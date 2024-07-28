@@ -48,7 +48,9 @@ func (c *Cli) InitProject() (*project.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	nextLogFile, err := os.Create(filepath.Join(p.PathWorkingDir(), "sst.log"))
+	sstLog := p.PathLog("sst")
+	os.MkdirAll(filepath.Dir(sstLog), 0755)
+	nextLogFile, err := os.Create(sstLog)
 	if err != nil {
 		return nil, util.NewReadableError(err, "Could not create log file")
 	}

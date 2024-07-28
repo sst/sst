@@ -46,11 +46,9 @@ func CmdDiff(c *cli.Cli) error {
 	defer u.Destroy()
 	err = p.Run(c.Context, &project.StackInput{
 		Command: "diff",
-		OnEvent: func(event *project.StackEvent) {
-		},
-		Dev:    c.Bool("dev"),
-		Out:    out,
-		Target: target,
+		Dev:     c.Bool("dev"),
+		Out:     out,
+		Target:  target,
 	})
 	close(out)
 	if err != nil {

@@ -309,16 +309,16 @@ func (u *UI) Event(unknown interface{}) {
 		}
 
 		if evt.Severity == "info#err" {
-			if strings.HasPrefix(evt.Message, "Downloading provider") {
-				u.printEvent(TEXT_INFO, "Info", strings.TrimSpace(ansi.Strip(evt.Message)))
-			} else {
-				u.printEvent(
-					TEXT_DIM,
-					"Log",
-					strings.TrimRightFunc(ansi.Strip(evt.Message), unicode.IsSpace),
-				)
-			}
+			u.printEvent(
+				TEXT_DIM,
+				"Log",
+				strings.TrimRightFunc(ansi.Strip(evt.Message), unicode.IsSpace),
+			)
 		}
+
+	case *project.ProviderDownloadEvent:
+		u.printEvent(TEXT_INFO, "Info", "Downloading provider "+evt.Name+" v"+evt.Version)
+		break
 
 	case *project.CompleteEvent:
 		if evt.Old {

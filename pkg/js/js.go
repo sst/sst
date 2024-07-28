@@ -12,12 +12,13 @@ import (
 )
 
 type EvalOptions struct {
-	Dir    string
-	Code   string
-	Env    []string
-	Banner string
-	Inject []string
-	Define map[string]string
+	Dir     string
+	Code    string
+	Env     []string
+	Globals string
+	Banner  string
+	Inject  []string
+	Define  map[string]string
 }
 
 func Build(input EvalOptions) (esbuild.BuildResult, error) {
@@ -46,6 +47,29 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 		NodePaths: []string{
 			filepath.Join(input.Dir, ".sst", "platform", "node_modules"),
 		},
+		Plugins: []esbuild.Plugin{
+			{
+				Name: "InjectGlobals",
+				Setup: func(build esbuild.PluginBuild) {
+					build.OnLoad(esbuild.OnLoadOptions{Filter: `\.(js|ts|jsx|tsx)$`},
+						func(args esbuild.OnLoadArgs) (esbuild.OnLoadResult, error) {
+							contents, err := os.ReadFile(args.Path)
+							if err != nil {
+								return esbuild.OnLoadResult{}, err
+							}
+							newContents := string(contents)
+							if !strings.Contains(args.Path, ".sst") {
+								newContents = input.Globals + "\n" + newContents
+							}
+							return esbuild.OnLoadResult{
+								Contents: &newContents,
+								Loader:   esbuild.LoaderDefault,
+							}, nil
+						})
+				},
+			},
+		},
+		Packages: esbuild.PackagesExternal,
 		External: []string{
 			"@pulumi/*",
 			"@pulumiverse/*",

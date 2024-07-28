@@ -258,7 +258,7 @@ func (m *footer) View(width int) string {
 		label += TEXT_DIM.Render(fmt.Sprintf(" %d skipped", m.skipped))
 	}
 	result = append(result, spinner+"  "+label)
-	return lipgloss.NewStyle().Width(width).Render(lipgloss.JoinVertical(lipgloss.Top, result...))
+	return lipgloss.NewStyle().MaxWidth(width).Render(lipgloss.JoinVertical(lipgloss.Top, result...))
 }
 
 func (u *footer) removePending(urn string) {

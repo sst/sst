@@ -35,10 +35,8 @@ func CmdRefresh(c *cli.Cli) error {
 	defer ui.Destroy()
 	err = p.Run(c.Context, &project.StackInput{
 		Command: "refresh",
-		OnEvent: func(event *project.StackEvent) {
-		},
-		Out:    out,
-		Target: target,
+		Out:     out,
+		Target:  target,
 	})
 	if err != nil {
 		return err

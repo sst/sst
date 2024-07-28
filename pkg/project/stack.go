@@ -1,6 +1,7 @@
 package project
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -8,8 +9,10 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"path"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -24,26 +27,17 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/tokens"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/workspace"
 	"github.com/sst/ion/internal/fs"
+	"github.com/sst/ion/pkg/flag"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/js"
 	"github.com/sst/ion/pkg/project/provider"
 )
-
-type StackEvent struct {
-	events.EngineEvent
-	ConcurrentUpdateEvent *ConcurrentUpdateEvent
-	CompleteEvent         *CompleteEvent
-	OldCompleteEvent      *CompleteEvent
-	StackCommandEvent     *StackCommandEvent
-	BuildFailedEvent      *BuildFailedEvent
-}
 
 type BuildFailedEvent struct {
 	Error string
 }
 
 type StackInput struct {
-	OnEvent func(event *StackEvent)
 	Out     chan interface{}
 	OnFiles func(files []string)
 	Command string
@@ -52,6 +46,11 @@ type StackInput struct {
 }
 
 type ConcurrentUpdateEvent struct{}
+
+type ProviderDownloadEvent struct {
+	Name    string
+	Version string
+}
 
 type Links map[string]interface{}
 
@@ -135,8 +134,6 @@ type Error struct {
 	URN     string `json:"urn"`
 }
 
-type StackEventStream = chan StackEvent
-
 var ErrStackRunFailed = fmt.Errorf("stack run had errors")
 var ErrStageNotFound = fmt.Errorf("stage not found")
 var ErrPassphraseInvalid = fmt.Errorf("passphrase invalid")
@@ -150,12 +147,6 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		}
 	}
 
-	input.OnEvent(&StackEvent{StackCommandEvent: &StackCommandEvent{
-		App:     p.app.Name,
-		Stage:   p.app.Stage,
-		Config:  p.PathConfig(),
-		Command: input.Command,
-	}})
 	publish(&StackCommandEvent{
 		App:     p.app.Name,
 		Stage:   p.app.Stage,
@@ -168,7 +159,6 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		err := p.Lock(updateID, input.Command)
 		if err != nil {
 			if err == provider.ErrLockExists {
-				input.OnEvent(&StackEvent{ConcurrentUpdateEvent: &ConcurrentUpdateEvent{}})
 				publish(&ConcurrentUpdateEvent{})
 			}
 			return err
@@ -236,9 +226,9 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 
 	providerShim := []string{}
 	for _, entry := range p.lock {
-		providerShim = append(providerShim, fmt.Sprintf("import * as %s from '%s'", entry.Alias, entry.Package))
-		providerShim = append(providerShim, fmt.Sprintf("globalThis.%s = %s", entry.Alias, entry.Alias))
+		providerShim = append(providerShim, fmt.Sprintf("import * as %s from \"%s\";", entry.Alias, entry.Package))
 	}
+	providerShim = append(providerShim, fmt.Sprintf("import * as sst from \"%s\";", path.Join(p.PathPlatformDir(), "src/components")))
 
 	buildResult, err := js.Build(js.EvalOptions{
 		Dir: p.PathRoot(),
@@ -247,31 +237,27 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 			"$cli": string(cliBytes),
 			"$dev": fmt.Sprintf("%v", input.Dev),
 		},
-		Inject: []string{filepath.Join(p.PathWorkingDir(), "platform/src/shim/run.js")},
+		Inject:  []string{filepath.Join(p.PathWorkingDir(), "platform/src/shim/run.js")},
+		Globals: strings.Join(providerShim, "\n"),
 		Code: fmt.Sprintf(`
       import { run } from "%v";
-      %v
       import mod from "%v/sst.config.ts";
-      const result = await run(mod.run)
-      export default result
+      const result = await run(mod.run);
+      export default result;
     `,
-			filepath.Join(p.PathWorkingDir(), "platform/src/auto/run.ts"),
-			strings.Join(providerShim, "\n"),
+			path.Join(p.PathWorkingDir(), "platform/src/auto/run.ts"),
 			p.PathRoot(),
 		),
 	})
 	if err != nil {
-		input.OnEvent(&StackEvent{
-			BuildFailedEvent: &BuildFailedEvent{
-				Error: err.Error(),
-			},
-		})
 		publish(&BuildFailedEvent{
 			Error: err.Error(),
 		})
 		return err
 	}
-	defer js.Cleanup(buildResult)
+	if !flag.SST_NO_CLEANUP {
+		defer js.Cleanup(buildResult)
+	}
 	outfile := buildResult.OutputFiles[1].Path
 
 	if input.OnFiles != nil {
@@ -336,9 +322,6 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		}
 		completed.Finished = true
 		completed.Old = true
-		input.OnEvent(&StackEvent{
-			OldCompleteEvent: completed,
-		})
 		publish(completed)
 	}()
 
@@ -368,7 +351,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("built config")
 
 	stream := make(chan events.EngineEvent)
-	eventlog, err := os.Create(filepath.Join(p.PathWorkingDir(), "event.log"))
+	eventlog, err := os.Create(p.PathLog("event"))
 	if err != nil {
 		return err
 	}
@@ -420,7 +403,6 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 					}
 				}
 
-				input.OnEvent(&StackEvent{EngineEvent: event})
 				for _, field := range getNotNilFields(event) {
 					publish(field)
 				}
@@ -449,7 +431,6 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		complete.Finished = finished
 		complete.Errors = errors
 		complete.ImportDiffs = importDiffs
-		defer input.OnEvent(&StackEvent{CompleteEvent: complete})
 		defer publish(complete)
 		if input.Command == "diff" {
 			return
@@ -595,13 +576,43 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		provider.PutSummary(p.home, p.app.Name, p.app.Stage, updateID, parsed)
 	}()
 
+	pulumiLog, err := os.Create(p.PathLog("pulumi"))
+	if err != nil {
+		return err
+	}
+	defer pulumiLog.Close()
+
+	pulumiErrReader, pulumiErrWriter := io.Pipe()
+	defer pulumiErrReader.Close()
+	defer pulumiErrWriter.Close()
+
+	go func() {
+		scanner := bufio.NewScanner(pulumiErrReader)
+		match := regexp.MustCompile(`\[resource plugin ([^\]]*)`)
+		for scanner.Scan() {
+			text := scanner.Text()
+			slog.Error("pulumi error", "line", text)
+			matches := match.FindStringSubmatch(text)
+			if len(matches) > 1 {
+				plugin := matches[1]
+				splits := strings.Split(plugin, "-")
+				for _, item := range p.lock {
+					if item.Name == splits[0] {
+						publish(&ProviderDownloadEvent{Name: splits[0], Version: splits[1]})
+						break
+					}
+				}
+			}
+		}
+	}()
+
 	switch input.Command {
 	case "deploy":
 		result, derr := stack.Up(ctx,
 			optup.Target(input.Target),
 			optup.TargetDependents(),
-			optup.ProgressStreams(),
-			optup.ErrorProgressStreams(),
+			optup.ProgressStreams(pulumiLog),
+			optup.ErrorProgressStreams(pulumiErrWriter),
 			optup.EventStreams(stream),
 		)
 		err = derr
@@ -612,8 +623,8 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 			optdestroy.ContinueOnError(),
 			optdestroy.Target(input.Target),
 			optdestroy.TargetDependents(),
-			optdestroy.ProgressStreams(),
-			optdestroy.ErrorProgressStreams(),
+			optdestroy.ProgressStreams(pulumiLog),
+			optdestroy.ErrorProgressStreams(pulumiErrWriter),
 			optdestroy.EventStreams(stream),
 		)
 		err = derr
@@ -622,8 +633,8 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	case "refresh":
 		result, derr := stack.Refresh(ctx,
 			optrefresh.Target(input.Target),
-			optrefresh.ProgressStreams(),
-			optrefresh.ErrorProgressStreams(),
+			optrefresh.ProgressStreams(pulumiLog),
+			optrefresh.ErrorProgressStreams(pulumiErrWriter),
 			optrefresh.EventStreams(stream),
 		)
 		err = derr
@@ -632,8 +643,8 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		_, derr := stack.Preview(ctx,
 			optpreview.Diff(),
 			optpreview.Target(input.Target),
-			optpreview.ProgressStreams(),
-			optpreview.ErrorProgressStreams(),
+			optpreview.ProgressStreams(pulumiLog),
+			optpreview.ErrorProgressStreams(pulumiErrWriter),
 			optpreview.EventStreams(stream),
 		)
 		err = derr
@@ -663,16 +674,18 @@ func (s *Project) Lock(updateID string, command string) error {
 }
 
 func (s *Project) Unlock() error {
-	dir := s.PathWorkingDir()
-	files, err := os.ReadDir(dir)
-	if err != nil {
-		return err
-	}
-	for _, file := range files {
-		if strings.HasPrefix(file.Name(), "Pulumi") {
-			err := os.Remove(filepath.Join(dir, file.Name()))
-			if err != nil {
-				return err
+	if !flag.SST_NO_CLEANUP {
+		dir := s.PathWorkingDir()
+		files, err := os.ReadDir(dir)
+		if err != nil {
+			return err
+		}
+		for _, file := range files {
+			if strings.HasPrefix(file.Name(), "Pulumi") {
+				err := os.Remove(filepath.Join(dir, file.Name()))
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

@@ -320,3 +320,7 @@ func (p *Project) Cleanup() error {
 		filepath.Join(p.PathWorkingDir(), "artifacts"),
 	)
 }
+
+func (p *Project) PathLog(name string) string {
+	return filepath.Join(p.PathWorkingDir(), "log", name+".log")
+}

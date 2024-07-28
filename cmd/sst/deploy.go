@@ -35,10 +35,8 @@ func CmdDeploy(c *cli.Cli) error {
 	defer ui.Destroy()
 	err = p.Run(c.Context, &project.StackInput{
 		Command: "deploy",
-		OnEvent: func(event *project.StackEvent) {
-		},
-		Out:    out,
-		Target: target,
+		Out:     out,
+		Target:  target,
 	})
 	if err != nil {
 		return err

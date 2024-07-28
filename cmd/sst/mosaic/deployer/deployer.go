@@ -43,9 +43,7 @@ func Start(ctx context.Context, p *project.Project) error {
 					p.Run(ctx, &project.StackInput{
 						Command: "deploy",
 						Dev:     true,
-						OnEvent: func(event *project.StackEvent) {
-						},
-						Out: out,
+						Out:     out,
 						OnFiles: func(files []string) {
 							bus.Publish(&WatchedFilesEvent{files})
 						},

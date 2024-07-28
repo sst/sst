@@ -34,7 +34,7 @@
  * @packageDocumentation
  */
 
-import * as vercel from "@pulumiverse/vercel";
+import { DnsRecord, DnsRecordArgs } from "@pulumiverse/vercel";
 import { Dns, Record } from "../dns";
 import { sanitizeToPascalCase } from "../naming";
 import { ComponentResourceOptions, all } from "@pulumi/pulumi";
@@ -61,12 +61,12 @@ export interface DnsArgs {
     /**
      * Transform the Vercel record resource.
      */
-    record?: Transform<vercel.DnsRecordArgs>;
+    record?: Transform<DnsRecordArgs>;
   };
 }
 
 export function dns(args: DnsArgs) {
-  let caaRecord: vercel.DnsRecord;
+  let caaRecord: DnsRecord;
   return {
     provider: "vercel",
     createRecord,
@@ -74,7 +74,7 @@ export function dns(args: DnsArgs) {
 
   function useCAARecord(namePrefix: string, opts: ComponentResourceOptions) {
     if (!caaRecord) {
-      caaRecord = new vercel.DnsRecord(
+      caaRecord = new DnsRecord(
         ...transform(
           args.transform?.record,
           `${namePrefix}CAARecord`,
@@ -113,7 +113,7 @@ export function dns(args: DnsArgs) {
       }
 
       function createRecord() {
-        return new vercel.DnsRecord(
+        return new DnsRecord(
           ...transform(
             args.transform?.record,
             `${namePrefix}${record.type}Record${nameSuffix}`,
