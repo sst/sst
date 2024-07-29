@@ -450,7 +450,7 @@ export class Postgres extends Component implements Link.Linkable {
    * @param clusterName The name of the RDS cluster.
    *
    * @example
-   * Imagine you created a cluster in the `dev` stage. And in your perosonal stage, ie. `frank`,
+   * Imagine you created a cluster in the `dev` stage. And in your personal stage, ie. `frank`,
    * instead of creating a new cluster, you want to reuse the same cluster from `dev`.
    *
    * ```ts title="sst.config.ts"

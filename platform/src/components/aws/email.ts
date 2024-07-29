@@ -356,7 +356,7 @@ export class Email extends Component implements Link.Linkable {
    * @param sender The email address or domain name of the SES identity.
    *
    * @example
-   * Imagine you created an Email component in the `dev` stage. And in your perosonal stage,
+   * Imagine you created an Email component in the `dev` stage. And in your personal stage,
    * ie. `frank`, instead of creating a new sender, you want to reuse the same sender from `dev`.
    *
    * ```ts title="sst.config.ts"

@@ -455,7 +455,7 @@ export class Vpc extends Component {
    * @param vpcID The id of the VPC.
    *
    * @example
-   * Imagine you created a VPC in the `dev` stage. And in your perosonal stage, ie. `frank`,
+   * Imagine you created a VPC in the `dev` stage. And in your personal stage, ie. `frank`,
    * instead of creating a new VPC, you want to reuse the same VPC from `dev`.
    *
    * ```ts title="sst.config.ts"
