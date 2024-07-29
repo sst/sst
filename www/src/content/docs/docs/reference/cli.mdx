@@ -197,52 +197,57 @@ The command to run
 <Section type="parameters">
 #### Flags
 - <p><code class="key">mode</code> <code class="symbol">&ldquo;</code><code class="primitive">basic</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">mosaic</code><code class="symbol">&rdquo;</code></p>
-Use mode=basic to turn off multiplexer
+Defaults to using the multiplexer or `mosaic` mode. Use `mode=basic` to turn it off.
 </Section>
-Run your app in development mode.
+Run your app in dev mode.
 
 ```bash frame="none"
 sst dev
 ```
+By default, this starts a multiplexer with processes that deploy your app, run your functions, or start your frontend.
 
-Optionally, pass in a command to start your frontend as well.
+![sst dev multiplexer mode](../../../../assets/docs/cli/sst-dev-multiplexer-mode.png)
+
+You can navigate to these processes through the sidebar.
+
+1. **SST**: A watcher for your `sst.config.ts` that deploy your app
+2. **Functions**: Your functions are run [Live](/docs/live/) and
+their invocations are logged
+3. Components that have `dev.autostart` enabled
+   - These include `Service` and frontends like `Nextjs`, `Remix`, `Astro`, `StaticSite`, etc.
+   - Their `dev.command` is run as a separate process
+   - These components are not deployed
+
+The multiplexer makes it so that you won't have to start your frontend or
+your container applications separately.
+
+There are also some keyboard shortcuts you can use to interact with these
+processes.
+
+Optionally, you can disable the multiplexer and run `sst dev` in basic mode.
+
+```bash frame="none"
+sst dev --mode=basic
+```
+
+This will only deploy your app and run your functions. You'll need to start your
+frontend separately
+
+To do this run `sst dev` in a separate terminal session by passing the command.
+For example:
 
 ```bash frame="none"
 sst dev next dev
 ```
 
-To pass in a flag to your command, use `--`.
+By wrapping your command, it'll load your [linked resources](/docs/linking) in the
+environment.
+
+To pass in a flag to the command, use `--`.
 
 ```bash frame="none"
 sst dev -- next dev --turbo
 ```
-
-Dev mode does a few things:
-
-1. Deploys your app
-2. For components with `dev.autostart`
-   - Skip the deploy
-   - Run their `dev.command` in a new multiplexer pane
-   - This includes `Service` and frontends like `Nextjs`, `Remix`, `Astro`, `StaticSite`, etc.
-2. Watch your `sst.config.ts` and re-deploys changes
-3. Run your functions [Live](/docs/live/)
-5. If you pass in a `command`, it'll:
-   - Load your [linked resources](/docs/linking) in the environment
-   - And run the command
-
-:::note
-If you run `sst dev` with a command, it will not print your function logs.
-:::
-
-If `sst dev` starts your frontend, it won't print logs from your SST app. We do this to prevent your logs from being too noisy. To view your logs, you can run `sst dev` in a separate terminal.
-
-:::tip
-You can start as many instances of `sst dev` in your app as you want.
-:::
-
-Starting multiple instances of `sst dev` in the same project only starts a single _server_. Meaning that the second instance connects to the existing one.
-
-This is different from SST v2, in that you needed to run `sst dev` and `sst bind` for your frontend.
 </Segment>
 
 ### deploy
