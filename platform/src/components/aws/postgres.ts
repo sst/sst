@@ -456,7 +456,7 @@ export class Postgres extends Component implements Link.Linkable {
    * ```ts title="sst.config.ts"
    * const database = $app.stage === "frank"
    *   ? sst.aws.Postgres.get("MyDatabase", "app-dev-mydatabase")
-   *   ? new sst.aws.Postgres("MyDatabase");
+   *   : new sst.aws.Postgres("MyDatabase");
    * ```
    *
    * Here `app-dev-mydatabase` is the name of the cluster created in the `dev` stage.

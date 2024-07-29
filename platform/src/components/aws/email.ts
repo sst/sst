@@ -117,6 +117,11 @@ export interface EmailArgs {
   };
 }
 
+interface EmailRef {
+  ref: boolean;
+  identity: sesv2.EmailIdentity;
+}
+
 /**
  * The `Email` component lets you send emails in your app.
  * It uses [Amazon Simple Email Service](https://aws.amazon.com/ses/).
@@ -203,8 +208,14 @@ export class Email extends Component implements Link.Linkable {
   constructor(name: string, args: EmailArgs, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
 
-    const parent = this;
+    if (args && "ref" in args) {
+      const ref = args as unknown as EmailRef;
+      this._sender = ref.identity.emailIdentity;
+      this.identity = ref.identity;
+      return;
+    }
 
+    const parent = this;
     const isDomain = checkIsDomain();
     const dns = normalizeDns();
     const dmarc = normalizeDmarc();
@@ -335,6 +346,30 @@ export class Email extends Component implements Link.Linkable {
         }),
       ],
     };
+  }
+
+  /**
+   * Reference an existing Email component with the given Amazon SES identity. This is useful
+   * when you created an SES identity in one stage and you want to reference it in another stage.
+   *
+   * @param name The name of the component.
+   * @param sender The email address or domain name of the SES identity.
+   *
+   * @example
+   * Imagine you created an Email component in the `dev` stage. And in your perosonal stage,
+   * ie. `frank`, instead of creating a new sender, you want to reuse the same sender from `dev`.
+   *
+   * ```ts title="sst.config.ts"
+   * const email = $app.stage === "frank"
+   *   ? sst.aws.Email.get("MyEmail", "spongebob@example.com")
+   *   : new sst.aws.Email("MyEmail", {
+   *       sender: "spongebob@example.com",
+   *     });
+   * ```
+   */
+  public static get(name: string, sender: Input<string>) {
+    const identity = sesv2.EmailIdentity.get(`${name}Identity`, sender);
+    return new Email(name, { ref: true, identity } as unknown as EmailArgs);
   }
 }
 

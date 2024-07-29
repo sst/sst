@@ -287,4 +287,40 @@ This is accessible through the `Resource` object in the [SDK](/docs/reference/sd
   The sender email address or domain name.
 </Section>
 </Segment>
+
+## Methods
+
+### static get
+<Segment>
+<Section type="signature">
+```ts
+Email.get(name, sender)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+The name of the component.
+- <p><code class="key">sender</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The email address or domain name of the SES identity.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">Email</code>](.)
+</InlineSection>
+Reference an existing Email component with the given Amazon SES identity. This is useful
+when you created an SES identity in one stage and you want to reference it in another stage.
+
+Imagine you created an Email component in the `dev` stage. And in your perosonal stage,
+ie. `frank`, instead of creating a new sender, you want to reuse the same sender from `dev`.
+
+```ts title="sst.config.ts"
+const email = $app.stage === "frank"
+  ? sst.aws.Email.get("MyEmail", "spongebob@example.com")
+  : new sst.aws.Email("MyEmail", {
+      sender: "spongebob@example.com",
+    });
+```
+</Segment>
 </div>
