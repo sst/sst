@@ -211,7 +211,7 @@ Optionally, pass in a command to start your frontend as well.
 sst dev next dev
 ```
 
-To pass in a flag to your command, use --
+To pass in a flag to your command, use `--`.
 
 ```bash frame="none"
 sst dev -- next dev --turbo
@@ -219,12 +219,13 @@ sst dev -- next dev --turbo
 
 Dev mode does a few things:
 
-1. Starts a local server
-2. Watches your `sst.config.ts` and re-deploys changes
+1. Deploys your app
+2. For components with `dev.autostart`
+   - Skip the deploy
+   - Run their `dev.command` in a new multiplexer pane
+   - This includes `Service` and frontends like `Nextjs`, `Remix`, `Astro`, `StaticSite`, etc.
+2. Watch your `sst.config.ts` and re-deploys changes
 3. Run your functions [Live](/docs/live/)
-4. Skip components that should be run locally
-   - `Service`
-   - Frontends like, `Nextjs`, `Remix`, `Astro`, `SvelteKit`, etc.
 5. If you pass in a `command`, it'll:
    - Load your [linked resources](/docs/linking) in the environment
    - And run the command
