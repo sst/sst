@@ -11,6 +11,7 @@ import { BaseSsrSiteArgs } from "../base/base-ssr-site.js";
 import { Kv, KvArgs } from "./kv.js";
 import { Worker, WorkerArgs } from "./worker.js";
 import { KvData } from "./providers/kv-data.js";
+import { DEFAULT_ACCOUNT_ID } from "./account-id.js";
 
 type Plan = ReturnType<typeof validatePlan>;
 export interface SsrSiteArgs extends BaseSsrSiteArgs {
@@ -156,7 +157,7 @@ export function createRouter(
       return new KvData(
         `${name}AssetFiles`,
         {
-          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+          accountId: DEFAULT_ACCOUNT_ID,
           namespaceId: storage.id,
           entries: assetManifest.apply((manifest) =>
             manifest.map((m) => ({

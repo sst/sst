@@ -34,7 +34,7 @@ export interface DataSourceArgs extends AppSyncDataSourceArgs {
  */
 export class AppSyncDataSource extends Component {
   private readonly dataSource: appsync.DataSource;
-  private readonly lambda?: Output<sst.aws.Function>;
+  private readonly lambda?: Output<Function>;
   private readonly serviceRole?: iam.Role;
 
   constructor(

@@ -3,6 +3,7 @@ import * as cloudflare from "@pulumi/cloudflare";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import { binding } from "./binding";
+import { DEFAULT_ACCOUNT_ID } from "./account-id";
 
 export interface KvArgs {
   /**
@@ -68,7 +69,7 @@ export class Kv extends Component implements Link.Linkable {
           `${name}Namespace`,
           {
             title: "",
-            accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+            accountId: DEFAULT_ACCOUNT_ID,
           },
           { parent },
         ),

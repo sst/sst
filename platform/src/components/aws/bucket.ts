@@ -505,7 +505,7 @@ export class Bucket extends Component implements Link.Linkable {
    * in the `dev` stage.
    */
   public static get(name: string, bucketName: string) {
-    return new sst.aws.Bucket(name, {
+    return new Bucket(name, {
       ref: true,
       bucket: s3.BucketV2.get(`${name}Bucket`, bucketName),
     } as BucketArgs);
