@@ -102,6 +102,40 @@ func (s *Multiplexer) Start() {
 
 				switch evt := unknown.(type) {
 
+				case *EventProcess:
+					for _, p := range s.processes {
+						if p.key == evt.Key {
+							return
+						}
+					}
+					proc := &process{
+						icon:     evt.Icon,
+						key:      evt.Key,
+						dir:      evt.Cwd,
+						title:    evt.Title,
+						args:     evt.Args,
+						killable: evt.Killable,
+						env:      evt.Env,
+						dead:     !evt.Autostart,
+					}
+					term := tcellterm.New()
+					term.SetSurface(s.main)
+					term.Attach(func(ev tcell.Event) {
+						s.screen.PostEvent(ev)
+					})
+					proc.vt = term
+					if evt.Autostart {
+						proc.start()
+					}
+					if !evt.Autostart {
+						proc.vt.Start(exec.Command("echo", evt.Key+" has auto-start disabled, press enter to start."))
+						proc.dead = true
+					}
+					s.processes = append(s.processes, proc)
+					s.sort()
+					s.draw()
+					break
+
 				case *tcell.EventMouse:
 					if evt.Buttons()&tcell.WheelUp != 0 {
 						s.scrollUp(3)
