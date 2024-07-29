@@ -750,9 +750,14 @@ function renderType(
     if (type.name === "T") {
       return `<code class="primitive">${type.name}</code>`;
     }
-    if (type.name === "Output" || type.name === "Input") {
+    if (
+      type.name === "Output" ||
+      type.name === "OutputInstance" ||
+      type.name === "Input"
+    ) {
+      const typeName = type.name === "OutputInstance" ? "Output" : type.name;
       return [
-        `<code class="primitive">${type.name}</code>`,
+        `<code class="primitive">${typeName}</code>`,
         `<code class="symbol">&lt;</code>`,
         renderSomeType(type.typeArguments?.[0]!),
         `<code class="symbol">&gt;</code>`,
@@ -1241,7 +1246,7 @@ function renderLinks(module: TypeDoc.DeclarationReflection) {
       if (
         link.type &&
         link.type.type === "reference" &&
-        link.type.name === "Output" &&
+        (link.type.name === "Output" || link.type.name === "OutputInstance") &&
         (link.type.typeArguments![0].type === "intrinsic" ||
           link.type.typeArguments![0].type === "union")
       ) {
@@ -1251,7 +1256,8 @@ function renderLinks(module: TypeDoc.DeclarationReflection) {
       else if (link.type && link.type.type === "union") {
         linkType = link.type;
         linkType.types = linkType.types.map((t) =>
-          t.type === "reference" && t.name === "Output"
+          t.type === "reference" &&
+          (t.name === "Output" || t.name === "OutputInstance")
             ? t.typeArguments![0]
             : t
         );

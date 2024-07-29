@@ -347,6 +347,16 @@ The ARN of the RDS Cluster.
 The name of the database.
 </Segment>
 
+### host
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The host of the database.
+</Segment>
+
 ### nodes
 <Segment>
 <Section type="parameters">
@@ -374,6 +384,26 @@ The name of the database.
 </Section>
 </Segment>
 
+### password
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The password of the master user.
+</Segment>
+
+### port
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The port of the database.
+</Segment>
+
 ### secretArn
 <Segment>
 <Section type="parameters">
@@ -382,6 +412,16 @@ The name of the database.
 </InlineSection>
 </Section>
 The ARN of the master user secret.
+</Segment>
+
+### username
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The username of the master user.
 </Segment>
 
 ## SDK
@@ -400,9 +440,21 @@ This is accessible through the `Resource` object in the [SDK](/docs/reference/sd
 - <p><code class="key">database</code> <code class="primitive">string</code></p>
 
   The name of the database.
+- <p><code class="key">host</code> <code class="primitive">string</code></p>
+
+  The host of the database.
+- <p><code class="key">password</code> <code class="primitive">undefined</code><code class="symbol"> | </code><code class="primitive">string</code></p>
+
+  The password of the master user.
+- <p><code class="key">port</code> <code class="primitive">number</code></p>
+
+  The port of the database.
 - <p><code class="key">secretArn</code> <code class="primitive">string</code></p>
 
   The ARN of the master user secret.
+- <p><code class="key">username</code> <code class="primitive">string</code></p>
+
+  The username of the master user.
 </Section>
 </Segment>
 

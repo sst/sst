@@ -505,9 +505,9 @@ By default there is no base path, so if the `name` is `api.example.com`, the ful
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">accessLog?</code>](#transform-accesslog)</p>
 - <p>[<code class="key">api?</code>](#transform-api)</p>
 - <p>[<code class="key">domainName?</code>](#transform-domainname)</p>
+- <p>[<code class="key">logGroup?</code>](#transform-loggroup)</p>
 - <p>[<code class="key">route?</code>](#transform-route) <code class="primitive">Object</code></p>
   - <p>[<code class="key">args?</code>](#transform-route-args)</p>
   - <p>[<code class="key">handler?</code>](#transform-route-handler)</p>
@@ -515,16 +515,6 @@ By default there is no base path, so if the `name` is `api.example.com`, the ful
 </Section>
 [Transform](/docs/components#transform) how this component creates its underlying
 resources.
-
-</Segment>
-<NestedTitle id="transform-accesslog" Tag="h4" parent="transform.">accessLog?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">LogGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">LogGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/#inputs)<code class="symbol">, </code><code class="primitive">opts</code><code class="symbol">: </code>[<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)<code class="symbol">, </code><code class="primitive">name</code><code class="symbol">: </code><code class="primitive">string</code><code class="symbol">)</code><code class="symbol"> => </code><code class="primitive">void</code>
-</InlineSection>
-</Section>
-Transform the CloudWatch LogGroup resource used for access logs.
 
 </Segment>
 <NestedTitle id="transform-api" Tag="h4" parent="transform.">api?</NestedTitle>
@@ -545,6 +535,16 @@ Transform the API Gateway HTTP API resource.
 </InlineSection>
 </Section>
 Transform the API Gateway HTTP API domain name resource.
+
+</Segment>
+<NestedTitle id="transform-loggroup" Tag="h4" parent="transform.">logGroup?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">LogGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">LogGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/#inputs)<code class="symbol">, </code><code class="primitive">opts</code><code class="symbol">: </code>[<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)<code class="symbol">, </code><code class="primitive">name</code><code class="symbol">: </code><code class="primitive">string</code><code class="symbol">)</code><code class="symbol"> => </code><code class="primitive">void</code>
+</InlineSection>
+</Section>
+Transform the CloudWatch LogGroup resource used for access logs.
 
 </Segment>
 <NestedTitle id="transform-route" Tag="h4" parent="transform.">route?</NestedTitle>
@@ -633,6 +633,7 @@ Transform the API Gateway HTTP API stage resource.
 </InlineSection>
 - <p>[<code class="key">api</code>](#nodes-api)</p>
 - <p>[<code class="key">logGroup</code>](#nodes-loggroup)</p>
+- <p>[<code class="key">domainName</code>](#nodes-domainname)</p>
 </Section>
 The underlying [resources](/docs/components/#nodes) this component creates.
 </Segment>
@@ -643,7 +644,7 @@ The underlying [resources](/docs/components/#nodes) this component creates.
 **Type** [<code class="type">Api</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/api/)
 </InlineSection>
 </Section>
-The Amazon API Gateway HTTP API
+The Amazon API Gateway HTTP API.
 </Segment>
 <NestedTitle id="nodes-loggroup" Tag="h4" parent="nodes.">logGroup</NestedTitle>
 <Segment>
@@ -653,6 +654,15 @@ The Amazon API Gateway HTTP API
 </InlineSection>
 </Section>
 The CloudWatch LogGroup for the access logs.
+</Segment>
+<NestedTitle id="nodes-domainname" Tag="h4" parent="nodes.">domainName</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">DomainName</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/domainname/)
+</InlineSection>
+</Section>
+The API Gateway HTTP API domain name.
 </Segment>
 
 ### url

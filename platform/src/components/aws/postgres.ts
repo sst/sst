@@ -373,7 +373,7 @@ export class Postgres extends Component implements Link.Linkable {
   /** The password of the master user. */
   public get password() {
     return this.cluster.masterPassword.apply((val) => {
-      if (val) return;
+      if (val) return output(undefined);
       const parsed = jsonParse(
         this.secret.apply((secret) =>
           secret ? secret.secretString : output("{}"),
@@ -390,6 +390,20 @@ export class Postgres extends Component implements Link.Linkable {
     return this.cluster.databaseName;
   }
 
+  /**
+   * The port of the database.
+   */
+  public get port() {
+    return this.instance.port;
+  }
+
+  /**
+   * The host of the database.
+   */
+  public get host() {
+    return this.instance.endpoint;
+  }
+
   public get nodes() {
     return {
       cluster: this.cluster,
@@ -401,13 +415,13 @@ export class Postgres extends Component implements Link.Linkable {
   public getSSTLink() {
     return {
       properties: {
-        clusterArn: this.cluster.arn,
-        secretArn: this.cluster.masterUserSecrets[0].secretArn,
+        clusterArn: this.clusterArn,
+        secretArn: this.secretArn,
         database: this.cluster.databaseName,
-        username: this.cluster.masterUsername,
+        username: this.username,
         password: this.password,
-        port: this.instance.port,
-        host: this.instance.endpoint,
+        port: this.port,
+        host: this.host,
       },
       include: [
         permission({

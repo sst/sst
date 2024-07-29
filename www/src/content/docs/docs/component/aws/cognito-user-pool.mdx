@@ -124,6 +124,7 @@ Transform the Cognito User Pool resource.
 - <p>[<code class="key">customMessage?</code>](#triggers-custommessage)</p>
 - <p>[<code class="key">customSmsSender?</code>](#triggers-customsmssender)</p>
 - <p>[<code class="key">defineAuthChallenge?</code>](#triggers-defineauthchallenge)</p>
+- <p>[<code class="key">kmsKey?</code>](#triggers-kmskey)</p>
 - <p>[<code class="key">postAuthentication?</code>](#triggers-postauthentication)</p>
 - <p>[<code class="key">postConfirmation?</code>](#triggers-postconfirmation)</p>
 - <p>[<code class="key">preAuthentication?</code>](#triggers-preauthentication)</p>
@@ -213,6 +214,19 @@ user has completed the authentication process or if additional challenges are ne
 ARN of the lambda function to name a custom challenge.
 
 Takes the handler path or the function args.
+
+</Segment>
+<NestedTitle id="triggers-kmskey" Tag="h4" parent="triggers.">kmsKey?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">string</code>
+</InlineSection>
+</Section>
+The ARN of the AWS KMS key used for encryption.
+
+When `customEmailSender` or `customSmsSender` are configured, Cognito encrypts the
+verification code and temporary passwords before sending them to your Lambda functions.
 
 </Segment>
 <NestedTitle id="triggers-postauthentication" Tag="h4" parent="triggers.">postAuthentication?</NestedTitle>
