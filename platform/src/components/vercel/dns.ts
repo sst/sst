@@ -40,6 +40,7 @@ import { sanitizeToPascalCase } from "../naming";
 import { ComponentResourceOptions, all } from "@pulumi/pulumi";
 import { Transform, transform } from "../component";
 import { Input } from "../input";
+import { DEFAULT_TEAM_ID } from "./account-id";
 
 export interface DnsArgs {
   /**
@@ -83,7 +84,7 @@ export function dns(args: DnsArgs) {
             type: "CAA",
             name: "",
             value: `0 issue "amazonaws.com"`,
-            teamId: sst.vercel.DEFAULT_TEAM_ID,
+            teamId: DEFAULT_TEAM_ID,
           },
           opts,
         ),
@@ -122,7 +123,7 @@ export function dns(args: DnsArgs) {
               type: record.type,
               name: recordName,
               value: record.value,
-              teamId: sst.vercel.DEFAULT_TEAM_ID,
+              teamId: DEFAULT_TEAM_ID,
               ttl: 60,
             },
             { ...opts, dependsOn: [useCAARecord(namePrefix, opts)] },

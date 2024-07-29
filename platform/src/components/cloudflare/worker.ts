@@ -18,6 +18,7 @@ import { ZoneLookup } from "./providers/zone-lookup.js";
 import { iam } from "@pulumi/aws";
 import { Permission } from "../aws/permission.js";
 import { Binding, binding } from "./binding.js";
+import { DEFAULT_ACCOUNT_ID } from "./account-id.js";
 
 export interface WorkerArgs {
   /**
@@ -272,7 +273,7 @@ export class Worker extends Component implements Link.Linkable {
                 handler,
                 runtime: "worker",
                 properties: {
-                  accountID: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+                  accountID: DEFAULT_ACCOUNT_ID,
                   scriptName: script.name,
                   build,
                 },
@@ -383,7 +384,7 @@ export class Worker extends Component implements Link.Linkable {
               `${name}Script`,
               {
                 name: "",
-                accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+                accountId: DEFAULT_ACCOUNT_ID,
                 content: (await fs.readFile(handler)).toString(),
                 module: true,
                 compatibilityDate: "2024-04-04",
@@ -426,7 +427,7 @@ export class Worker extends Component implements Link.Linkable {
       return new WorkerUrl(
         `${name}Url`,
         {
-          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+          accountId: DEFAULT_ACCOUNT_ID,
           scriptName: script.name,
           enabled: urlEnabled,
         },
@@ -440,7 +441,7 @@ export class Worker extends Component implements Link.Linkable {
       const zone = new ZoneLookup(
         `${name}ZoneLookup`,
         {
-          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+          accountId: DEFAULT_ACCOUNT_ID,
           domain: args.domain,
         },
         { parent },
@@ -449,7 +450,7 @@ export class Worker extends Component implements Link.Linkable {
       return new cf.WorkerDomain(
         `${name}Domain`,
         {
-          accountId: sst.cloudflare.DEFAULT_ACCOUNT_ID,
+          accountId: DEFAULT_ACCOUNT_ID,
           service: script.name,
           hostname: args.domain,
           zoneId: zone.id,

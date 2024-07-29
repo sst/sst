@@ -43,7 +43,7 @@ export interface AuthorizerArgs extends ApiGatewayV1AuthorizerArgs {
  */
 export class ApiGatewayV1Authorizer extends Component {
   private readonly authorizer: apigateway.Authorizer;
-  private readonly fn?: Output<sst.aws.Function>;
+  private readonly fn?: Output<Function>;
   private readonly permission?: lambda.Permission;
 
   constructor(
