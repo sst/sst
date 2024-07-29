@@ -196,8 +196,8 @@ The command to run
 
 <Section type="parameters">
 #### Flags
-- <p><code class="key">silent</code> <code class="primitive">boolean</code></p>
-Don't show logs from function invocations
+- <p><code class="key">mode</code> <code class="symbol">&ldquo;</code><code class="primitive">basic</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">mosaic</code><code class="symbol">&rdquo;</code></p>
+Use mode=basic to turn off multiplexer
 </Section>
 Run your app in development mode.
 
@@ -211,10 +211,10 @@ Optionally, pass in a command to start your frontend as well.
 sst dev next dev
 ```
 
-To pass in a flag to your command, wrap it in quotes.
+To pass in a flag to your command, use --
 
 ```bash frame="none"
-sst dev "next dev --turbo"
+sst dev -- next dev --turbo
 ```
 
 Dev mode does a few things:
@@ -270,6 +270,24 @@ You can get the URN of a resource from the [Console](/docs/console/#resources).
 ```bash frame="none"
 sst deploy --target urn:pulumi:prod::www::sst:aws:Astro::Astro,urn:pulumi:prod::www::sst:aws:Bucket::Assets
 ```
+</Segment>
+
+### diff
+<Segment>
+<Section type="signature">
+```sh frame="none"
+sst diff
+```
+</Section>
+
+<Section type="parameters">
+#### Flags
+- <p><code class="key">target</code> <code class="primitive"></code></p>
+Comma seperated list of target URNs.
+- <p><code class="key">dev</code> <code class="primitive">boolean</code></p>
+Compare to sst dev
+</Section>
+See what changes will be made
 </Segment>
 
 ### add

@@ -277,9 +277,22 @@ function generateCliDoc() {
   }
 
   function renderCliFlagType(type: CliCommand["flags"][number]["type"]) {
-    return `<code class="primitive">${
-      type === "bool" ? "boolean" : type
-    }</code>`;
+    if (type.startsWith("[") && type.endsWith("]")) {
+      return type
+        .substring(1, type.length - 1)
+        .split(",")
+        .map((t: string) =>
+          [
+            `<code class="symbol">&ldquo;</code>`,
+            `<code class="primitive">${t}</code>`,
+            `<code class="symbol">&rdquo;</code>`,
+          ].join("")
+        )
+        .join(`<code class="symbol"> | </code>`);
+    }
+
+    if (type === "bool") return `<code class="primitive">boolean</code>`;
+    return `<code class="primitive">${type}</code>`;
   }
 }
 
