@@ -22,7 +22,7 @@ export interface Definition<
    * ```ts
    * {
    *   include: [
-   *     aws.permission({
+   *     sst.aws.permission({
    *       actions: ["lambda:InvokeFunction"],
    *       resources: ["*"],
    *     }),
@@ -34,11 +34,8 @@ export interface Definition<
    * ```ts
    * {
    *   include: [
-   *     cloudflare.permission({
-   *       type: "r2BucketBindings";
-   *       properties: {
-   *         text: "my-bucket",
-   *       };
+   *     sst.cloudflare.binding("r2BucketBindings", {
+   *       bucketName: "my-bucket",
    *     }),
    *   ],
    * }

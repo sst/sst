@@ -1,57 +1,76 @@
+/**
+ * The Cloudflare Binding Adapter is used to define Cloudflare bindings associated with the
+ * [Linkable resource](./linkable).
+ *
+ * @example
+ *
+ * ```ts
+ * sst.cloudflare.binding("r2BucketBindings", {
+ *   bucketName: "my-bucket",
+ * })
+ * ```
+ *
+ * @packageDocumentation
+ */
+
 import { Input } from "../input";
 
+export interface KvBinding {
+  type: "kvNamespaceBindings";
+  properties: {
+    namespaceId: Input<string>;
+  };
+}
+export interface SecretTextBinding {
+  type: "secretTextBindings";
+  properties: {
+    text: Input<string>;
+  };
+}
+export interface ServiceBinding {
+  type: "serviceBindings";
+  properties: {
+    service: Input<string>;
+  };
+}
+export interface PlainTextBinding {
+  type: "plainTextBindings";
+  properties: {
+    text: Input<string>;
+  };
+}
+export interface QueueBinding {
+  type: "queueBindings";
+  properties: {
+    queue: Input<string>;
+  };
+}
+export interface R2BucketBinding {
+  type: "r2BucketBindings";
+  properties: {
+    bucketName: Input<string>;
+  };
+}
+
+export interface D1DatabaseBinding {
+  type: "d1DatabaseBindings";
+  properties: {
+    databaseId: Input<string>;
+  };
+}
+
 export type Binding =
-  | {
-      type: "kvNamespaceBindings";
-      properties: {
-        namespaceId: Input<string>;
-      };
-    }
-  | {
-      type: "serviceBindings";
-      properties: {
-        service: Input<string>;
-      };
-    }
-  | {
-      type: "secretTextBindings";
-      properties: {
-        text: Input<string>;
-      };
-    }
-  | {
-      type: "plainTextBindings";
-      properties: {
-        text: Input<string>;
-      };
-    }
-  | {
-      type: "queueBindings";
-      properties: {
-        queue: Input<string>;
-      };
-    }
-  | {
-      type: "r2BucketBindings";
-      properties: {
-        bucketName: Input<string>;
-      };
-    }
-  | {
-      type: "d1DatabaseBindings";
-      properties: {
-        databaseId: Input<string>;
-      };
-    };
+  | KvBinding
+  | SecretTextBinding
+  | ServiceBinding
+  | PlainTextBinding
+  | QueueBinding
+  | R2BucketBinding
+  | D1DatabaseBinding;
 
 export function binding<T extends Binding["type"]>(
   type: T,
-  properties: Extract<
-    Binding,
-    {
-      type: T;
-    }
-  >["properties"],
+  properties: Extract<Binding, { type: T }>["properties"],
 ) {
   return {
     type: "cloudflare.binding" as const,

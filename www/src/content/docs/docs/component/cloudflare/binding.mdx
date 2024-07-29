@@ -1,0 +1,259 @@
+---
+title: Cloudflare Binding Linkable Adapter
+description: Reference doc for the `sst.cloudflare.binding` adapter.
+---
+
+{/* DO NOT EDIT. AUTO-GENERATED FROM "platform/src/components/cloudflare/binding.ts" */}
+
+import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
+import Section from '../../../../../../src/components/tsdoc/Section.astro';
+import NestedTitle from '../../../../../../src/components/tsdoc/NestedTitle.astro';
+import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.astro';
+
+<div class="tsdoc">
+
+<Section type="about">
+The Cloudflare Binding Adapter is used to define Cloudflare bindings associated with the
+[Linkable resource](./linkable).
+
+```ts
+sst.cloudflare.binding("r2BucketBindings", {
+  bucketName: "my-bucket",
+})
+```
+</Section>
+
+---
+
+## Functions
+
+### binding
+<Segment>
+<Section type="signature">
+```ts
+binding(type, properties)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">type</code> <code class="primitive">string</code></p>
+- <p><code class="key">properties</code> <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code></p>
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Object</code>
+</InlineSection>
+
+</Segment>
+
+## D1DatabaseBinding
+### properties
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">databaseId</code>](#properties-databaseid)</p>
+</Section>
+
+</Segment>
+<NestedTitle id="properties-databaseid" Tag="h4" parent="properties.">databaseId</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">d1DatabaseBindings</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+
+## KvBinding
+### properties
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">namespaceId</code>](#properties-namespaceid)</p>
+</Section>
+
+</Segment>
+<NestedTitle id="properties-namespaceid" Tag="h4" parent="properties.">namespaceId</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">kvNamespaceBindings</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+
+## PlainTextBinding
+### properties
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">text</code>](#properties-text)</p>
+</Section>
+
+</Segment>
+<NestedTitle id="properties-text" Tag="h4" parent="properties.">text</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">plainTextBindings</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+
+## QueueBinding
+### properties
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">queue</code>](#properties-queue)</p>
+</Section>
+
+</Segment>
+<NestedTitle id="properties-queue" Tag="h4" parent="properties.">queue</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">queueBindings</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+
+## R2BucketBinding
+### properties
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">bucketName</code>](#properties-bucketname)</p>
+</Section>
+
+</Segment>
+<NestedTitle id="properties-bucketname" Tag="h4" parent="properties.">bucketName</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">r2BucketBindings</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+
+## SecretTextBinding
+### properties
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">text</code>](#properties-text-1)</p>
+</Section>
+
+</Segment>
+<NestedTitle id="properties-text-1" Tag="h4" parent="properties.">text</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">secretTextBindings</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+
+## ServiceBinding
+### properties
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code>
+</InlineSection>
+- <p>[<code class="key">service</code>](#properties-service)</p>
+</Section>
+
+</Segment>
+<NestedTitle id="properties-service" Tag="h4" parent="properties.">service</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+### type
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">serviceBindings</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+
+</Segment>
+</div>

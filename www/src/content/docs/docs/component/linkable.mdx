@@ -82,9 +82,9 @@ Linkable.wrap(cls, cb)
 
 <Section type="parameters">
 #### Parameters
-- <p><code class="key">cls</code> <code class="primitive">(args: <code class="primitive">any</code><code class="symbol">[]</code>) => <code class="symbol">&ldquo;</code><code class="primitive">RESOURCE_CLASS</code><code class="symbol">&rdquo;</code></code></p>
+- <p><code class="key">cls</code> <code class="type">Constructor</code></p>
 The Pulumi Resource class to wrap.
-- <p><code class="key">cb</code> <code class="primitive">(resource: <code class="symbol">&ldquo;</code><code class="primitive">RESOURCE_CLASS</code><code class="symbol">&rdquo;</code>) => [<code class="type">Definition</code>](#definition)</code></p>
+- <p><code class="key">cb</code> <code class="primitive">(resource: <code class="type">Resource</code>) => [<code class="type">Definition</code>](#definition)</code></p>
 A callback that returns the definition for the linkable resource.
 </Section>
 
@@ -128,7 +128,7 @@ new sst.aws.Nextjs("MyWeb", {
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">any</code><code class="symbol">[]</code>
+**Type** <code class="symbol">(</code>[<code class="type">sst.aws.permission</code>](/docs/component/aws/permission/)<code class="symbol"> | </code>[<code class="type">sst.cloudflare.binding</code>](/docs/component/cloudflare/binding/)<code class="symbol">)[]</code>
 </InlineSection>
 </Section>
 Defining AWS permissions or Cloudflare bindings for the linkable resource.
@@ -137,7 +137,7 @@ Defining AWS permissions.
 ```ts
 {
   include: [
-    aws.permission({
+    sst.aws.permission({
       actions: ["lambda:InvokeFunction"],
       resources: ["*"],
     }),
@@ -149,11 +149,8 @@ Defining Cloudflare bindings.
 ```ts
 {
   include: [
-    cloudflare.permission({
-      type: "r2BucketBindings";
-      properties: {
-        text: "my-bucket",
-      };
+    sst.cloudflare.binding("r2BucketBindings", {
+      bucketName: "my-bucket",
     }),
   ],
 }

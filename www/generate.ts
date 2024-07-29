@@ -59,6 +59,11 @@ if (!cmd || cmd === "components") {
     else if (sourceFile === "platform/src/config.ts")
       await generateConfigDoc(component);
     else if (sourceFile.endsWith("/dns.ts")) await generateDnsDoc(component);
+    else if (
+      sourceFile.endsWith("/aws/permission.ts") ||
+      sourceFile.endsWith("/cloudflare/binding.ts")
+    )
+      await generateLinkableDoc(component);
     else {
       const sdkName = component.name.split("/")[2];
       const sdk = sdks.find(
@@ -433,6 +438,49 @@ async function generateDnsDoc(module: TypeDoc.DeclarationReflection) {
   );
 }
 
+async function generateLinkableDoc(module: TypeDoc.DeclarationReflection) {
+  const name = module.name.split("/")[1];
+  console.log({ name });
+  console.log(module.name);
+  const sourceFile = module.sources![0].fileName;
+  console.log({ sourceFile });
+  const outputFilePath = path.join(
+    "src/content/docs/docs/component",
+    `${module.name.split("/").slice(1).join("/")}.mdx`
+  );
+  const copy = {
+    "components/aws/permission": {
+      title: "AWS Permission",
+      namespace: "sst.aws.permission",
+    },
+    "components/cloudflare/binding": {
+      title: "Cloudflare Binding",
+      namespace: "sst.cloudflare.binding",
+    },
+  }[module.name]!;
+
+  fs.writeFileSync(
+    outputFilePath,
+    [
+      renderHeader(
+        `${copy.title} Linkable Adapter`,
+        `Reference doc for the \`${copy.namespace}\` adapter.`
+      ),
+      renderSourceMessage(sourceFile),
+      renderImports(outputFilePath),
+      renderBodyBegin(),
+      renderAbout(useModuleComment(module)),
+      renderFunctions(module, useModuleFunctions(module), {
+        title: "Functions",
+      }),
+      renderInterfacesAtH2Level(module),
+      renderBodyEnd(),
+    ]
+      .flat()
+      .join("\n")
+  );
+}
+
 async function generateComponentDoc(
   component: TypeDoc.DeclarationReflection,
   sdk?: TypeDoc.DeclarationReflection
@@ -692,6 +740,19 @@ function renderType(
     if (dnsProvider) {
       return `[<code class="type">sst.${dnsProvider}.dns</code>](/docs/component/${dnsProvider}/dns/)`;
     }
+    const linkableProvider = {
+      AwsPermission: {
+        doc: "aws/permission/",
+        namespace: "sst.aws.permission",
+      },
+      CloudflareBinding: {
+        doc: "cloudflare/binding/",
+        namespace: "sst.cloudflare.binding",
+      },
+    }[type.name];
+    if (linkableProvider) {
+      return `[<code class="type">${linkableProvider.namespace}</code>](/docs/component/${linkableProvider.doc})`;
+    }
     // types in the same doc (links to the class ie. `subscribe()` return type)
     if (isModuleComponent(module) && type.name === useClassName(module)) {
       return `[<code class="type">${type.name}</code>](.)`;
@@ -737,6 +798,9 @@ function renderType(
         ? `#${type.name.toLowerCase()}`
         : "";
       return `[<code class="type">${type.name}</code>](/docs/component/aws/${externalModule}/${hash})`;
+    }
+    if (type.name === "Resource" || type.name === "Constructor") {
+      return `<code class="type">${type.name}</code>`;
     }
 
     // @ts-expect-error
@@ -1635,7 +1699,9 @@ function isModuleComponent(module: TypeDoc.DeclarationReflection) {
   return (
     sourceFile !== "platform/src/config.ts" &&
     sourceFile !== "platform/src/global-config.d.ts" &&
-    !sourceFile.endsWith("/dns.ts")
+    !sourceFile.endsWith("/dns.ts") &&
+    !sourceFile.endsWith("/aws/permission.ts") &&
+    !sourceFile.endsWith("/cloudflare/binding.ts")
   );
 }
 function useModuleComment(module: TypeDoc.DeclarationReflection) {
@@ -1811,9 +1877,33 @@ function patchCode() {
         "public get properties(): Record<string, any> {"
       )
       // replace generic <Resource>
-      .replaceAll(`: Resource`, `: "RESOURCE_CLASS"`)
+      .replaceAll(`cls: { new (...args: any[]): Resource }`, `cls: Constructor`)
       // replace Definition.include
-      .replace(/include\?\: \{[^}]*\}/, `include?: any`)
+      .replace(
+        /include\?\: \{[^}]*\}/,
+        `include?: (AwsPermission | CloudflareBinding)`
+      ) +
+      "\ntype Constructor = {};\n" +
+      "\ntype AwsPermission = {};\n" +
+      "\ntype CloudflareBinding = {};\n"
+  );
+  // patch Cloudflare Binding
+  fs.cpSync(
+    "../platform/src/components/cloudflare/binding.ts",
+    "../platform/src/components/cloudflare/binding.ts.bk"
+  );
+  fs.writeFileSync(
+    "../platform/src/components/cloudflare/binding.ts",
+    fs
+      .readFileSync("../platform/src/components/cloudflare/binding.ts")
+      .toString()
+      .trim()
+      // replace generic <Properties>
+      .replace("type: T", "type: string")
+      .replace(
+        `properties: Extract<Binding, { type: T }>["properties"]`,
+        "properties: Record<string, any>"
+      )
   );
 }
 
@@ -1830,6 +1920,11 @@ function restoreCode() {
     "../platform/src/components/linkable.ts.bk",
     "../platform/src/components/linkable.ts"
   );
+  // restore Cloudflare Binding
+  fs.renameSync(
+    "../platform/src/components/cloudflare/binding.ts.bk",
+    "../platform/src/components/cloudflare/binding.ts"
+  );
 }
 
 async function buildComponents() {
@@ -1845,61 +1940,63 @@ async function buildComponents() {
       "../platform/src/config.ts",
       "../platform/src/global-config.d.ts",
       "../platform/src/components/linkable.ts",
-      "../platform/src/components/secret.ts",
-      "../platform/src/components/aws/apigateway-websocket.ts",
-      "../platform/src/components/aws/apigateway-websocket-route.ts",
-      "../platform/src/components/aws/apigatewayv1.ts",
-      "../platform/src/components/aws/apigatewayv1-authorizer.ts",
-      "../platform/src/components/aws/apigatewayv1-lambda-route.ts",
-      "../platform/src/components/aws/apigatewayv2.ts",
-      "../platform/src/components/aws/apigatewayv2-authorizer.ts",
-      "../platform/src/components/aws/apigatewayv2-lambda-route.ts",
-      "../platform/src/components/aws/apigatewayv2-url-route.ts",
-      "../platform/src/components/aws/app-sync.ts",
-      "../platform/src/components/aws/app-sync-data-source.ts",
-      "../platform/src/components/aws/app-sync-function.ts",
-      "../platform/src/components/aws/app-sync-resolver.ts",
-      "../platform/src/components/aws/bucket.ts",
-      "../platform/src/components/aws/bucket-lambda-subscriber.ts",
-      "../platform/src/components/aws/cluster.ts",
-      "../platform/src/components/aws/cognito-identity-pool.ts",
-      "../platform/src/components/aws/cognito-user-pool.ts",
-      "../platform/src/components/aws/cognito-user-pool-client.ts",
-      "../platform/src/components/aws/cron.ts",
-      "../platform/src/components/aws/dynamo.ts",
-      "../platform/src/components/aws/dynamo-lambda-subscriber.ts",
-      "../platform/src/components/aws/email.ts",
-      "../platform/src/components/aws/function.ts",
-      "../platform/src/components/aws/postgres.ts",
-      "../platform/src/components/aws/vector.ts",
-      "../platform/src/components/aws/astro.ts",
-      "../platform/src/components/aws/nextjs.ts",
-      "../platform/src/components/aws/nuxt.ts",
-      "../platform/src/components/aws/realtime.ts",
-      "../platform/src/components/aws/realtime-lambda-subscriber.ts",
-      "../platform/src/components/aws/remix.ts",
-      "../platform/src/components/aws/queue.ts",
-      "../platform/src/components/aws/queue-lambda-subscriber.ts",
-      "../platform/src/components/aws/kinesis-stream.ts",
-      "../platform/src/components/aws/kinesis-stream-lambda-subscriber.ts",
-      "../platform/src/components/aws/router.ts",
-      "../platform/src/components/aws/service.ts",
-      "../platform/src/components/aws/sns-topic.ts",
-      "../platform/src/components/aws/sns-topic-lambda-subscriber.ts",
-      "../platform/src/components/aws/sns-topic-queue-subscriber.ts",
-      "../platform/src/components/aws/solid-start.ts",
-      "../platform/src/components/aws/static-site.ts",
-      "../platform/src/components/aws/svelte-kit.ts",
-      "../platform/src/components/aws/vpc.ts",
-      "../platform/src/components/cloudflare/worker.ts",
-      "../platform/src/components/cloudflare/bucket.ts",
-      "../platform/src/components/cloudflare/d1.ts",
-      "../platform/src/components/cloudflare/kv.ts",
-      // internal
-      "../platform/src/components/aws/dns.ts",
-      "../platform/src/components/cloudflare/dns.ts",
-      "../platform/src/components/vercel/dns.ts",
-      "../platform/src/components/aws/cdn.ts",
+      //"../platform/src/components/secret.ts",
+      //"../platform/src/components/aws/apigateway-websocket.ts",
+      //"../platform/src/components/aws/apigateway-websocket-route.ts",
+      //"../platform/src/components/aws/apigatewayv1.ts",
+      //"../platform/src/components/aws/apigatewayv1-authorizer.ts",
+      //"../platform/src/components/aws/apigatewayv1-lambda-route.ts",
+      //"../platform/src/components/aws/apigatewayv2.ts",
+      //"../platform/src/components/aws/apigatewayv2-authorizer.ts",
+      //"../platform/src/components/aws/apigatewayv2-lambda-route.ts",
+      //"../platform/src/components/aws/apigatewayv2-url-route.ts",
+      //"../platform/src/components/aws/app-sync.ts",
+      //"../platform/src/components/aws/app-sync-data-source.ts",
+      //"../platform/src/components/aws/app-sync-function.ts",
+      //"../platform/src/components/aws/app-sync-resolver.ts",
+      //"../platform/src/components/aws/bucket.ts",
+      //"../platform/src/components/aws/bucket-lambda-subscriber.ts",
+      //"../platform/src/components/aws/cluster.ts",
+      //"../platform/src/components/aws/cognito-identity-pool.ts",
+      //"../platform/src/components/aws/cognito-user-pool.ts",
+      //"../platform/src/components/aws/cognito-user-pool-client.ts",
+      //"../platform/src/components/aws/cron.ts",
+      //"../platform/src/components/aws/dynamo.ts",
+      //"../platform/src/components/aws/dynamo-lambda-subscriber.ts",
+      //"../platform/src/components/aws/email.ts",
+      //"../platform/src/components/aws/function.ts",
+      //"../platform/src/components/aws/postgres.ts",
+      //"../platform/src/components/aws/vector.ts",
+      //"../platform/src/components/aws/astro.ts",
+      //"../platform/src/components/aws/nextjs.ts",
+      //"../platform/src/components/aws/nuxt.ts",
+      //"../platform/src/components/aws/realtime.ts",
+      //"../platform/src/components/aws/realtime-lambda-subscriber.ts",
+      //"../platform/src/components/aws/remix.ts",
+      //"../platform/src/components/aws/queue.ts",
+      //"../platform/src/components/aws/queue-lambda-subscriber.ts",
+      //"../platform/src/components/aws/kinesis-stream.ts",
+      //"../platform/src/components/aws/kinesis-stream-lambda-subscriber.ts",
+      //"../platform/src/components/aws/router.ts",
+      //"../platform/src/components/aws/service.ts",
+      //"../platform/src/components/aws/sns-topic.ts",
+      //"../platform/src/components/aws/sns-topic-lambda-subscriber.ts",
+      //"../platform/src/components/aws/sns-topic-queue-subscriber.ts",
+      //"../platform/src/components/aws/solid-start.ts",
+      //"../platform/src/components/aws/static-site.ts",
+      //"../platform/src/components/aws/svelte-kit.ts",
+      //"../platform/src/components/aws/vpc.ts",
+      //"../platform/src/components/cloudflare/worker.ts",
+      //"../platform/src/components/cloudflare/bucket.ts",
+      //"../platform/src/components/cloudflare/d1.ts",
+      //"../platform/src/components/cloudflare/kv.ts",
+      //// internal
+      //"../platform/src/components/aws/dns.ts",
+      //"../platform/src/components/cloudflare/dns.ts",
+      //"../platform/src/components/vercel/dns.ts",
+      //"../platform/src/components/aws/cdn.ts",
+      "../platform/src/components/aws/permission.ts",
+      "../platform/src/components/cloudflare/binding.ts",
     ],
     tsconfig: "../platform/tsconfig.json",
   });
