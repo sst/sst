@@ -62,6 +62,13 @@ export interface CognitoUserPoolArgs {
    */
   triggers?: Input<{
     /**
+     * The ARN of the AWS KMS key used for encryption.
+     *
+     * When `customEmailSender` or `customSmsSender` are configured, Cognito encrypts the
+     * verification code and temporary passwords before sending them to your Lambda functions.
+     */
+    kmsKey?: string;
+    /**
      * Triggered after the user successfully responds to the previous challenge, and a new
      * challenge needs to be created.
      *
@@ -233,33 +240,42 @@ export class CognitoUserPool extends Component implements Link.Linkable {
 
     function normalizeAliasesAndUsernames() {
       all([args.aliases, args.usernames]).apply(([aliases, usernames]) => {
-        if (aliases && usernames) {
+        if (aliases && usernames)
           throw new VisibleError(
             "You cannot set both aliases and usernames. Learn more about customizing sign-in attributes at https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases",
           );
-        }
       });
     }
 
     function createTriggers() {
       if (!args.triggers) return;
 
-      return output(args.triggers).apply((triggers) =>
-        Object.fromEntries(
-          Object.entries(triggers).map(([trigger, value]) => {
+      return output(args.triggers).apply((triggers) => {
+        if (
+          (triggers.customEmailSender || triggers.customSmsSender) &&
+          !triggers.kmsKey
+        )
+          throw new VisibleError(
+            "You must provide a KMS key via `kmsKey` when configuring `customEmailSender` or `customSmsSender`.",
+          );
+
+        return Object.fromEntries(
+          Object.entries(triggers).map(([key, value]) => {
+            if (key === "kmsKey") return [key, output(value as string)];
+
             const fn = Function.fromDefinition(
-              `${name}Trigger${trigger}`,
+              `${name}Trigger${key}`,
               value,
               {
-                description: `Subscribed to ${trigger} from ${name}`,
+                description: `Subscribed to ${key} from ${name}`,
               },
               undefined,
               { parent },
             );
-            return [trigger, fn.arn];
+            return [key, fn.arn];
           }),
-        ),
-      );
+        );
+      });
     }
 
     function createUserPool() {
@@ -321,7 +337,30 @@ export class CognitoUserPool extends Component implements Link.Linkable {
               emailSubject: "Verify your new account",
               smsMessage: "The verification code to your new account is {####}",
             },
-            lambdaConfig: triggers,
+            lambdaConfig:
+              triggers &&
+              triggers.apply((triggers) => ({
+                kmsKeyId: triggers.kmsKey,
+                createAuthChallenge: triggers.createAuthChallenge,
+                customEmailSender: triggers.customEmailSender && {
+                  lambdaArn: triggers.customEmailSender,
+                  lambdaVersion: "V1_0",
+                },
+                customMessage: triggers.customMessage,
+                customSmsSender: triggers.customSmsSender && {
+                  lambdaArn: triggers.customSmsSender,
+                  lambdaVersion: "V1_0",
+                },
+                defineAuthChallenge: triggers.defineAuthChallenge,
+                postAuthentication: triggers.postAuthentication,
+                postConfirmation: triggers.postConfirmation,
+                preAuthentication: triggers.preAuthentication,
+                preSignUp: triggers.preSignUp,
+                preTokenGeneration: triggers.preTokenGeneration,
+                userMigration: triggers.userMigration,
+                verifyAuthChallengeResponse:
+                  triggers.verifyAuthChallengeResponse,
+              })),
           },
           { parent },
         ),
@@ -332,9 +371,11 @@ export class CognitoUserPool extends Component implements Link.Linkable {
       if (!triggers) return;
 
       triggers.apply((triggers) => {
-        Object.entries(triggers).forEach(([trigger, functionArn]) => {
+        Object.entries(triggers).forEach(([key, functionArn]) => {
+          if (key === "kmsKey") return;
+
           new lambda.Permission(
-            `${name}Permission${trigger}`,
+            `${name}Permission${key}`,
             {
               action: "lambda:InvokeFunction",
               function: functionArn,
