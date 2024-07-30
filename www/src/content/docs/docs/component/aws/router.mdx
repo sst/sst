@@ -296,6 +296,109 @@ Use this to create a `www.` version of your domain and redirect visitors to the 
 }
 ```
 </Segment>
+### invalidation?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">paths?</code>](#invalidation-paths)</p>
+- <p>[<code class="key">token?</code>](#invalidation-token)</p>
+- <p>[<code class="key">wait?</code>](#invalidation-wait)</p>
+</Section>
+
+<InlineSection>
+**Default** Invalidation is turned off
+</InlineSection>
+Configure how the CloudFront cache invalidations are handled.
+:::tip
+You get 1000 free invalidations per month. After that you pay $0.005 per invalidation path. [Read more here](https://aws.amazon.com/cloudfront/pricing/).
+:::
+
+Enable invalidations. Setting this to `true` will invalidate all paths. It is equivalent
+to passing in `{ paths: ["/*"] }`.
+
+```js
+{
+  invalidation: true
+}
+```
+</Segment>
+<NestedTitle id="invalidation-paths" Tag="h4" parent="invalidation.">paths?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">["/*"]</code>
+</InlineSection>
+Specify an array of glob pattern of paths to invalidate.
+
+:::note
+Each glob pattern counts as a single invalidation. However, invalidating `/*` counts as a single invalidation as well.
+:::
+
+Invalidate the `index.html` and all files under the `products/` route. This counts as two invalidations.
+```js
+{
+  invalidation: {
+    paths: ["/index.html", "/products/*"]
+  }
+}
+```
+</Segment>
+<NestedTitle id="invalidation-token" Tag="h4" parent="invalidation.">token?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** A unique value is automatically generated on each deploy
+</InlineSection>
+Invalidation token used to determine if the cache should be invalidated. If the
+token is the same as the previous deployment, the cache will not be invalidated.
+
+```js
+{
+  invalidation: {
+    token: "foo123"
+  }
+}
+```
+</Segment>
+<NestedTitle id="invalidation-wait" Tag="h4" parent="invalidation.">wait?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
+
+:::tip
+For non-prod environments it might make sense to pass in `false`.
+:::
+
+Waiting for this process to finish ensures that new content will be available after the deploy finishes. However, this process can sometimes take more than 5 mins.
+
+```js
+{
+  invalidation: {
+    wait: true
+  }
+}
+```
+</Segment>
 ### routes
 <Segment>
 <Section type="parameters">

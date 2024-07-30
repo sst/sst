@@ -15,7 +15,6 @@ import { Link } from "../link.js";
 import { Input } from "../input.js";
 import { globSync } from "glob";
 import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
-import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
 import {
   BaseStaticSiteArgs,
   buildApp,
@@ -398,8 +397,8 @@ export class StaticSite extends Component implements Link.Linkable {
     const bucket = createS3Bucket();
     const bucketFile = uploadAssets();
     const cloudfrontFunction = createCloudfrontFunction();
+    const invalidation = buildInvalidation();
     const distribution = createDistribution();
-    createDistributionInvalidation();
     this.assets = bucket;
     this.cdn = distribution;
 
@@ -543,7 +542,7 @@ export class StaticSite extends Component implements Link.Linkable {
               bucketName: bucket.name,
               files: bucketFiles,
             },
-            { parent, ignoreChanges: $dev ? ["*"] : undefined },
+            { parent },
           );
         },
       );
@@ -652,6 +651,7 @@ export class StaticSite extends Component implements Link.Linkable {
               ],
             },
             domain: args.domain,
+            invalidation,
             wait: !$dev,
           },
           // create distribution after s3 upload finishes
@@ -660,11 +660,11 @@ export class StaticSite extends Component implements Link.Linkable {
       );
     }
 
-    function createDistributionInvalidation() {
-      all([outputPath, args.invalidation]).apply(
+    function buildInvalidation() {
+      return all([outputPath, args.invalidation]).apply(
         ([outputPath, invalidationRaw]) => {
           // Normalize invalidation
-          if (invalidationRaw === false) return;
+          if (invalidationRaw === false) return false;
           const invalidation = {
             wait: false,
             paths: "all" as const,
@@ -674,7 +674,7 @@ export class StaticSite extends Component implements Link.Linkable {
           // Build invalidation paths
           const invalidationPaths =
             invalidation.paths === "all" ? ["/*"] : invalidation.paths;
-          if (invalidationPaths.length === 0) return;
+          if (invalidationPaths.length === 0) return false;
 
           // Calculate a hash based on the contents of the S3 files. This will be
           // used to determine if we need to invalidate our CloudFront cache.
@@ -692,19 +692,11 @@ export class StaticSite extends Component implements Link.Linkable {
             hash.update(fs.readFileSync(path.resolve(outputPath, filePath))),
           );
 
-          new DistributionInvalidation(
-            `${name}Invalidation`,
-            {
-              distributionId: distribution.nodes.distribution.id,
-              paths: invalidationPaths,
-              version: hash.digest("hex"),
-              wait: invalidation.wait,
-            },
-            {
-              parent,
-              ignoreChanges: $dev ? ["*"] : undefined,
-            },
-          );
+          return {
+            paths: invalidationPaths,
+            token: hash.digest("hex"),
+            wait: invalidation.wait,
+          };
         },
       );
     }

@@ -4,6 +4,7 @@ import { Link } from "../link";
 import type { Input } from "../input";
 import { Cdn, CdnArgs } from "./cdn";
 import { cloudfront, types } from "@pulumi/aws";
+import { normalize } from "path";
 
 export interface RouterArgs {
   /**
@@ -96,6 +97,23 @@ export interface RouterArgs {
    * ```
    */
   routes: Input<Record<string, Input<string>>>;
+  /**
+   * Configure how the CloudFront cache invalidations are handled.
+   * :::tip
+   * You get 1000 free invalidations per month. After that you pay $0.005 per invalidation path. [Read more here](https://aws.amazon.com/cloudfront/pricing/).
+   * :::
+   * @default Invalidation is turned off
+   * @example
+   * Enable invalidations. Setting this to `true` will invalidate all paths. It is equivalent
+   * to passing in `{ paths: ["/*"] }`.
+   *
+   * ```js
+   * {
+   *   invalidation: true
+   * }
+   * ```
+   */
+  invalidation?: CdnArgs["invalidation"];
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -270,6 +288,7 @@ export class Router extends Component implements Link.Linkable {
                 ) as types.input.cloudfront.DistributionOrderedCacheBehavior[],
             ),
             domain: args.domain,
+            invalidation: args.invalidation,
             wait: true,
           },
           { parent },

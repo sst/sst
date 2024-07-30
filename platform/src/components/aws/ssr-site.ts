@@ -13,7 +13,6 @@ import {
 } from "@pulumi/pulumi";
 import { Cdn, CdnArgs } from "./cdn.js";
 import { Function, FunctionArgs } from "./function.js";
-import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
 import { useProvider } from "./helpers/provider.js";
 import { Bucket, BucketArgs } from "./bucket.js";
 import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
@@ -325,8 +324,8 @@ export function createServersAndDistribution(
     const edgeFunctions = createEdgeFunctions();
     const origins = buildOrigins();
     const originGroups = buildOriginGroups();
+    const invalidation = buildInvalidation();
     const distribution = createDistribution();
-    createDistributionInvalidation();
     createWarmer();
 
     return {
@@ -820,6 +819,99 @@ function handler(event) {
       ].join("\n");
     }
 
+    function buildInvalidation() {
+      return all([outputPath, args.invalidation]).apply(
+        ([outputPath, invalidationRaw]) => {
+          // Normalize invalidation
+          if (invalidationRaw === false) return false;
+          const invalidation = {
+            wait: false,
+            paths: "all",
+            ...invalidationRaw,
+          };
+
+          // We will generate a hash based on the contents of the S3 files with cache enabled.
+          // This will be used to determine if we need to invalidate our CloudFront cache.
+          const s3Origin = Object.values(plan.origins).find(
+            (origin) => origin.s3,
+          )?.s3;
+          if (!s3Origin) return false;
+          const cachedS3Files = s3Origin.copy.filter((file) => file.cached);
+          if (cachedS3Files.length === 0) return false;
+
+          // Build invalidation paths
+          const invalidationPaths: string[] = [];
+          if (invalidation.paths === "all") {
+            invalidationPaths.push("/*");
+          } else if (invalidation.paths === "versioned") {
+            cachedS3Files.forEach((item) => {
+              if (!item.versionedSubDir) return false;
+              invalidationPaths.push(
+                path.posix.join("/", item.to, item.versionedSubDir, "*"),
+              );
+            });
+          } else {
+            invalidationPaths.push(...(invalidation?.paths || []));
+          }
+          if (invalidationPaths.length === 0) return false;
+
+          // Build build ID
+          let invalidationBuildId: string;
+          if (plan.buildId) {
+            invalidationBuildId = plan.buildId;
+          } else {
+            const hash = crypto.createHash("md5");
+
+            cachedS3Files.forEach((item) => {
+              // The below options are needed to support following symlinks when building zip files:
+              // - nodir: This will prevent symlinks themselves from being copied into the zip.
+              // - follow: This will follow symlinks and copy the files within.
+
+              // For versioned files, use file path for digest since file version in name should change on content change
+              if (item.versionedSubDir) {
+                globSync("**", {
+                  dot: true,
+                  nodir: true,
+                  follow: true,
+                  cwd: path.resolve(
+                    outputPath,
+                    item.from,
+                    item.versionedSubDir,
+                  ),
+                }).forEach((filePath) => hash.update(filePath));
+              }
+
+              // For non-versioned files, use file content for digest
+              if (invalidation.paths !== "versioned") {
+                globSync("**", {
+                  ignore: item.versionedSubDir
+                    ? [path.posix.join(item.versionedSubDir, "**")]
+                    : undefined,
+                  dot: true,
+                  nodir: true,
+                  follow: true,
+                  cwd: path.resolve(outputPath, item.from),
+                }).forEach((filePath) =>
+                  hash.update(
+                    fs.readFileSync(
+                      path.resolve(outputPath, item.from, filePath),
+                    ),
+                  ),
+                );
+              }
+            });
+            invalidationBuildId = hash.digest("hex");
+          }
+
+          return {
+            paths: invalidationPaths,
+            token: invalidationBuildId,
+            wait: invalidation.wait,
+          };
+        },
+      );
+    }
+
     function createDistribution() {
       return new Cdn(
         ...transform(
@@ -841,6 +933,7 @@ function handler(event) {
               })),
             customErrorResponses: plan.errorResponses,
             domain: args.domain,
+            invalidation,
           },
           // create distribution after assets are uploaded
           { dependsOn: bucketFile, parent },
@@ -905,104 +998,6 @@ function handler(event) {
           input: JSON.stringify({}),
         },
         { parent },
-      );
-    }
-
-    function createDistributionInvalidation() {
-      all([outputPath, args.invalidation]).apply(
-        ([outputPath, invalidationRaw]) => {
-          // Normalize invalidation
-          if (invalidationRaw === false) return;
-          const invalidation = {
-            wait: false,
-            paths: "all",
-            ...invalidationRaw,
-          };
-
-          // We will generate a hash based on the contents of the S3 files with cache enabled.
-          // This will be used to determine if we need to invalidate our CloudFront cache.
-          const s3Origin = Object.values(plan.origins).find(
-            (origin) => origin.s3,
-          )?.s3;
-          if (!s3Origin) return;
-          const cachedS3Files = s3Origin.copy.filter((file) => file.cached);
-          if (cachedS3Files.length === 0) return;
-
-          // Build invalidation paths
-          const invalidationPaths: string[] = [];
-          if (invalidation.paths === "all") {
-            invalidationPaths.push("/*");
-          } else if (invalidation.paths === "versioned") {
-            cachedS3Files.forEach((item) => {
-              if (!item.versionedSubDir) return;
-              invalidationPaths.push(
-                path.posix.join("/", item.to, item.versionedSubDir, "*"),
-              );
-            });
-          } else {
-            invalidationPaths.push(...(invalidation?.paths || []));
-          }
-          if (invalidationPaths.length === 0) return;
-
-          // Build build ID
-          let invalidationBuildId: string;
-          if (plan.buildId) {
-            invalidationBuildId = plan.buildId;
-          } else {
-            const hash = crypto.createHash("md5");
-
-            cachedS3Files.forEach((item) => {
-              // The below options are needed to support following symlinks when building zip files:
-              // - nodir: This will prevent symlinks themselves from being copied into the zip.
-              // - follow: This will follow symlinks and copy the files within.
-
-              // For versioned files, use file path for digest since file version in name should change on content change
-              if (item.versionedSubDir) {
-                globSync("**", {
-                  dot: true,
-                  nodir: true,
-                  follow: true,
-                  cwd: path.resolve(
-                    outputPath,
-                    item.from,
-                    item.versionedSubDir,
-                  ),
-                }).forEach((filePath) => hash.update(filePath));
-              }
-
-              // For non-versioned files, use file content for digest
-              if (invalidation.paths !== "versioned") {
-                globSync("**", {
-                  ignore: item.versionedSubDir
-                    ? [path.posix.join(item.versionedSubDir, "**")]
-                    : undefined,
-                  dot: true,
-                  nodir: true,
-                  follow: true,
-                  cwd: path.resolve(outputPath, item.from),
-                }).forEach((filePath) =>
-                  hash.update(
-                    fs.readFileSync(
-                      path.resolve(outputPath, item.from, filePath),
-                    ),
-                  ),
-                );
-              }
-            });
-            invalidationBuildId = hash.digest("hex");
-          }
-
-          new DistributionInvalidation(
-            `${name}Invalidation`,
-            {
-              distributionId: distribution.nodes.distribution.id,
-              paths: invalidationPaths,
-              version: invalidationBuildId,
-              wait: invalidation.wait,
-            },
-            { parent },
-          );
-        },
       );
     }
   });
