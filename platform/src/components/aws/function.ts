@@ -199,7 +199,7 @@ export interface FunctionArgs {
    * @example
    * ```js
    * {
-   *   name: ""
+   *   name: "my-function"
    * }
    * ```
    */
@@ -1436,7 +1436,9 @@ export class Function extends Component implements Link.Linkable {
             args.transform?.logGroup,
             `${name}LogGroup`,
             {
-              name: `/aws/lambda/${prefixName(64, `${name}Function`)}`,
+              name: interpolate`/aws/lambda/${
+                args.name ?? prefixName(64, `${name}Function`)
+              }`,
               retentionInDays: RETENTION[logging.retention],
             },
             { parent },
