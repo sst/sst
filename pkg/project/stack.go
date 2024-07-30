@@ -204,7 +204,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	}
 	env["PULUMI_CONFIG_PASSPHRASE"] = passphrase
 	env["PULUMI_SKIP_UPDATE_CHECK"] = "true"
-	env["PULUMI_DISABLE_AUTOMATIC_PLUGIN_ACQUISITION"] = "true"
+	// env["PULUMI_DISABLE_AUTOMATIC_PLUGIN_ACQUISITION"] = "true"
 	env["NODE_OPTIONS"] = "--enable-source-maps --no-deprecation"
 
 	cli := map[string]interface{}{
