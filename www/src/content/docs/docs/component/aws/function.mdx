@@ -372,7 +372,7 @@ Disable running this function [Live](/docs/live/) in `sst dev`.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 - <p>[<code class="key">format?</code>](#logging-format)</p>
 - <p>[<code class="key">retention?</code>](#logging-retention)</p>
@@ -383,6 +383,14 @@ Disable running this function [Live](/docs/live/) in `sst dev`.
 </InlineSection>
 Configure the function logs in CloudWatch.
 
+Disable CloudWatch logs.
+```js
+{
+  logging: false
+}
+```
+When set to `false`, the function does not have permissions to write to AWS CloudWatch
+Logs.
 </Segment>
 <NestedTitle id="logging-format" Tag="h4" parent="logging.">format?</NestedTitle>
 <Segment>
@@ -1243,7 +1251,7 @@ The AWS Lambda function.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** [<code class="type">LogGroup</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/)
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">undefined</code><code class="symbol"> | </code>[<code class="type">LogGroup</code>](https://www.pulumi.com/registry/packages/aws/api-docs/cloudwatch/loggroup/)<code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
 The CloudWatch Log Group the function logs are stored.
