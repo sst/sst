@@ -19,6 +19,7 @@ import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "../component.js";
 import { Link } from "../link.js";
+import { DevArgs } from "../dev.js";
 import { VisibleError } from "../error.js";
 import type { Input } from "../input.js";
 import { Queue } from "./queue.js";
@@ -90,6 +91,18 @@ interface OpenNextOutput {
 }
 
 export interface NextjsArgs extends SsrSiteArgs {
+  /**
+   * Configure how this component works in `sst dev`.
+   *
+   * :::note
+   * In `sst dev` your Next.js app is run in dev mode; it's not deployed.
+   * :::
+   *
+   * Instead of deploying your Next.js app, this starts it in dev mode. It's run
+   * as a separate process in the `sst dev` multiplexer. Read more about
+   * [`sst dev`](/docs/reference/cli/#dev).
+   */
+  dev?: DevArgs["dev"];
   /**
    * The number of instances of the [server function](#nodes-server) to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
    *
@@ -777,39 +790,39 @@ export class Nextjs extends Component implements Link.Linkable {
               },
               ...(revalidationQueueArn
                 ? [
-                    {
-                      actions: [
-                        "sqs:SendMessage",
-                        "sqs:GetQueueAttributes",
-                        "sqs:GetQueueUrl",
-                      ],
-                      resources: [revalidationQueueArn],
-                    },
-                  ]
+                  {
+                    actions: [
+                      "sqs:SendMessage",
+                      "sqs:GetQueueAttributes",
+                      "sqs:GetQueueUrl",
+                    ],
+                    resources: [revalidationQueueArn],
+                  },
+                ]
                 : []),
               ...(revalidationTableArn
                 ? [
-                    {
-                      actions: [
-                        "dynamodb:BatchGetItem",
-                        "dynamodb:GetRecords",
-                        "dynamodb:GetShardIterator",
-                        "dynamodb:Query",
-                        "dynamodb:GetItem",
-                        "dynamodb:Scan",
-                        "dynamodb:ConditionCheckItem",
-                        "dynamodb:BatchWriteItem",
-                        "dynamodb:PutItem",
-                        "dynamodb:UpdateItem",
-                        "dynamodb:DeleteItem",
-                        "dynamodb:DescribeTable",
-                      ],
-                      resources: [
-                        revalidationTableArn,
-                        `${revalidationTableArn}/*`,
-                      ],
-                    },
-                  ]
+                  {
+                    actions: [
+                      "dynamodb:BatchGetItem",
+                      "dynamodb:GetRecords",
+                      "dynamodb:GetShardIterator",
+                      "dynamodb:Query",
+                      "dynamodb:GetItem",
+                      "dynamodb:Scan",
+                      "dynamodb:ConditionCheckItem",
+                      "dynamodb:BatchWriteItem",
+                      "dynamodb:PutItem",
+                      "dynamodb:UpdateItem",
+                      "dynamodb:DeleteItem",
+                      "dynamodb:DescribeTable",
+                    ],
+                    resources: [
+                      revalidationTableArn,
+                      `${revalidationTableArn}/*`,
+                    ],
+                  },
+                ]
                 : []),
             ],
           };

@@ -413,7 +413,15 @@ The path is relative to the root of your site, `path`.
 - <p>[<code class="key">directory?</code>](#dev-directory)</p>
 - <p>[<code class="key">url?</code>](#dev-url)</p>
 </Section>
-Configure the behavior in the `sst dev` mode.
+Configure how this component works in `sst dev`.
+
+:::note
+In `sst dev` your static site is run in dev mode; it's not deployed.
+:::
+
+Instead of deploying your static site, this starts it in dev mode. It's run
+as a separate process in the `sst dev` multiplexer. Read more about
+[`sst dev`](/docs/reference/cli/#dev).
 
 </Segment>
 <NestedTitle id="dev-autostart" Tag="h4" parent="dev.">autostart?</NestedTitle>
@@ -427,7 +435,8 @@ Configure the behavior in the `sst dev` mode.
 <InlineSection>
 **Default** <code class="primitive">true</code>
 </InlineSection>
-Whether to start the dev server automatically.
+Configure if you want to automatically start this when `sst dev` starts. You can still
+start it manually later.
 
 </Segment>
 <NestedTitle id="dev-command" Tag="h4" parent="dev.">command?</NestedTitle>
@@ -439,9 +448,9 @@ Whether to start the dev server automatically.
 </Section>
 
 <InlineSection>
-**Default** The `start` script in `package.json`
+**Default** <code class="primitive">"npm run dev"</code>
 </InlineSection>
-The command to run in the `sst dev` mode.
+The command that `sst dev` runs to start this in dev mode.
 
 </Segment>
 <NestedTitle id="dev-directory" Tag="h4" parent="dev.">directory?</NestedTitle>
@@ -453,9 +462,9 @@ The command to run in the `sst dev` mode.
 </Section>
 
 <InlineSection>
-**Default** <code class="primitive">"."</code>
+**Default** Uses the `path`
 </InlineSection>
-Path to the directory to watch for changes.
+Change the directory from where the `command` is run.
 
 </Segment>
 <NestedTitle id="dev-url" Tag="h4" parent="dev.">url?</NestedTitle>
@@ -469,7 +478,11 @@ Path to the directory to watch for changes.
 <InlineSection>
 **Default** <code class="primitive">"http://url-unavailable-in-dev.mode"</code>
 </InlineSection>
-The URL in the `sst dev` mode.
+The `url` when this is running in dev mode.
+
+Since this component is not deployed in `sst dev`, there is no real URL. But if you are
+using this component's `url` or linking to this component's `url`, it can be useful to
+have a placeholder URL. It avoids having to handle it being `undefined`.
 
 </Segment>
 ### domain?

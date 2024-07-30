@@ -15,11 +15,24 @@ import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "../component.js";
 import { Link } from "../link.js";
+import { DevArgs } from "../dev.js";
 import { buildApp } from "../base/base-ssr-site.js";
 import { VisibleError } from "../error.js";
 import { URL_UNAVAILABLE } from "./linkable.js";
 
 export interface SolidStartArgs extends SsrSiteArgs {
+  /**
+   * Configure how this component works in `sst dev`.
+   *
+   * :::note
+   * In `sst dev` your SolidStart app is run in dev mode; it's not deployed.
+   * :::
+   *
+   * Instead of deploying your SolidStart app, this starts it in dev mode. It's run
+   * as a separate process in the `sst dev` multiplexer. Read more about
+   * [`sst dev`](/docs/reference/cli/#dev).
+   */
+  dev?: DevArgs["dev"];
   /**
    * The number of instances of the [server function](#nodes-server) to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
    *

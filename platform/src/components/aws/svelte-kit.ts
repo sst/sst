@@ -15,11 +15,24 @@ import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "../component.js";
 import { Link } from "../link.js";
+import { DevArgs } from "../dev.js";
 import type { Input } from "../input.js";
 import { buildApp } from "../base/base-ssr-site.js";
 import { URL_UNAVAILABLE } from "./linkable.js";
 
 export interface SvelteKitArgs extends SsrSiteArgs {
+  /**
+   * Configure how this component works in `sst dev`.
+   *
+   * :::note
+   * In `sst dev` your SvelteKit app is run in dev mode; it's not deployed.
+   * :::
+   *
+   * Instead of deploying your SvelteKit app, this starts it in dev mode. It's run
+   * as a separate process in the `sst dev` multiplexer. Read more about
+   * [`sst dev`](/docs/reference/cli/#dev).
+   */
+  dev?: DevArgs["dev"];
   /**
    * The number of instances of the [server function](#nodes-server) to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
    *
@@ -446,7 +459,7 @@ export class SvelteKit extends Component implements Link.Linkable {
           if (appDir && appPath && appPath.endsWith(appDir)) {
             basePath = appPath.substring(0, appPath.length - appDir.length);
           }
-        } catch (e) {}
+        } catch (e) { }
 
         return {
           basePath,
@@ -490,11 +503,11 @@ export class SvelteKit extends Component implements Link.Linkable {
             },
             copyFiles: buildMeta.serverFiles
               ? [
-                  {
-                    from: path.join(outputPath, buildMeta.serverFiles),
-                    to: "prerendered",
-                  },
-                ]
+                {
+                  from: path.join(outputPath, buildMeta.serverFiles),
+                  to: "prerendered",
+                },
+              ]
               : undefined,
           };
 
@@ -510,17 +523,17 @@ export class SvelteKit extends Component implements Link.Linkable {
             },
             edgeFunctions: edge
               ? {
-                  server: { function: serverConfig },
-                }
+                server: { function: serverConfig },
+              }
               : undefined,
             origins: {
               ...(edge
                 ? {}
                 : {
-                    server: {
-                      server: { function: serverConfig },
-                    },
-                  }),
+                  server: {
+                    server: { function: serverConfig },
+                  },
+                }),
               s3: {
                 s3: {
                   copy: [
@@ -542,16 +555,16 @@ export class SvelteKit extends Component implements Link.Linkable {
             behaviors: [
               edge
                 ? {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    edgeFunction: "server",
-                    origin: "s3",
-                  }
+                  cacheType: "server",
+                  cfFunction: "serverCfFunction",
+                  edgeFunction: "server",
+                  origin: "s3",
+                }
                 : {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    origin: "server",
-                  },
+                  cacheType: "server",
+                  cfFunction: "serverCfFunction",
+                  origin: "server",
+                },
               ...buildMeta.staticRoutes.map(
                 (route) =>
                   ({

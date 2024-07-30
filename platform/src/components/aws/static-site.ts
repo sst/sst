@@ -25,7 +25,19 @@ import { cloudfront, iam } from "@pulumi/aws";
 import { URL_UNAVAILABLE } from "./linkable.js";
 import { DevArgs } from "../dev.js";
 
-export interface StaticSiteArgs extends BaseStaticSiteArgs, DevArgs {
+export interface StaticSiteArgs extends BaseStaticSiteArgs {
+  /**
+   * Configure how this component works in `sst dev`.
+   *
+   * :::note
+   * In `sst dev` your static site is run in dev mode; it's not deployed.
+   * :::
+   *
+   * Instead of deploying your static site, this starts it in dev mode. It's run
+   * as a separate process in the `sst dev` multiplexer. Read more about
+   * [`sst dev`](/docs/reference/cli/#dev).
+   */
+  dev?: DevArgs["dev"];
   /**
    * Path to the directory where your static site is located. By default this assumes your static site is in the root of your SST app.
    *
@@ -146,46 +158,46 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs, DevArgs {
   invalidation?: Input<
     | false
     | {
-        /**
-         * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
-         *
-         * :::tip
-         * For non-prod environments it might make sense to pass in `false`.
-         * :::
-         *
-         * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
-         * @default `false`
-         * @example
-         * ```js
-         * {
-         *   invalidation: {
-         *     wait: true
-         *   }
-         * }
-         * ```
-         */
-        wait?: Input<boolean>;
-        /**
-         * The paths to invalidate.
-         *
-         * You can either pass in an array of glob patterns to invalidate specific files. Or you can use the built-in option `all` to invalidation all files when any file changes.
-         *
-         * :::note
-         * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
-         * :::
-         * @default `"all"`
-         * @example
-         * Invalidate the `index.html` and all files under the `products/` route.
-         * ```js
-         * {
-         *   invalidation: {
-         *     paths: ["/index.html", "/products/*"]
-         *   }
-         * }
-         * ```
-         */
-        paths?: Input<"all" | string[]>;
-      }
+      /**
+       * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
+       *
+       * :::tip
+       * For non-prod environments it might make sense to pass in `false`.
+       * :::
+       *
+       * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
+       * @default `false`
+       * @example
+       * ```js
+       * {
+       *   invalidation: {
+       *     wait: true
+       *   }
+       * }
+       * ```
+       */
+      wait?: Input<boolean>;
+      /**
+       * The paths to invalidate.
+       *
+       * You can either pass in an array of glob patterns to invalidate specific files. Or you can use the built-in option `all` to invalidation all files when any file changes.
+       *
+       * :::note
+       * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
+       * :::
+       * @default `"all"`
+       * @example
+       * Invalidate the `index.html` and all files under the `products/` route.
+       * ```js
+       * {
+       *   invalidation: {
+       *     paths: ["/index.html", "/products/*"]
+       *   }
+       * }
+       * ```
+       */
+      paths?: Input<"all" | string[]>;
+    }
   >;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -612,29 +624,29 @@ export class StaticSite extends Component implements Link.Linkable {
             defaultRootObject: indexPage,
             customErrorResponses: args.errorPage
               ? [
-                  {
-                    errorCode: 403,
-                    responsePagePath: interpolate`/${args.errorPage}`,
-                    responseCode: 403,
-                  },
-                  {
-                    errorCode: 404,
-                    responsePagePath: interpolate`/${args.errorPage}`,
-                    responseCode: 404,
-                  },
-                ]
+                {
+                  errorCode: 403,
+                  responsePagePath: interpolate`/${args.errorPage}`,
+                  responseCode: 403,
+                },
+                {
+                  errorCode: 404,
+                  responsePagePath: interpolate`/${args.errorPage}`,
+                  responseCode: 404,
+                },
+              ]
               : [
-                  {
-                    errorCode: 403,
-                    responsePagePath: interpolate`/${indexPage}`,
-                    responseCode: 200,
-                  },
-                  {
-                    errorCode: 404,
-                    responsePagePath: interpolate`/${indexPage}`,
-                    responseCode: 200,
-                  },
-                ],
+                {
+                  errorCode: 403,
+                  responsePagePath: interpolate`/${indexPage}`,
+                  responseCode: 200,
+                },
+                {
+                  errorCode: 404,
+                  responsePagePath: interpolate`/${indexPage}`,
+                  responseCode: 200,
+                },
+              ],
             defaultCacheBehavior: {
               targetOriginId: "s3",
               viewerProtocolPolicy: "redirect-to-https",

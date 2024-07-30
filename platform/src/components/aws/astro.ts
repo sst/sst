@@ -17,10 +17,23 @@ import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "./../component.js";
 import { Link } from "../link.js";
+import { DevArgs } from "../dev.js";
 import { buildApp } from "../base/base-ssr-site.js";
 import { URL_UNAVAILABLE } from "./linkable.js";
 
 export interface AstroArgs extends SsrSiteArgs {
+  /**
+   * Configure how this component works in `sst dev`.
+   *
+   * :::note
+   * In `sst dev` your Astro site is run in dev mode; it's not deployed.
+   * :::
+   *
+   * Instead of deploying your Astro site, this starts it in dev mode. It's run
+   * as a separate process in the `sst dev` multiplexer. Read more about
+   * [`sst dev`](/docs/reference/cli/#dev).
+   */
+  dev?: DevArgs["dev"];
   /**
    * The number of instances of the [server function](#nodes-server) to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
    *
@@ -677,11 +690,10 @@ function useCloudFrontRoutingInjection(buildMetadata: BuildMetaConfig) {
     var matchedRoute = findFirstMatch(findMatches(request.uri, routeData));
     if (matchedRoute[0]) {
       if (!matchedRoute[1] && !/^.*\\.[^\\/]+$/.test(request.uri)) {
-        ${
-          buildMetadata.pageResolution === "file"
-            ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
-            : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
-        }
+        ${buildMetadata.pageResolution === "file"
+      ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
+      : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
+    }
       } else if (matchedRoute[1] === 2) {
         var redirectPath = matchedRoute[2];
         matchedRoute[0].exec(request.uri).forEach((match, index) => {
