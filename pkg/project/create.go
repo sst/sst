@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/kkqy/gokvpairs"
+	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/npm"
 	"github.com/sst/ion/platform"
 	"github.com/tailscale/hujson"
@@ -91,7 +91,7 @@ func Create(templateName string, home string) ([]string, error) {
 		return nil, err
 	}
 
-	packageJsons := map[string]gokvpairs.KeyValuePairs[interface{}]{}
+	packageJsons := map[string]util.KeyValuePairs[interface{}]{}
 	instructions := []string{}
 
 	for _, step := range preset.Steps {
@@ -138,7 +138,7 @@ func Create(templateName string, home string) ([]string, error) {
 			}
 			if target == nil {
 				target = map[string]interface{}{}
-				packageJson = append(packageJson, gokvpairs.KeyValuePair[interface{}]{Key: field, Value: target})
+				packageJson = append(packageJson, util.KeyValuePair[interface{}]{Key: field, Value: target})
 				packageJsons[npmStep.File] = packageJson
 			}
 
@@ -287,12 +287,15 @@ func Create(templateName string, home string) ([]string, error) {
 		}
 	}
 
-	for file, content := range packageJsons {
-		bytes, err := json.MarshalIndent(content, "", "  ")
+	for p, content := range packageJsons {
+		file, err := os.Create(p)
 		if err != nil {
 			return nil, err
 		}
-		err = os.WriteFile(file, bytes, 0666)
+		encoder := json.NewEncoder(file)
+		encoder.SetEscapeHTML(false)
+		encoder.SetIndent("", "  ")
+		err = encoder.Encode(content)
 		if err != nil {
 			return nil, err
 		}

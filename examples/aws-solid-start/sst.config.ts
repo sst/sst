@@ -9,11 +9,6 @@ export default $config({
     };
   },
   async run() {
-    const bucket = new sst.aws.Bucket("MyBucket", {
-      public: true
-    });
-    new sst.aws.SolidStart("MyWeb", {
-      link: [bucket],
-    });
+    new sst.aws.SolidStart("MyWeb");
   },
 });
