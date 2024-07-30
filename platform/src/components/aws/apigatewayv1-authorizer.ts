@@ -98,7 +98,7 @@ export class ApiGatewayV1Authorizer extends Component {
       if (!fn) return;
 
       return Function.fromDefinition(`${name}Function`, fn, {
-        description: `${api.name} authorizer`,
+        description: interpolate`${api.name} authorizer`,
       });
     }
 
