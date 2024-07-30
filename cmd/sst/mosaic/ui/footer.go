@@ -91,13 +91,13 @@ func (m *footer) Render(width int, next string) {
 
 	out := &bytes.Buffer{}
 
-	if next == m.previous {
-		return
-	}
+	// if next == m.previous {
+	// 	return
+	// }
 
 	if len(oldLines) > 0 {
 		for i := range oldLines {
-			if i <= len(oldLines)-len(nextLines) {
+			if i < len(oldLines)-len(nextLines) || next == "" {
 				out.WriteString(ansi.EraseEntireLine)
 			}
 			if i < len(oldLines)-1 {
@@ -111,6 +111,9 @@ func (m *footer) Render(width int, next string) {
 			out.WriteByte('\r')
 		}
 		truncated := ansi.Truncate(line, width, "…")
+		if ansi.StringWidth(truncated) < width {
+			truncated += strings.Repeat(" ", width-ansi.StringWidth(truncated))
+		}
 		out.WriteString(truncated)
 		if i < len(nextLines)-1 {
 			out.WriteString("\r\n")

@@ -6,6 +6,5 @@ export const astro = new sst.aws.Astro("Astro", {
   link: [bucket],
   environment: {
     VITE_API_URL: api.url,
-    FOO: "1",
   },
 });
