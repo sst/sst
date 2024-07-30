@@ -206,7 +206,7 @@ func (u *UI) Event(unknown interface{}) {
 
 	case *apitype.ResourcePreEvent:
 		u.timing[evt.Metadata.URN] = time.Now()
-		if evt.Metadata.Type == "pulumi:pulumi:Stack" {
+		if evt.Metadata.Type == "pulumi:pulumi:Stack" || evt.Metadata.Type == "sst:sst:LinkRef" {
 			return
 		}
 
@@ -226,7 +226,7 @@ func (u *UI) Event(unknown interface{}) {
 		break
 
 	case *apitype.ResOutputsEvent:
-		if evt.Metadata.Type == "pulumi:pulumi:Stack" {
+		if evt.Metadata.Type == "pulumi:pulumi:Stack" || evt.Metadata.Type == "sst:sst:LinkRef" {
 			return
 		}
 
@@ -569,7 +569,7 @@ func (u *UI) FormatURN(urn string) string {
 		if parent == "" {
 			break
 		}
-		if parent.Type().DisplayName() == "pulumi:pulumi:Stack" {
+		if parent.Type().DisplayName() == "pulumi:pulumi:Stack" || parent.Type().DisplayName() == "sst:sst:LinkRef" {
 			break
 		}
 		child = parent

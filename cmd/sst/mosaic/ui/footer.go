@@ -161,7 +161,7 @@ func (m *footer) Update(msg any) {
 		m.Reset()
 		break
 	case *apitype.ResourcePreEvent:
-		if resource.URN(msg.Metadata.URN).Type().DisplayName() == "pulumi:pulumi:Stack" {
+		if msg.Metadata.Type == "pulumi:pulumi:Stack" || msg.Metadata.Type == "sst:sst:LinkRef" {
 			break
 		}
 		if msg.Metadata.Old != nil && msg.Metadata.Old.Parent != "" {
