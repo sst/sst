@@ -201,6 +201,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	}
 	for key, value := range secrets {
 		env["SST_SECRET_"+key] = value
+	}
 	env["PULUMI_CONFIG_PASSPHRASE"] = passphrase
 	env["PULUMI_SKIP_UPDATE_CHECK"] = "true"
 	env["PULUMI_DISABLE_AUTOMATIC_PLUGIN_ACQUISITION"] = "true"
