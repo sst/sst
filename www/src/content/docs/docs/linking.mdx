@@ -84,11 +84,19 @@ Resource Linking  allows you to access your **infrastructure** in your **runtime
 
 ---
 
-#### Working locally
+### Working locally
 
-The above applies to your app deployed through `sst deploy`. To access linked resources locally you'll need to be running `sst dev`.
+The above applies to your app deployed through `sst deploy`.
 
-For the frontends, you'll need to wrap your frontend in the `sst dev` command.
+To access linked resources locally you'll need to be running `sst dev`. By default, the `sst dev` CLI runs a multiplexer that also starts your frontend for you. This loads all your linked resources in the environment. Read more about [`sst dev`](/docs/reference/cli/#dev).
+
+However if you are not using the multiplexer.
+
+```bash frame="none"
+sst dev --mode=basic
+```
+
+You'll need to wrap your frontend's dev command with the `sst dev` command.
 
 <Tabs>
   <TabItem label="Next.js">
@@ -147,7 +155,7 @@ This is why when you are running your frontend locally, it needs to be wrapped i
 
 ---
 
-## Generating types
+### Generating types
 
 When you run `sst dev` or `sst deploy`, it generates the types to access the linked resources. These are generated as:
 
@@ -155,3 +163,81 @@ When you run `sst dev` or `sst deploy`, it generates the types to access the lin
 2. A `.sst/types.generated.ts` file that can be referenced from a `sst-env.d.ts`. This is useful for monorepo packages that don't have a function or frontend. For example, if you have a _core_ package that contains some shared code. 
 
 You can check the generated `sst-env.d.ts` types into source control. This will let your teammates see the types without having to run `sst dev` when they pull your changes.
+
+---
+
+## Extending linking
+
+The examples above are for the built-in SST components. However, you might be using other resources from the Pulumi/Terraform ecosystem. Or you might want to link a different set of outputs than what SST exposes.
+
+You can do this using the [`sst.Linkable`](/docs/component/linkable/) component.
+
+---
+
+### Link any value
+
+The `Linkable` component takes a list of properties that you want to link. These can be
+outputs from other resources or constants.
+
+```ts title="sst.config.ts"
+const myLinkable = new sst.Linkable("MyLinkable", {
+  properties: { foo: "bar" }
+});
+```
+
+You can optionally include permissions or bindings for the linked resource.
+
+Now you can now link this resource to your frontend or a function.
+
+```ts title="sst.config.ts" {3}
+new sst.aws.Function("MyApi", {
+  handler: "src/lambda.handler",
+  link: [myLinkable]
+});
+```
+
+Then use the [SDK](/docs/reference/sdk/) to access that at runtime.
+
+```js title="src/lambda.ts"
+import { Resource } from "sst";
+
+console.log(Resource.MyLinkable.foo);
+```
+
+Read more about [`sst.Linkable`](/docs/component/linkable/).
+
+---
+
+### Link any resource
+
+You can also wrap any Pulumi Resource class to make it linkable with the `Linkable.wrap` static method.
+
+```ts title="sst.config.ts"
+Linkable.wrap(aws.dynamodb.Table, (table) => ({
+  properties: { tableName: table.name }
+}));
+```
+
+Now you create an instance of `aws.dynamodb.Table` and link it in your app like any other SST
+component.
+
+```ts title="sst.config.ts" {7}
+const table = new aws.dynamodb.Table("MyTable", {
+  attributes: [{ name: "id", type: "S" }],
+  hashKey: "id"
+});
+
+new sst.aws.Nextjs("MyWeb", {
+  link: [table]
+});
+```
+
+And use the [SDK](/docs/reference/sdk/) to access it at runtime.
+
+```js title="app/page.tsx"
+import { Resource } from "sst";
+
+console.log(Resource.MyTable.tableName);
+```
+
+Read more about [`sst.Linkable.wrap`](/docs/component/linkable/#static-wrap).

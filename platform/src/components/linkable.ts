@@ -123,7 +123,7 @@ export interface Definition<
  * console.log(Resource.MyStorage.bucketA);
  * ```
  *
- * #### Linking a Pulumi Resource
+ * #### Linking any resource
  *
  * You can also wrap any Pulumi Resource class to make it linkable.
  *
