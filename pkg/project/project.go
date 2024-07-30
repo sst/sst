@@ -16,6 +16,7 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/sst/ion/internal/fs"
 	"github.com/sst/ion/internal/util"
+	"github.com/sst/ion/pkg/flag"
 	"github.com/sst/ion/pkg/js"
 	"github.com/sst/ion/pkg/project/provider"
 )
@@ -313,7 +314,7 @@ func (p *Project) Provider(name string) (provider.Provider, bool) {
 }
 
 func (p *Project) Cleanup() error {
-	if os.Getenv("SST_NO_ARTIFACT_CLEANUP") != "" {
+	if !flag.SST_NO_CLEANUP {
 		return nil
 	}
 	return os.RemoveAll(
