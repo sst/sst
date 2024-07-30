@@ -61,7 +61,7 @@ new sst.aws.Email("MyEmail", {
 You can link it to a function or your Next.js app to send emails.
 
 ```ts {3} title="sst.config.ts"
-const api = new sst.aws.Function("MyApi", {
+new sst.aws.Function("MyApi", {
   handler: "sender.handler",
   link: [email]
 });
