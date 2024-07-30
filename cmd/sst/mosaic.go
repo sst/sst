@@ -79,10 +79,10 @@ func CmdMosaic(c *cli.Cli) error {
 						restarting = true
 						cmd.Process.Signal(syscall.SIGINT)
 						cmd.Wait()
-						fmt.Println("restarting...")
+						fmt.Println("\n[restarting]")
 					}
 					restarting = false
-					cmd := exec.Command(
+					cmd = exec.Command(
 						args[0],
 						args[1:]...,
 					)
