@@ -204,18 +204,18 @@ Run your app in dev mode.
 ```bash frame="none"
 sst dev
 ```
-By default, this starts a multiplexer with processes that deploy your app, run your functions, or start your frontend.
+By default, this starts a multiplexer with processes that deploy your app, run your functions, and start your frontend.
 
 ![sst dev multiplexer mode](../../../../assets/docs/cli/sst-dev-multiplexer-mode.png)
 
-You can navigate to these panes through the sidebar. These include panes that:
+Each process is run in a separate pane that you can click on in the sidebar. These
+include processes that:
 
 1. Watch your `sst.config.ts` and deploy your app
 2. Run your functions [Live](/docs/live/) and logs their invocations
-3. Start processes for components that have `dev.autostart` enabled
+3. Run the dev mode for components that have `dev.autostart` enabled
    - Components like `Service` and frontends like `Nextjs`, `Remix`, `Astro`, `StaticSite`, etc.
-   - These components are not deployed
-   - Instead their `dev.command` is run as a process
+   - It starts their `dev.command` in a separate pane
    - And loads any [linked resources](/docs/linking) in the environment
 
 The multiplexer makes it so that you won't have to start your frontend or
@@ -224,6 +224,15 @@ your container applications separately.
 :::tip
 The `sst dev` CLI also starts your frontend. So you don't need to start it
 separately.
+:::
+
+While `sst dev` does a deploy when it starts up, it does not deploy components like
+`Service`, or the frontends like `Nextjs`, `Remix`, `Astro`, `StaticSite`, etc.
+That's because these have their own dev modes that the multiplexer starts.
+
+:::note
+The `Service` component and the frontends like `Nextjs` or `StaticSite` are not
+deployed by `sst dev`.
 :::
 
 Optionally, you can disable the multiplexer and run `sst dev` in basic mode.
