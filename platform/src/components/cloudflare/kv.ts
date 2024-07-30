@@ -94,8 +94,11 @@ export class Kv extends Component implements Link.Linkable {
     return {
       properties: {},
       include: [
-        binding("kvNamespaceBindings", {
-          namespaceId: this.namespace.id,
+        binding({
+          type: "kvNamespaceBindings",
+          properties: {
+            namespaceId: this.namespace.id,
+          },
         }),
       ],
     };

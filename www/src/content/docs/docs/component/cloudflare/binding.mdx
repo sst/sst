@@ -17,8 +17,11 @@ The Cloudflare Binding Adapter is used to define Cloudflare bindings associated 
 [Linkable resource](./linkable).
 
 ```ts
-sst.cloudflare.binding("r2BucketBindings", {
-  bucketName: "my-bucket",
+sst.cloudflare.binding({
+  type: "r2BucketBindings",
+  properties: {
+    bucketName: "my-bucket",
+  },
 })
 ```
 </Section>
@@ -31,14 +34,13 @@ sst.cloudflare.binding("r2BucketBindings", {
 <Segment>
 <Section type="signature">
 ```ts
-binding(type, properties)
+binding(input)
 ```
 </Section>
 
 <Section type="parameters">
 #### Parameters
-- <p><code class="key">type</code> <code class="primitive">string</code></p>
-- <p><code class="key">properties</code> <code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">any</code><code class="symbol">&gt;</code></p>
+- <p><code class="key">input</code> [<code class="type">KvBinding</code>](#kvbinding)<code class="symbol"> | </code>[<code class="type">SecretTextBinding</code>](#secrettextbinding)<code class="symbol"> | </code>[<code class="type">ServiceBinding</code>](#servicebinding)<code class="symbol"> | </code>[<code class="type">PlainTextBinding</code>](#plaintextbinding)<code class="symbol"> | </code>[<code class="type">QueueBinding</code>](#queuebinding)<code class="symbol"> | </code>[<code class="type">R2BucketBinding</code>](#r2bucketbinding)<code class="symbol"> | </code>[<code class="type">D1DatabaseBinding</code>](#d1databasebinding)</p>
 </Section>
 
 <InlineSection>

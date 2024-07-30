@@ -98,8 +98,11 @@ export class Bucket extends Component implements Link.Linkable {
     return {
       properties: {},
       include: [
-        binding("r2BucketBindings", {
-          bucketName: this.bucket.name,
+        binding({
+          type: "r2BucketBindings",
+          properties: {
+            bucketName: this.bucket.name,
+          },
         }),
       ],
     };

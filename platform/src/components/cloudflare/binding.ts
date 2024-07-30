@@ -5,8 +5,11 @@
  * @example
  *
  * ```ts
- * sst.cloudflare.binding("r2BucketBindings", {
- *   bucketName: "my-bucket",
+ * sst.cloudflare.binding({
+ *   type: "r2BucketBindings",
+ *   properties: {
+ *     bucketName: "my-bucket",
+ *   },
  * })
  * ```
  *
@@ -68,13 +71,10 @@ export type Binding =
   | R2BucketBinding
   | D1DatabaseBinding;
 
-export function binding<T extends Binding["type"]>(
-  type: T,
-  properties: Extract<Binding, { type: T }>["properties"],
-) {
+export function binding<T extends Binding["type"]>(input: Binding & {}) {
   return {
     type: "cloudflare.binding" as const,
-    binding: type,
-    properties,
+    binding: input.type as T,
+    properties: input.properties as Extract<Binding, { type: T }>["properties"],
   };
 }

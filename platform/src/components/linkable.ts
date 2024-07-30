@@ -34,9 +34,12 @@ export interface Definition<
    * ```ts
    * {
    *   include: [
-   *     sst.cloudflare.binding("r2BucketBindings", {
-   *       bucketName: "my-bucket",
-   *     }),
+   *     sst.cloudflare.binding({
+   *       binding: "r2BucketBindings",
+   *       properties: {
+   *         bucketName: "my-bucket",
+   *       },
+   *     })
    *   ],
    * }
    * ```

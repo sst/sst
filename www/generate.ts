@@ -1884,24 +1884,6 @@ function patchCode() {
       "\ntype AwsPermission = {};\n" +
       "\ntype CloudflareBinding = {};\n"
   );
-  // patch Cloudflare Binding
-  fs.cpSync(
-    "../platform/src/components/cloudflare/binding.ts",
-    "../platform/src/components/cloudflare/binding.ts.bk"
-  );
-  fs.writeFileSync(
-    "../platform/src/components/cloudflare/binding.ts",
-    fs
-      .readFileSync("../platform/src/components/cloudflare/binding.ts")
-      .toString()
-      .trim()
-      // replace generic <Properties>
-      .replace("type: T", "type: string")
-      .replace(
-        `properties: Extract<Binding, { type: T }>["properties"]`,
-        "properties: Record<string, any>"
-      )
-  );
 }
 
 function restoreCode() {
@@ -1916,11 +1898,6 @@ function restoreCode() {
   fs.renameSync(
     "../platform/src/components/linkable.ts.bk",
     "../platform/src/components/linkable.ts"
-  );
-  // restore Cloudflare Binding
-  fs.renameSync(
-    "../platform/src/components/cloudflare/binding.ts.bk",
-    "../platform/src/components/cloudflare/binding.ts"
   );
 }
 

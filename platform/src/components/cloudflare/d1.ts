@@ -98,8 +98,11 @@ export class D1 extends Component implements Link.Linkable {
     return {
       properties: {},
       include: [
-        binding("d1DatabaseBindings", {
-          databaseId: this.database.id,
+        binding({
+          type: "d1DatabaseBindings",
+          properties: {
+            databaseId: this.database.id,
+          },
         }),
       ],
     };

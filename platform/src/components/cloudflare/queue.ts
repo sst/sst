@@ -53,8 +53,11 @@ export class Queue extends Component implements Link.Linkable {
     return {
       properties: {},
       include: [
-        binding("queueBindings", {
-          queue: this.queue.id,
+        binding({
+          type: "queueBindings",
+          properties: {
+            queue: this.queue.id,
+          },
         }),
       ],
     };

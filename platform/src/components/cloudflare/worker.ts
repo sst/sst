@@ -503,8 +503,11 @@ export class Worker extends Component implements Link.Linkable {
         url: this.url,
       },
       include: [
-        binding("serviceBindings", {
-          service: this.script.id,
+        binding({
+          type: "serviceBindings",
+          properties: {
+            service: this.script.id,
+          },
         }),
       ],
     };
