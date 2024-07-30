@@ -97,7 +97,9 @@ func (m *footer) Render(width int, next string) {
 
 	if len(oldLines) > 0 {
 		for i := range oldLines {
-			out.WriteString(ansi.EraseEntireLine)
+			if i <= len(oldLines)-len(nextLines) {
+				out.WriteString(ansi.EraseEntireLine)
+			}
 			if i < len(oldLines)-1 {
 				out.WriteString(ansi.CursorUp1)
 			}

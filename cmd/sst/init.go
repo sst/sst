@@ -127,9 +127,9 @@ func CmdInit(cli *cli.Cli) error {
 	fmt.Println()
 
 	p := promptui.Select{
+		Items:        []string{"Yes", "No"},
 		Label:        "‏‏‎ ‎Continue",
 		HideSelected: true,
-		Items:        []string{"Yes", "No"},
 		HideHelp:     true,
 	}
 
