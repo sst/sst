@@ -1,13 +1,13 @@
 /**
- * The AWS Permission Adapter is used to define AWS permissions associated with the
- * [Linkable resource](./linkable).
+ * The AWS Permission Linkable helper is used to define the AWS permissions included with the
+ * [`sst.Linkable`](/docs/component/linkable/) component.
  *
  * @example
  *
  * ```ts
  * sst.aws.permission({
  *   actions: ["lambda:InvokeFunction"],
- *   resources: ["*"],
+ *   resources: ["*"]
  * })
  * ```
  *
@@ -17,7 +17,7 @@
 import { Prettify } from "../component.js";
 import { FunctionPermissionArgs } from "./function.js";
 
-export interface InputArgs extends Prettify<FunctionPermissionArgs> {}
+export interface InputArgs extends Prettify<FunctionPermissionArgs> { }
 
 export function permission(input: InputArgs) {
   return {

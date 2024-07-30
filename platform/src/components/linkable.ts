@@ -41,12 +41,12 @@ export interface Definition<
    * {
    *   include: [
    *     sst.cloudflare.binding({
-   *       binding: "r2BucketBindings",
+   *       type: "r2BucketBindings",
    *       properties: {
-   *         bucketName: "my-bucket",
-   *       },
+   *         bucketName: "my-bucket"
+   *       }
    *     })
-   *   ],
+   *   ]
    * }
    * ```
    */

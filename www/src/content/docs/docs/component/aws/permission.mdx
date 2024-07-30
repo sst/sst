@@ -1,6 +1,6 @@
 ---
-title: AWS Permission Linkable Adapter
-description: Reference doc for the `sst.aws.permission` adapter.
+title: AWS Linkable helper
+description: Reference doc for the `sst.aws.permission` helper.
 ---
 
 {/* DO NOT EDIT. AUTO-GENERATED FROM "platform/src/components/aws/permission.ts" */}
@@ -13,13 +13,13 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <div class="tsdoc">
 
 <Section type="about">
-The AWS Permission Adapter is used to define AWS permissions associated with the
-[Linkable resource](./linkable).
+The AWS Permission Linkable helper is used to define the AWS permissions included with the
+[`sst.Linkable`](/docs/component/linkable/) component.
 
 ```ts
 sst.aws.permission({
   actions: ["lambda:InvokeFunction"],
-  resources: ["*"],
+  resources: ["*"]
 })
 ```
 </Section>

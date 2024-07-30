@@ -1,6 +1,6 @@
 ---
-title: Cloudflare Binding Linkable Adapter
-description: Reference doc for the `sst.cloudflare.binding` adapter.
+title: Cloudflare Linkable helper
+description: Reference doc for the `sst.cloudflare.binding` helper.
 ---
 
 {/* DO NOT EDIT. AUTO-GENERATED FROM "platform/src/components/cloudflare/binding.ts" */}
@@ -13,15 +13,15 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <div class="tsdoc">
 
 <Section type="about">
-The Cloudflare Binding Adapter is used to define Cloudflare bindings associated with the
-[Linkable resource](./linkable).
+The Cloudflare Binding Linkable helper is used to define the Cloudflare bindings included
+with the [`sst.Linkable`](/docs/component/linkable/) component.
 
 ```ts
 sst.cloudflare.binding({
   type: "r2BucketBindings",
   properties: {
-    bucketName: "my-bucket",
-  },
+    bucketName: "my-bucket"
+  }
 })
 ```
 </Section>

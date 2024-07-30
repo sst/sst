@@ -1,6 +1,6 @@
 /**
- * The Cloudflare Binding Adapter is used to define Cloudflare bindings associated with the
- * [Linkable resource](./linkable).
+ * The Cloudflare Binding Linkable helper is used to define the Cloudflare bindings included
+ * with the [`sst.Linkable`](/docs/component/linkable/) component.
  *
  * @example
  *
@@ -8,8 +8,8 @@
  * sst.cloudflare.binding({
  *   type: "r2BucketBindings",
  *   properties: {
- *     bucketName: "my-bucket",
- *   },
+ *     bucketName: "my-bucket"
+ *   }
  * })
  * ```
  *
