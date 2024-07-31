@@ -1,7 +1,6 @@
 package multiplexer
 
 import (
-	"os"
 	"os/exec"
 
 	"github.com/gdamore/tcell/v2"
@@ -52,7 +51,7 @@ func (s *Multiplexer) AddProcess(key string, args []string, icon string, title s
 
 func (p *process) start() error {
 	cmd := exec.Command(p.args[0], p.args[1:]...)
-	cmd.Env = append(p.env, os.Environ()...)
+	cmd.Env = p.env
 	if p.dir != "" {
 		cmd.Dir = p.dir
 	}

@@ -3,19 +3,15 @@ package dev
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
 
-	awssdk "github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/sst/ion/cmd/sst/mosaic/bus"
 	"github.com/sst/ion/cmd/sst/mosaic/deployer"
 	"github.com/sst/ion/pkg/project"
-	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/server"
 	"golang.org/x/sync/errgroup"
 )
@@ -80,61 +76,30 @@ func Start(ctx context.Context, p *project.Project, server *server.Server) error
 
 	server.Mux.HandleFunc("/api/env", func(w http.ResponseWriter, r *http.Request) {
 		directory := r.URL.Query().Get("directory")
-		var dev *project.Dev
 		cwd, _ := os.Getwd()
 		for _, d := range complete.Devs {
 			full := filepath.Join(cwd, d.Directory)
 			slog.Info("matching dev", "full", full, "directory", directory)
 			if full == directory {
-				dev = &d
-				break
-			}
-		}
-		if dev == nil {
-			slog.Info("dev not found", "directory", directory)
-			http.Error(w, "dev not found", http.StatusNotFound)
-			return
-		}
-		env := map[string]string{}
-		if dev.Aws != nil && dev.Aws.Role != "" {
-			prov, _ := p.Provider("aws")
-			awsProvider := prov.(*provider.AwsProvider)
-			stsClient := sts.NewFromConfig(awsProvider.Config())
-			sessionName := "sst-dev"
-			slog.Info("assuming role", "role", dev.Aws.Role)
-			result, err := stsClient.AssumeRole(r.Context(), &sts.AssumeRoleInput{
-				RoleArn:         &dev.Aws.Role,
-				RoleSessionName: &sessionName,
-				DurationSeconds: awssdk.Int32(3600),
-			})
-			if err != nil {
-				slog.Info("error assuming role", "err", err.Error())
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				env, err := p.EnvFor(ctx, complete, d.Name)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				body, err := json.Marshal(env)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				w.Write(body)
 				return
 			}
-			env["AWS_ACCESS_KEY_ID"] = *result.Credentials.AccessKeyId
-			env["AWS_SECRET_ACCESS_KEY"] = *result.Credentials.SecretAccessKey
-			env["AWS_SESSION_TOKEN"] = *result.Credentials.SessionToken
 		}
-		slog.Info("dev", "links", dev.Links)
-		for _, resource := range dev.Links {
-			value := complete.Links[resource]
-			jsonValue, _ := json.Marshal(value)
-			env["SST_RESOURCE_"+resource] = string(jsonValue)
-		}
-		env["SST_RESOURCE_App"] = fmt.Sprintf(`{"name": "%s", "stage": "%s" }`, p.App().Name, p.App().Stage)
-		for key, value := range dev.Environment {
-			slog.Info("setting env", "key", key, "value", value)
-			env[key] = value
-		}
-		body, err := json.Marshal(env)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(body)
+		slog.Info("dev not found", "directory", directory)
+		http.Error(w, "dev not found", http.StatusNotFound)
+		return
 	})
 
 	return wg.Wait()

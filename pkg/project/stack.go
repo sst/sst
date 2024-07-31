@@ -869,3 +869,49 @@ func getNotNilFields(v interface{}) []interface{} {
 
 	return result
 }
+
+func (p *Project) GetCompleted(ctx context.Context) (*CompleteEvent, error) {
+	passphrase, err := provider.Passphrase(p.home, p.app.Name, p.app.Stage)
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.PullState()
+	if err != nil {
+		return nil, err
+	}
+	pulumi, err := auto.NewPulumiCommand(&auto.PulumiCommandOptions{
+		Root:             filepath.Join(global.BinPath(), ".."),
+		SkipVersionCheck: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	ws, err := auto.NewLocalWorkspace(ctx,
+		auto.Pulumi(pulumi),
+		auto.WorkDir(p.PathWorkingDir()),
+		auto.PulumiHome(global.ConfigDir()),
+		auto.Project(workspace.Project{
+			Name:    tokens.PackageName(p.app.Name),
+			Runtime: workspace.NewProjectRuntimeInfo("nodejs", nil),
+			Backend: &workspace.ProjectBackend{
+				URL: fmt.Sprintf("file://%v", p.PathWorkingDir()),
+			},
+		}),
+		auto.EnvVars(
+			map[string]string{
+				"PULUMI_CONFIG_PASSPHRASE": passphrase,
+			},
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+	stack, err := auto.UpsertStack(ctx,
+		p.app.Stage,
+		ws,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return getCompletedEvent(ctx, stack)
+}

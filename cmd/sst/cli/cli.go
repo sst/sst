@@ -22,9 +22,12 @@ type Cli struct {
 	path      CommandPath
 	Context   context.Context
 	cancel    context.CancelFunc
+	env       []string
 }
 
 func New(ctx context.Context, cancel context.CancelFunc, root *Command, version string) (*Cli, error) {
+	env := os.Environ()
+	godotenv.Load()
 	parsedFlags := map[string]interface{}{}
 	root.init(parsedFlags)
 	flag.CommandLine.Init("sst", flag.ContinueOnError)
@@ -59,6 +62,7 @@ func New(ctx context.Context, cancel context.CancelFunc, root *Command, version 
 		path:      cmds,
 		Context:   ctx,
 		cancel:    cancel,
+		env:       env,
 	}
 	cli.configureLog()
 	if cliParseError != nil {
@@ -119,6 +123,10 @@ func (c *Cli) Positional(index int) string {
 		return ""
 	}
 	return c.arguments[index]
+}
+
+func (c *Cli) Env() []string {
+	return c.env
 }
 
 type Command struct {

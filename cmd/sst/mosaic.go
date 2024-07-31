@@ -164,10 +164,11 @@ func CmdMosaic(c *cli.Cli) error {
 	mode := c.String("mode")
 	if mode == "" {
 		multi := multiplexer.New(c.Context)
-		multiEnv := []string{
+		multiEnv := append(
+			c.Env(),
 			fmt.Sprintf("SST_SERVER=http://localhost:%v", server.Port),
-			"SST_STAGE=" + p.App().Stage,
-		}
+			"SST_STAGE="+p.App().Stage,
+		)
 		multi.AddProcess("deploy", []string{currentExecutable, "ui", "--filter=sst"}, "⑆", "SST", "", false, true, multiEnv...)
 		multi.AddProcess("function", []string{currentExecutable, "ui", "--filter=function"}, "λ", "Functions", "", false, true, multiEnv...)
 		wg.Go(func() error {
