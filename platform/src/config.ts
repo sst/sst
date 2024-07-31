@@ -20,7 +20,12 @@
  *   },
  *   // Your app's resources
  *   async run() {
- *     new sst.aws.Bucket("MyBucket");
+ *     const bucket = new sst.aws.Bucket("MyBucket");
+ *
+ *     // Your app's outputs
+ *     return {
+ *       bucket: bucket.name
+ *     };
  *   }
  * });
  * ```
@@ -587,11 +592,14 @@ export interface PullRequestEvent {
 
 export interface Config {
   /**
-   * The config for your app. It needs to return an object of type [`App`](#app-1).
+   * The config for your app. It needs to return an object of type [`App`](#app-1). The `app`
+   * function is evaluated when your app loads.
    *
-   * :::tip
-   * The `app` function is evaluated when your app loads.
+   * :::caution
+   * You cannot define any components or resources in the `app` function.
    * :::
+   *
+   * Here's an example of a simple `app` function.
    *
    * @example
    *
@@ -780,6 +788,13 @@ export interface Config {
    *
    * ```bash frame=\"none\"
    * bucket: bucket-jOaikGu4rla
+   * ```
+   *
+   * These outputs are also written to a `.sst/output.json` file after every successful deploy.
+   * It contains the above outputs in JSON.
+   *
+   * ```json title=".sst/output.json"
+   * {"bucket": "bucket-jOaikGu4rla"}
    * ```
    */
   run(): Promise<Record<string, any> | void>;
