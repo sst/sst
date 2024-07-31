@@ -352,6 +352,13 @@ export class Postgres extends Component implements Link.Linkable {
   }
 
   /**
+   * The ID of the RDS Cluster.
+   */
+  public get clusterID() {
+    return this.cluster.id;
+  }
+
+  /**
    * The ARN of the RDS Cluster.
    */
   public get clusterArn() {
@@ -452,7 +459,7 @@ export class Postgres extends Component implements Link.Linkable {
    * :::
    *
    * @param name The name of the component.
-   * @param clusterName The name of the existing Postgres cluster.
+   * @param clusterID The id of the existing Postgres cluster.
    *
    * @example
    * Imagine you create a cluster in the `dev` stage. And in your personal stage `frank`,
@@ -464,25 +471,25 @@ export class Postgres extends Component implements Link.Linkable {
    *   : new sst.aws.Postgres("MyDatabase");
    * ```
    *
-   * Here `app-dev-mydatabase` is the name of the cluster created in the `dev` stage.
-   * You can find this by outputting the cluster name in the `dev` stage.
+   * Here `app-dev-mydatabase` is the ID of the cluster created in the `dev` stage.
+   * You can find this by outputting the cluster ID in the `dev` stage.
    *
    * ```ts title="sst.config.ts"
    * return {
-   *   cluster: database.clusterName
+   *   cluster: database.clusterID
    * };
    * ```
    */
-  public static get(name: string, clusterName: Input<string>) {
-    const cluster = rds.Cluster.get(`${name}Cluster`, clusterName);
+  public static get(name: string, clusterID: Input<string>) {
+    const cluster = rds.Cluster.get(`${name}Cluster`, clusterID);
     const instances = rds.getInstancesOutput({
-      filters: [{ name: "db-cluster-id", values: [cluster.id] }],
+      filters: [{ name: "db-cluster-id", values: [clusterID] }],
     });
     const instance = rds.ClusterInstance.get(
       `${name}Instance`,
       instances.apply((instances) => {
         if (instances.instanceIdentifiers.length === 0)
-          throw new Error(`No instance found for cluster ${clusterName}`);
+          throw new Error(`No instance found for cluster ${clusterID}`);
         return instances.instanceIdentifiers[0];
       }),
     );
