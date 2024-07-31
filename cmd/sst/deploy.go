@@ -48,7 +48,7 @@ func CmdDeploy(c *cli.Cli) error {
 		return nil
 	})
 	defer ui.Destroy()
-	fmt.Println(s.Port)
+	defer c.Cancel()
 	err = p.Run(c.Context, &project.StackInput{
 		Command:    "deploy",
 		Out:        out,
