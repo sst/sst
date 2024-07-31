@@ -1,0 +1,64 @@
+---
+title: Share Across Stages
+description: Share resources across stages in your app.
+---
+
+You define all the resources in your app in your `sst.config.ts`. These resources then get created for each stage that you deploy to.
+
+However, there might be some cases where you don't want to recreate certain resources for every stage.
+
+---
+
+## Why share
+
+You typically want to share for cases where:
+
+- Resources that are expensive, like your Postgres cluster.
+- Or, if they contain data that these new stages need to reuse. For example, your PR stages might just be for testing against your staging data and don't need to recreate some resources.
+
+---
+
+## How to share
+
+To help with this some SST components come with a `static get` method. These compoents are typically ones that people want to be able to share. Here are some components that have this:
+
+- [`Vpc`](/docs/component/aws/vpc/)
+- [`Bucket`](/docs/component/aws/bucket/)
+- [`Postgres`](/docs/component/aws/postgres/)
+
+Let's look at an example.
+
+---
+
+The [`static get`](/docs/component/aws/bucket/#static-get) in the `Bucket` component has the following signature. It takes the name of the component and the name of the existing bucket.
+
+```ts
+get(name: string, bucketName: string)
+```
+
+Imagine you create a bucket in the `dev` stage. And in your personal stage `frank`, instead of creating a new bucket, you want to share the bucket from `dev`.
+
+```ts title="sst.config.ts"
+const bucket = $app.stage === "frank"
+  ? sst.aws.Bucket.get("MyBucket", "app-dev-mybucket-12345678")
+  : new sst.aws.Bucket("MyBucket");
+```
+
+We are using [`$app.stage`](/docs/reference/global/#app-stage), a global to get the current stage the CLI is running on. It allows us to conditionally create the bucket.
+
+Here `app-dev-mybucket-12345678` is the auto-generated bucket name for the bucket created
+in the `dev` stage. You can find this by outputting the bucket name in the `dev` stage.
+
+```ts title="sst.config.ts"
+return {
+  bucket: bucket.name
+};
+```
+
+And it'll print it out on `sst deploy`.
+
+```bash frame="none"
+bucket: app-dev-mybucket-12345678
+```
+
+You can read more about outputs in the [`run`](/docs/reference/config/#run) function.

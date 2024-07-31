@@ -1,8 +1,10 @@
 /**
  * The Global library is a collection of `$` functions and variables that are available in the `run` function, of your [`sst.config.ts`](/docs/reference/config/).
  *
- * :::tip
  * You don't need to import the Global library. It's available in the `run` function of your `sst.config.ts`.
+ *
+ * :::note
+ * The Global library is only available in the `run` function of your `sst.config.ts`.
  * :::
  *
  * For example, you can get the name of your app in your app config using `$app.name`.
@@ -38,7 +40,16 @@ interface $APP
      */
     name: string;
     /**
-     * The stage currently being run.
+     * The stage currently being run. You can use this to conditionally deploy resources based
+     * on the stage.
+     *
+     * For example, to deploy a bucket only in the `dev` stage:
+     *
+     * ```ts title="sst.config.ts"
+     * if ($app.stage === "dev") {
+     *   new sst.aws.Bucket("MyBucket");
+     * }
+     * ```
      */
     stage: string;
     /**
