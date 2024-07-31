@@ -9,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/kballard/go-shellquote"
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
 	"github.com/sst/ion/cmd/sst/mosaic/bus"
@@ -183,10 +184,10 @@ func CmdMosaic(c *cli.Cli) error {
 							}
 							dir := filepath.Join(cwd, d.Directory)
 							slog.Info("mosaic", "dev", d.Name, "directory", dir)
+							words, _ := shellquote.Split(d.Command)
 							multi.AddProcess(
 								d.Name,
-								append([]string{currentExecutable, "dev", "--"},
-									strings.Split(d.Command, " ")...),
+								append([]string{currentExecutable, "dev", "--"}, words...),
 								// 𝝺 λ
 								"→",
 								d.Name,

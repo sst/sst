@@ -74,7 +74,7 @@ func (m *footer) Start(ctx context.Context) {
 			width, _, _ := terminal.GetSize(int(os.Stdout.Fd()))
 			switch evt := val.(type) {
 			case lineMsg:
-				m.Render(width, "")
+				m.clear()
 				fmt.Println(evt)
 			default:
 				m.Update(val)
@@ -83,6 +83,21 @@ func (m *footer) Start(ctx context.Context) {
 			m.Render(width, next)
 		}
 	}
+}
+
+func (m *footer) clear() {
+	oldLines := strings.Split(m.previous, "\n")
+	out := &bytes.Buffer{}
+	if len(oldLines) > 0 {
+		for i := range oldLines {
+			out.WriteString(ansi.EraseEntireLine)
+			if i < len(oldLines)-1 {
+				out.WriteString(ansi.CursorUp1)
+			}
+		}
+	}
+	os.Stdout.Write(out.Bytes())
+	m.previous = ""
 }
 
 func (m *footer) Render(width int, next string) {

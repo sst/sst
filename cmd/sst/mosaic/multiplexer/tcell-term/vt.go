@@ -317,6 +317,20 @@ func (vt *VT) Resize(w int, h int) {
 	default:
 		vt.activeScreen = vt.altScreen
 	}
+	/*
+		nextScrollback := [][]cell{}
+		currentRow := []cell{}
+		for _, row := range vt.primaryScrollback {
+			for col, c := range row {
+				if col >= w {
+					nextScrollback = append(nextScrollback, currentRow)
+					currentRow = []cell{}
+				}
+				currentRow = append(currentRow, c)
+			}
+		}
+		vt.primaryScrollback = nextScrollback
+	*/
 
 	_ = pty.Setsize(vt.pty, &pty.Winsize{
 		Cols: uint16(w),
