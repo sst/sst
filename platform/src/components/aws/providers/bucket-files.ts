@@ -1,6 +1,11 @@
 import fs from "fs";
 import { CustomResourceOptions, Input, dynamic } from "@pulumi/pulumi";
-import { S3Client, PutObjectCommand, S3 } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  S3,
+} from "@aws-sdk/client-s3";
 import { useClient } from "../helpers/client.js";
 
 export interface BucketFile {
@@ -11,33 +16,48 @@ export interface BucketFile {
   hash?: string;
 }
 
-export interface BucketFilesInputs {
-  bucketName: Input<string>;
-  files: Input<BucketFile[]>;
-}
-
 interface Inputs {
   bucketName: string;
   files: BucketFile[];
+  purge: boolean;
+}
+
+interface Outputs {
+  bucketName?: string;
+  files?: BucketFile[];
+  purge?: boolean;
+}
+
+export interface BucketFilesInputs {
+  bucketName: Input<Inputs["bucketName"]>;
+  files: Input<Inputs["files"]>;
+  purge: Input<Inputs["purge"]>;
 }
 
 class Provider implements dynamic.ResourceProvider {
-  async create(inputs: Inputs): Promise<dynamic.CreateResult> {
+  async create(inputs: Inputs): Promise<dynamic.CreateResult<Outputs>> {
     await this.upload(inputs.bucketName, inputs.files, []);
-    return { id: "files" };
+    return { id: "files", outs: inputs };
   }
 
   async update(
     id: string,
-    olds: Inputs,
+    olds: Outputs,
     news: Inputs,
-  ): Promise<dynamic.UpdateResult> {
-    await this.upload(
-      news.bucketName,
-      news.files,
-      news.bucketName === olds.bucketName ? olds.files : [],
-    );
-    return {};
+  ): Promise<dynamic.UpdateResult<Outputs>> {
+    const oldFiles =
+      news.bucketName === olds.bucketName ? olds.files ?? [] : [];
+    await this.upload(news.bucketName, news.files, oldFiles);
+    if (news.purge) {
+      await this.purge(news.bucketName, news.files, oldFiles);
+    }
+    return { outs: news };
+  }
+
+  async delete(id: string, olds: Outputs) {
+    if (!olds.bucketName || !olds.files) return;
+
+    await this.purge(olds.bucketName, [], olds.files);
   }
 
   async upload(
@@ -70,6 +90,23 @@ class Provider implements dynamic.ResourceProvider {
           }),
         );
       }),
+    );
+  }
+
+  async purge(bucketName: string, files: BucketFile[], oldFiles: BucketFile[]) {
+    const newFileKeys = Object.fromEntries(files.map((f) => [f.key, true]));
+    const s3 = useClient(S3Client);
+    await Promise.all(
+      oldFiles
+        .filter((oldFile) => !newFileKeys[oldFile.key])
+        .map(async (oldFile) =>
+          s3.send(
+            new DeleteObjectCommand({
+              Bucket: bucketName,
+              Key: oldFile.key,
+            }),
+          ),
+        ),
     );
   }
 }
