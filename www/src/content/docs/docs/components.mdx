@@ -140,11 +140,9 @@ The type for these callbacks is similar. Here's what the `role` callback looks l
 RoleArgs | (args: RoleArgs, opts: pulumi.ComponentResourceOptions, name: string) => void
 ```
 
-So this takes either a `RoleArgs` object or a function that takes `RoleArgs`. Where [args, opts, and name](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#constructor-syntax) are the arguments for the role constructor passed to Pulumi.
+This takes either:
 
-This allows you to either:
-
-- Pass in your own `RoleArgs` object.
+- A `RoleArgs` object. For example:
 
   ```ts
   {
@@ -158,7 +156,15 @@ This allows you to either:
 
   This is **merged** with the original `RoleArgs` that were going to be passed to the component.
 
-- Or, pass in a callback that takes the current `RoleArgs` and mutates it.
+- A function that takes `RoleArgs`. Here's the function signature:
+
+  ```ts
+  (args: RoleArgs, opts: pulumi.ComponentResourceOptions, name: string) => void
+  ```
+
+  Where [`args`, `opts`, and `name`](https://www.pulumi.com/registry/packages/aws/api-docs/iam/role/#constructor-syntax) are the arguments for the Role constructor passed to Pulumi.
+
+  So you can pass in a callback that takes the current `RoleArgs` and mutates it.
 
   ```ts
   {
