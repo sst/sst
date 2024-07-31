@@ -8,6 +8,7 @@ import { Component, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { QueueSubscriberArgs } from "./queue";
 import { lambda } from "@pulumi/aws";
+import { toSeconds } from "../duration";
 
 export interface Args extends QueueSubscriberArgs {
   /**
@@ -80,6 +81,13 @@ export class QueueLambdaSubscriber extends Component {
           args.transform?.eventSourceMapping,
           `${name}EventSourceMapping`,
           {
+            functionResponseTypes: output(args.batch).apply((batch) =>
+              batch?.partialResponses ? ["ReportBatchItemFailures"] : [],
+            ),
+            batchSize: output(args.batch).apply((batch) => batch?.size ?? 10),
+            maximumBatchingWindowInSeconds: output(args.batch).apply((batch) =>
+              batch?.window ? toSeconds(batch.window) : 0,
+            ),
             eventSourceArn: queue.arn,
             functionName: fn.name,
             filterCriteria: args.filters && {

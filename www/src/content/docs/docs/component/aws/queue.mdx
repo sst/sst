@@ -385,6 +385,127 @@ sst.aws.Queue.subscribe(queueArn, {
 </Segment>
 
 ## QueueSubscriberArgs
+### batch?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">partialResponses?</code>](#batch-partialresponses)</p>
+- <p>[<code class="key">size?</code>](#batch-size)</p>
+- <p>[<code class="key">window?</code>](#batch-window)</p>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">&lcub;size: 10, window: "20 seconds", partialResponses: false&rcub;</code>
+</InlineSection>
+Configure batch processing options for the consumer function.
+
+</Segment>
+<NestedTitle id="batch-partialresponses" Tag="h4" parent="batch.">partialResponses?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">boolean</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+Whether to return partial successful responses for a batch.
+
+Enables reporting of individual message failures in a batch. When enabled, only failed
+messages become visible in the queue again, preventing unnecessary reprocessing of
+successful messages.
+
+The handler function must return a response with failed message IDs.
+
+:::note
+Ensure your Lambda function is updated to handle `batchItemFailures` responses when
+enabling this option.
+:::
+
+Read more about [partial batch responses](https://docs.aws.amazon.com/lambda/latest/dg/services-sqs-errorhandling.html#services-sqs-batchfailurereporting).
+
+Enable partial responses.
+```js
+{
+  batch: {
+    partialResponses: true
+  }
+}
+```
+
+For a batch of messages (id1, id2, id3, id4, id5), if id2 and id4 fail:
+```json
+{
+  "batchItemFailures": [
+        {
+            "itemIdentifier": "id2"
+        },
+        {
+            "itemIdentifier": "id4"
+        }
+    ]
+}
+```
+
+This makes only id2 and id4 visible again in the queue.
+</Segment>
+<NestedTitle id="batch-size" Tag="h4" parent="batch.">size?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">number</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">10</code>
+</InlineSection>
+The maximum number of events that will be processed together in a single invocation
+of the consumer function.
+
+Value must be between 1 and 10000.
+
+:::note
+When `size` is set to a value greater than 10, `window` must be set to at least `1 second`.
+:::
+
+Set batch size to 1. This will process events individually.
+```js
+{
+  batch: {
+    size: 1
+  }
+}
+```
+</Segment>
+<NestedTitle id="batch-window" Tag="h4" parent="batch.">window?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minute</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} minutes</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} second</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">$\{number\} seconds</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">"0 seconds"</code>
+</InlineSection>
+The maximum amount of time to wait for collecting events before sending the batch to
+the consumer function, even if the batch size hasn't been reached.
+
+Value must be between 0 seconds and 5 minutes (300 seconds).
+
+```js
+{
+  batch: {
+    window: "20 seconds"
+  }
+}
+```
+</Segment>
 ### filters?
 <Segment>
 <Section type="parameters">
