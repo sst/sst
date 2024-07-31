@@ -4,6 +4,7 @@ import {
   output,
   interpolate,
 } from "@pulumi/pulumi";
+import crypto from "crypto";
 import { DnsValidatedCertificate } from "./dns-validated-certificate.js";
 import { HttpsRedirect } from "./https-redirect.js";
 import { useProvider } from "./helpers/provider.js";
