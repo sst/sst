@@ -354,6 +354,38 @@ Read more about the [Console](/docs/console/).
 
 ---
 
+## FAQ
+
+Here are some questions that we frequently get.
+
+---
+
+**How does SST compare to CDK for Terraform or Pulumi?**
+
+Both CDKTF and Pulumi allow you to define your infrastructure using a programming language like TypeScript. SST is also built on top of Pulumi. So you might wonder how SST compares to them and why you would use SST instead of them.
+
+In a nutshell, SST is for developers, while CDKTF and Pulumi are primarily for DevOps engineers. There are 3 big things SST does for developers:
+
+1. Higher-level components
+
+   SST's built-in components like [`Nextjs`](/docs/component/aws/nextjs/) or [`Email`](/docs/component/aws/email/) make it easy for developers to add features to their app. You can use these without having to figure out how to work with the underlying Terraform resources. Read more about [Components](/docs/components/).
+
+2. Linking resources
+
+   SST makes it easy to link your infrastructure to your application and access them at runtime in your code. Read more about [Linking](/docs/linking/).
+
+3. Dev mode
+
+   Finally, SST features a local developer environment that deploys your app through a watcher, runs your functions [_Live_](/docs/live/), and starts your frontend, all together. Read more about [`sst dev`](/docs/reference/cli/#dev).
+
+---
+
+**How does SST make money?**
+
+While SST is open-source and free to use, we also have the [Console](/docs/console/) that can auto-deploy your apps and monitor for any issues. It's optional and includes a free tier but it's a SaaS service. It's used by a large numder of teams in our community, including ours.
+
+---
+
 #### Next steps
 
 1. Create your first SST app
