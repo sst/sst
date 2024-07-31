@@ -337,6 +337,16 @@ A list of VPC security group IDs.
 The ARN of the RDS Cluster.
 </Segment>
 
+### clusterID
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Output</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ID of the RDS Cluster.
+</Segment>
+
 ### database
 <Segment>
 <Section type="parameters">
@@ -464,7 +474,7 @@ This is accessible through the `Resource` object in the [SDK](/docs/reference/sd
 <Segment>
 <Section type="signature">
 ```ts
-Postgres.get(name, clusterName)
+Postgres.get(name, clusterID)
 ```
 </Section>
 
@@ -472,8 +482,8 @@ Postgres.get(name, clusterName)
 #### Parameters
 - <p><code class="key">name</code> <code class="primitive">string</code></p>
 The name of the component.
-- <p><code class="key">clusterName</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
-The name of the existing Postgres cluster.
+- <p><code class="key">clusterID</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The id of the existing Postgres cluster.
 </Section>
 
 <InlineSection>
@@ -496,12 +506,12 @@ const database = $app.stage === "frank"
   : new sst.aws.Postgres("MyDatabase");
 ```
 
-Here `app-dev-mydatabase` is the name of the cluster created in the `dev` stage.
-You can find this by outputting the cluster name in the `dev` stage.
+Here `app-dev-mydatabase` is the ID of the cluster created in the `dev` stage.
+You can find this by outputting the cluster ID in the `dev` stage.
 
 ```ts title="sst.config.ts"
 return {
-  cluster: database.clusterName
+  cluster: database.clusterID
 };
 ```
 </Segment>

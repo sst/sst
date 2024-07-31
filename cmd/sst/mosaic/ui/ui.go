@@ -396,10 +396,10 @@ func (u *UI) Event(unknown interface{}) {
 				if ok {
 					isSSTComponent := strings.Contains(status.URN, "::sst")
 					if isSSTComponent {
-						u.println(TEXT_NORMAL.Render(". Set the following values: "))
+						u.println(TEXT_NORMAL.Render("\n\nSet the following in your transform:"))
 					}
 					if !isSSTComponent {
-						u.println(TEXT_NORMAL.Render(". Set the following values in transform: "))
+						u.println(TEXT_NORMAL.Render("\n\nSet the following:"))
 					}
 					for _, diff := range importDiffs {
 						value, _ := json.Marshal(diff.Old)

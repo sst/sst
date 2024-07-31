@@ -468,11 +468,13 @@ And might end up being more [cost effective](https://docs.aws.amazon.com/lambda/
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The name for the function. This is displayed in the AWS Console.
+The name for the function. This is the name that's displayed in the AWS Console.
 
-:::note
+:::caution
 Changing the name will create a new function and delete the old one.
 :::
+
+By default, the name is generated from the app name, stage name, and component name.
 
 ```js
 {
