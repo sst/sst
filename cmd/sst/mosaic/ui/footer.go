@@ -126,10 +126,8 @@ func (m *footer) Render(width int, next string) {
 			out.WriteByte('\r')
 		}
 		truncated := ansi.Truncate(line, width, "…")
-		if ansi.StringWidth(truncated) < width {
-			truncated += strings.Repeat(" ", width-ansi.StringWidth(truncated))
-		}
 		out.WriteString(truncated)
+		out.WriteString(ansi.EraseLine(0))
 		if i < len(nextLines)-1 {
 			out.WriteString("\r\n")
 		}
