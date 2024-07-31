@@ -371,7 +371,7 @@ var root = &cli.Command{
 			Flags: []cli.Flag{
 				{
 					Name: "mode",
-					Type: "[basic,mosaic]",
+					Type: "string",
 					Description: cli.Description{
 						Short: "Use mode=basic to turn off multiplexer",
 						Long:  "Defaults to using the multiplexer or `mosaic` mode. Use `basic` to turn it off.",
