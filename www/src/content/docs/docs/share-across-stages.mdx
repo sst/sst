@@ -13,8 +13,10 @@ However, there might be some cases where you don't want to recreate certain reso
 
 You typically want to share for cases where:
 
-- Resources that are expensive, like your Postgres cluster.
+- Resources that are expensive and their pricing is not truly pay-per-use, like your Postgres cluster.
 - Or, if they contain data that these new stages need to reuse. For example, your PR stages might just be for testing against your staging data and don't need to recreate some resources.
+
+While it might be tempting to share more resources across stages, we only recommend doing it for the above cases.
 
 ---
 
@@ -23,12 +25,19 @@ You typically want to share for cases where:
 To help with this some SST components come with a `static get` method. These compoents are typically ones that people want to be able to share. Here are some components that have this:
 
 - [`Vpc`](/docs/component/aws/vpc/)
+- [`Email`](/docs/component/aws/email/)
 - [`Bucket`](/docs/component/aws/bucket/)
 - [`Postgres`](/docs/component/aws/postgres/)
+
+If you'd like us to add to this list, feel free to open a GitHub issue.
+
+It's worth noting that complex components like our frontends, `Nextjs`, or `StaticSite`, are not likely to be supported. Both because they are made up of a large number of resources. But also because they really aren't worth sharing across stages.
 
 Let's look at an example.
 
 ---
+
+### Example
 
 The [`static get`](/docs/component/aws/bucket/#static-get) in the `Bucket` component has the following signature. It takes the name of the component and the name of the existing bucket.
 
