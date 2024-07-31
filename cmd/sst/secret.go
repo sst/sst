@@ -10,10 +10,11 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/sst/ion/cmd/sst/cli"
-	"github.com/sst/ion/cmd/sst/mosaic/server"
+	"github.com/sst/ion/cmd/sst/mosaic/dev"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project/provider"
+	"github.com/sst/ion/pkg/server"
 )
 
 func CmdSecretList(c *cli.Cli) error {
@@ -88,7 +89,7 @@ func CmdSecretSet(c *cli.Cli) error {
 	}
 	url, _ := server.Discover(p.PathConfig(), p.App().Stage)
 	if url != "" {
-		server.Deploy(c.Context, url)
+		dev.Deploy(c.Context, url)
 	}
 
 	ui.Success(fmt.Sprintf("Set \"%s\" for stage \"%s\". Run \"sst deploy\" to update.", key, p.App().Stage))
@@ -133,7 +134,7 @@ func CmdSecretLoad(c *cli.Cli) error {
 	}
 	url, _ := server.Discover(p.PathConfig(), p.App().Stage)
 	if url != "" {
-		server.Deploy(c.Context, url)
+		dev.Deploy(c.Context, url)
 	}
 
 	ui.Success("Run \"sst deploy\" to update.")

@@ -11,8 +11,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
 	"github.com/sst/ion/cmd/sst/mosaic/bus"
-	"github.com/sst/ion/cmd/sst/mosaic/server"
 	"github.com/sst/ion/pkg/project"
+	"github.com/sst/ion/pkg/server"
 )
 
 var upgrader = websocket.Upgrader{
@@ -64,7 +64,7 @@ type Frame struct {
 	Raw string `json:"raw"`
 }
 
-func Start(ctx context.Context, p *project.Project, server *server.Server) {
+func Start(ctx context.Context, p *project.Project, server *server.Server) error {
 	connected := make(chan *websocket.Conn)
 	disconnected := make(chan *websocket.Conn)
 	invocationClear := make(chan string)
@@ -127,7 +127,7 @@ func Start(ctx context.Context, p *project.Project, server *server.Server) {
 	for {
 		select {
 		case <-ctx.Done():
-			return
+			return nil
 		case source := <-invocationClear:
 			if source == "all" {
 				invocations = map[string]*Invocation{}

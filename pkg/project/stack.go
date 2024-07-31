@@ -38,11 +38,12 @@ type BuildFailedEvent struct {
 }
 
 type StackInput struct {
-	Out     chan interface{}
-	OnFiles func(files []string)
-	Command string
-	Target  []string
-	Dev     bool
+	Out        chan interface{}
+	OnFiles    func(files []string)
+	Command    string
+	Target     []string
+	ServerPort int
+	Dev        bool
 }
 
 type ConcurrentUpdateEvent struct{}
@@ -216,6 +217,9 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 			"work":     p.PathWorkingDir(),
 			"platform": p.PathPlatformDir(),
 		},
+	}
+	if input.ServerPort != 0 {
+		cli["rpc"] = fmt.Sprintf("http://localhost:%v/rpc", input.ServerPort)
 	}
 	cliBytes, err := json.Marshal(cli)
 	if err != nil {

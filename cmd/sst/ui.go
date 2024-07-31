@@ -8,9 +8,10 @@ import (
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
 	"github.com/sst/ion/cmd/sst/mosaic/cloudflare"
-	"github.com/sst/ion/cmd/sst/mosaic/server"
+	"github.com/sst/ion/cmd/sst/mosaic/dev"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/pkg/project"
+	"github.com/sst/ion/pkg/server"
 )
 
 func CmdUI(c *cli.Cli) error {
@@ -51,7 +52,7 @@ func CmdUI(c *cli.Cli) error {
 			project.CompleteEvent{},
 		)
 	}
-	evts, err := server.Stream(c.Context, url, types...)
+	evts, err := dev.Stream(c.Context, url, types...)
 	if err != nil {
 		return err
 	}
@@ -59,7 +60,7 @@ func CmdUI(c *cli.Cli) error {
 	u := ui.New(c.Context, ui.WithDev)
 	slog.Info("initialized ui")
 	if filter == "sst" || filter == "" {
-		err = server.Deploy(c.Context, url)
+		err = dev.Deploy(c.Context, url)
 	}
 	if err != nil {
 		return err

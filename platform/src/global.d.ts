@@ -60,7 +60,7 @@ interface $APP
      * The providers currently being used in the app.
      */
     providers: App["providers"];
-  }> { }
+  }> {}
 
 declare global {
   // @ts-expect-error
@@ -246,6 +246,7 @@ declare global {
   /** @internal */
   export const $cli: {
     command: string;
+    rpc: string;
     paths: {
       home: string;
       root: string;

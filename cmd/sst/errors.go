@@ -4,10 +4,10 @@ import (
 	"errors"
 
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
-	"github.com/sst/ion/cmd/sst/mosaic/server"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
+	"github.com/sst/ion/pkg/server"
 )
 
 func TransformError(err error) error {

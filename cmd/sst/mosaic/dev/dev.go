@@ -1,16 +1,14 @@
-package server
+package dev
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
-	"syscall"
 
 	awssdk "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
@@ -18,28 +16,16 @@ import (
 	"github.com/sst/ion/cmd/sst/mosaic/deployer"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
+	"github.com/sst/ion/pkg/server"
 	"golang.org/x/sync/errgroup"
 )
 
-type Server struct {
-	Port int
-	Mux  *http.ServeMux
+type Message struct {
+	Type  string          `json:"type"`
+	Event json.RawMessage `json:"event"`
 }
 
-func New() (*Server, error) {
-	port, err := port()
-	if err != nil {
-		return nil, err
-	}
-	return &Server{
-		Port: port,
-		Mux:  http.NewServeMux(),
-	}, nil
-}
-
-func (s *Server) Start(ctx context.Context, p *project.Project) error {
-	defer slog.Info("server done")
-
+func Start(ctx context.Context, p *project.Project, server *server.Server) error {
 	var complete *project.CompleteEvent
 	var wg errgroup.Group
 	wg.Go(func() error {
@@ -54,7 +40,7 @@ func (s *Server) Start(ctx context.Context, p *project.Project) error {
 		}
 	})
 
-	s.Mux.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
+	server.Mux.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("content-type", "application/x-ndjson")
 		w.WriteHeader(http.StatusOK)
 		slog.Info("subscribed", "addr", r.RemoteAddr)
@@ -87,12 +73,12 @@ func (s *Server) Start(ctx context.Context, p *project.Project) error {
 		}
 	})
 
-	s.Mux.HandleFunc(("/api/deploy"), func(w http.ResponseWriter, r *http.Request) {
+	server.Mux.HandleFunc(("/api/deploy"), func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("deploy requested")
 		bus.Publish(&deployer.DeployRequestedEvent{})
 	})
 
-	s.Mux.HandleFunc("/api/env", func(w http.ResponseWriter, r *http.Request) {
+	server.Mux.HandleFunc("/api/env", func(w http.ResponseWriter, r *http.Request) {
 		directory := r.URL.Query().Get("directory")
 		var dev *project.Dev
 		cwd, _ := os.Getwd()
@@ -151,40 +137,88 @@ func (s *Server) Start(ctx context.Context, p *project.Project) error {
 		w.Write(body)
 	})
 
-	server := &http.Server{
-		Handler: s.Mux,
-	}
-	server.Addr = fmt.Sprintf("0.0.0.0:%d", s.Port)
-	slog.Info("server", "addr", server.Addr)
-	serverPath := resolveServerFile(p.PathConfig(), p.App().Stage)
-	os.WriteFile(serverPath, []byte("http://"+server.Addr), 0644)
-	defer os.Remove(serverPath)
-	wg.Go(func() error {
-		go server.ListenAndServe()
-		<-ctx.Done()
-		server.Shutdown(ctx)
-		return nil
-	})
 	return wg.Wait()
 }
 
-func port() (int, error) {
-	port := 13557
-	for {
-		listener, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
-		if err != nil {
-			if opError, ok := err.(*net.OpError); ok && opError.Op == "listen" {
-				if syscallErr, ok := opError.Err.(*os.SyscallError); ok && syscallErr.Syscall == "bind" {
-					if errno, ok := syscallErr.Err.(syscall.Errno); ok && errno == syscall.EADDRINUSE {
-						port++
-						continue
-					}
-				}
-			}
-			return 0, err
-		}
-		defer listener.Close()
-		addr := listener.Addr().(*net.TCPAddr)
-		return addr.Port, nil
+func Stream(ctx context.Context, url string, types ...interface{}) (chan any, error) {
+	out := make(chan any)
+	req, err := http.NewRequestWithContext(ctx, "GET", url+"/stream", nil)
+	if err != nil {
+		return nil, err
 	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	decoder := json.NewDecoder(resp.Body)
+
+	registry := map[string]reflect.Type{}
+	for _, v := range types {
+		t := reflect.TypeOf(v)
+		if t.Kind() == reflect.Ptr {
+			t = t.Elem()
+		}
+		name := t.String()
+		registry[name] = t
+	}
+
+	go func() {
+		defer close(out)
+		defer resp.Body.Close()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				var msg Message
+				err := decoder.Decode(&msg)
+				if err != nil {
+					return
+				}
+				prototype, ok := registry[msg.Type]
+				if !ok {
+					continue
+				}
+				target := reflect.New(prototype).Interface()
+				err = json.Unmarshal(msg.Event, target)
+				if err != nil {
+					continue
+				}
+				out <- target
+			}
+		}
+	}()
+
+	return out, nil
+}
+
+func Env(ctx context.Context, directory string, url string) (map[string]string, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", url+"/api/env?directory="+directory, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var result map[string]string
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func Deploy(ctx context.Context, url string) error {
+	req, err := http.NewRequestWithContext(ctx, "POST", url+"/api/deploy", nil)
+	if err != nil {
+		return err
+	}
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	return nil
 }

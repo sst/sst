@@ -23,11 +23,11 @@ import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/sst/ion/cmd/sst/mosaic/aws/iot_writer"
 	"github.com/sst/ion/cmd/sst/mosaic/bus"
-	"github.com/sst/ion/cmd/sst/mosaic/server"
 	"github.com/sst/ion/cmd/sst/mosaic/watcher"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/runtime"
+	"github.com/sst/ion/pkg/server"
 )
 
 type fragment struct {

@@ -15,11 +15,13 @@ import (
 	"github.com/sst/ion/cmd/sst/mosaic/bus"
 	"github.com/sst/ion/cmd/sst/mosaic/cloudflare"
 	"github.com/sst/ion/cmd/sst/mosaic/deployer"
+	"github.com/sst/ion/cmd/sst/mosaic/dev"
 	"github.com/sst/ion/cmd/sst/mosaic/multiplexer"
-	"github.com/sst/ion/cmd/sst/mosaic/server"
 	"github.com/sst/ion/cmd/sst/mosaic/socket"
 	"github.com/sst/ion/cmd/sst/mosaic/watcher"
 	"github.com/sst/ion/pkg/project"
+	"github.com/sst/ion/pkg/rpc"
+	"github.com/sst/ion/pkg/server"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -44,7 +46,7 @@ func CmdMosaic(c *cli.Cli) error {
 			return err
 		}
 		slog.Info("found server", "url", url)
-		evts, err := server.Stream(c.Context, url, project.CompleteEvent{})
+		evts, err := dev.Stream(c.Context, url, project.CompleteEvent{})
 		if err != nil {
 			return err
 		}
@@ -71,7 +73,7 @@ func CmdMosaic(c *cli.Cli) error {
 				if !ok {
 					return nil
 				}
-				nextEnv, err := server.Env(c.Context, cwd, url)
+				nextEnv, err := dev.Env(c.Context, cwd, url)
 				if err != nil {
 					return err
 				}
@@ -127,8 +129,12 @@ func CmdMosaic(c *cli.Cli) error {
 
 	wg.Go(func() error {
 		defer c.Cancel()
-		socket.Start(c.Context, p, server)
-		return nil
+		return dev.Start(c.Context, p, server)
+	})
+
+	wg.Go(func() error {
+		defer c.Cancel()
+		return socket.Start(c.Context, p, server)
 	})
 
 	os.Setenv("SST_SERVER", fmt.Sprintf("http://localhost:%v", server.Port))
@@ -147,6 +153,7 @@ func CmdMosaic(c *cli.Cli) error {
 			})
 		}
 	}
+
 	wg.Go(func() error {
 		defer c.Cancel()
 		return server.Start(c.Context, p)
@@ -188,7 +195,6 @@ func CmdMosaic(c *cli.Cli) error {
 							multi.AddProcess(
 								d.Name,
 								append([]string{currentExecutable, "dev", "--"}, words...),
-								// 𝝺 λ
 								"→",
 								d.Name,
 								dir,
@@ -204,16 +210,21 @@ func CmdMosaic(c *cli.Cli) error {
 		})
 	}
 
+	wg.Go(func() error {
+		defer c.Cancel()
+		return rpc.Start(c.Context, p, server)
+	})
+
+	wg.Go(func() error {
+		defer c.Cancel()
+		return deployer.Start(c.Context, p, server)
+	})
+
 	if mode == "basic" {
 		wg.Go(func() error {
 			return CmdUI(c)
 		})
 	}
-
-	wg.Go(func() error {
-		defer c.Cancel()
-		return deployer.Start(c.Context, p)
-	})
 
 	err = wg.Wait()
 	slog.Info("done mosaic", "err", err)

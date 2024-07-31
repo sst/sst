@@ -19,12 +19,13 @@ import (
 	"github.com/fatih/color"
 	"github.com/joho/godotenv"
 	"github.com/sst/ion/cmd/sst/cli"
-	"github.com/sst/ion/cmd/sst/mosaic/server"
+	"github.com/sst/ion/cmd/sst/mosaic/dev"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
+	"github.com/sst/ion/pkg/server"
 	"github.com/sst/ion/pkg/telemetry"
 )
 
@@ -864,7 +865,7 @@ var root = &cli.Command{
 						}
 						url, _ := server.Discover(p.PathConfig(), p.App().Stage)
 						if url != "" {
-							server.Deploy(c.Context, url)
+							dev.Deploy(c.Context, url)
 						}
 						ui.Success(fmt.Sprintf("Removed \"%s\" for stage \"%s\"", key, p.App().Stage))
 						return nil
