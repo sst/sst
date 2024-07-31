@@ -107,9 +107,9 @@ interface VpcRef {
  *
  * #### Create it with 3 Availability Zones
  *
- * ```ts title="sst.config.ts"
+ * ```ts title="sst.config.ts" {2}
  * new sst.aws.Vpc("MyVPC", {
- *   az: 3,
+ *   az: 3
  * });
  * ```
  */
@@ -448,15 +448,20 @@ export class Vpc extends Component {
   }
 
   /**
-   * Reference an existing VPC instance with the given VPC ID. This is useful when you
-   * created a VPC in one stage and you want to reference it in another stage.
+   * Reference an existing VPC with the given ID. This is useful when you
+   * create a VPC in one stage and want to share it in another stage. It avoids having to
+   * create a new VPC in the other stage.
+   *
+   * :::tip
+   * You can use the `static get` method to share VPCs across stages.
+   * :::
    *
    * @param name The name of the component.
-   * @param vpcID The id of the VPC.
+   * @param vpcID The ID of the existing VPC.
    *
    * @example
-   * Imagine you created a VPC in the `dev` stage. And in your personal stage, ie. `frank`,
-   * instead of creating a new VPC, you want to reuse the same VPC from `dev`.
+   * Imagine you create a VPC in the `dev` stage. And in your personal stage `frank`,
+   * instead of creating a new VPC, you want to share the VPC from `dev`.
    *
    * ```ts title="sst.config.ts"
    * const vpc = $app.stage === "frank"
@@ -465,6 +470,13 @@ export class Vpc extends Component {
    * ```
    *
    * Here `vpc-0be8fa4de860618bb` is the ID of the VPC created in the `dev` stage.
+   * You can find this by outputting the VPC ID in the `dev` stage.
+   *
+   * ```ts title="sst.config.ts"
+   * return {
+   *   vpc: vpc.id
+   * };
+   * ```
    */
   public static get(name: string, vpcID: Input<string>) {
     const vpc = ec2.Vpc.get(`${name}Vpc`, vpcID);

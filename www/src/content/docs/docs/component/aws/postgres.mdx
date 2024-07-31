@@ -473,17 +473,22 @@ Postgres.get(name, clusterName)
 - <p><code class="key">name</code> <code class="primitive">string</code></p>
 The name of the component.
 - <p><code class="key">clusterName</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
-The name of the RDS cluster.
+The name of the existing Postgres cluster.
 </Section>
 
 <InlineSection>
 **Returns** [<code class="type">Postgres</code>](.)
 </InlineSection>
-Reference an existing Postgres cluster with the given cluster name. This is useful
-when you created a cluster in one stage and you want to reference it in another stage.
+Reference an existing Postgrest cluster with the given cluster name. This is useful when you
+create a Postgres cluster in one stage and want to share it in another. It avoids having to
+create a new Postgres cluster in the other stage.
 
-Imagine you created a cluster in the `dev` stage. And in your personal stage, ie. `frank`,
-instead of creating a new cluster, you want to reuse the same cluster from `dev`.
+:::tip
+You can use the `static get` method to share Postgres clusters across stages.
+:::
+
+Imagine you create a cluster in the `dev` stage. And in your personal stage `frank`,
+instead of creating a new cluster, you want to share the same cluster from `dev`.
 
 ```ts title="sst.config.ts"
 const database = $app.stage === "frank"
@@ -492,5 +497,12 @@ const database = $app.stage === "frank"
 ```
 
 Here `app-dev-mydatabase` is the name of the cluster created in the `dev` stage.
+You can find this by outputting the cluster name in the `dev` stage.
+
+```ts title="sst.config.ts"
+return {
+  cluster: database.clusterName
+};
+```
 </Segment>
 </div>

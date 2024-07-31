@@ -443,15 +443,20 @@ export class Postgres extends Component implements Link.Linkable {
   }
 
   /**
-   * Reference an existing Postgres cluster with the given cluster name. This is useful
-   * when you created a cluster in one stage and you want to reference it in another stage.
+   * Reference an existing Postgrest cluster with the given cluster name. This is useful when you
+   * create a Postgres cluster in one stage and want to share it in another. It avoids having to
+   * create a new Postgres cluster in the other stage.
+   *
+   * :::tip
+   * You can use the `static get` method to share Postgres clusters across stages.
+   * :::
    *
    * @param name The name of the component.
-   * @param clusterName The name of the RDS cluster.
+   * @param clusterName The name of the existing Postgres cluster.
    *
    * @example
-   * Imagine you created a cluster in the `dev` stage. And in your personal stage, ie. `frank`,
-   * instead of creating a new cluster, you want to reuse the same cluster from `dev`.
+   * Imagine you create a cluster in the `dev` stage. And in your personal stage `frank`,
+   * instead of creating a new cluster, you want to share the same cluster from `dev`.
    *
    * ```ts title="sst.config.ts"
    * const database = $app.stage === "frank"
@@ -460,6 +465,13 @@ export class Postgres extends Component implements Link.Linkable {
    * ```
    *
    * Here `app-dev-mydatabase` is the name of the cluster created in the `dev` stage.
+   * You can find this by outputting the cluster name in the `dev` stage.
+   *
+   * ```ts title="sst.config.ts"
+   * return {
+   *   cluster: database.clusterName
+   * };
+   * ```
    */
   public static get(name: string, clusterName: Input<string>) {
     const cluster = rds.Cluster.get(`${name}Cluster`, clusterName);
