@@ -436,12 +436,10 @@ export class Nuxt extends Component implements Link.Linkable {
           assetsPath,
           // create 1 behaviour for each top level asset file/folder
           staticRoutes: fs
-            .readdirSync(path.join(outputPath, assetsPath))
-            .map((item) =>
-              fs.statSync(path.join(outputPath, assetsPath, item)).isDirectory()
-                ? `${item}/*`
-                : item,
-            ),
+            .readdirSync(path.join(outputPath, assetsPath), {
+              withFileTypes: true,
+            })
+            .map((item) => (item.isDirectory() ? `${item.name}/*` : item.name)),
         };
       });
     }

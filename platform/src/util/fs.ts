@@ -15,13 +15,12 @@ export async function findBelow(dir: string, target: string) {
     const current = path.join(dir, target);
     if (await existsAsync(current)) return dir;
 
-    const files = await fs.readdir(dir);
+    const files = await fs.readdir(dir, { withFileTypes: true });
     for (const file of files) {
-      if (file === "node_modules") continue;
-      if (file === ".sst") continue;
-      const full = path.join(dir, file);
-      const stat = await fs.stat(full);
-      if (stat.isDirectory()) {
+      if (file.name === "node_modules") continue;
+      if (file.name === ".sst") continue;
+      if (file.isDirectory()) {
+        const full = path.join(dir, file.name);
         const result = await loop(full);
         if (result) return result;
       }

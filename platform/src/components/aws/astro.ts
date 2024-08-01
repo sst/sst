@@ -507,22 +507,13 @@ export class Astro extends Component implements Link.Linkable {
             ...fs
               .readdirSync(
                 path.join(outputPath, buildMeta.clientBuildOutputDir),
+                { withFileTypes: true },
               )
               .map(
                 (item) =>
                   ({
                     cacheType: "static",
-                    pattern: fs
-                      .statSync(
-                        path.join(
-                          outputPath,
-                          buildMeta.clientBuildOutputDir,
-                          item,
-                        ),
-                      )
-                      .isDirectory()
-                      ? `${item}/*`
-                      : item,
+                    pattern: item.isDirectory() ? `${item.name}/*` : item.name,
                     origin: "staticsServer",
                   }) as const,
               ),

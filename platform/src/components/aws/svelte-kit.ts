@@ -470,11 +470,13 @@ export class SvelteKit extends Component implements Link.Linkable {
           assetsVersionedSubDir: "_app",
           // create 1 behaviour for each top level asset file/folder
           staticRoutes: fs
-            .readdirSync(path.join(outputPath, assetsPath))
+            .readdirSync(path.join(outputPath, assetsPath), {
+              withFileTypes: true,
+            })
             .map((item) =>
-              fs.statSync(path.join(outputPath, assetsPath, item)).isDirectory()
-                ? `${basePath}${item}/*`
-                : `${basePath}${item}`,
+              item.isDirectory()
+                ? `${basePath}${item.name}/*`
+                : `${basePath}${item.name}`,
             ),
         };
       });
