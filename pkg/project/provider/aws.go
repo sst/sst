@@ -93,7 +93,7 @@ func (a *AwsProvider) Init(app string, stage string, args map[string]interface{}
 	if cfg.Region == "" {
 		cfg.Region = "us-east-1"
 	}
-	slog.Info("credentials found")
+	slog.Info("aws credentials found", "region", cfg.Region)
 	a.config = cfg
 	// if profile is set in args it gets saved to the provider and always used for removing resources
 	// this isn't ideal because people may use different profile names for the same stage
