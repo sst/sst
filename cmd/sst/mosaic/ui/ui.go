@@ -411,7 +411,7 @@ func (u *UI) Event(unknown interface{}) {
 							u.print(TEXT_INFO.Render("`args." + string(diff.Input) + " = " + string(value) + ";`"))
 						}
 						if !isSSTComponent {
-							u.print(TEXT_INFO.Render("`" + string(diff.Input) + ": " + string(value) + ";`"))
+							u.print(TEXT_INFO.Render("`" + string(diff.Input) + ": " + string(value) + ",`"))
 						}
 						u.println()
 					}
