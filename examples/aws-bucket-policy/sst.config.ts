@@ -17,6 +17,8 @@ export default $config({
     const bucket = new sst.aws.Bucket("MyBucket", {
       transform: {
         policy: (args) => {
+          // use $jsonParse and $jsonStringify helper functions to manipulate JSON strings
+          // containing Output values from components
           args.policy = $jsonParse(args.policy).apply((policy) => {
             policy.Statement.push({
               Effect: "Allow",
