@@ -14,6 +14,10 @@ type CreateResult[T any] struct {
 	Outs T      `json:"outs"`
 }
 
+type UpdateResult[T any] struct {
+	Outs T      `json:"outs"`
+}
+
 type DeleteInput[T any] struct {
 	ID   string `json:"id"`
 	Outs T      `json:"outs"`

@@ -29,7 +29,13 @@ func Start(ctx context.Context, p *project.Project, server *server.Server) error
 
 	awsResource := AwsResource{ctx, p}
 
+	serve.RegisterName("Resource.Aws.BucketFiles", &BucketFiles{&awsResource})
+	serve.RegisterName("Resource.Aws.DistributionDeploymentWaiter", &DistributionDeploymentWaiter{&awsResource})
+	serve.RegisterName("Resource.Aws.DistributionInvalidation", &DistributionInvalidation{&awsResource})
+	serve.RegisterName("Resource.Aws.FunctionCodeUpdater", &FunctionCodeUpdater{&awsResource})
+	serve.RegisterName("Resource.Aws.HostedZoneLookup", &HostedZoneLookup{&awsResource})
 	serve.RegisterName("Resource.Aws.OriginAccessIdentity", &OriginAccessIdentity{&awsResource})
+	serve.RegisterName("Resource.Aws.VectorTable", &VectorTable{&awsResource})
 
 	server.Mux.HandleFunc("/rpc", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" {
