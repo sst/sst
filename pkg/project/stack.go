@@ -128,6 +128,7 @@ type StackCommandEvent struct {
 	Stage   string
 	Config  string
 	Command string
+	Version string
 }
 
 type Error struct {
@@ -153,6 +154,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		Stage:   p.app.Stage,
 		Config:  p.PathConfig(),
 		Command: input.Command,
+		Version: p.Version(),
 	})
 
 	updateID := cuid2.Generate()

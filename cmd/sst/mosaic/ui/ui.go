@@ -169,7 +169,7 @@ func (u *UI) Event(unknown interface{}) {
 
 	case *project.StackCommandEvent:
 		u.reset()
-		u.header("", evt.App, evt.Stage)
+		u.header(evt.Version, evt.App, evt.Stage)
 		u.blank()
 		if evt.Command == "deploy" {
 			u.mode = ProgressModeDeploy
