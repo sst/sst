@@ -3,10 +3,12 @@ package cli
 import (
 	"context"
 	"fmt"
-	flag "github.com/spf13/pflag"
 	"os"
 	"os/user"
+	"path/filepath"
 	"strings"
+
+	flag "github.com/spf13/pflag"
 
 	"github.com/charmbracelet/huh"
 	"github.com/fatih/color"
@@ -329,7 +331,7 @@ func (c *Cli) Stage(cfgPath string) (string, error) {
 			}
 		}
 	}
-	godotenv.Load(fmt.Sprintf(".env.%s", stage))
+	godotenv.Load(filepath.Join(filepath.Dir(cfgPath), ".env."+stage))
 	return stage, nil
 }
 

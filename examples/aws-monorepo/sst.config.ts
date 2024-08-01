@@ -1,7 +1,5 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
-import { OriginAccessIdentity } from "./.sst/platform/src/components/aws/providers/origin-access-identity";
-
 /**
  * ## AWS monorepo
  *
@@ -117,8 +115,6 @@ export default $config({
   },
   async run() {
     const infra = await import("./infra");
-
-    new OriginAccessIdentity("MyOriginAccessIdentity", {});
 
     return {
       api: infra.api.url,
