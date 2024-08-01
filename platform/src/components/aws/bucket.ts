@@ -459,7 +459,7 @@ export class Bucket extends Component implements Link.Linkable {
   }
 
   /**
-   * The domain name of the bucket
+   * The domain name of the bucket. Has the format `${bucketName}.s3.amazonaws.com`.
    */
   public get domain() {
     return this.bucket.bucketDomainName;

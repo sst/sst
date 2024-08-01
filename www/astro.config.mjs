@@ -53,8 +53,8 @@ const sidebar = [
     label: "How to",
     items: [
       // { label: "Migrate from SST", link: "/docs/migrate-from-sst/" },
-      // { label: "Import Resources", link: "/docs/import-resources/" },
       { label: "Custom Domains", link: "/docs/custom-domains/" },
+      { label: "Import Resources", link: "/docs/import-resources/" },
       { label: "Share Across Stages", link: "/docs/share-across-stages/" },
     ],
   },
