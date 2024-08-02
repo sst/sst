@@ -257,36 +257,11 @@ This cost estimate is based on the `us-east-1` region pricing and does not consi
 
 ---
 
-## Logging
-
-By default, Lambda sends all logs to the same AWS CloudWatch log group. This makes it hard to find the request you are looking for.
-
-Starting v2.36.0, logs for individual routes are sent to separate log groups. The log group names are prefixed with `/sst/lambda`, followed by the app server function name, a hash of the route, and ends with route path in a readable format.
-
-```
-/sst/lambda/prod-app-MyNextSite-serverFunction6DFA6F1B-TiNQRV8IhGAu/979bddc4/about
-```
-
-With per-route logging, the [SST Console](../console.md) will display all routes within the resources page. To access logs for a specific route, simply select the route from the list.
-
-![Next.js per-route logging](/img/nextjssite/per-route-logging.png)
-
-You can opt-out of this by logging all routes to a single log group by setting the `logging` prop to `combined`.
-
-```diff
-new NextjsSite(stack, "Site", {
-  path: "my-next-app/",
-+ logging: "combined",
-});
-```
-
----
-
 ## Source maps
 
 Next.js uses Webpack to bundle your code, so the stack trace line numbers might not match. Turning on sourcemaps when building your Next.js app can fix this.
 
-To enable sourcemaps, make sure you are not disabling [`per-route` logging](#logging). Then update your Next.js config:
+To enable sourcemaps, update your Next.js config:
 
 ```diff title="next.config.js"
 const nextConfig = {
