@@ -30,7 +30,6 @@ func CmdMosaic(c *cli.Cli) error {
 	cwd, _ := os.Getwd()
 	var wg errgroup.Group
 
-	fmt.Println(os.Environ(), c.Arguments())
 	// spawning child process
 	if len(c.Arguments()) > 0 {
 		var args []string
