@@ -1165,7 +1165,7 @@ export class Function extends Component implements Link.Linkable {
             });
             if (result.type === "error") {
               throw new Error(
-                "Failed to build function: " + result.errors.join("\n").trim(),
+                `Failed to build function "${args.handler}": ` + result.errors.join("\n").trim(),
               );
             }
             return result;
