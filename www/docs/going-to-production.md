@@ -140,7 +140,7 @@ To setup OpenID Connect manually:
             uses: aws-actions/configure-aws-credentials@v2
             with:
               role-to-assume: arn:aws:iam::1234567890:role/GitHub
-              role-duration-seconds: 14390 #adjust as needed for your build time
+              role-duration-seconds: 14390 #adjust as needed for your build time and match Maximum session duration in the aws console
               aws-region: us-east-1
           - name: Deploy app
             run: |
