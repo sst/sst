@@ -129,7 +129,7 @@ We want to import this bucket into the [`Bucket`](/docs/component/aws/bucket/) c
          args.bucket = "mybucket-xnbmhcvd";
          args.forceDestroy = undefined;
 
-   -     opts.import = "mybucket-xnbmhcvd";
+   -      opts.import = "mybucket-xnbmhcvd";
        }
      }
    });
@@ -222,9 +222,9 @@ We want to import this bucket into the [`aws.s3.BucketV2`](https://www.pulumi.co
      {
        objectLockEnabled: undefined
      },
-   - {
-   -   import: "mybucket-xnbmhcvd"
-   - }
+   -  {
+   -    import: "mybucket-xnbmhcvd"
+   -  }
    );
    ```
 
@@ -232,7 +232,7 @@ We want to import this bucket into the [`aws.s3.BucketV2`](https://www.pulumi.co
 
 ---
 
-## What to import with
+## Import properties
 
 In the above examples we are importing a bucket using the bucket name. We need the bucket name because that's what AWS internally uses to do a lookup. But this is different for different resources.
 
@@ -241,8 +241,6 @@ So we've compiled a list of the most common resources you might import, along wi
 You can look this up by going to the **Import** section of a resource's doc. For example, here's the one for a [`aws.s3.BucketV2`](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/#import).
 
 ---
-
-### Properties
 
 The following table lists the properties you need to pass in to the `import` prop of the given resource to be able to import it.
 
