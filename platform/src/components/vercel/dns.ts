@@ -36,7 +36,7 @@
 
 import { DnsRecord, DnsRecordArgs } from "@pulumiverse/vercel";
 import { Dns, Record } from "../dns";
-import { sanitizeToPascalCase } from "../naming";
+import { logicalName } from "../naming";
 import { ComponentResourceOptions, all } from "@pulumi/pulumi";
 import { Transform, transform } from "../component";
 import { Input } from "../input";
@@ -99,7 +99,7 @@ export function dns(args: DnsArgs) {
     opts: ComponentResourceOptions,
   ) {
     return all([args.domain, record]).apply(([domain, record]) => {
-      const nameSuffix = sanitizeToPascalCase(record.name);
+      const nameSuffix = logicalName(record.name);
       const recordName = validateRecordName();
       const dnsRecord = createRecord();
       return dnsRecord;

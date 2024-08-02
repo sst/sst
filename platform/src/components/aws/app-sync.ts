@@ -4,7 +4,7 @@ import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs } from "./function";
-import { sanitizeToPascalCase } from "../naming";
+import { logicalName } from "../naming";
 import { VisibleError } from "../error";
 import { AppSyncDataSource } from "./app-sync-data-source";
 import { AppSyncResolver } from "./app-sync-resolver";
@@ -694,7 +694,7 @@ export class AppSync extends Component implements Link.Linkable {
   public addDataSource(args: AppSyncDataSourceArgs) {
     const self = this;
     const selfName = this.constructorName;
-    const nameSuffix = sanitizeToPascalCase(args.name);
+    const nameSuffix = logicalName(args.name);
 
     return new AppSyncDataSource(`${selfName}DataSource${nameSuffix}`, {
       apiId: self.api.id,
@@ -738,7 +738,7 @@ export class AppSync extends Component implements Link.Linkable {
   public addFunction(args: AppSyncFunctionArgs) {
     const self = this;
     const selfName = this.constructorName;
-    const nameSuffix = sanitizeToPascalCase(args.name);
+    const nameSuffix = logicalName(args.name);
 
     return new AppSyncFunction(`${selfName}Function${nameSuffix}`, {
       apiId: self.api.id,
@@ -806,8 +806,7 @@ export class AppSync extends Component implements Link.Linkable {
       throw new VisibleError(`Invalid resolver ${operation}`);
     const [type, field] = parts;
 
-    const nameSuffix =
-      `${sanitizeToPascalCase(type)}` + `${sanitizeToPascalCase(field)}`;
+    const nameSuffix = `${logicalName(type)}` + `${logicalName(field)}`;
     return new AppSyncResolver(`${selfName}Resolver${nameSuffix}`, {
       apiId: self.api.id,
       type,

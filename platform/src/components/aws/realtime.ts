@@ -3,7 +3,7 @@ import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { Function, FunctionArgs } from "./function";
-import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
+import { hashStringToPrettyString, logicalName } from "../naming";
 import { RealtimeLambdaSubscriber } from "./realtime-lambda-subscriber";
 import { iot, lambda } from "@pulumi/aws";
 
@@ -289,8 +289,8 @@ export class Realtime extends Component implements Link.Linkable {
     args: RealtimeSubscriberArgs,
   ) {
     return all([subscriber, args.filter]).apply(([subscriber, filter]) => {
-      const prefix = sanitizeToPascalCase(this.constructorName);
-      const suffix = sanitizeToPascalCase(
+      const prefix = logicalName(this.constructorName);
+      const suffix = logicalName(
         hashStringToPrettyString(
           [
             filter,

@@ -6,6 +6,8 @@ import {
   all,
   ComponentResource,
 } from "@pulumi/pulumi";
+import { VisibleError } from "./error.js";
+import { Linkable } from "./linkable.js";
 
 export module Link {
   export interface Definition<
@@ -40,18 +42,41 @@ export module Link {
 
   export function reset() {
     const links = new Set<string>();
+    // Ensure component names are unique
+    runtime.registerStackTransformation((args) => {
+      const isLinkable =
+        args.type.startsWith("sst:") ||
+        Linkable.wrappedResources.has(args.type);
+      if (isLinkable && !args.opts.parent) {
+        const lcname = args.name.toLowerCase();
+
+        // "App" is reserved and cannot be used as a component name.
+        if (lcname === "app") {
+          throw new VisibleError(
+            `Component name "${args.name}" is reserved. Please choose a different name for your "${args.type}" component.`,
+          );
+        }
+
+        // Ensure linkable resources have unique names. This includes all SST components
+        // and non-SST components that are linkable.
+        if (links.has(lcname)) {
+          throw new VisibleError(`Component name ${args.name} is not unique.`);
+        }
+        links.add(lcname);
+      }
+      return {
+        opts: args.opts,
+        props: args.props,
+      };
+    });
+
+    // Create link refs
     runtime.registerStackTransformation((args) => {
       const resource = args.resource;
       process.nextTick(() => {
         if (Link.isLinkable(resource) && !args.opts.parent) {
-          // Ensure linkable resources have unique names. This includes all
-          // SST components and non-SST components that are linkable.
-          if (links.has(args.name)) {
-            throw new Error(`Component name ${args.name} is not unique`);
-          }
           const link = resource.getSSTLink();
           new Ref(args.name, args.type, link.properties);
-          links.add(args.name);
         }
       });
       return {

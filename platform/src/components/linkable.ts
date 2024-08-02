@@ -163,9 +163,12 @@ export interface Definition<
  */
 export class Linkable<T extends Record<string, any>>
   extends Component
-  implements Link.Linkable {
+  implements Link.Linkable
+{
   private _name: string;
   private _definition: Definition<T>;
+
+  public static wrappedResources = new Set<string>();
 
   constructor(name: string, definition: Definition<T>) {
     super("sst:sst:Linkable", name, definition, {});
@@ -228,10 +231,13 @@ export class Linkable<T extends Record<string, any>>
    * ```
    */
   public static wrap<Resource>(
-    cls: { new(...args: any[]): Resource },
+    cls: { new (...args: any[]): Resource },
     cb: (resource: Resource) => Definition,
   ) {
-    cls.prototype.getSSTLink = function() {
+    // @ts-expect-error
+    this.wrappedResources.add(cls.__pulumiType);
+
+    cls.prototype.getSSTLink = function () {
       return cb(this);
     };
   }

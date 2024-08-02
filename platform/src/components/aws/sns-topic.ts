@@ -3,7 +3,7 @@ import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs } from "./function";
-import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
+import { hashStringToPrettyString, logicalName } from "../naming";
 import { parseTopicArn } from "./helpers/arn";
 import { SnsTopicLambdaSubscriber } from "./sns-topic-lambda-subscriber";
 import { SnsTopicQueueSubscriber } from "./sns-topic-queue-subscriber";
@@ -314,8 +314,8 @@ export class SnsTopic extends Component implements Link.Linkable {
     args: SnsTopicSubscriberArgs = {},
   ) {
     return all([name, subscriber, args]).apply(([name, subscriber, args]) => {
-      const prefix = sanitizeToPascalCase(name);
-      const suffix = sanitizeToPascalCase(
+      const prefix = logicalName(name);
+      const suffix = logicalName(
         hashStringToPrettyString(
           [
             topicArn,
@@ -426,8 +426,8 @@ export class SnsTopic extends Component implements Link.Linkable {
     args: SnsTopicSubscriberArgs = {},
   ) {
     return all([name, queueArn, args]).apply(([name, queueArn, args]) => {
-      const prefix = sanitizeToPascalCase(name);
-      const suffix = sanitizeToPascalCase(
+      const prefix = logicalName(name);
+      const suffix = logicalName(
         hashStringToPrettyString(
           [topicArn, JSON.stringify(args.filter ?? {}), queueArn].join(""),
           6,

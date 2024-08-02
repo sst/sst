@@ -7,10 +7,10 @@ import {
 } from "@pulumi/pulumi";
 import { RandomId } from "@pulumi/random";
 import {
-  prefixName,
+  physicalName,
   hashNumberToPrettyString,
   hashStringToPrettyString,
-  sanitizeToPascalCase,
+  logicalName,
 } from "../naming";
 import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
@@ -347,7 +347,7 @@ export class Bucket extends Component implements Link.Linkable {
           { parent },
         );
         transformed[1].bucket = randomId.dec.apply((dec) =>
-          prefixName(
+          physicalName(
             63,
             name,
             `-${hashNumberToPrettyString(parseInt(dec), 8)}`,
@@ -649,8 +649,8 @@ export class Bucket extends Component implements Link.Linkable {
   ) {
     return all([name, subscriber, args]).apply(([name, subscriber, args]) => {
       // Build subscriber name
-      const prefix = sanitizeToPascalCase(name);
-      const suffix = sanitizeToPascalCase(
+      const prefix = logicalName(name);
+      const suffix = logicalName(
         hashStringToPrettyString(
           [
             bucketArn,

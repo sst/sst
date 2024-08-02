@@ -9,11 +9,7 @@ import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs } from "./function";
-import {
-  hashStringToPrettyString,
-  prefixName,
-  sanitizeToPascalCase,
-} from "../naming";
+import { hashStringToPrettyString, physicalName, logicalName } from "../naming";
 import { VisibleError } from "../error";
 import { RETENTION } from "./logging";
 import { ApiGatewayV1LambdaRoute } from "./apigatewayv1-lambda-route";
@@ -607,7 +603,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
       const parentPath = "/" + pathParts.slice(0, i).join("/");
       const subPath = "/" + pathParts.slice(0, i + 1).join("/");
       if (!this.resources[subPath]) {
-        const suffix = sanitizeToPascalCase(
+        const suffix = logicalName(
           hashStringToPrettyString([this.api.id, subPath].join(""), 6),
         );
         const resource = new apigateway.Resource(
@@ -627,7 +623,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     }
 
     // Create route
-    const suffix = sanitizeToPascalCase(
+    const suffix = logicalName(
       hashStringToPrettyString([this.api.id, method, path].join(""), 6),
     );
 
@@ -738,7 +734,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
   public addAuthorizer(args: ApiGatewayV1AuthorizerArgs) {
     const self = this;
     const selfName = this.constructorName;
-    const nameSuffix = sanitizeToPascalCase(args.name);
+    const nameSuffix = logicalName(args.name);
 
     return new ApiGatewayV1Authorizer(`${selfName}Authorizer${nameSuffix}`, {
       api: {
@@ -801,7 +797,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
           args.transform?.accessLog,
           `${name}AccessLog`,
           {
-            name: `/aws/vendedlogs/apis/${prefixName(64, name)}`,
+            name: `/aws/vendedlogs/apis/${physicalName(64, name)}`,
             retentionInDays: accessLog.apply(
               (accessLog) => RETENTION[accessLog.retention],
             ),

@@ -3,11 +3,7 @@ import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs } from "./function";
-import {
-  hashStringToPrettyString,
-  prefixName,
-  sanitizeToPascalCase,
-} from "../naming";
+import { hashStringToPrettyString, physicalName, logicalName } from "../naming";
 import { parseEventBusArn } from "./helpers/arn";
 import { BusLambdaSubscriber } from "./bus-lambda-subscriber";
 import { cloudwatch } from "@pulumi/aws";
@@ -190,7 +186,7 @@ export class Bus extends Component implements Link.Linkable {
           args.transform?.bus,
           `${name}Bus`,
           {
-            name: prefixName(256, name),
+            name: physicalName(256, name),
           },
           { parent },
         ),
@@ -319,8 +315,8 @@ export class Bus extends Component implements Link.Linkable {
     args: BusSubscriberArgs = {},
   ) {
     return all([name, subscriber, args]).apply(([name, subscriber, args]) => {
-      const prefix = sanitizeToPascalCase(name);
-      const suffix = sanitizeToPascalCase(
+      const prefix = logicalName(name);
+      const suffix = logicalName(
         hashStringToPrettyString(
           [
             busArn,

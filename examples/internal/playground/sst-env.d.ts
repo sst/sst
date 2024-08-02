@@ -3,14 +3,14 @@
 import "sst"
 declare module "sst" {
   export interface Resource {
-    MyApp: {
-      name: string
-      type: "sst.aws.Function"
-      url: string
+    "MyApp": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
     }
-    MyBucket: {
-      name: string
-      type: "sst.aws.Bucket"
+    "MyBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
     }
   }
 }

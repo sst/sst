@@ -3,7 +3,7 @@ import { Component, Transform, transform } from "../component";
 import { FunctionArgs } from "./function.js";
 import { Input } from "../input";
 import { Link } from "../link";
-import { prefixName } from "../naming";
+import { physicalName } from "../naming";
 import { cognito, getRegionOutput, iam } from "@pulumi/aws";
 import { permission } from "./permission";
 
@@ -159,7 +159,7 @@ export class CognitoIdentityPool extends Component implements Link.Linkable {
           args.transform?.identityPool,
           `${name}IdentityPool`,
           {
-            identityPoolName: prefixName(128, name),
+            identityPoolName: physicalName(128, name),
             allowUnauthenticatedIdentities: true,
             cognitoIdentityProviders:
               args.userPools &&

@@ -3,11 +3,7 @@ import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs } from "./function";
-import {
-  hashStringToPrettyString,
-  prefixName,
-  sanitizeToPascalCase,
-} from "../naming";
+import { hashStringToPrettyString, physicalName, logicalName } from "../naming";
 import { VisibleError } from "../error";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { RETENTION } from "./logging";
@@ -603,7 +599,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
           args.transform?.logGroup,
           `${name}AccessLog`,
           {
-            name: `/aws/vendedlogs/apis/${prefixName(64, name)}`,
+            name: `/aws/vendedlogs/apis/${physicalName(64, name)}`,
             retentionInDays: accessLog.apply(
               (accessLog) => RETENTION[accessLog.retention],
             ),
@@ -873,7 +869,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
   ) {
     const route = this.parseRoute(rawRoute);
     const prefix = this.constructorName;
-    const suffix = sanitizeToPascalCase(
+    const suffix = logicalName(
       hashStringToPrettyString([this.api.id, route].join(""), 6),
     );
 
@@ -989,7 +985,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
 
   private buildRouteId(route: string) {
     const prefix = this.constructorName;
-    const suffix = sanitizeToPascalCase(
+    const suffix = logicalName(
       hashStringToPrettyString([this.api.id, route].join(""), 6),
     );
     return `${prefix}Route${suffix}`;
@@ -1016,7 +1012,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
   public addAuthorizer(args: ApiGatewayV2AuthorizerArgs) {
     const self = this;
     const selfName = this.constructorName;
-    const nameSuffix = sanitizeToPascalCase(args.name);
+    const nameSuffix = logicalName(args.name);
 
     return new ApiGatewayV2Authorizer(`${selfName}Authorizer${nameSuffix}`, {
       api: {

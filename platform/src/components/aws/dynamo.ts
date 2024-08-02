@@ -9,7 +9,7 @@ import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs } from "./function";
-import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
+import { hashStringToPrettyString, logicalName } from "../naming";
 import { parseDynamoStreamArn } from "./helpers/arn";
 import { DynamoLambdaSubscriber } from "./dynamo-lambda-subscriber";
 import { dynamodb, lambda } from "@pulumi/aws";
@@ -581,8 +581,8 @@ export class Dynamo extends Component implements Link.Linkable {
     args: DynamoSubscriberArgs = {},
   ) {
     return all([name, subscriber, args]).apply(([name, subscriber, args]) => {
-      const prefix = sanitizeToPascalCase(name);
-      const suffix = sanitizeToPascalCase(
+      const prefix = logicalName(name);
+      const suffix = logicalName(
         hashStringToPrettyString(
           [
             streamArn,

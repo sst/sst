@@ -9,7 +9,7 @@ import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs } from "./function";
 import { VisibleError } from "../error";
-import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming";
+import { hashStringToPrettyString, logicalName } from "../naming";
 import { parseQueueArn } from "./helpers/arn";
 import { QueueLambdaSubscriber } from "./queue-lambda-subscriber";
 import { lambda, sqs } from "@pulumi/aws";
@@ -508,10 +508,8 @@ export class Queue extends Component implements Link.Linkable {
     opts?: ComponentResourceOptions,
   ) {
     return all([name, queueArn]).apply(([name, queueArn]) => {
-      const prefix = sanitizeToPascalCase(name);
-      const suffix = sanitizeToPascalCase(
-        hashStringToPrettyString(queueArn, 6),
-      );
+      const prefix = logicalName(name);
+      const suffix = logicalName(hashStringToPrettyString(queueArn, 6));
 
       return new QueueLambdaSubscriber(
         `${prefix}Subscriber${suffix}`,

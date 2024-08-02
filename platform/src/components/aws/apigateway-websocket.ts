@@ -9,11 +9,7 @@ import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs } from "./function";
-import {
-  hashStringToPrettyString,
-  prefixName,
-  sanitizeToPascalCase,
-} from "../naming";
+import { hashStringToPrettyString, physicalName, logicalName } from "../naming";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { RETENTION } from "./logging";
 import { dns as awsDns } from "./dns.js";
@@ -293,7 +289,7 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
           args.transform?.accessLog,
           `${name}AccessLog`,
           {
-            name: `/aws/vendedlogs/apis/${prefixName(64, name)}`,
+            name: `/aws/vendedlogs/apis/${physicalName(64, name)}`,
             retentionInDays: accessLog.apply(
               (accessLog) => RETENTION[accessLog.retention],
             ),
@@ -537,7 +533,7 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
     args: ApiGatewayWebSocketRouteArgs = {},
   ) {
     const prefix = this.constructorName;
-    const suffix = sanitizeToPascalCase(
+    const suffix = logicalName(
       ["$connect", "$disconnect", "$default"].includes(route)
         ? route
         : hashStringToPrettyString(`${this.api.id}${route}`, 6),

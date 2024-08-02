@@ -42,7 +42,7 @@
 
 import * as cloudflare from "@pulumi/cloudflare";
 import { Dns, Record } from "../dns";
-import { sanitizeToPascalCase } from "../naming";
+import { logicalName } from "../naming";
 import { ZoneLookup } from "./providers/zone-lookup";
 import { ComponentResourceOptions, output } from "@pulumi/pulumi";
 import { Transform, transform } from "../component";
@@ -100,7 +100,7 @@ export function dns(args: DnsArgs = {}) {
     opts: ComponentResourceOptions,
   ) {
     return output(record).apply((record) => {
-      const nameSuffix = sanitizeToPascalCase(record.name);
+      const nameSuffix = logicalName(record.name);
       const zoneId = lookupZone();
       const dnsRecord = createRecord();
       return dnsRecord;

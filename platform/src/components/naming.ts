@@ -1,15 +1,24 @@
 import crypto from "crypto";
 
-export function sanitizeToPascalCase(str: string) {
-  const strNorm = str.replace(/[^a-zA-Z0-9]/g, "");
-  return strNorm.charAt(0).toUpperCase() + strNorm.slice(1);
+export function logicalName(name: string) {
+  name = name.replace(/[^a-zA-Z0-9]/g, "");
+  return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
-export function prefixName(maxLength: number, name: string, suffix?: string) {
-  const suffixStr = suffix ?? "";
+export function physicalName(
+  maxLength: number,
+  name: string,
+  suffix: string = "",
+) {
+  // This function does the following:
+  // - Removes all non-alphanumeric characters
+  // - Prefixes the name with the app name and stage
+  // - Truncates the name if it's too long
+
+  name = name.replace(/[^a-zA-Z0-9]/g, "");
 
   const prefixedName = (() => {
-    const L = maxLength - suffixStr.length;
+    const L = maxLength - suffix.length;
     const appLen = $app.name.length;
     const stageLen = $app.stage.length;
     const nameLen = name.length;
@@ -33,7 +42,7 @@ export function prefixName(maxLength: number, name: string, suffix?: string) {
     return `${stageTruncated}-${nameTruncated}`;
   })();
 
-  return `${prefixedName}${suffixStr}`;
+  return `${prefixedName}${suffix}`;
 }
 
 export function hashNumberToPrettyString(number: number, length: number) {

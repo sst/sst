@@ -16,7 +16,7 @@ import { Function, FunctionArgs } from "./function.js";
 import { useProvider } from "./helpers/provider.js";
 import { Bucket, BucketArgs } from "./bucket.js";
 import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
-import { sanitizeToPascalCase } from "../naming.js";
+import { logicalName } from "../naming.js";
 import { Input } from "../input.js";
 import { transform, type Prettify, type Transform } from "../component.js";
 import { VisibleError } from "../error.js";
@@ -471,7 +471,7 @@ export function createServersAndDistribution(
       Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
         ([fnName, { injections }]) => {
           functions[fnName] = new cloudfront.Function(
-            `${name}CloudfrontFunction${sanitizeToPascalCase(fnName)}`,
+            `${name}CloudfrontFunction${logicalName(fnName)}`,
             {
               runtime: "cloudfront-js-1.0",
               code: `
@@ -502,7 +502,7 @@ function handler(event) {
           });
 
           const fn = new Function(
-            `${name}Edge${sanitizeToPascalCase(fnName)}`,
+            `${name}Edge${logicalName(fnName)}`,
             {
               runtime: "nodejs20.x",
               timeout: "20 seconds",
@@ -603,7 +603,7 @@ function handler(event) {
       const fn = new Function(
         ...transform(
           args.transform?.server,
-          `${name}${sanitizeToPascalCase(fnName)}`,
+          `${name}${logicalName(fnName)}`,
           {
             description: `${name} server`,
             runtime: "nodejs20.x",
@@ -665,7 +665,7 @@ function handler(event) {
       const fn = new Function(
         ...transform(
           args.transform?.imageOptimization,
-          `${name}${sanitizeToPascalCase(fnName)}`,
+          `${name}${logicalName(fnName)}`,
           {
             timeout: "25 seconds",
             logging: {

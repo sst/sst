@@ -32,7 +32,7 @@
  */
 
 import { AliasRecord, Dns, Record } from "../dns";
-import { sanitizeToPascalCase } from "../naming";
+import { logicalName } from "../naming";
 import { HostedZoneLookup } from "./providers/hosted-zone-lookup";
 import { ComponentResourceOptions, output } from "@pulumi/pulumi";
 import { Transform, transform } from "../component";
@@ -149,7 +149,7 @@ export function dns(args: DnsArgs = {}) {
     opts: ComponentResourceOptions,
   ) {
     return output(partial).apply((partial) => {
-      const nameSuffix = sanitizeToPascalCase(partial.name);
+      const nameSuffix = logicalName(partial.name);
       const zoneId = lookupZone();
       const dnsRecord = createRecord();
       return dnsRecord;

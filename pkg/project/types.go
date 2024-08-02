@@ -24,7 +24,7 @@ func inferTypes(input map[string]interface{}, indentArgs ...string) string {
 	sort.Strings(keys)
 	for _, key := range keys {
 		value := input[key]
-		builder.WriteString(indent + "  " + key + ": ")
+		builder.WriteString(indent + "  \"" + key + "\": ")
 		if key == "type" && len(indentArgs) == 1 {
 			builder.WriteString("\"")
 			builder.WriteString(value.(string))

@@ -4,7 +4,7 @@ import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component.js";
 import { Input } from "../input.js";
 import { Link } from "../link.js";
-import { hashStringToPrettyString, sanitizeToPascalCase } from "../naming.js";
+import { hashStringToPrettyString, logicalName } from "../naming.js";
 import { FunctionArgs } from "./function.js";
 import { KinesisStreamLambdaSubscriber } from "./kinesis-stream-lambda-subscriber.js";
 import { parseKinesisStreamArn } from "./helpers/arn.js";
@@ -263,8 +263,8 @@ export class KinesisStream extends Component implements Link.Linkable {
     opts?: ComponentResourceOptions,
   ) {
     return all([name, streamArn, args]).apply(([name, streamArn, args]) => {
-      const prefix = sanitizeToPascalCase(name);
-      const suffix = sanitizeToPascalCase(
+      const prefix = logicalName(name);
+      const suffix = logicalName(
         hashStringToPrettyString(
           [
             streamArn,

@@ -17,7 +17,7 @@ export async function run(program: automation.PulumiFn) {
   process.chdir($cli.paths.root);
 
   addTransformationToRetainResourcesOnDelete();
-  addTransformationToEnsureUniqueComponentNames();
+  addTransformationToAddTags();
   addTransformationToCheckBucketsHaveMultiplePolicies();
 
   Linkable.wrap(dynamodb.Table, (item) => ({
@@ -52,44 +52,16 @@ function addTransformationToRetainResourcesOnDelete() {
     }
     return undefined;
   });
-  runtime.registerStackTransformation((args) => {
+}
+
+function addTransformationToAddTags() {
+  runtime.registerStackTransformation((args: ResourceTransformationArgs) => {
     if ("import" in args.opts && args.opts.import) {
       if (!args.opts.ignoreChanges) args.opts.ignoreChanges = [];
       args.opts.ignoreChanges.push("tags");
       args.opts.ignoreChanges.push("tagsAll");
     }
     return args;
-  });
-}
-
-function addTransformationToEnsureUniqueComponentNames() {
-  const componentNames = new Set<string>();
-  runtime.registerStackTransformation((args: ResourceTransformationArgs) => {
-    if (args.type.startsWith("pulumi")) {
-      return;
-    }
-
-    const lcName = args.name.toLowerCase();
-    if (lcName === "app") {
-      throw new VisibleError(
-        `Component name "${args.name}" is reserved. Please choose a different name for your "${args.type}" component.`,
-      );
-    }
-
-    if (componentNames.has(lcName)) {
-      throw new VisibleError(
-        `Invalid component name "${args.name}". Component names must be unique.`,
-      );
-    }
-    componentNames.add(lcName);
-
-    if (!args.name.match(/^[A-Z][a-zA-Z0-9]*$/)) {
-      throw new VisibleError(
-        `Invalid component name "${args.name}". Component names must start with an uppercase letter and contain only alphanumeric characters.`,
-      );
-    }
-
-    return undefined;
   });
 }
 
