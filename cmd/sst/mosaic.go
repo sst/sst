@@ -19,6 +19,7 @@ import (
 	"github.com/sst/ion/cmd/sst/mosaic/multiplexer"
 	"github.com/sst/ion/cmd/sst/mosaic/socket"
 	"github.com/sst/ion/cmd/sst/mosaic/watcher"
+	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/rpc"
 	"github.com/sst/ion/pkg/server"
@@ -29,6 +30,7 @@ func CmdMosaic(c *cli.Cli) error {
 	cwd, _ := os.Getwd()
 	var wg errgroup.Group
 
+	fmt.Println(os.Environ(), c.Arguments())
 	// spawning child process
 	if len(c.Arguments()) > 0 {
 		var args []string
@@ -108,6 +110,10 @@ func CmdMosaic(c *cli.Cli) error {
 				env = nextEnv
 			}
 		}
+	}
+
+	if os.Getenv("SST_SERVER") != "" {
+		return util.NewReadableError(nil, "The dev command for this process does not look right. Check your dev script in package.json to make sure it is simply starting your process and not running `sst dev`. More info here: https://ion.sst.dev/docs/reference/cli/#dev")
 	}
 
 	p, err := c.InitProject()
