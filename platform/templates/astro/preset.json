@@ -25,7 +25,7 @@
         "",
         "import aws from \"astro-sst\";",
         "export default defineConfig({",
-        "  output: \"server\",",
+        "  output: \"dist\",",
         "  adapter: aws()",
         "});"
       ]
