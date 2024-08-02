@@ -23,7 +23,7 @@
       "properties": [
         "Next steps: update svelte.config.js",
         "",
-        "import adapter from \"svelte-kit-sst\";",
+        "import adapter from \"svelte-kit-sst\";"
       ]
     }
   ]
