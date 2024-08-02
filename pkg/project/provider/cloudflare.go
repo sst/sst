@@ -18,19 +18,16 @@ import (
 type CloudflareProvider struct {
 	api              *cloudflare.API
 	identifier       *cloudflare.ResourceContainer
-	bootstrap        *bootstrap
 	defaultAccountId string
 }
 
-type bootstrap struct {
-	State string `json:"state"`
-}
-
-func (c CloudflareProvider) Api() *cloudflare.API {
-	return c.api
-}
-
 var ErrCloudflareMissingAccount = fmt.Errorf("missing account")
+
+func (c *CloudflareProvider) Env() (map[string]string, error) {
+	return map[string]string{
+		"CLOUDFLARE_DEFAULT_ACCOUNT_ID": c.defaultAccountId,
+	}, nil
+}
 
 func (c *CloudflareProvider) Init(app, stage string, args map[string]interface{}) error {
 	apiToken := os.Getenv("CLOUDFLARE_API_TOKEN")
@@ -73,9 +70,28 @@ func (c *CloudflareProvider) Init(app, stage string, args map[string]interface{}
 	return nil
 }
 
-func (c *CloudflareProvider) Bootstrap(app, stage string) error {
+func (c CloudflareProvider) Api() *cloudflare.API {
+	return c.api
+}
+
+type CloudflareHome struct {
+	provider  *CloudflareProvider
+	bootstrap *bootstrap
+}
+
+func NewCloudflareHome(provider *CloudflareProvider) *CloudflareHome {
+	return &CloudflareHome{
+		provider: provider,
+	}
+}
+
+type bootstrap struct {
+	State string `json:"state"`
+}
+
+func (c *CloudflareHome) Bootstrap() error {
 	ctx := context.Background()
-	buckets, err := c.api.ListR2Buckets(ctx, c.identifier, cloudflare.ListR2BucketsParams{
+	buckets, err := c.provider.api.ListR2Buckets(ctx, c.provider.identifier, cloudflare.ListR2BucketsParams{
 		Name: "sst-state",
 	})
 	if err != nil {
@@ -92,7 +108,7 @@ func (c *CloudflareProvider) Bootstrap(app, stage string) error {
 
 	if c.bootstrap == nil {
 		slog.Info("creating new bucket", "bucket", "sst-state")
-		_, err = c.api.CreateR2Bucket(ctx, c.identifier, cloudflare.CreateR2BucketParameters{
+		_, err = c.provider.api.CreateR2Bucket(ctx, c.provider.identifier, cloudflare.CreateR2BucketParameters{
 			Name: "sst-state",
 		})
 		if err != nil {
@@ -109,18 +125,18 @@ func (c *CloudflareProvider) Bootstrap(app, stage string) error {
 //go:linkname makeRequestContext github.com/cloudflare/cloudflare-go.(*API).makeRequestContext
 func makeRequestContext(*cloudflare.API, context.Context, string, string, interface{}) ([]byte, error)
 
-func (c *CloudflareProvider) putData(kind, app, stage string, data io.Reader) error {
+func (c *CloudflareHome) putData(kind, app, stage string, data io.Reader) error {
 	path := filepath.Join(kind, app, stage)
-	_, err := makeRequestContext(c.api, context.Background(), http.MethodPut, "/accounts/"+c.identifier.Identifier+"/r2/buckets/"+c.bootstrap.State+"/objects/"+path, data)
+	_, err := makeRequestContext(c.provider.api, context.Background(), http.MethodPut, "/accounts/"+c.provider.identifier.Identifier+"/r2/buckets/"+c.bootstrap.State+"/objects/"+path, data)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *CloudflareProvider) getData(kind, app, stage string) (io.Reader, error) {
+func (c *CloudflareHome) getData(kind, app, stage string) (io.Reader, error) {
 	path := filepath.Join(kind, app, stage)
-	data, err := makeRequestContext(c.api, context.Background(), http.MethodGet, "/accounts/"+c.identifier.Identifier+"/r2/buckets/"+c.bootstrap.State+"/objects/"+path, nil)
+	data, err := makeRequestContext(c.provider.api, context.Background(), http.MethodGet, "/accounts/"+c.provider.identifier.Identifier+"/r2/buckets/"+c.bootstrap.State+"/objects/"+path, nil)
 	if err != nil {
 		if err.Error() == "The specified key does not exist. (10007)" {
 			return nil, nil
@@ -130,9 +146,9 @@ func (c *CloudflareProvider) getData(kind, app, stage string) (io.Reader, error)
 	return bytes.NewReader(data), nil
 }
 
-func (c *CloudflareProvider) removeData(kind, app, stage string) error {
+func (c *CloudflareHome) removeData(kind, app, stage string) error {
 	path := filepath.Join(kind, app, stage)
-	_, err := makeRequestContext(c.api, context.Background(), http.MethodDelete, "/accounts/"+c.identifier.Identifier+"/r2/buckets/"+c.bootstrap.State+"/objects/"+path, nil)
+	_, err := makeRequestContext(c.provider.api, context.Background(), http.MethodDelete, "/accounts/"+c.provider.identifier.Identifier+"/r2/buckets/"+c.bootstrap.State+"/objects/"+path, nil)
 	if err != nil {
 		return err
 	}
@@ -140,11 +156,11 @@ func (c *CloudflareProvider) removeData(kind, app, stage string) error {
 }
 
 // these should go into secrets manager once it's out of beta
-func (c *CloudflareProvider) setPassphrase(app, stage string, passphrase string) error {
+func (c *CloudflareHome) setPassphrase(app, stage string, passphrase string) error {
 	return c.putData("passphrase", app, stage, bytes.NewReader([]byte(passphrase)))
 }
 
-func (c *CloudflareProvider) getPassphrase(app, stage string) (string, error) {
+func (c *CloudflareHome) getPassphrase(app, stage string) (string, error) {
 	data, err := c.getData("passphrase", app, stage)
 	if err != nil {
 		return "", err
@@ -157,10 +173,4 @@ func (c *CloudflareProvider) getPassphrase(app, stage string) (string, error) {
 		return "", err
 	}
 	return string(read), nil
-}
-
-func (c *CloudflareProvider) Env() (map[string]string, error) {
-	return map[string]string{
-		"CLOUDFLARE_DEFAULT_ACCOUNT_ID": c.defaultAccountId,
-	}, nil
 }

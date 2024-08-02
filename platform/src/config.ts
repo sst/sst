@@ -48,7 +48,7 @@
  * :::
  *
  * The run function also has access to a list of [Global](/docs/reference/global/) `$` variables and functions. These serve as the context for your app config.
- * 
+ *
  * :::caution
  * Do not `import` the provider packages in your `sst.config.ts`.
  * :::
@@ -195,24 +195,14 @@ export interface App {
   /**
    * The provider SST will use to store the state for your app. The state keeps track of all your resources and secrets. The state is generated locally and backed up in your cloud provider.
    *
+   *
+   * Currently supports AWS, Cloudflare and local.
+   *
    * :::tip
-   * SST uses the `home` provider to store the state for your app.
+   * SST uses the `home` provider to store the state for your app. If you use the local provider it will be saved on your machine. You can see where by running `sst version`.
    * :::
    *
-   * Currently supports AWS and Cloudflare.
-   *
-   * Setting the `home` provider is the same as setting the `providers` list. So if you set `home` to `aws`, it's the same as doing:
-   *
-   * ```ts
-   * {
-   *   home: "aws",
-   *   providers: {
-   *     aws: true
-   *   }
-   * }
-   * ```
-   *
-   * If you want to configure your home provider, you can:
+   * If you want to configure the aws or cloudflare home provider, you can:
    *
    * ```ts
    * {
@@ -226,7 +216,7 @@ export interface App {
    * ```
    *
    */
-  home: "aws" | "cloudflare";
+  home: "aws" | "cloudflare" | "local";
 }
 
 export interface AppInput {

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/nrednav/cuid2"
+	"github.com/pulumi/pulumi/sdk/v3"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
@@ -1047,7 +1048,9 @@ var root = &cli.Command{
 				Long:  `Prints the current version of the CLI.`,
 			},
 			Run: func(cli *cli.Cli) error {
-				fmt.Println(version)
+				fmt.Println("sst", version)
+				fmt.Println("pulumi", sdk.Version)
+				fmt.Println("config", global.ConfigDir())
 				return nil
 			},
 		},

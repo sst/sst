@@ -8,7 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
-	"path/filepath"
+	"path"
 	"strings"
 	"sync"
 
@@ -26,7 +26,6 @@ import (
 
 type AwsProvider struct {
 	config      aws.Config
-	bootstrap   *awsBootstrapData
 	profile     string
 	credentials sync.Once
 }
@@ -46,16 +45,6 @@ func (a *AwsProvider) Env() (map[string]string, error) {
 	}
 	return env, nil
 }
-
-func (a *AwsProvider) pathForData(key, app, stage string) string {
-	return filepath.Join(key, app, fmt.Sprintf("%v.json", stage))
-}
-
-func (a *AwsProvider) pathForPassphrase(app string, stage string) string {
-	return "/" + strings.Join([]string{"sst", "passphrase", app, stage}, "/")
-}
-
-const BOOTSTRAP_VERSION = 1
 
 func (a *AwsProvider) Init(app string, stage string, args map[string]interface{}) error {
 	ctx := context.Background()
@@ -120,7 +109,32 @@ func (a *AwsProvider) Init(app string, stage string, args map[string]interface{}
 	return nil
 }
 
-func (a *AwsProvider) Bootstrap(app string, stage string) (err error) {
+func (a *AwsProvider) Config() aws.Config {
+	return a.config
+}
+
+type AwsHome struct {
+	provider  *AwsProvider
+	bootstrap *awsBootstrapData
+}
+
+func NewAwsHome(provider *AwsProvider) *AwsHome {
+	return &AwsHome{
+		provider: provider,
+	}
+}
+
+func (a *AwsHome) pathForData(key, app, stage string) string {
+	return path.Join(key, app, fmt.Sprintf("%v.json", stage))
+}
+
+func (a *AwsHome) pathForPassphrase(app string, stage string) string {
+	return "/" + strings.Join([]string{"sst", "passphrase", app, stage}, "/")
+}
+
+const BOOTSTRAP_VERSION = 1
+
+func (a *AwsHome) Bootstrap() (err error) {
 	bootstrap, err := a.resolveBuckets()
 	if err != nil {
 		return err
@@ -135,10 +149,10 @@ type awsBootstrapData struct {
 	State   string `json:"state"`
 }
 
-func (a *AwsProvider) resolveBuckets() (*awsBootstrapData, error) {
+func (a *AwsHome) resolveBuckets() (*awsBootstrapData, error) {
 	ctx := context.TODO()
 
-	ssmClient := ssm.NewFromConfig(a.config)
+	ssmClient := ssm.NewFromConfig(a.provider.config)
 	slog.Info("fetching bootstrap")
 	result, err := ssmClient.GetParameter(ctx, &ssm.GetParameterInput{
 		Name:           aws.String(SSM_NAME_BOOTSTRAP),
@@ -161,12 +175,12 @@ func (a *AwsProvider) resolveBuckets() (*awsBootstrapData, error) {
 		}
 	}
 
-	region := a.config.Region
+	region := a.provider.config.Region
 	rand := util.RandomString(12)
 	assetName := fmt.Sprintf("sst-asset-%v", rand)
 	stateName := fmt.Sprintf("sst-state-%v", rand)
 	slog.Info("creating bootstrap bucket", "name", assetName)
-	s3Client := s3.NewFromConfig(a.config)
+	s3Client := s3.NewFromConfig(a.provider.config)
 
 	var config *s3types.CreateBucketConfiguration = nil
 	if region != "us-east-1" {
@@ -231,8 +245,8 @@ func (a *AwsProvider) resolveBuckets() (*awsBootstrapData, error) {
 	return bootstrapData, nil
 }
 
-func (a *AwsProvider) getData(key, app, stage string) (io.Reader, error) {
-	s3Client := s3.NewFromConfig(a.config)
+func (a *AwsHome) getData(key, app, stage string) (io.Reader, error) {
+	s3Client := s3.NewFromConfig(a.provider.config)
 
 	result, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
 		Bucket: aws.String(a.bootstrap.State),
@@ -248,8 +262,8 @@ func (a *AwsProvider) getData(key, app, stage string) (io.Reader, error) {
 	return result.Body, nil
 }
 
-func (a *AwsProvider) putData(key, app, stage string, data io.Reader) error {
-	s3Client := s3.NewFromConfig(a.config)
+func (a *AwsHome) putData(key, app, stage string, data io.Reader) error {
+	s3Client := s3.NewFromConfig(a.provider.config)
 
 	_, err := s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket:      aws.String(a.bootstrap.State),
@@ -264,8 +278,8 @@ func (a *AwsProvider) putData(key, app, stage string, data io.Reader) error {
 	return nil
 }
 
-func (a *AwsProvider) removeData(key, app, stage string) error {
-	s3Client := s3.NewFromConfig(a.config)
+func (a *AwsHome) removeData(key, app, stage string) error {
+	s3Client := s3.NewFromConfig(a.provider.config)
 
 	_, err := s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
 		Bucket: aws.String(a.bootstrap.State),
@@ -278,8 +292,8 @@ func (a *AwsProvider) removeData(key, app, stage string) error {
 	return nil
 }
 
-func (a *AwsProvider) getPassphrase(app string, stage string) (string, error) {
-	ssmClient := ssm.NewFromConfig(a.config)
+func (a *AwsHome) getPassphrase(app string, stage string) (string, error) {
+	ssmClient := ssm.NewFromConfig(a.provider.config)
 
 	result, err := ssmClient.GetParameter(context.TODO(), &ssm.GetParameterInput{
 		Name:           aws.String(a.pathForPassphrase(app, stage)),
@@ -296,8 +310,8 @@ func (a *AwsProvider) getPassphrase(app string, stage string) (string, error) {
 	return *result.Parameter.Value, nil
 }
 
-func (a *AwsProvider) setPassphrase(app, stage, passphrase string) error {
-	ssmClient := ssm.NewFromConfig(a.config)
+func (a *AwsHome) setPassphrase(app, stage, passphrase string) error {
+	ssmClient := ssm.NewFromConfig(a.provider.config)
 
 	_, err := ssmClient.PutParameter(context.TODO(), &ssm.PutParameterInput{
 		Name:        aws.String(a.pathForPassphrase(app, stage)),
@@ -307,15 +321,4 @@ func (a *AwsProvider) setPassphrase(app, stage, passphrase string) error {
 		Overwrite:   aws.Bool(false),
 	})
 	return err
-}
-
-type fragment struct {
-	ID    string `json:"id"`
-	Index int    `json:"index"`
-	Count int    `json:"count"`
-	Data  string `json:"data"`
-}
-
-func (a *AwsProvider) Config() aws.Config {
-	return a.config
 }

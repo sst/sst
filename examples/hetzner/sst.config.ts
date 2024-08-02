@@ -8,7 +8,7 @@ export default $config({
     return {
       name: "hetzner",
       removal: input?.stage === "production" ? "retain" : "remove",
-      home: "aws",
+      home: "local",
       providers: { hcloud: true, tls: true, docker: true },
     };
   },
