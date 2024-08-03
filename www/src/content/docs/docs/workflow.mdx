@@ -104,6 +104,24 @@ SST will create, track, and removes all the low level resources created by your 
 
 ---
 
+#### Exceptions
+
+There are some exceptions to this. You might have resources that are not created by your SST config. These could include resources that were:
+
+1. **Previously created**
+
+   You might've created some resources by hand in the past that you would like to use in your new SST app. You can import these resources into your app and moving forward, SST can mange them for you. Learn more about [importing resources](/docs/import-resources/).
+
+2. **Externally managed**
+
+   You might have resources that are managed by a different team. In this case, you don't want SST to manage them. You simply want to reference them in your app. Learn more about [referencing resources](/docs/reference-resources/).
+
+3. **Shared across stages**
+
+   If you are creating preview environments, you might not want to make copies of certain components like your database. You might want to share these across stages. Learn more about [sharing across stages](/docs/share-across-stages/).
+
+---
+
 ### Linking
 
 Let's say you wanted your API from the above example to upload a file to the S3 bucket, you'd need to hardcode the name of the bucket in your API.
