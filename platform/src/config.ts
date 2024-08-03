@@ -115,7 +115,7 @@ export interface App {
    * - `retain-all`: Retains all your resources on remove.
    *
    * :::tip
-   * It's a good idea to use `retain` for your production stage.
+   * If you change your removal policy, you'll need to deploy your app once for it to take effect.
    * :::
    *
    * @default `"retain"`

@@ -196,7 +196,7 @@ sst dev [command]
 
 <Section type="parameters">
 #### Flags
-- <p><code class="key">mode</code> <code class="symbol">&ldquo;</code><code class="primitive">basic</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">mosaic</code><code class="symbol">&rdquo;</code></p>
+- <p><code class="key">mode</code> <code class="primitive">string</code></p>
 <p>Defaults to using the multiplexer or `mosaic` mode. Use `basic` to turn it off.</p>
 </Section>
 Run your app in dev mode.
@@ -302,9 +302,35 @@ sst diff
 - <p><code class="key">target</code> <code class="primitive"></code></p>
 <p>Comma seperated list of target URNs.</p>
 - <p><code class="key">dev</code> <code class="primitive">boolean</code></p>
-<p>Compare to sst dev</p>
+<p>Compare to the dev of this stage.</p>
 </Section>
-See what changes will be made
+Builds your app to see what changes will be made when you deploy it.
+
+It displays a list of resources that will be created, updated, or deleted.
+For each of these resources, it'll also show the properties that are changing.
+
+:::tip
+Run a `sst diff` to see what changes will be made when you deploy your app.
+:::
+
+This is useful for cases when you pull some changes from a teammate and want to
+see what will be deployed; before doing the actual deploy.
+
+Optionall, you can diff a specific set of resources by passing in a list of their URNs.
+
+```bash frame="none"
+sst diff --target urn:pulumi:prod::www::sst:aws:Astro::Astro,urn:pulumi:prod::www::sst:aws:Bucket::Assets
+```
+
+By default, this compares to the last deploy of the given stage as it would be
+deployed using `sst deploy`. But if you are working in dev mode using `sst dev`,
+you can use the `--dev` flag.
+
+```bash frame="none"
+sst diff --dev
+```
+
+This is useful because in dev mode, you app is deployed a little differently.
 </Segment>
 
 ### add
@@ -536,6 +562,12 @@ sst shell [command]
 #### Args
 - <p><code class="key">command?</code></p>
 <p>A command to run.</p>
+</Section>
+
+<Section type="parameters">
+#### Flags
+- <p><code class="key">target</code> <code class="primitive"></code></p>
+<p>Target to run against.</p>
 </Section>
 Run a command with **all the resources linked** to the environment. This is useful for running scripts against your infrastructure.
 

@@ -381,15 +381,14 @@ Disable running this function [Live](/docs/live/) in `sst dev`.
 <InlineSection>
 **Default** <code class="primitive">&lcub;retention: "forever", format: "text"&rcub;</code>
 </InlineSection>
-Configure the function logs in CloudWatch.
+Configure the function logs in CloudWatch. Or pass in `false` to disable writing logs.
 
-Disable function writing logs to AWS CloudWatch logs.
 ```js
 {
   logging: false
 }
 ```
-When set to `false`, the function does not have permissions to write to AWS CloudWatch
+When set to `false`, the function is not given permissions to write to CloudWatch.
 Logs.
 </Segment>
 <NestedTitle id="logging-format" Tag="h4" parent="logging.">format?</NestedTitle>

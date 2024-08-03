@@ -336,29 +336,19 @@ It contains the above outputs in JSON.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="symbol">&ldquo;</code><code class="primitive">aws</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">cloudflare</code><code class="symbol">&rdquo;</code>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">aws</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">cloudflare</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">local</code><code class="symbol">&rdquo;</code>
 </InlineSection>
 </Section>
 The provider SST will use to store the state for your app. The state keeps track of all your resources and secrets. The state is generated locally and backed up in your cloud provider.
 
+
+Currently supports AWS, Cloudflare and local.
+
 :::tip
-SST uses the `home` provider to store the state for your app.
+SST uses the `home` provider to store the state for your app. If you use the local provider it will be saved on your machine. You can see where by running `sst version`.
 :::
 
-Currently supports AWS and Cloudflare.
-
-Setting the `home` provider is the same as setting the `providers` list. So if you set `home` to `aws`, it's the same as doing:
-
-```ts
-{
-  home: "aws",
-  providers: {
-    aws: true
-  }
-}
-```
-
-If you want to configure your home provider, you can:
+If you want to configure the aws or cloudflare home provider, you can:
 
 ```ts
 {
@@ -479,7 +469,7 @@ Configure how your resources are handled on `sst remove`:
 - `retain-all`: Retains all your resources on remove.
 
 :::tip
-It's a good idea to use `retain` for your production stage.
+If you change your removal policy, you'll need to deploy your app once for it to take effect.
 :::
 
 Retain resources if it's the _production_ stage, otherwise remove all resources.
