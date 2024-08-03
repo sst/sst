@@ -1,0 +1,97 @@
+---
+title: Reference Resources
+description: Reference externally created resources in your app.
+---
+
+Referencing is the process of _using_ some externally created resources in your SST app. But without having SST to manage them.
+
+:::note
+You usually reference low-level resources and not SST's built-in components.
+:::
+
+This is for when you have some resources that are either managed by a different team or a different IaC tool. Typically these are low-level resources and not SST's built-in components.
+
+---
+
+## How it works
+
+When you create a resource in your SST app, two things happen. First, the resource is created by making a bunch of calls to your cloud provider. Second, SST makes a call to _get_ the resource from the cloud provider. The data that it gets back is stored in your [state](/docs/state/).
+
+:::note
+When you reference a resource or create it, you get the same type of object.
+:::
+
+When you reference a resource, it skips the creation step and just gets the resource. It does this every time you deploy. But the object you get in both cases is the same.
+
+---
+
+## How to reference
+
+You reference a resource by passing in a property of the resource. These properties are the same ones that you'd use if you were trying to import them.
+
+:::tip
+You can look up a resource with its [Import Property](/docs/import-resources/#import-properties).
+:::
+
+We've compiled a list of the most commonly referenced low-level resources and their [Import Properties](/docs/import-resources/#import-properties).
+
+Most low-level resources come with a `static get` method that use this property to look up the resource.
+
+---
+
+#### Look up the resource
+
+Say you want to reference a previously created S3 Bucket with the following name.
+
+```txt
+mybucket-xnbmhcvd
+```
+
+We are going use the [`static aws.s3.BucketV2.get`](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketv2/#look-up) method.
+
+```ts title="sst.config.ts"
+const bucket = aws.s3.BucketV2.get("MyBucket", "mybucket-xnbmhcvd");
+```
+
+This gives you the same bucket object that you'd get if you had created this resource in your app. Let's take it a step further.
+
+---
+
+#### Make it linkable
+
+You can use the [`sst.Linkable`](/docs/component/linkable/) component, to can link any property of this resource.
+
+```ts title="sst.config.ts" {3}
+const storage = new sst.Linkable("MyStorage", {
+  properties: {
+    domain: bucket.bucketDomainName
+  }
+});
+```
+
+Here we are using the domain name of the bucket as an example.
+
+---
+
+#### Link to it
+
+And link it to a function.
+
+```ts title="sst.config.ts" {9}
+new sst.aws.Function("MyFunction", {
+  handler: "src/lambda.handler",
+  link: [storage]
+});
+```
+
+Now you can use the [SDK](/docs/reference/sdk/) to access them at runtime.
+
+```js title="src/lambda.ts"
+import { Resource } from "sst";
+
+console.log(Resource.MyStorage.domain);
+```
+
+---
+
+Check out the list of [Import Properties](/docs/import-resources/#import-properties) if you want to reference other low-level resources.

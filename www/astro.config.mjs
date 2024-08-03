@@ -56,6 +56,7 @@ const sidebar = [
       { label: "Custom Domains", link: "/docs/custom-domains/" },
       { label: "Import Resources", link: "/docs/import-resources/" },
       { label: "Share Across Stages", link: "/docs/share-across-stages/" },
+      { label: "Reference Resources", link: "/docs/reference-resources/" },
     ],
   },
   {

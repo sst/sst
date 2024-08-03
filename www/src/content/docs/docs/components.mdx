@@ -103,8 +103,8 @@ const function = new sst.aws.Function("MyFunction", {
 
 There are two guidelines to follow when naming your components:
 
-1. Component names are global across your entire app.
-2. Use PascalCase for the component name. For example, `MyFunction` instead of `myFunction` or `my_function`.
+1. The names of SST's built-in components and components extended with [`Linkable.wrap`](/docs/component/linkable/#static-wrap) need to be global across your entire app.
+2. Optionally, use PascalCase for the component name. For example, `MyFunction` instead of `myFunction` or `my_function`.
 
 These make it possible to [link resources](/docs/linking/) together in your SST app.
 

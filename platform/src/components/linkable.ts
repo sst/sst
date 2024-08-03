@@ -163,8 +163,7 @@ export interface Definition<
  */
 export class Linkable<T extends Record<string, any>>
   extends Component
-  implements Link.Linkable
-{
+  implements Link.Linkable {
   private _name: string;
   private _definition: Definition<T>;
 
@@ -231,13 +230,13 @@ export class Linkable<T extends Record<string, any>>
    * ```
    */
   public static wrap<Resource>(
-    cls: { new (...args: any[]): Resource },
+    cls: { new(...args: any[]): Resource },
     cb: (resource: Resource) => Definition,
   ) {
     // @ts-expect-error
     this.wrappedResources.add(cls.__pulumiType);
 
-    cls.prototype.getSSTLink = function () {
+    cls.prototype.getSSTLink = function() {
       return cb(this);
     };
   }
