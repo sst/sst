@@ -1,5 +1,21 @@
 # @serverless-stack/cli2
 
+## 2.43.5
+
+### Patch Changes
+
+- [#3829](https://github.com/sst/sst/pull/3829) [`9c52c86c4`](https://github.com/sst/sst/commit/9c52c86c4daf4321360002327a6773b039c11e22) Thanks [@scarperharper](https://github.com/scarperharper)! - SsrSite: fix query params with no values should be strings
+
+- [#3803](https://github.com/sst/sst/pull/3803) [`1c542ab86`](https://github.com/sst/sst/commit/1c542ab86ca67d5ce8402f4a884473c76f015b2f) Thanks [@JacksonBowe](https://github.com/JacksonBowe)! - fix: fix dockerfile build commands for python 3.12
+
+- [#3815](https://github.com/sst/sst/pull/3815) [`b4119671b`](https://github.com/sst/sst/commit/b4119671bb1e99dc22917ef88f493d5855cb58e1) Thanks [@mattzcarey](https://github.com/mattzcarey)! - SSTBootstrap: Add description to bootstrap stack
+
+- [#3799](https://github.com/sst/sst/pull/3799) [`baa633cd6`](https://github.com/sst/sst/commit/baa633cd687e0e87f3a5ba86070c785d70b8510e) Thanks [@blair55](https://github.com/blair55)! - enhancement: make magic link expiry configurable
+
+- [#3779](https://github.com/sst/sst/pull/3779) [`04717fb1c`](https://github.com/sst/sst/commit/04717fb1ca51d272811bfc8a8a30f8271528f3d8) Thanks [@omikader](https://github.com/omikader)! - misc(rds): expose migration methods
+
+- [#3794](https://github.com/sst/sst/pull/3794) [`436f2aa39`](https://github.com/sst/sst/commit/436f2aa393a056f4249e78829ac3ce45dd4330da) Thanks [@gronxb](https://github.com/gronxb)! - fix: support npm versions 10 and above
+
 ## 2.43.4
 
 ### Patch Changes

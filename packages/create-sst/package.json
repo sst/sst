@@ -1,6 +1,6 @@
 {
   "name": "create-sst",
-  "version": "2.43.4",
+  "version": "2.43.5",
   "homepage": "https://sst.dev",
   "description": "Create SST apps",
   "main": "src/index.mjs",
