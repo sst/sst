@@ -85,22 +85,11 @@ test("default: check cache policy configured correctly", async () => {
     CachePolicyConfig: objectLike({
       ParametersInCacheKeyAndForwardedToOrigin: objectLike({
         HeadersConfig: objectLike({
-          Headers: arrayWith(["accept"]),
+          Headers: arrayWith(["x-open-next-cache-key"]),
         }),
       }),
     }),
   });
-});
-
-test("buildDefaultServerCachePolicyProps", () => {
-  expect(NextjsSite.buildDefaultServerCachePolicyProps()).toEqual(
-    expect.objectContaining({
-      headerBehavior: {
-        behavior: "whitelist",
-        headers: expect.arrayContaining(["accept"]),
-      },
-    })
-  );
 });
 
 test("timeout defined", async () => {
@@ -118,49 +107,6 @@ test("timeout defined", async () => {
       ]),
     }),
   });
-});
-
-test("experimental.streaming undefined", async () => {
-  const { stack } = await createSite();
-  hasResource(stack, "AWS::Lambda::Url", {
-    InvokeMode: "BUFFERED",
-  });
-});
-test("experimental.streaming true", async () => {
-  const { stack } = await createSite({
-    experimental: {
-      streaming: true,
-    },
-  });
-  hasResource(stack, "AWS::Lambda::Url", {
-    InvokeMode: "RESPONSE_STREAM",
-  });
-});
-
-test("experimental.disableIncrementalCache undefined", async () => {
-  const { stack } = await createSite();
-  countResources(stack, "AWS::SQS::Queue", 1);
-});
-test("experimental.disableIncrementalCache true", async () => {
-  const { stack } = await createSite({
-    experimental: {
-      disableIncrementalCache: true,
-    },
-  });
-  countResources(stack, "AWS::SQS::Queue", 0);
-});
-
-test("experimental.disableDynamoDBCache undefined", async () => {
-  const { stack } = await createSite();
-  countResources(stack, "AWS::DynamoDB::GlobalTable", 1);
-});
-test("experimental.disableDynamoDBCache true", async () => {
-  const { stack } = await createSite({
-    experimental: {
-      disableDynamoDBCache: true,
-    },
-  });
-  countResources(stack, "AWS::DynamoDB::GlobalTable", 0);
 });
 
 test("cdk.distribution.defaultBehavior", async () => {

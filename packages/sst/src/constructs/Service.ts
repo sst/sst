@@ -31,6 +31,7 @@ import {
   DistributionProps,
   OriginProtocolPolicy,
   OriginRequestPolicy,
+  ICachePolicy,
 } from "aws-cdk-lib/aws-cloudfront";
 import { HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 
@@ -609,6 +610,21 @@ export interface ServiceProps {
      * ```
      */
     vpc?: IVpc;
+    /**
+     * By default, SST creates a CloudFront cache policy. Pass in a value to override the default policy.
+     *
+     * @example
+     * ```js
+     * import { CachePolicy } from "aws-cdk-lib/aws-cloudfront";
+     *
+     * {
+     *   cdk: {
+     *     cachePolicy: CachePolicy.fromCachePolicyId(stack, "CachePolicy", "83da9c7e-98b4-4e11-a168-04f0df8e2c65"),
+     *   }
+     * }
+     * ```
+     */
+    cachePolicy?: ICachePolicy;
   };
 }
 
@@ -1104,17 +1120,19 @@ export class Service extends Construct implements SSTConstruct {
     // Do not create distribution if disabled or if ALB was not created (ie. disabled)
     if (!alb || cdk?.cloudfrontDistribution === false) return;
 
-    const cachePolicy = new CachePolicy(this, "CachePolicy", {
-      queryStringBehavior: CacheQueryStringBehavior.all(),
-      headerBehavior: CacheHeaderBehavior.none(),
-      cookieBehavior: CacheCookieBehavior.none(),
-      defaultTtl: CdkDuration.days(0),
-      maxTtl: CdkDuration.days(365),
-      minTtl: CdkDuration.days(0),
-      enableAcceptEncodingBrotli: true,
-      enableAcceptEncodingGzip: true,
-      comment: "SST server response cache policy",
-    });
+    const cachePolicy =
+      cdk?.cachePolicy ??
+      new CachePolicy(this, "CachePolicy", {
+        queryStringBehavior: CacheQueryStringBehavior.all(),
+        headerBehavior: CacheHeaderBehavior.none(),
+        cookieBehavior: CacheCookieBehavior.none(),
+        defaultTtl: CdkDuration.days(0),
+        maxTtl: CdkDuration.days(365),
+        minTtl: CdkDuration.days(0),
+        enableAcceptEncodingBrotli: true,
+        enableAcceptEncodingGzip: true,
+        comment: "SST server response cache policy",
+      });
 
     return new Distribution(this, "CDN", {
       customDomain,
@@ -1292,9 +1310,9 @@ export class Service extends Construct implements SSTConstruct {
                       ? Object.entries(build?.cacheTo?.params).map(
                           ([pk, pv]) => `${pk}=${pv}`
                         )
-                      : []
-                    ).join(","),
-                  ],
+                      : []),
+                  ].join(","),
+                ,
               ]
             : []),
           this.props.path,

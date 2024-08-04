@@ -1,9 +1,9 @@
 import querystring from 'node:querystring';
-import { generators, Issuer } from 'openid-client';
+import { BaseClient, generators, Issuer } from 'openid-client';
 
 import { useBody, useCookie, useDomainName, usePathParam, useResponse } from '../../../api/index.js';
 import { Adapter } from './adapter.js';
-import { OauthConfig } from './oauth.js';
+import { OauthBasicConfig } from './oauth.js';
 
 // This adapter support the OAuth flow with the response_mode "form_post" for now.
 // More details about the flow:
@@ -13,19 +13,26 @@ import { OauthConfig } from './oauth.js';
 // userinfo_endpoint are not included in the response.
 // await Issuer.discover("https://appleid.apple.com/.well-known/openid-configuration/");
 
-const issuer = await Issuer.discover(
-  "https://appleid.apple.com/.well-known/openid-configuration"
-)
+let issuer: Issuer<BaseClient>;
+
+type AppleConfig = OauthBasicConfig & {
+  issuer?: Issuer
+}
 
 export const AppleAdapter =
   /* @__PURE__ */
-  (config: OauthConfig) => {
+  (config: AppleConfig) => {
+
     return async function () {
+      const doesConfigHasIssuer = config.issuer !== undefined
+      if(!doesConfigHasIssuer && !issuer){
+        issuer = await Issuer.discover("https://appleid.apple.com/.well-known/openid-configuration");
+      }
       const step = usePathParam("step");
       const callback = "https://" + useDomainName() + "/callback";
       console.log("callback", callback);
 
-      const client = new issuer.Client({
+      const client = new (issuer as Issuer<BaseClient>).Client({
         client_id: config.clientID,
         client_secret: config.clientSecret,
         redirect_uris: [callback],

@@ -47,7 +47,7 @@ export const list = (program: Program) =>
           case "env":
             for (const [key, value] of Object.entries(secrets)) {
               console.log(
-                `${key}=${value.value || `${value.fallback} #fallback`}`
+                `${key}=${ `'${value.value}'` || `'${value.fallback}' #fallback`}`
               );
             }
             break;

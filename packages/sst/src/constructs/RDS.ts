@@ -48,7 +48,11 @@ export interface RDSProps {
     | "mysql8.0"
     | "postgresql11.13"
     | "postgresql11.16"
-    | "postgresql13.9";
+    | "postgresql13.12"
+    | "postgresql13.9"
+    | "postgresql14.10"
+    | "postgresql15.5"
+    | "postgresql16.1";
 
   /**
    * Name of a database which is automatically created inside the cluster.
@@ -246,9 +250,7 @@ export class RDS extends Construct implements SSTConstruct {
     // Create the migrator function
 
     if (migrations) {
-      this.validateMigrationsFileExists(migrations);
-      this.createMigrationsFunction(migrations);
-      this.createMigrationCustomResource(migrations);
+      this.runMigrations(migrations);
     }
 
     const app = this.node.root as App;
@@ -348,6 +350,12 @@ export class RDS extends Construct implements SSTConstruct {
     };
   }
 
+  public runMigrations(migrations: string, database?: string) {
+    this.validateMigrationsFileExists(migrations);
+    this.createMigrationsFunction(migrations);
+    this.createMigrationCustomResource(migrations, database);
+  }
+
   private validateRequiredProps(props: RDSProps) {
     if (!props.engine) {
       throw new Error(`Missing "engine" in the "${this.node.id}" RDS`);
@@ -439,14 +447,30 @@ export class RDS extends Construct implements SSTConstruct {
       return DatabaseClusterEngine.auroraPostgres({
         version: AuroraPostgresEngineVersion.VER_11_16,
       });
+    } else if (engine === "postgresql13.12") {
+      return DatabaseClusterEngine.auroraPostgres({
+        version: AuroraPostgresEngineVersion.VER_13_12,
+      });
     } else if (engine === "postgresql13.9") {
       return DatabaseClusterEngine.auroraPostgres({
         version: AuroraPostgresEngineVersion.VER_13_9,
       });
+    } else if (engine === "postgresql14.10") {
+      return DatabaseClusterEngine.auroraPostgres({
+        version: AuroraPostgresEngineVersion.VER_14_10,
+      });
+    } else if (engine === "postgresql15.5") {
+      return DatabaseClusterEngine.auroraPostgres({
+        version: AuroraPostgresEngineVersion.VER_15_5,
+      });
+    } else if (engine === "postgresql16.1") {
+      return DatabaseClusterEngine.auroraPostgres({
+        version: AuroraPostgresEngineVersion.VER_16_1,
+      });
     }
 
     throw new Error(
-      `The specified "engine" is not supported for sst.RDS. Only mysql5.6, mysql5.7, postgresql11.13, postgresql11.16, and postgres13.9 engines are currently supported.`
+      `The specified "engine" is not supported for sst.RDS. Only mysql5.6, mysql5.7, postgresql11.13, postgresql11.16, postgresql13.12, and postgresql13.9 engines are currently supported.`
     );
   }
 
@@ -557,7 +581,7 @@ export class RDS extends Construct implements SSTConstruct {
       "rds-migrator/index.handler";
   }
 
-  private createMigrationCustomResource(migrations: string) {
+  private createMigrationCustomResource(migrations: string, database?: string) {
     const app = this.node.root as App;
 
     // Create custom resource handler
@@ -594,7 +618,7 @@ export class RDS extends Construct implements SSTConstruct {
           app.mode === "dev" ? undefined : this.migratorFunction?.functionName,
         UserUpdateFunction:
           app.mode === "dev" ? undefined : this.migratorFunction?.functionName,
-        UserParams: JSON.stringify({}),
+        UserParams: JSON.stringify({ database }),
         MigrationsHash: hash,
       },
     });
