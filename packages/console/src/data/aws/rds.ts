@@ -1,4 +1,5 @@
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
+import { ArrayValue } from "@aws-sdk/client-rds-data"
 import { Buffer } from "buffer";
 import {
   RDSDataClient,
@@ -37,7 +38,7 @@ export function useRDSExecute() {
           if (el.isNull) return null;
           if (el.blobValue != null) return "<blob value>";
           if (el.longValue != null) return el.longValue;
-          if (el.arrayValue != null) return JSON.stringify(el.longValue);
+          if (el.arrayValue != null) return JSON.stringify(unmarshallArrayValue(el.arrayValue));
           if (el.doubleValue != null) return el.doubleValue;
           if (el.booleanValue != null) return JSON.stringify(el.booleanValue);
           if (el.stringValue != null) return el.stringValue;
@@ -151,4 +152,14 @@ export function useRunMigration(arn: string) {
       await qc.invalidateQueries(["migrations", arn]);
     },
   });
+}
+
+function unmarshallArrayValue(arrayValue: ArrayValue): unknown[] {
+  return (
+    arrayValue.stringValues ??
+    arrayValue.doubleValues ??
+    arrayValue.longValues ??
+    arrayValue.booleanValues ??
+    arrayValue.arrayValues?.map((value) => unmarshallArrayValue(value))
+  );
 }
