@@ -3,11 +3,10 @@ title: Migration
 description: Migration guide to SST v3.
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 This guide will help you migrate from SST v2 to v3. Treat these are recommendations. The exact migration plan will be different from team to team depending on the resources in your app, and sensitivity of down time.
 
-:::note
-If you are using the `Job`, `Auth`, `EventBus`, `Script`, `RDS` with MySQL engine, or `Function` with non-Node.js runtime in your SST v2 app, do not migrate yet. These constructs will be supported in v3 soon.
-:::
 
 ---
 
@@ -17,6 +16,21 @@ If you are using the `Job`, `Auth`, `EventBus`, `Script`, `RDS` with MySQL engin
 1. Make code changes in a new branch.
 
 ---
+
+### Major changes
+
+- `sst dev` multiplexer
+- Resource binding is called linking, and done via `Resource.`
+- default function props vs $transform
+- No `sst build`
+- secrets not in SSM
+  - No top-level await for secrets
+- not stacks
+- components are availably globally, no imports
+
+- Unsupported
+  - If you are using the `Job`, `Auth`, `EventBus`, `Script`, `RDS` with MySQL engine, or `Function` with non-Node.js runtime in your SST v2 app, do not migrate yet. These constructs will be supported in v3 soon.
+  - Client handlers, hooks
 
 ### Initialize v3 App
 
@@ -177,372 +191,691 @@ To get around the issue:
 
 This ensure that at any time, the same subscriber is only attached once to a resource.
 
-## Update Application Code to v3
+---
 
-Update `sst` to the latest version in your `package.json`. If you have a monorepo, make sure to update `sst` in all packages.
+## Clients
 
-In SST v3, you access all linked resources through the `Resource` module. Here is an example for accessing linked secrets.
+The Node.js client, now called the [JS SDK](/docs/reference/sdk/) has a couple of minor changes.
 
-```ts title="lambda.ts"
-// SST v2
-import { Bucket } from "sst/node/config";
-console.log(Config.STRIPE_KEY);
-
-// SST v3
-import { Resource } from "sst";
-console.log(Bucket.STRIPE_KEY.value);
-```
-
-And here is an example for accessing the linked bucket.
-
-```ts title="lambda.ts"
-// SST v2
-import { Bucket } from "sst/node/bucket";
-console.log(Bucket.MyBucket.bucketName);
-
-// SST v3
-import { Resource } from "sst";
-console.log(Bucket.MyBucket.name);
-```
+Update `sst` to the latest version in your `package.json`. If you have a monorepo, make sure to update `sst` in all your packages.
 
 ---
 
-## Construct Reference
+### Bind
 
-This section shows the equivalent v3 component for each supported v2 construct.
+In SST v3, you access all bound or _linked_ resources are accessed through the `Resource` module.
 
-### Function
-```ts title="sst.config.ts"
-// v2
-new Function(stack, "MyFunction", {
-  handler: "src/lambda.handler",
-  bind: [bucket],
-});
+Say you link a bucket to a function.
 
-// v3
-new sst.aws.Function("MyFunction", {
-  handler: "src/lambda.handler"
-  link: [bucket],
-});
-```
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts" {5}
+  const bucket = new sst.aws.Bucket("MyBucket");
 
-### Cron
-```ts title="sst.config.ts"
-// v2
-new Cron(stack, "MyCronJob", {
-  schedule: "rate(1 minute)",
-  job: "src/cron.handler",
-});
+  new sst.aws.Function("MyFunction", {
+    handler: "src/lambda.handler",
+    link: [bucket]
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts" {5}
+  const bucket = new Bucket(stack, "MyBucket");
 
-// v3
-new sst.aws.Cron("MyCronJob", {
-  schedule: "rate(1 minute)"
-  job: "src/cron.handler",
-});
-```
+  new Function(stack, "MyFunction", {
+    handler: "src/lambda.handler",
+    bind: [bucket]
+  });
+  ```
+  </TabItem>
+</Tabs>
 
-### Topic
-```ts title="sst.config.ts"
-// v2
-const topic = new Topic(stack, "MyTopic");
-topic.addSubscribers(stack, {
-  subscriber: "src/subscriber.handler",
-});
+In your function you would access it like so.
 
-// v3
-const topic = new sst.aws.SnsTopic("MyTopic");
-topic.subscribe("src/subscriber.handler");
-```
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="src/lambda.ts" "Resource.MyBucket.name" "sst"
+  import { Resource } from "sst";
 
-### Queue
-```ts title="sst.config.ts"
-// v2
-const queue = new Queue(stack, "MyQueue");
-queue.addConsumer(stack, "src/subscriber.handler");
+  console.log(Resource.MyBucket.name);
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="src/lambda.ts" "Bucket.MyBucket.bucketName" "sst/node/bucket"
+  import { Bucket } from "sst/node/bucket";
 
-// v3
-const queue = new sst.aws.Queue("MyQueue");
-queue.subscribe("src/subscriber.handler");
-```
+  console.log(Bucket.MyBucket.bucketName);
+  ```
+  </TabItem>
+</Tabs>
 
-### KinesisStream
-```ts title="sst.config.ts"
-// v2
-const stream = new KinesisStream(stack, "MyStream");
-stream.addConsumers(stack, {
-  consumer: "src/subscriber.handler",
-});
+---
 
-// v3
-const stream = new sst.aws.KinesisStream("MyStream");
-stream.subscribe("src/subscriber.handler");
-```
+### Config
 
-### RDS
-```ts title="sst.config.ts"
-// v2
-new RDS(stack, "MyDatabase", {
-  engine: "postgresql15.5",
-  defaultDatabaseName: "acme",
-  migrations: "path/to/migration/scripts",
-});
+The same applies to `Config` as well. Let's look at a secret.
 
-// v3
-new sst.aws.Postgres("MyDatabase", {
-  version: "15.5",
-  databaseName: "acme",
-});
-```
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts" {5}
+  const secret = new sst.Secret("MySecret");
 
-TODO: how to run migrations in v3
+  new sst.aws.Function("MyFunction", {
+    handler: "src/lambda.handler",
+    link: [secret]
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts" {5}
+  const secret = new Config.Secret(stack, "MySecret");
 
-### Table
-```ts title="sst.config.ts"
-// v2
-const table = new Table(stack, "MyTable", {
-  fields: {
-    id: "string",
-  },
-  primaryIndex: { partitionKey: "id" },
-});
-table.addConsumers(stack, {
-  consumer: "src/subscriber.handler",
-});
+  new Function(stack, "MyFunction", {
+    handler: "src/lambda.handler",
+    bind: [secret]
+  });
+  ```
+  </TabItem>
+</Tabs>
 
-// v3
-const table = new sst.aws.Dynamo("MyTable", {
-  fields: {
-    id: "string",
-  },
-  primaryIndex: { hashKey: "id" }
-});
-table.subscribe("src/subscriber.handler");
-```
+And in your function you access it in the same way.
 
-### Bucket
-```ts title="sst.config.ts"
-// v2
-const bucket = new Bucket(stack, "MyBucket");
-bucket.addNotifications(stack, {
-  notification: "src/notification.main",
-});
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="src/lambda.ts" "Resource.MySecret.value" "sst"
+  import { Resource } from "sst";
 
-// v3
-const bucket = new sst.aws.Bucket("MyBucket");
-bucket.subscribe("src/subscriber.handler");
-```
+  console.log(Resource.MySecret.value);
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="src/lambda.ts" "Config.MySecret" "sst/node/config"
+  import { Config } from "sst/node/config";
 
-### Cognito
-```ts title="sst.config.ts"
-// v2
-new Cognito(stack, "Auth");
+  console.log(Config.MySecret);
+  ```
+  </TabItem>
+</Tabs>
 
-// v3
-const userPool = new sst.aws.CognitoUserPool("MyUserPool");
-const client = userPool.addClient("MyClient");
-new sst.aws.CognitoIdentityPool("MyIdentityPool", {
-  userPools: [{
-    userPool: userPool.id,
-    client: client.id,
-  }]
-});
-```
+---
+
+## Constructs
+
+Below shows the v3 component version of a v2 construct.
+
+---
 
 ### Api
-```ts title="sst.config.ts"
-// v2
-const api = new Api(stack, "MyApi", {
-  customDomain: "api.example.com",
-});
-api.addRoutes(stack, {
-  "GET /": "src/get.main",
-  "POST /": "src/post.handler",
-});
 
-// v3
-const api = new sst.aws.ApiGatewayV2("MyApi", {
-  domain: "api.example.com"
-});
-api.route("GET /", "src/get.handler");
-api.route("POST /", "src/post.handler");
-```
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const api = new sst.aws.ApiGatewayV2("MyApi", {
+    domain: "api.example.com"
+  });
 
-### ApiGatewayV1Api
-```ts title="sst.config.ts"
-// v2
-const api = new ApiGatewayV1Api(stack, "MyApi", {
-  customDomain: "api.example.com",
-});
-api.addRoutes(stack, {
-  "GET /": "src/get.handler",
-  "POST /": "src/post.handler",
-});
+  api.route("GET /", "src/get.handler");
+  api.route("POST /", "src/post.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const api = new Api(stack, "MyApi", {
+    customDomain: "api.example.com"
+  });
 
-// v3
-const api = new sst.aws.ApiGatewayV1("MyApi", {
-  domain: "api.example.com"
-});
-api.route("GET /", "src/get.handler");
-api.route("POST /", "src/post.handler");
-api.deploy();
-```
+  api.addRoutes(stack, {
+    "GET /": "src/get.main",
+    "POST /": "src/post.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
 
-### AppSyncApi
-```ts title="sst.config.ts"
-// v2
-const api = new AppSyncApi(stack, "MyApi", {
-  schema: "graphql/schema.graphql",
-  customDomain: "api.example.com",
-});
-api.addDataSources(stack, {
-  lambdaDS: "src/lambda.handler",
-});
-api.addResolvers(stack, {
-  "Query user": "lambdaDS",
-});
+---
 
-// v3
-const api = new sst.aws.AppSync("MyApi", {
-  schema: "schema.graphql",
-  domain: "api.domain.com",
-});
-const lambdaDS = api.addDataSource({
-  name: "lambdaDS",
-  lambda: "src/lambda.handler",
-});
-api.addResolver("Query user", {
-  dataSource: lambdaDS.name,
-});
-```
+### RDS
 
-### WebSocketApi
-```ts title="sst.config.ts"
-// v2
-const api = new WebSocketApi(stack, "MyApi", {
-  customDomain: "api.example.com",
-});
-api.addRoutes(stack, {
-  $connect: "src/connect.handler",
-  $disconnect: "src/disconnect.handler",
-});
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.Postgres("MyDatabase", {
+    version: "15.5",
+    databaseName: "acme"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new RDS(stack, "MyDatabase", {
+    engine: "postgresql15.5",
+    defaultDatabaseName: "acme",
+    migrations: "path/to/migration/scripts"
+  });
+  ```
+  </TabItem>
+</Tabs>
 
-// v3
-const api = new sst.aws.ApiGatewayWebSocket("MyApi", {
-  domain: "api.example.com"
-});
-api.route("$connect", "src/connect.handler");
-api.route("$disconnect", "src/disconnect.handler");
-```
+For migrations, we recommend using [Drizzle Kit](https://orm.drizzle.team/kit-docs/overview). Check out our [Drizzle example](/docs/start/aws/drizzle/).
+
+---
+
+### Cron
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.Cron("MyCronJob", {
+    schedule: "rate(1 minute)",
+    job: "src/cron.handler"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new Cron(stack, "MyCronJob", {
+    schedule: "rate(1 minute)",
+    job: "src/cron.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Table
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const table = new sst.aws.Dynamo("MyTable", {
+    fields: {
+      id: "string"
+    },
+    primaryIndex: { hashKey: "id" }
+  });
+
+  table.subscribe("src/subscriber.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const table = new Table(stack, "MyTable", {
+    fields: {
+      id: "string"
+    },
+    primaryIndex: { partitionKey: "id" }
+  });
+
+  table.addConsumers(stack, {
+    consumer: "src/subscriber.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Topic
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const topic = new sst.aws.SnsTopic("MyTopic");
+
+  topic.subscribe("src/subscriber.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const topic = new Topic(stack, "MyTopic");
+
+  topic.addSubscribers(stack, {
+    subscriber: "src/subscriber.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Queue
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const queue = new sst.aws.Queue("MyQueue");
+
+  queue.subscribe("src/subscriber.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const queue = new Queue(stack, "MyQueue");
+
+  queue.addConsumer(stack, "src/subscriber.handler");
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Config
+
+The `Config` construct is now broken into a `Secret` component and v3 has a separate way to bind any value or _parameter_.
+
+---
+
+#### Secret
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const secret = new sst.Secret("MySecret");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const secret = new Config.Secret(stack, "MySecret");
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+#### Parameter
+
+The `Linkable` component lets you bind or _link_ any value.
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const secret = new sst.Linkable("MyParameter", {
+    properties: { version: "1.2.0" }
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const secret = new Config.Parameter(stack, "MyParameter", {
+    value: "1.2.0"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+In your function you'd access this using.
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="src/lambda.ts"
+  import { Resource } from "sst";
+
+  console.log(Resource.MyParameter.version);
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="src/lambda.ts"
+  import { Config } from "sst/node/config";
+
+  console.log(Config.MyParameter);
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Bucket
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const bucket = new sst.aws.Bucket("MyBucket");
+
+  bucket.subscribe("src/subscriber.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const bucket = new Bucket(stack, "MyBucket");
+
+  bucket.addNotifications(stack, {
+    notification: "src/notification.main"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
 
 ### Service
-```ts title="sst.config.ts"
-// v2
-new Service(stack, "MyService", {
-  customDomain: "my-app.com",
-  path: "./service",
-  port: 80,
-  cdk: {
-    vpc: Vpc.fromLookup(stack, "VPC", {
-      vpcId: "vpc-0d19d2b8ca2b268a1",
-    }),
-  },
-});
 
-// v3
-const cluster = new sst.aws.Cluster("MyCluster", {
-  vpc: {
-    id: "vpc-0d19d2b8ca2b268a1",
-    publicSubnets: ["subnet-0b6a2b73896dc8c4c", "subnet-021389ebee680c2f0"],
-    privateSubnets: ["subnet-0db7376a7ad4db5fd ", "subnet-06fc7ee8319b2c0ce"],
-    securityGroups: ["sg-0399348378a4c256c"],
-  }
-});
-cluster.addService("MyService", {
-  public: {
-    domain: "my-app.com",
-    ports: [
-      { listen: "80/http" },
-    ]
-  }
-});
-```
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const cluster = new sst.aws.Cluster("MyCluster", {
+    vpc: {
+      id: "vpc-0d19d2b8ca2b268a1",
+      securityGroups: ["sg-0399348378a4c256c"],
+      publicSubnets: ["subnet-0b6a2b73896dc8c4c", "subnet-021389ebee680c2f0"],
+      privateSubnets: ["subnet-0db7376a7ad4db5fd ", "subnet-06fc7ee8319b2c0ce"]
+    }
+  });
 
-### StaticSite
-```ts title="sst.config.ts"
-// v2
-new StaticSite(stack, "MyWeb", {
-  customDomain: "my-app.com",
-});
+  cluster.addService("MyService", {
+    public: {
+      domain: "my-app.com",
+      ports: [
+        { listen: "80/http" }
+      ]
+    }
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new Service(stack, "MyService", {
+    customDomain: "my-app.com",
+    path: "./service",
+    port: 80,
+    cdk: {
+      vpc: Vpc.fromLookup(stack, "VPC", {
+        vpcId: "vpc-0d19d2b8ca2b268a1"
+      })
+    }
+  });
+  ```
+  </TabItem>
+</Tabs>
 
-// v3
-new sst.aws.StaticSite("MyWeb", {
-  domain: "my-app.com"
-});
-```
+---
 
-### NextjsSite
-```ts title="sst.config.ts"
-// v2
-new NextjsSite(stack, "MyWeb", {
-  customDomain: "my-app.com",
-  bind: [bucket],
-});
+### Cognito
 
-// v3
-new sst.aws.Nextjs("MyWeb", {
-  domain: "my-app.com"
-  link: [bucket],
-});
-```
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const userPool = new sst.aws.CognitoUserPool("MyUserPool");
 
-### SvelteKitSite
-```ts title="sst.config.ts"
-// v2
-new SvelteKitSite(stack, "MyWeb", {
-  customDomain: "my-app.com",
-});
+  const client = userPool.addClient("MyClient");
 
-// v3
-new sst.aws.SvelteKit("MyWeb", {
-  domain: "my-app.com"
-});
-```
+  new sst.aws.CognitoIdentityPool("MyIdentityPool", {
+    userPools: [{
+      userPool: userPool.id,
+      client: client.id
+    }]
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new Cognito(stack, "MyAuth");
+  ```
+  </TabItem>
+</Tabs>
 
-### RemixSite
-```ts title="sst.config.ts"
-// v2
-new RemixSite(stack, "MyWeb", {
-  customDomain: "my-app.com",
-});
+---
 
-// v3
-new sst.aws.Remix("MyWeb", {
-  domain: "my-app.com"
-});
-```
+### Function
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.Function("MyFunction", {
+    handler: "src/lambda.handler"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new Function(stack, "MyFunction", {
+    handler: "src/lambda.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
 
 ### AstroSite
-```ts title="sst.config.ts"
-// v2
-new AstroSite(stack, "MyWeb", {
-  customDomain: "my-app.com",
-});
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.Astro("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new AstroSite(stack, "MyWeb", {
+    customDomain: "my-app.com"
+  });
+  ```
+  </TabItem>
+</Tabs>
 
-// v3
-new sst.aws.Astro("MyWeb", {
-  domain: "my-app.com"
-});
-```
+---
+
+### StaticSite
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.StaticSite("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new StaticSite(stack, "MyWeb", {
+    customDomain: "my-app.com"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### RemixSite
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.Remix("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new RemixSite(stack, "MyWeb", {
+    customDomain: "my-app.com"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### NextjsSite
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.Nextjs("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new NextjsSite(stack, "MyWeb", {
+    customDomain: "my-app.com"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### AppSyncApi
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const api = new sst.aws.AppSync("MyApi", {
+    schema: "schema.graphql",
+    domain: "api.domain.com"
+  });
+
+  const lambdaDS = api.addDataSource({
+    name: "lambdaDS",
+    lambda: "src/lambda.handler"
+  });
+  api.addResolver("Query user", {
+    dataSource: lambdaDS.name
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const api = new AppSyncApi(stack, "MyApi", {
+    schema: "graphql/schema.graphql",
+    customDomain: "api.example.com"
+  });
+
+  api.addDataSources(stack, {
+    lambdaDS: "src/lambda.handler"
+  });
+  api.addResolvers(stack, {
+    "Query user": "lambdaDS"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### SvelteKitSite
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.SvelteKit("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new SvelteKitSite(stack, "MyWeb", {
+    customDomain: "my-app.com"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
 
 ### SolidStartSite
-```ts title="sst.config.ts"
-// v2
-new SolidStartSite(stack, "MyWeb", {
-  customDomain: "my-app.com",
-});
 
-// v3
-new sst.aws.SolidStart("MyWeb", {
-  domain: "my-app.com"
-});
-```
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.SolidStart("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new SolidStartSite(stack, "MyWeb", {
+    customDomain: "my-app.com"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### WebSocketApi
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const api = new sst.aws.ApiGatewayWebSocket("MyApi", {
+    domain: "api.example.com"
+  });
+
+  api.route("$connect", "src/connect.handler");
+  api.route("$disconnect", "src/disconnect.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const api = new WebSocketApi(stack, "MyApi", {
+    customDomain: "api.example.com"
+  });
+
+  api.addRoutes(stack, {
+    $connect: "src/connect.handler",
+    $disconnect: "src/disconnect.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### KinesisStream
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const stream = new sst.aws.KinesisStream("MyStream");
+
+  stream.subscribe("src/subscriber.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const stream = new KinesisStream(stack, "MyStream");
+
+  stream.addConsumers(stack, {
+    consumer: "src/subscriber.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### ApiGatewayV1Api
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const api = new sst.aws.ApiGatewayV1("MyApi", {
+    domain: "api.example.com"
+  });
+
+  api.route("GET /", "src/get.handler");
+  api.route("POST /", "src/post.handler");
+  api.deploy();
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const api = new ApiGatewayV1Api(stack, "MyApi", {
+    customDomain: "api.example.com"
+  });
+
+  api.addRoutes(stack, {
+    "GET /": "src/get.handler",
+    "POST /": "src/post.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
