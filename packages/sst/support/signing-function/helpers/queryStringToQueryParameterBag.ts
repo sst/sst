@@ -14,7 +14,7 @@ export const queryStringToQueryParameterBag = (
     const value = split[1];
 
     if (query[key] === undefined || query[key] === null) {
-      query[key] = value ? decodeURIComponent(value) : null;
+      query[key] = value ? decodeURIComponent(value) : "";
       continue;
     }
 
