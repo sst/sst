@@ -6,6 +6,11 @@ import * as cfnResponse from "./cfn-response.js";
 const lambda = new AWS.Lambda({ region: "us-east-1" });
 const LIVE_ALIAS = "live";
 
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
 export const handler = cfnResponse.safeHandler(
   async (cfnRequest: AWSLambda.CloudFormationCustomResourceEvent) => {
     log("onEventHandler", cfnRequest);
@@ -49,7 +54,9 @@ export const handler = cfnResponse.safeHandler(
 
 async function createVersion(functionName: string) {
   log(`createVersion() called with functionName`, functionName);
-
+  log("sleeping");
+  await sleep(30000);
+  log("slept");
   const resp = await lambda
     .publishVersion({
       FunctionName: functionName,
