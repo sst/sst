@@ -36,9 +36,7 @@ func CmdDiff(c *cli.Cli) error {
 			u.Event(evt)
 			switch evt := evt.(type) {
 			case *apitype.ResOutputsEvent:
-				if len(evt.Metadata.DetailedDiff) > 0 {
-					outputs = append(outputs, evt)
-				}
+				outputs = append(outputs, evt)
 			}
 		}
 		return nil
@@ -90,9 +88,6 @@ func CmdDiff(c *cli.Cli) error {
 		}
 		sort.Strings(sorted)
 		for _, path := range sorted {
-			if path == "__provider" {
-				continue
-			}
 			diff := output.Metadata.DetailedDiff[path]
 			label := ""
 			if diff.Kind == apitype.DiffUpdate {
@@ -115,6 +110,9 @@ func CmdDiff(c *cli.Cli) error {
 			}
 			fmt.Print("   ", label+" ", strings.TrimSpace(path))
 			value, _ := jsonpath.Read(output.Metadata.New.Outputs, "$."+path)
+			if path == "__provider" {
+				value = "code changed"
+			}
 			if value != nil {
 				formatted := ""
 				switch value.(type) {
