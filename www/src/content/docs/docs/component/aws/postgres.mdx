@@ -28,12 +28,6 @@ connect to it locally.
 #### Create the database
 
 ```js title="sst.config.ts"
-const database = new sst.aws.Postgres("MyDatabase");
-```
-
-#### Use a VPC
-
-```js title="sst.config.ts"
 const vpc = new sst.aws.Vpc("MyVpc");
 const database = new sst.aws.Postgres("MyDatabase", { vpc });
 ```
@@ -45,7 +39,8 @@ new sst.aws.Postgres("MyDatabase", {
   scaling: {
     min: "2 ACU",
     max: "128 ACU"
-  }
+  },
+  vpc
 });
 ```
 
@@ -55,7 +50,8 @@ You can link your database to other resources, like a function or your Next.js a
 
 ```ts title="sst.config.ts"
 new sst.aws.Nextjs("MyWeb", {
-  link: [database]
+  link: [database],
+  vpc
 });
 ```
 
@@ -81,14 +77,14 @@ drizzle(new RDSDataClient({}), {
 <Segment>
 <Section type="signature">
 ```ts
-new Postgres(name, args?, opts?)
+new Postgres(name, args, opts?)
 ```
 </Section>
 
 <Section type="parameters">
 #### Parameters
 - <p><code class="key">name</code> <code class="primitive">string</code></p>
-- <p><code class="key">args?</code> [<code class="type">PostgresArgs</code>](#postgresargs)</p>
+- <p><code class="key">args</code> [<code class="type">PostgresArgs</code>](#postgresargs)</p>
 - <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
 </Section>
 </Segment>
@@ -257,28 +253,22 @@ The Postgres engine version. Check out the [available versions in your region](h
 }
 ```
 </Segment>
-### vpc?
+### vpc
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">default</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 - <p>[<code class="key">privateSubnets</code>](#vpc-privatesubnets)</p>
 - <p>[<code class="key">securityGroups</code>](#vpc-securitygroups)</p>
 </Section>
-
-<InlineSection>
-**Default** The default VPC in your account.
-</InlineSection>
 The VPC to use for the database cluster.
 
-:::note
-The default VPC does not have a private subnet and is not recommended for production.
-:::
+Each AWS account has a default VPC. If `default` is specified, the default VPC is used.
 
-By default, your account has a VPC in each account.
-This comes with a public subnet. If you don't specify a VPC, it'll use the default one.
-This is not recommended for production.
+:::note
+The default VPC does not have private subnets and is not recommended for production use.
+:::
 
 ```js
 {

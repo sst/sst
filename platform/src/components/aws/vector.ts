@@ -108,7 +108,7 @@ export class Vector extends Component implements Link.Linkable {
         ...transform(
           args?.transform?.postgres,
           `${name}Database`,
-          {},
+          { vpc: "default" },
           { parent },
         ),
       );

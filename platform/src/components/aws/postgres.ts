@@ -102,15 +102,11 @@ export interface PostgresArgs {
   /**
    * The VPC to use for the database cluster.
    *
+   * Each AWS account has a default VPC. If `default` is specified, the default VPC is used.
+   *
    * :::note
-   * The default VPC does not have a private subnet and is not recommended for production.
+   * The default VPC does not have private subnets and is not recommended for production use.
    * :::
-   *
-   * By default, your account has a VPC in each account.
-   * This comes with a public subnet. If you don't specify a VPC, it'll use the default one.
-   * This is not recommended for production.
-   *
-   * @default The default VPC in your account.
    *
    * @example
    * ```js
@@ -136,17 +132,19 @@ export interface PostgresArgs {
    * }
    * ```
    */
-  vpc?: Input<{
-    /**
-     * A list of private subnet IDs in the VPC. The database will be placed in the private
-     * subnets.
-     */
-    privateSubnets: Input<Input<string>[]>;
-    /**
-     * A list of VPC security group IDs.
-     */
-    securityGroups: Input<Input<string>[]>;
-  }>;
+  vpc:
+    | "default"
+    | Input<{
+        /**
+         * A list of private subnet IDs in the VPC. The database will be placed in the private
+         * subnets.
+         */
+        privateSubnets: Input<Input<string>[]>;
+        /**
+         * A list of VPC security group IDs.
+         */
+        securityGroups: Input<Input<string>[]>;
+      }>;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -191,12 +189,6 @@ interface PostgresRef {
  * #### Create the database
  *
  * ```js title="sst.config.ts"
- * const database = new sst.aws.Postgres("MyDatabase");
- * ```
- *
- * #### Use a VPC
- *
- * ```js title="sst.config.ts"
  * const vpc = new sst.aws.Vpc("MyVpc");
  * const database = new sst.aws.Postgres("MyDatabase", { vpc });
  * ```
@@ -208,7 +200,8 @@ interface PostgresRef {
  *   scaling: {
  *     min: "2 ACU",
  *     max: "128 ACU"
- *   }
+ *   },
+ *   vpc
  * });
  * ```
  *
@@ -218,7 +211,8 @@ interface PostgresRef {
  *
  * ```ts title="sst.config.ts"
  * new sst.aws.Nextjs("MyWeb", {
- *   link: [database]
+ *   link: [database],
+ *   vpc
  * });
  * ```
  *
@@ -242,13 +236,13 @@ export class Postgres extends Component implements Link.Linkable {
 
   constructor(
     name: string,
-    args?: PostgresArgs,
+    args: PostgresArgs,
     opts?: ComponentResourceOptions,
   ) {
     super(__pulumiType, name, args, opts);
 
     if (args && "ref" in args) {
-      const ref = args as PostgresRef;
+      const ref = args as unknown as PostgresRef;
       this.cluster = ref.cluster;
       this.instance = ref.instance;
       return;
@@ -267,31 +261,30 @@ export class Postgres extends Component implements Link.Linkable {
     this.instance = instance;
 
     function normalizeScaling() {
-      return output(args?.scaling).apply((scaling) => ({
+      return output(args.scaling).apply((scaling) => ({
         minCapacity: parseACU(scaling?.min ?? "0.5 ACU"),
         maxCapacity: parseACU(scaling?.max ?? "4 ACU"),
       }));
     }
 
     function normalizeVersion() {
-      return output(args?.version).apply((version) => version ?? "15.5");
+      return output(args.version).apply((version) => version ?? "15.5");
     }
 
     function normalizeDatabaseName() {
-      return output(args?.databaseName).apply(
+      return output(args.databaseName).apply(
         (name) => name ?? $app.name.replaceAll("-", "_"),
       );
     }
 
     function createSubnetGroup() {
-      if (!args?.vpc) return;
-
+      if (args.vpc === "default") return;
       return new rds.SubnetGroup(
         ...transform(
-          args?.transform?.subnetGroup,
+          args.transform?.subnetGroup,
           `${name}SubnetGroup`,
           {
-            subnetIds: output(args.vpc).privateSubnets,
+            subnetIds: output(args.vpc).apply((vpc) => vpc.privateSubnets),
           },
           { parent },
         ),
@@ -301,7 +294,7 @@ export class Postgres extends Component implements Link.Linkable {
     function createCluster() {
       return new rds.Cluster(
         ...transform(
-          args?.transform?.cluster,
+          args.transform?.cluster,
           `${name}Cluster`,
           {
             engine: rds.EngineType.AuroraPostgresql,
@@ -314,7 +307,10 @@ export class Postgres extends Component implements Link.Linkable {
             skipFinalSnapshot: true,
             enableHttpEndpoint: true,
             dbSubnetGroupName: subnetGroup?.name,
-            vpcSecurityGroupIds: args?.vpc && output(args.vpc).securityGroups,
+            vpcSecurityGroupIds:
+              args.vpc === "default"
+                ? undefined
+                : output(args.vpc).securityGroups,
           },
           { parent },
         ),
@@ -324,7 +320,7 @@ export class Postgres extends Component implements Link.Linkable {
     function createInstance() {
       return new rds.ClusterInstance(
         ...transform(
-          args?.transform?.instance,
+          args.transform?.instance,
           `${name}Instance`,
           {
             clusterIdentifier: cluster.id,
@@ -497,7 +493,7 @@ export class Postgres extends Component implements Link.Linkable {
       ref: true,
       cluster,
       instance,
-    } as PostgresArgs);
+    } as unknown as PostgresArgs);
   }
 }
 
