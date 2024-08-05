@@ -1,4 +1,4 @@
-package rpc
+package resource
 
 import (
 	"fmt"
@@ -22,10 +22,10 @@ type DistributionInvalidation struct {
 }
 
 type DistributionInvalidationInputs struct {
-	DistributionId string `json:"distributionId"`
+	DistributionId string   `json:"distributionId"`
 	Paths          []string `json:"paths"`
-	Wait           bool `json:"wait"`
-	Version        string `json:"version"`
+	Wait           bool     `json:"wait"`
+	Version        string   `json:"version"`
 }
 
 func (r *DistributionInvalidation) Create(input *DistributionInvalidationInputs, output *CreateResult[struct{}]) error {
@@ -133,3 +133,4 @@ func (r *DistributionInvalidation) waitForInvalidation(client *cloudfront.Client
 	}
 	return nil
 }
+

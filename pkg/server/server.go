@@ -3,18 +3,24 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/sst/ion/pkg/project"
-	"golang.org/x/sync/errgroup"
+	"io"
 	"log/slog"
 	"net"
 	"net/http"
+	"net/rpc"
+	"net/rpc/jsonrpc"
 	"os"
 	"syscall"
+
+	"github.com/sst/ion/pkg/project"
+	"github.com/sst/ion/pkg/server/resource"
+	"golang.org/x/sync/errgroup"
 )
 
 type Server struct {
 	Port int
 	Mux  *http.ServeMux
+	Rpc  *rpc.Server
 }
 
 func New() (*Server, error) {
@@ -22,14 +28,26 @@ func New() (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Server{
+	result := &Server{
 		Port: port,
 		Mux:  http.NewServeMux(),
-	}, nil
+		Rpc:  rpc.NewServer(),
+	}
+	result.Mux.HandleFunc("/rpc", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		result.Rpc.ServeCodec(jsonrpc.NewServerCodec(&HttpConn{Reader: r.Body, Writer: w}))
+	})
+	return result, nil
 }
 
 func (s *Server) Start(ctx context.Context, p *project.Project) error {
 	defer slog.Info("server done")
+
+	resource.Register(ctx, p, s.Rpc)
+
 	var wg errgroup.Group
 	server := &http.Server{
 		Handler: s.Mux,
@@ -68,3 +86,10 @@ func port() (int, error) {
 		return addr.Port, nil
 	}
 }
+
+type HttpConn struct {
+	io.Reader
+	io.Writer
+}
+
+func (c *HttpConn) Close() error { return nil }

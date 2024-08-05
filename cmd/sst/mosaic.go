@@ -21,7 +21,6 @@ import (
 	"github.com/sst/ion/cmd/sst/mosaic/watcher"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
-	"github.com/sst/ion/pkg/rpc"
 	"github.com/sst/ion/pkg/server"
 	"golang.org/x/sync/errgroup"
 )
@@ -215,11 +214,6 @@ func CmdMosaic(c *cli.Cli) error {
 			}
 		})
 	}
-
-	wg.Go(func() error {
-		defer c.Cancel()
-		return rpc.Start(c.Context, p, server)
-	})
 
 	wg.Go(func() error {
 		defer c.Cancel()

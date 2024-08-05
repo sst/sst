@@ -1,4 +1,4 @@
-package rpc
+package resource
 
 import (
 	"log/slog"

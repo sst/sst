@@ -16,6 +16,11 @@ export default $config({
       url: true,
       link: [bucket],
       handler: "index.handler",
+      transform: {
+        function: {
+          name: "my-function",
+        },
+      },
     });
     return {
       api: hono.url,

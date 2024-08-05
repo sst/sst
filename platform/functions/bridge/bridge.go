@@ -158,47 +158,34 @@ func run() error {
 	writer := iot_writer.New(mqttClient, prefix+"/response")
 	var conn net.Conn
 	var connLock sync.Mutex
-	timer := time.NewTimer(time.Second * 5)
 	go func() {
 		for {
 			connLock.Lock()
-			slog.Info("connecting to lambda runtime api")
+			slog.Info("dialing lambda runtime api")
 			conn, err = net.Dial("tcp", LAMBDA_RUNTIME_API)
 			if err != nil {
 				cancel()
 				return
 			}
-			timer.Reset(time.Second * 5)
 			connLock.Unlock()
 			slog.Info("waiting for response")
 			io.Copy(writer, conn)
 			writer.Flush()
 		}
 	}()
-	/*
-		go func() {
-			select {
-			case <-timer.C:
-				slog.Info("timer expired")
-				cancel()
-				return
-			case <-ctx.Done():
-				return
-			}
-		}()
-	*/
 
 	slog.Info("get lambda runtime api", "url", LAMBDA_RUNTIME_API)
 
+	firstRequest := make(chan struct{}, 10_000)
 	if token := mqttClient.Subscribe(prefix+"/request", 1, func(c MQTT.Client, m MQTT.Message) {
 		slog.Info("iot", "topic", m.Topic())
 		payload := m.Payload()
 		topic := m.Topic()
 		slog.Info("received message", "topic", topic, "payload", string(payload))
+		firstRequest <- struct{}{}
 		go func() {
 			connLock.Lock()
 			defer connLock.Unlock()
-			timer.Stop()
 			conn.Write(payload)
 			slog.Info("wrote request")
 		}()
@@ -218,6 +205,10 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	if token := mqttClient.Publish(prefix+"/init", 1, false, initPayload); token.Wait() && token.Error() != nil {
+		return token.Error()
+	}
+
 	if token := mqttClient.Subscribe(prefix+"/reboot", 1, func(c MQTT.Client, m MQTT.Message) {
 		slog.Info("received reboot message")
 		go func() {
@@ -236,12 +227,15 @@ func run() error {
 		return token.Error()
 	}
 
-	if token := mqttClient.Publish(prefix+"/init", 1, false, initPayload); token.Wait() && token.Error() != nil {
-		return token.Error()
-	}
-
 	sigs := make(chan os.Signal)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+
+	select {
+	case <-firstRequest:
+		break
+	case <-time.After(time.Second * 1):
+		return fmt.Errorf("could not connect to sst dev session")
+	}
 
 	select {
 	case <-sigs:

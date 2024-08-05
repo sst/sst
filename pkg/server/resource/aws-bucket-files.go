@@ -1,4 +1,4 @@
-package rpc
+package resource
 
 import (
 	"bytes"
@@ -13,23 +13,23 @@ type BucketFiles struct {
 }
 
 type BucketFile struct {
-	Source       string `json:"source"`
-	Key          string `json:"key"`
+	Source       string  `json:"source"`
+	Key          string  `json:"key"`
 	CacheControl *string `json:"cacheControl,omitempty"`
-	ContentType  string `json:"contentType"`
+	ContentType  string  `json:"contentType"`
 	Hash         *string `json:"hash,omitempty"`
 }
 
 type BucketFilesInputs struct {
-	BucketName string `json:"bucketName"`
+	BucketName string       `json:"bucketName"`
 	Files      []BucketFile `json:"files"`
-	Purge      bool `json:"purge"`
+	Purge      bool         `json:"purge"`
 }
 
 type BucketFilesOutputs struct {
-	BucketName string `json:"bucketName,omitempty"`
+	BucketName string       `json:"bucketName,omitempty"`
 	Files      []BucketFile `json:"files,omitempty"`
-	Purge      bool `json:"purge,omitempty"`
+	Purge      bool         `json:"purge,omitempty"`
 }
 
 func (r *BucketFiles) Create(input *BucketFilesInputs, output *CreateResult[BucketFilesOutputs]) error {
@@ -154,3 +154,4 @@ func (r *BucketFiles) purge(client *s3.Client, bucketName string, files []Bucket
 
 	return nil
 }
+

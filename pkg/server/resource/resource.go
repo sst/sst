@@ -1,8 +1,9 @@
-package rpc
+package resource
 
 import (
 	"context"
 	"fmt"
+	"net/rpc"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/sst/ion/pkg/project"
@@ -15,7 +16,7 @@ type CreateResult[T any] struct {
 }
 
 type UpdateResult[T any] struct {
-	Outs T      `json:"outs"`
+	Outs T `json:"outs"`
 }
 
 type DeleteInput[T any] struct {
@@ -41,4 +42,16 @@ func (a *AwsResource) config() (aws.Config, error) {
 	}
 	casted := result.(*provider.AwsProvider)
 	return casted.Config(), nil
+}
+
+func Register(ctx context.Context, p *project.Project, r *rpc.Server) error {
+	awsResource := &AwsResource{ctx, p}
+	r.RegisterName("Resource.Aws.BucketFiles", &BucketFiles{awsResource})
+	r.RegisterName("Resource.Aws.DistributionDeploymentWaiter", &DistributionDeploymentWaiter{awsResource})
+	r.RegisterName("Resource.Aws.DistributionInvalidation", &DistributionInvalidation{awsResource})
+	r.RegisterName("Resource.Aws.FunctionCodeUpdater", &FunctionCodeUpdater{awsResource})
+	r.RegisterName("Resource.Aws.HostedZoneLookup", &HostedZoneLookup{awsResource})
+	r.RegisterName("Resource.Aws.OriginAccessIdentity", &OriginAccessIdentity{awsResource})
+	r.RegisterName("Resource.Aws.VectorTable", &VectorTable{awsResource})
+	return nil
 }

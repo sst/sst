@@ -1,4 +1,4 @@
-package rpc
+package resource
 
 import (
 	"log/slog"
@@ -15,7 +15,7 @@ type DistributionDeploymentWaiter struct {
 type DistributionDeploymentWaiterInputs struct {
 	DistributionId string `json:"distributionId"`
 	Etag           string `json:"etag"`
-	Wait           bool `json:"wait"`
+	Wait           bool   `json:"wait"`
 }
 
 type DistributionDeploymentWaiterOutputs struct {
@@ -77,3 +77,4 @@ func (r *DistributionDeploymentWaiter) handle(input *DistributionDeploymentWaite
 		time.Sleep(5 * time.Second)
 	}
 }
+

@@ -1,4 +1,4 @@
-package rpc
+package resource
 
 import (
 	"fmt"
@@ -85,32 +85,33 @@ func (r *FunctionCodeUpdater) updateCode(input *FunctionCodeUpdaterInputs) (stri
 func (r *FunctionCodeUpdater) waitForUpdate(input *FunctionCodeUpdaterInputs) error {
 	cfg, err := r.config()
 	if err != nil {
-			return err
+		return err
 	}
 
 	cfg.Region = input.Region
 	client := lambda.NewFromConfig(cfg)
 
 	for {
-			ret, err := client.GetFunction(r.context, &lambda.GetFunctionInput{
-					FunctionName: aws.String(input.FunctionName),
-			})
-			if err != nil {
-					return err
-			}
+		ret, err := client.GetFunction(r.context, &lambda.GetFunctionInput{
+			FunctionName: aws.String(input.FunctionName),
+		})
+		if err != nil {
+			return err
+		}
 
-			if ret.Configuration.LastUpdateStatus == types.LastUpdateStatusSuccessful {
-					return nil
-			}
+		if ret.Configuration.LastUpdateStatus == types.LastUpdateStatusSuccessful {
+			return nil
+		}
 
-			if ret.Configuration.LastUpdateStatus == types.LastUpdateStatusFailed {
-					reason := "Unknown"
-					if ret.Configuration.LastUpdateStatusReason != nil {
-							reason = *ret.Configuration.LastUpdateStatusReason
-					}
-					return fmt.Errorf("failed to update function %s: %s", ret.Configuration.LastUpdateStatusReasonCode, reason)
+		if ret.Configuration.LastUpdateStatus == types.LastUpdateStatusFailed {
+			reason := "Unknown"
+			if ret.Configuration.LastUpdateStatusReason != nil {
+				reason = *ret.Configuration.LastUpdateStatusReason
 			}
+			return fmt.Errorf("failed to update function %s: %s", ret.Configuration.LastUpdateStatusReasonCode, reason)
+		}
 
-			time.Sleep(300 * time.Millisecond)
+		time.Sleep(300 * time.Millisecond)
 	}
 }
+

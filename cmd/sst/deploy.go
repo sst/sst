@@ -6,7 +6,6 @@ import (
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/pkg/project"
-	"github.com/sst/ion/pkg/rpc"
 	"github.com/sst/ion/pkg/server"
 	"golang.org/x/sync/errgroup"
 )
@@ -32,10 +31,6 @@ func CmdDeploy(c *cli.Cli) error {
 	if err != nil {
 		return err
 	}
-	wg.Go(func() error {
-		defer c.Cancel()
-		return rpc.Start(c.Context, p, s)
-	})
 	wg.Go(func() error {
 		defer c.Cancel()
 		return s.Start(c.Context, p)

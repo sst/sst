@@ -1,4 +1,4 @@
-package rpc
+package resource
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ type VectorTableInputs struct {
 	SecretArn    string `json:"secretArn"`
 	DatabaseName string `json:"databaseName"`
 	TableName    string `json:"tableName"`
-	Dimension    int `json:"dimension"`
+	Dimension    int    `json:"dimension"`
 }
 
 type VectorTableOutputs struct {
@@ -157,3 +157,4 @@ func (r *VectorTable) executeSQL(input *VectorTableInputs, sql string) error {
 func stringPtr(s string) *string {
 	return &s
 }
+
