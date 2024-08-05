@@ -368,11 +368,18 @@ export class App extends CDKApp {
           const functions = useFunctions();
           const sourcemaps = functions.sourcemaps.forStack(child.stackName);
           if (sourcemaps.length) {
+            // Add policy with access to buckets: CKD bootstrap and SST sourcemap
+            // If the object in CDK bootstrap has tags, target object will have the same tags
             const policy = new Policy(child, "SourcemapUploaderPolicy", {
               statements: [
                 new PolicyStatement({
                   effect: Effect.ALLOW,
-                  actions: ["s3:GetObject", "s3:PutObject"],
+                  actions: [
+                    "s3:GetObject", 
+                    "s3:GetObjectTagging", 
+                    "s3:PutObject", 
+                    "s3:PutObjectTagging"
+                  ],
                   resources: [
                     sourcemaps[0].asset.bucket.bucketArn + "/*",
                     `arn:${child.partition}:s3:::${bootstrap.bucket}/*`,
