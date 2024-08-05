@@ -20,11 +20,9 @@ import (
 
 type Home interface {
 	Bootstrap() error
-
 	getData(key, app, stage string) (io.Reader, error)
 	putData(key, app, stage string, data io.Reader) error
 	removeData(key, app, stage string) error
-
 	setPassphrase(app, stage string, passphrase string) error
 	getPassphrase(app, stage string) (string, error)
 }

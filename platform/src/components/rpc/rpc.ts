@@ -6,7 +6,7 @@ export module rpc {
       super(`Method "${method}" not found`);
     }
   }
-  export async function call(method: string, args: any) {
+  export async function call<T = any>(method: string, args: any) {
     return fetch($cli.rpc, {
       headers: {
         "Content-Type": "application/json",
@@ -27,7 +27,7 @@ export module rpc {
           throw new MethodNotFoundError(method);
         throw new Error(json.error);
       }
-      return json.result;
+      return json.result as T;
     });
   }
 

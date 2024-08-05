@@ -300,6 +300,7 @@ func (u *UI) Event(unknown interface{}) {
 
 		if evt.Severity == "info" {
 			for _, line := range strings.Split(strings.TrimRightFunc(ansi.Strip(evt.Message), unicode.IsSpace), "\n") {
+				slog.Info("line", "line", line)
 				u.printEvent(
 					TEXT_DIM,
 					"Log",

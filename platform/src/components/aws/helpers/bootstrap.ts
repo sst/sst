@@ -16,6 +16,7 @@ import {
 export type {} from "@smithy/types";
 import { PRETTY_CHARS, hashNumberToPrettyString } from "../../naming";
 import { useClient } from "./client";
+import { rpc } from "../../rpc/rpc";
 
 const VERSION = 1;
 const SSM_NAME = `/sst/bootstrap/asset`;
@@ -32,10 +33,14 @@ interface BootstrapData {
 const bootstrapBuckets: Record<string, Promise<BootstrapData>> = {};
 
 export const bootstrap = {
-  forRegion(region: string): Promise<BootstrapData> {
+  async forRegion(region: string): Promise<BootstrapData> {
     if (region in bootstrapBuckets) {
       return bootstrapBuckets[region]!;
     }
+    const result = await rpc.call("Provider.Aws.Bootstrap", {
+      region,
+    });
+    console.log(result);
 
     const ssm = useClient(SSMClient, { region });
     const s3 = useClient(S3Client, { region });

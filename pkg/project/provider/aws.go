@@ -115,7 +115,7 @@ func (a *AwsProvider) Config() aws.Config {
 
 type AwsHome struct {
 	provider  *AwsProvider
-	bootstrap *awsBootstrapData
+	bootstrap *AwsBootstrapData
 }
 
 func NewAwsHome(provider *AwsProvider) *AwsHome {
@@ -130,119 +130,6 @@ func (a *AwsHome) pathForData(key, app, stage string) string {
 
 func (a *AwsHome) pathForPassphrase(app string, stage string) string {
 	return "/" + strings.Join([]string{"sst", "passphrase", app, stage}, "/")
-}
-
-const BOOTSTRAP_VERSION = 1
-
-func (a *AwsHome) Bootstrap() (err error) {
-	bootstrap, err := a.resolveBuckets()
-	if err != nil {
-		return err
-	}
-	a.bootstrap = bootstrap
-	return err
-}
-
-type awsBootstrapData struct {
-	Version int    `json:"version"`
-	Asset   string `json:"asset"`
-	State   string `json:"state"`
-}
-
-func (a *AwsHome) resolveBuckets() (*awsBootstrapData, error) {
-	ctx := context.TODO()
-
-	ssmClient := ssm.NewFromConfig(a.provider.config)
-	slog.Info("fetching bootstrap")
-	result, err := ssmClient.GetParameter(ctx, &ssm.GetParameterInput{
-		Name:           aws.String(SSM_NAME_BOOTSTRAP),
-		WithDecryption: aws.Bool(false),
-	})
-
-	if result != nil && result.Parameter.Value != nil {
-		slog.Info("found existing bootstrap", "data", *result.Parameter.Value)
-		var bootstrapData awsBootstrapData
-		err = json.Unmarshal([]byte(*result.Parameter.Value), &bootstrapData)
-		if err != nil {
-			return nil, err
-		}
-		return &bootstrapData, nil
-	}
-	if err != nil {
-		var pnf *ssmTypes.ParameterNotFound
-		if !errors.As(err, &pnf) {
-			return nil, err
-		}
-	}
-
-	region := a.provider.config.Region
-	rand := util.RandomString(12)
-	assetName := fmt.Sprintf("sst-asset-%v", rand)
-	stateName := fmt.Sprintf("sst-state-%v", rand)
-	slog.Info("creating bootstrap bucket", "name", assetName)
-	s3Client := s3.NewFromConfig(a.provider.config)
-
-	var config *s3types.CreateBucketConfiguration = nil
-	if region != "us-east-1" {
-		config = &s3types.CreateBucketConfiguration{
-			LocationConstraint: s3types.BucketLocationConstraint(region),
-		}
-	}
-	_, err = s3Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
-		Bucket:                    aws.String(assetName),
-		CreateBucketConfiguration: config,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = s3Client.PutBucketNotificationConfiguration(context.TODO(), &s3.PutBucketNotificationConfigurationInput{
-		Bucket:                    aws.String(assetName),
-		NotificationConfiguration: &s3types.NotificationConfiguration{},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = s3Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
-		Bucket:                    aws.String(stateName),
-		CreateBucketConfiguration: config,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = s3Client.PutBucketVersioning(context.TODO(), &s3.PutBucketVersioningInput{
-		Bucket: aws.String(stateName),
-		VersioningConfiguration: &s3types.VersioningConfiguration{
-			Status: s3types.BucketVersioningStatusEnabled,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	bootstrapData := &awsBootstrapData{
-		Version: BOOTSTRAP_VERSION,
-		Asset:   assetName,
-		State:   stateName,
-	}
-
-	data, err := json.Marshal(bootstrapData)
-
-	_, err = ssmClient.PutParameter(
-		ctx,
-		&ssm.PutParameterInput{
-			Name:  aws.String(SSM_NAME_BOOTSTRAP),
-			Type:  ssmTypes.ParameterTypeString,
-			Value: aws.String(string(data)),
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return bootstrapData, nil
 }
 
 func (a *AwsHome) getData(key, app, stage string) (io.Reader, error) {
@@ -321,4 +208,128 @@ func (a *AwsHome) setPassphrase(app, stage, passphrase string) error {
 		Overwrite:   aws.Bool(false),
 	})
 	return err
+}
+
+func (a *AwsHome) Bootstrap() error {
+	data, err := AwsBootstrap(a.provider.config)
+	if err != nil {
+		return err
+	}
+	a.bootstrap = data
+	return err
+}
+
+func AwsBootstrap(cfg aws.Config) (*AwsBootstrapData, error) {
+	ctx := context.TODO()
+	ssmClient := ssm.NewFromConfig(cfg)
+	bootstrapData := &AwsBootstrapData{}
+	slog.Info("fetching bootstrap")
+	result, err := ssmClient.GetParameter(ctx, &ssm.GetParameterInput{
+		Name:           aws.String(SSM_NAME_BOOTSTRAP),
+		WithDecryption: aws.Bool(false),
+	})
+	if result != nil && result.Parameter.Value != nil {
+		slog.Info("found existing bootstrap", "data", *result.Parameter.Value)
+		err = json.Unmarshal([]byte(*result.Parameter.Value), bootstrapData)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if err != nil {
+		var pnf *ssmTypes.ParameterNotFound
+		if !errors.As(err, &pnf) {
+			return nil, err
+		}
+	}
+
+	if len(steps) > bootstrapData.Version {
+		for index, step := range steps {
+			if bootstrapData != nil && bootstrapData.Version > index {
+				continue
+			}
+			slog.Info("running bootstrap step", "step", index)
+			err = step(ctx, cfg, bootstrapData)
+			if err != nil {
+				return nil, err
+			}
+		}
+		bootstrapData.Version = len(steps)
+		data, err := json.Marshal(bootstrapData)
+		_, err = ssmClient.PutParameter(
+			ctx,
+			&ssm.PutParameterInput{
+				Name:      aws.String(SSM_NAME_BOOTSTRAP),
+				Type:      ssmTypes.ParameterTypeString,
+				Overwrite: aws.Bool(true),
+				Value:     aws.String(string(data)),
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return bootstrapData, nil
+}
+
+type AwsBootstrapData struct {
+	Version int    `json:"version"`
+	Asset   string `json:"asset"`
+	State   string `json:"state"`
+}
+
+type bootstrapStep = func(ctx context.Context, cfg aws.Config, data *AwsBootstrapData) error
+
+// never change these, only append more steps
+var steps = []bootstrapStep{
+	func(ctx context.Context, cfg aws.Config, data *AwsBootstrapData) error {
+		region := cfg.Region
+		rand := util.RandomString(12)
+		assetName := fmt.Sprintf("sst-asset-%v", rand)
+		stateName := fmt.Sprintf("sst-state-%v", rand)
+		slog.Info("creating bootstrap bucket", "name", assetName)
+		s3Client := s3.NewFromConfig(cfg)
+
+		var config *s3types.CreateBucketConfiguration = nil
+		if region != "us-east-1" {
+			config = &s3types.CreateBucketConfiguration{
+				LocationConstraint: s3types.BucketLocationConstraint(region),
+			}
+		}
+		_, err := s3Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
+			Bucket:                    aws.String(assetName),
+			CreateBucketConfiguration: config,
+		})
+		if err != nil {
+			return err
+		}
+
+		_, err = s3Client.PutBucketNotificationConfiguration(context.TODO(), &s3.PutBucketNotificationConfigurationInput{
+			Bucket:                    aws.String(assetName),
+			NotificationConfiguration: &s3types.NotificationConfiguration{},
+		})
+		if err != nil {
+			return err
+		}
+
+		_, err = s3Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
+			Bucket:                    aws.String(stateName),
+			CreateBucketConfiguration: config,
+		})
+		if err != nil {
+			return err
+		}
+
+		_, err = s3Client.PutBucketVersioning(context.TODO(), &s3.PutBucketVersioningInput{
+			Bucket: aws.String(stateName),
+			VersioningConfiguration: &s3types.VersioningConfiguration{
+				Status: s3types.BucketVersioningStatusEnabled,
+			},
+		})
+		if err != nil {
+			return err
+		}
+		data.Asset = assetName
+		data.State = stateName
+		return nil
+	},
 }
