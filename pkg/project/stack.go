@@ -286,8 +286,12 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	}
 	slog.Info("tracked files")
 
+	pulumiPath := flag.SST_PULUMI_PATH
+	if pulumiPath == "" {
+		pulumiPath = filepath.Join(global.BinPath(), "..")
+	}
 	pulumi, err := auto.NewPulumiCommand(&auto.PulumiCommandOptions{
-		Root:             filepath.Join(global.BinPath(), ".."),
+		Root:             pulumiPath,
 		SkipVersionCheck: true,
 	})
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 
@@ -147,9 +148,7 @@ func (s *Multiplexer) Start() {
 					}
 					if evt.Buttons() == tcell.ButtonNone {
 						if s.dragging && selected != nil {
-							copied := selected.vt.Copy()
-							encoded := base64.StdEncoding.EncodeToString([]byte(copied))
-							fmt.Fprintf(os.Stdout, "\x1b]52;c;%s\x07", encoded)
+							s.copy()
 						}
 						s.dragging = false
 						return
@@ -258,9 +257,7 @@ func (s *Multiplexer) Start() {
 						}
 					case tcell.KeyEnter:
 						if selected != nil && selected.vt.HasSelection() {
-							copied := selected.vt.Copy()
-							encoded := base64.StdEncoding.EncodeToString([]byte(copied))
-							fmt.Fprintf(os.Stdout, "\x1b]52;c;%s\x07", encoded)
+							s.copy()
 							selected.vt.ClearSelection()
 							s.draw()
 							return
@@ -328,4 +325,28 @@ func (s *Multiplexer) scrollUp(n int) {
 	}
 	selected.scrollUp(n)
 	s.draw()
+}
+
+func (s *Multiplexer) copy() {
+	selected := s.selectedProcess()
+	if selected == nil {
+		return
+	}
+	data := selected.vt.Copy()
+	if data == "" {
+		return
+	}
+	// check if mac terminal
+	if os.Getenv("TERM_PROGRAM") == "Apple_Terminal" {
+		// use pbcopy
+		cmd := exec.Command("pbcopy")
+		cmd.Stdin = strings.NewReader(data)
+		err := cmd.Run()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to copy to clipboard: %v\n", err)
+		}
+		return
+	}
+	encoded := base64.StdEncoding.EncodeToString([]byte(data))
+	fmt.Fprintf(os.Stdout, "\x1b]52;c;%s\x07", encoded)
 }
