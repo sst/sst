@@ -46,13 +46,13 @@ Most modern editors; VS Code and Neovim included, should do the above automatica
 
 SST apps are deployed to your infrastructure. So whether you are deploying to AWS, or Cloudflare, or any other cloud provider, make sure you have their credentials configured locally.
 
-Learn more about how to [configure your AWS credentials](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file).
+Learn more about how to [configure your AWS credentials](/docs/iam-credentials/).
 
 ---
 
 ### Console
 
-SST also comes with a [Console](/docs/console/). It shows you all your apps, the resources in them, lets you configure _git push to deploy_, and also send you alerts for when there are any issues in your apps.
+SST also comes with a [Console](/docs/console/). It shows you all your apps, the resources in them, lets you configure _git push to deploy_, and also send you alerts for when there are any issues.
 
 While it is optional, we recommend creating a free account and linking it to your AWS account. Learn more about the [SST Console](/docs/console/).
 
@@ -67,7 +67,7 @@ Now that you are ready to work on your app and your `sst.config.ts`, let's take 
 
 ### IaC
 
-Infrastructure as Code or _IaC_ is a process of automating the management of infrastructure through code, rather than doing it manually through a console or user interface.
+Infrastructure as Code or _IaC_ is a process of automating the management of infrastructure through code. Rather than doing it manually through a console or user interface.
 
 :::tip
 You won't ever need to use the AWS Console to configure your SST app.
@@ -84,7 +84,7 @@ api.route("GET /", {
 });
 ```
 
-You won't ever need to go to the API Gateway and S3 parts of the AWS Console. SST will do the work for you!
+You won't ever need to go to the API Gateway and S3 parts of the AWS Console. SST will do the work for you.
 
 In the above snippets, `sst.aws.ApiGatewayV2` and `sst.aws.Bucket` are called Components. Learn more about [Components](/docs/components/).
 
@@ -92,15 +92,15 @@ In the above snippets, `sst.aws.ApiGatewayV2` and `sst.aws.Bucket` are called Co
 
 ### Resources
 
-The reason this works is because when SST deploys the above app, it'll convert it into a set of commands. It then call AWS with your credentials to create the underlying resources. So the above components create a list of low level resources in AWS.
+The reason this works is because when SST deploys the above app, it'll convert it into a set of commands. These then call AWS with your credentials to create the underlying resources. So the above components get transformed into a list of low level resources in AWS.
 
 :::note
 You are not directly responsible for the low level resources that SST creates.
 :::
 
-If you login to your AWS Console you can see what gets created internally. While these might look a little intimidating, these are all managed by SST and you are not directly responsible for them.
+If you login to your AWS Console you can see what gets created internally. While these might look a little intimidating, they are all managed by SST and you are not directly responsible for them.
 
-SST will create, track, and removes all the low level resources created by your app.
+SST will create, track, and remove all the low level resources created by your app.
 
 ---
 
@@ -143,7 +143,7 @@ import { Resource } from "sst";
 console.log(Resource.MyBucket.name);
 ```
 
-There's a difference between the two snippets above. One is your **infrastructure code** and the other is your **runtime code**. One is run while creating your app, while the other runs when your user's use your app.
+There's a difference between the two snippets above. One is your **infrastructure code** and the other is your **runtime code**. One is run while creating your app, while the other runs when your users use your app.
 
 :::tip
 You can access your infrastructure in your runtime using the SST SDK.
@@ -172,7 +172,7 @@ The state is stored in a file locally and backed up to a bucket in your AWS (or 
 You can view the state of your app and its history in the SST Console. 
 :::
 
-While the state is backed up, if for some reason you delete your state locally and in your provider, SST won't be able to manage the resources anymore. To SST this app doesn't exist anymore!
+A word of caution, if for some reason you delete your state locally and in your provider, SST won't be able to manage the resources anymore. To SST this app doesn't exist anymore.
 
 :::danger
 Do not delete the bucket that stores your app's state.
@@ -235,7 +235,7 @@ You create a new stage by deploying to it with the `--stage <name>` CLI option. 
 To rename a stage, you'll need to remove the resources from the old one and deploy to the new one.
 :::
 
-Similar to app names, stage cannot be renamed. So if you wanted to rename a `development` stage to `dev`; you'll need to first remove `development` and then deploy `dev`.
+Similar to app names, stages cannot be renamed. So if you wanted to rename a `development` stage to `dev`; you'll need to first remove `development` and then deploy `dev`.
 
 ---
 
@@ -294,7 +294,13 @@ To start with, you'll run your app in dev.
 sst dev
 ```
 
-This deploys your app to your _personal_ stage in _dev mode_. This deploys your app a little differently and is optimized for local development.
+This deploys your app to your _personal_ stage in _dev mode_. It brings up a multiplexer that deploys your app, runs your functions, and starts your frontends in dev mode as well.
+
+:::note
+The `sst dev` CLI starts your entire app. Including your infrastructure, functions, and frontends.
+:::
+
+This deploys your app a little differently and is optimized for local development.
 
 One of the things it does is it runs the functions in your app [_Live_](/docs/live/). This proxies any requests to your local machine and runs the functions locally.
 
@@ -302,7 +308,7 @@ One of the things it does is it runs the functions in your app [_Live_](/docs/li
 Only use `sst dev` in your personal stage.
 :::
 
-For this reason we recommend only using your personal stage for local development. And instead deploying to a separate stage when you want to share your app with your users.
+For this reason we recommend only using your personal stage for local development. And instead deploying to a separate stage when you want to share your app with your users. Learn more about [`sst dev`](/docs/reference/cli/#dev).
 
 ---
 
@@ -377,4 +383,4 @@ Just like above, you can configure this using GitHub Actions or let the SST Cons
 
 ---
 
-And there you have it! You are now ready to build apps the _SST way_.
+And there you have it. You are now ready to build apps the _SST way_.

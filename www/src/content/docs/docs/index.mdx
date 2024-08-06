@@ -10,19 +10,17 @@ export const github  = config.github;
 
 SST is a framework that makes it easy to build modern full-stack applications on your own infrastructure.
 
-What makes SST different is that your _entire_ app is **defined in code** — in a single `sst.config.ts` file. This includes databases, buckets, queues, Stripe webhooks, or any one of the **150+ providers**.
+What makes SST different is that your _entire_ app is **defined in code** — in a single `sst.config.ts` file. This includes databases, buckets, queues, Stripe webhooks, or any one of **150+ providers**.
 
 With SST, **everything is automated**.
 
 ---
 
-Ion is a new engine for deploying [SST](https://sst.dev) apps. It uses [Pulumi](https://www.pulumi.com) and [Terraform](https://www.terraform.io), as opposed to CDK and CloudFormation.
+SST v3 uses [Pulumi](https://www.pulumi.com) and [Terraform](https://www.terraform.io). Previously, SST v2 used [CDK and CloudFormation](https://sst.dev/blog/moving-away-from-cdk.html).
 
 :::note
-Ion is open source, does not require a Pulumi account, and only depends on the open source parts of Pulumi and Terraform.
+SST is open source, does not require a Pulumi account, and only depends on the open source parts of Pulumi and Terraform.
 :::
-
-Ion is generally available and **recommended for new SST users**. We are working on a migration path for SST v2 users. Once Ion is stable, it’ll be released as SST v3. [Read the full announcement](https://sst.dev/blog/moving-away-from-cdk.html).
 
 If you are new to SST, here's how it works.
 
@@ -137,7 +135,7 @@ The above are called **Components**. They are a way of defining the features of 
 
 In the above examples, they create the necessary infrastructure in your AWS account. All without using the AWS Console.
 
-Read more about [Components](/docs/components/).
+Learn more about [Components](/docs/components/).
 
 ---
 
@@ -145,7 +143,7 @@ Read more about [Components](/docs/components/).
 
 SST's components come with sensible defaults designed to get you started. But they can also be configured completely.
 
-For example, the `sst.aws.Function` can be configured with all the common Lambda function props.
+For example, the `sst.aws.Function` can be configured with all the common Lambda function options.
 
 ```ts {3,4} title="sst.config.ts"
 new sst.aws.Function("MyFunction", {
@@ -155,7 +153,7 @@ new sst.aws.Function("MyFunction", {
 });
 ```
 
-But with SST you can take it a step further and transform how the Function component creates its low level infrastructure. For example, the Function component also creates an IAM Role. You can transform the IAM Role using the `transform` prop.
+But with SST you can take it a step further and transform how the Function component creates its low level resources. For example, the Function component also creates an IAM Role. You can transform the IAM Role using the `transform` prop.
 
 ```ts {3-7} title="sst.config.ts"
 new sst.aws.Function("MyFunction", {
@@ -168,17 +166,15 @@ new sst.aws.Function("MyFunction", {
 });
 ```
 
-Read more about [transforms](/docs/components#transforms).
+Learn more about [transforms](/docs/components#transforms).
 
 ---
 
 ### Providers
 
-SST has components for AWS and Cloudflare that make these services easier to use.
+SST has built-in components for AWS and Cloudflare that make these services easier to use.
 
-However it also supports components from any one of the 150+ Pulumi/Terraform providers. This is because components in SST are built on Pulumi components.
-
-For example, you can use Vercel for your frontends.
+However it also supports components from any one of the 150+ Pulumi/Terraform providers. For example, you can use Vercel for your frontends.
 
 ```ts title="sst.config.ts"
 new vercel.Project("MyFrontend", {
@@ -186,7 +182,7 @@ new vercel.Project("MyFrontend", {
 });
 ```
 
-Read more about [Providers](/docs/providers) and check out the full list in the [Directory](/docs/providers#directory)
+Learn more about [Providers](/docs/providers) and check out the full list in the [Directory](/docs/providers#directory).
 
 ---
 
@@ -212,7 +208,7 @@ import { Resource } from "sst";
 console.log(Resource.MyBucket.name);
 ```
 
-Read more about [resource linking](/docs/linking/).
+Learn more about [resource linking](/docs/linking/).
 
 ---
 
@@ -256,7 +252,7 @@ my-sst-app
 └─ infra
 ```
 
-Read more about our [monorepo setup](/docs/set-up-a-monorepo/).
+Learn more about our [monorepo setup](/docs/set-up-a-monorepo/).
 
 ---
 
@@ -278,7 +274,7 @@ curl -fsSL https://ion.sst.dev/install | bash
 SST currently supports **macOS, Linux, and WSL**. Support for Windows is on the roadmap.
 :::
 
-The CLI currently supports macOS, Linux, and WSL. Read more about the [CLI](/docs/reference/cli/).
+The CLI currently supports macOS, Linux, and WSL. Learn more about the [CLI](/docs/reference/cli/).
 
 ---
 
@@ -290,31 +286,18 @@ The CLI includes a `dev` command that starts a local development environment.
 sst dev
 ```
 
-It lets you make and test changes to your functions live, without having to redeploy them.
+This brings up a multiplexer that:
+
+1. Starts a watcher that deploys any infrastructure changes.
+2. Runs your functions [_Live_](/docs/live/); letting you make and test changes to your functions, without having to redeploy them.
+3. Starts up your frontend in dev mode and links it to your infrastructure
+
 
 :::tip
-The `sst dev` command runs your functions _**live**_, letting you test changes to your functions in milliseconds. [Read more](/docs/live/).
+The `sst dev` command runs your functions _**live**_, letting you test changes to your functions in milliseconds. [Learn more](/docs/live/).
 :::
 
-You can also use this command to start your frontend locally, and it'll automatically load your linked resources in your frontend's environment.
-
-<Tabs>
-  <TabItem label="Next.js">
-  ```bash
-  sst dev next dev
-  ```
-  </TabItem>
-  <TabItem label="Remix">
-  ```bash
-  sst dev remix dev
-  ```
-  </TabItem>
-  <TabItem label="Astro">
-  ```bash
-  sst dev astro dev
-  ```
-  </TabItem>
-</Tabs>
+The `sst dev` CLI makes it so that you won’t have to start your frontend or your container applications separately. Learn more about [`sst dev`](/docs/reference/cli/#dev).
 
 ---
 
@@ -330,7 +313,7 @@ sst deploy --stage production
 
 #### Stages
 
-The `deploy` command can also deploy your app to a specific stage or environment.
+The `deploy` command can deploy your app to a specific stage or environment.
 
 ```bash
 # Deploy to dev
@@ -340,7 +323,7 @@ npx sst deploy --stage dev
 npx sst deploy --stage pr-123
 ```
 
-This lets you create separate environments for your app. Read more about [stages](/docs/reference/cli#stage).
+This lets you create separate environments for your app. Learn more about [stages](/docs/reference/cli#stage).
 
 ---
 
@@ -350,7 +333,7 @@ Once you are ready to go to production, you can use the [SST Console](/docs/cons
 
 ![SST Console](../../../assets/docs/sst-console-home.png)
 
-Read more about the [Console](/docs/console/).
+Learn more about the [Console](/docs/console/).
 
 ---
 
@@ -368,15 +351,15 @@ In a nutshell, SST is for developers, while CDKTF and Pulumi are primarily for D
 
 1. Higher-level components
 
-   SST's built-in components like [`Nextjs`](/docs/component/aws/nextjs/) or [`Email`](/docs/component/aws/email/) make it easy for developers to add features to their app. You can use these without having to figure out how to work with the underlying Terraform resources. Read more about [Components](/docs/components/).
+   SST's built-in components like [`Nextjs`](/docs/component/aws/nextjs/) or [`Email`](/docs/component/aws/email/) make it easy for developers to add features to their app. You can use these without having to figure out how to work with the underlying Terraform resources.
 
 2. Linking resources
 
-   SST makes it easy to link your infrastructure to your application and access them at runtime in your code. Read more about [Linking](/docs/linking/).
+   SST makes it easy to link your infrastructure to your application and access them at runtime in your code.
 
 3. Dev mode
 
-   Finally, SST features a local developer environment that deploys your app through a watcher, runs your functions [_Live_](/docs/live/), and starts your frontend, all together. Read more about [`sst dev`](/docs/reference/cli/#dev).
+   Finally, SST features a unified local developer environment that deploys your app through a watcher, runs your functions [_Live_](/docs/live/), and starts your frontend, all together.
 
 ---
 
