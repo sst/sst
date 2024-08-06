@@ -806,7 +806,7 @@ export class Service extends Component implements Link.Linkable {
   /** @internal */
   public getSSTLink() {
     return {
-      properties: this.loadBalancer ? { url: this.url } : {},
+      properties: { url: this.loadBalancer ? this.url : undefined },
     };
   }
 }
