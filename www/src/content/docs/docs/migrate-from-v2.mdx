@@ -1,0 +1,1240 @@
+---
+title: Migrate From V2
+description: Migrate your SST v2 apps to v3.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+This guide will help you migrate your SST v2 apps to v3. We look at the major differences between v2 and v3 below. But to get a quick intro, we recommend reading the [What is SST](/docs/) and [Workflow](/docs/workflow/) docs.
+
+:::tip
+We recently [migrated our demo notes app](https://github.com/sst/demo-notes-app/pull/8/files) from v2 to v3. You use these changes as reference.
+:::
+
+We'll then go over a migration plan that you can use. The exact details of this will be different from team to team depending on the resources in it, and sensitivity of downtime.
+
+---
+
+#### Not supported
+
+While the goal with v3 is to support most of what's in v2, there are a couple of things that haven't been supported yet. If you rely on these heavily in your app, we recommend waiting a bit longer till we support them.
+
+| Construct | GitHub Issue |
+|----------|-------|
+| `Job` | [#170](https://github.com/sst/ion/issues/170) |
+| `Auth` | [#90](https://github.com/sst/ion/issues/90) |
+| `Script` | [#811](https://github.com/sst/ion/issues/811) |
+| `EventBus` | [#67](https://github.com/sst/ion/issues/67) |
+| `RDS` MySQL | [#812](https://github.com/sst/ion/issues/812) |
+| `Function` non-Node.js runtimes | [#366](https://github.com/sst/ion/issues/366) [#640](https://github.com/sst/ion/issues/640) [#179](https://github.com/sst/ion/issues/179) |
+
+:::note
+We are currently not planning to support the handlers and hooks in the Node.js clients.
+:::
+
+Feel free to let us know via the linked GitHub issues if these are blockers for you. It'll help us prioritize this list.
+
+---
+
+## Major changes
+
+If you are coming from SST v2, it's worth starting with the big differences between v2 and v3. It'll help you understand the types of changes you'll need to make as you migrate.
+
+---
+
+#### No CloudFormation
+
+Let's start with the obvious. SST v3 moves away from CloudFormation and CDK, [we've written in detail about why we decided to do this](https://sst.dev/blog/moving-away-from-cdk.html).
+
+No CloudFormation, means a couple of things:
+
+1. There are no stacks, all the resources are defined through the same function in the `sst.config.ts`.
+2. The outputs of constructs or _components_ are different. These used to be tokens that would get replaced on deploy. Now they are something called [_Outputs_](/docs/components/#outputs).
+3. The state of your app is stored locally and backed up to S3. Learn more about [State](/docs/state/).
+
+---
+
+#### sst.config.ts
+
+The `sst.config.ts` is similar in v3 but there are some changes. Here's a comparison of the general structure, we look at this in detail in a [section below](#sstconfigts-1).
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  export default $config({
+    // Your app's config
+    app(input) {
+      return {
+        name: "my-sst-app",
+        home: "aws"
+      };
+    },
+    // Your app's resources
+    async run() { }
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  export default {
+    // Your app's config
+    config(_input) {
+      return {
+        name: "my-sst-app",
+        region: "us-east-1"
+      };
+    },
+    // Your app's resources
+    stacks(app) { }
+  } satisfies SSTConfig;
+  ```
+  </TabItem>
+</Tabs>
+
+Learn more about the new [`sst.config.ts`](/docs/reference/config/).
+
+---
+
+#### sst dev
+
+The `sst dev` CLI has been completely reworked. It now runs a _multiplexer_ that deploys your app and runs your frontends together. So you don't need to:
+
+- Start your frontend separately
+- Need to wrap your frontend `dev` script with `sst bind`
+
+Learn more about [`sst dev`](/docs/reference/cli/#dev).
+
+---
+
+#### sst build
+
+There is no `sst build` CLI. Instead you can run `sst diff` to see what changes will be deployed, without doing an actual deploy.
+
+Learn more about [`sst diff`](/docs/reference/cli/#diff).
+
+---
+
+#### Resource binding
+
+Resource binding is now called resource linking, the `bind` prop is now renamed to `link`. The Node.js client or _JS SDK_ has been reworked so that all linked resources are now available through the `Resource` object. We'll look at this in [detail below](#clients).
+
+The client handlers and hooks have not been supported yet.
+
+Learn more about [Resource linking](/docs/linking/).
+
+---
+
+#### Secrets
+
+Secrets are not stored in SSM. Instead they are encrypted and stored in your state file. It's encrypted using a passphrase that's stored in SSM.
+
+Loading secrets in your functions no longer needs a top-level await.
+
+
+---
+
+## Migration plan
+
+Say you have a v2 app in a git repo that's currently deployed to production. Here's how we recommend carrying out the migration.
+
+1. Use the steps below to migrate over your app to a non-prod stage. You don't need to import any resources, just recreate them.
+2. Test your non-prod version of your v3 app.
+3. Then for your prod stage, follow the steps below and make the import, domain, and subscriber changes.
+4. Once the prod version of your v3 app is running, clean up some of the v2 prod resources.
+
+:::caution
+These are recommendations and the specific details depend on the type of resources you have.
+:::
+
+The general idea here is to have the v2 app hand over control of the underlying resources to the v3 version of the app.
+
+---
+
+### Setup
+
+1. Start by setting the removal policy to `retain` in the v2 app for the production stages. This ensures resources don't get accidentally removed.
+
+   ```ts
+   app.setDefaultRemovalPolicy("retain");
+   ```
+
+   :::caution
+   You'll want to deploy your app once after setting this.
+   :::
+
+2. Create a new branch in your repo for the upcoming changes.
+
+3. For the prod version of the v3 app, pick a different stage name. Say your prod stage in v2 is called `production`. Maybe use `prod`, `main`, or `live` for your v3 app. Or vice versa. This isn't strictly necessary, but we recommend doing this because you don't want to change the wrong resources by mistake.
+
+---
+
+### Init v3
+
+Now let's set up our new v3 app in the root of your project.
+
+1. Update SST to v3. Or set the version by hand in your `package.json`. Make sure to this across all the packages in your repo.
+
+   ```bash frame="none"
+   npm update sst
+   ```
+
+   Ensure v3 is installed.
+
+   ```bash frame="none"
+   npx sst version
+   ```
+
+2. Backup the v2 config with.
+
+   ```bash frame="none"
+   mv sst.config.ts sst.config.ts.bk
+   ```
+
+3. Init a v3 app.
+
+   ```bash frame="none"
+   npx sst init
+   ```
+
+   :::caution
+   Make sure to use the same app name.
+   :::
+
+4. Set the removal policy to `retain`. Similar to `setDefaultRemovalPolicy` in v2, you can configure the removal policy in `sst.config.ts` in v3.
+
+    ```ts title="sst.config.ts" {4}
+    app(input) {
+      return {
+        name: "my-sst-app",
+        removal: input?.stage === "production" ? "retain" : "remove"
+      };
+    }
+    ```
+
+   By default, v3 has removal policy set to `retain` for the `production` stage, and `remove` for other stages.
+
+5. Deploy an empty app to ensure the app is configured correctly.
+
+   ```bash frame="none"
+   npx sst deploy
+   ```
+
+6. Update the dev scripts for your frontend. Remove the `sst bind` from the `dev` script in your `package.json`. For example, for a Next.js app.
+
+   ```diff lang="js" title="package.json"
+   - "dev": "sst bind next dev",
+   + "dev": "next dev",
+   ```
+
+7. Remove any CDK related packages from your `package.json`.
+
+---
+
+### Migrate stacks
+
+Now before we start making changes to our constructs, you might have some stacks code in your `sst.config.ts`.
+
+Take a look at the [**list below**](#sstconfigts-1) and apply the changes that matter to you.
+
+---
+
+#### Restructure
+
+Since you don't have to import the constructs and there are no stacks, you'll need to change how your constructs are structured.
+
+For example, in the [monorepo notes app](https://github.com/sst/demo-notes-app/pull/8) we made these changes.
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  export default $config({
+    // ...
+
+    async run() {
+      await import("./infra/api");
+      await import("./infra/storage");
+      await import("./infra/frontend");
+      const auth = await import("./infra/auth");
+  
+      return {
+        UserPool: auth.userPool.id,
+        Region: aws.getRegionOutput().name,
+        IdentityPool: auth.identityPool.id,
+        UserPoolClient: auth.userPoolClient.id,
+      };
+    }
+  }
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  import { SSTConfig } from "sst";
+  import { ApiStack } from "./stacks/ApiStack";
+  import { AuthStack } from "./stacks/AuthStack";
+  import { StorageStack } from "./stacks/StorageStack";
+  import { FrontendStack } from "./stacks/FrontendStack";
+
+  export default {
+    // ...
+
+    stacks(app) {
+      app
+        .stack(StorageStack)
+        .stack(ApiStack)
+        .stack(AuthStack)
+        .stack(FrontendStack);
+    }
+  } satisfies SSTConfig;
+  ```
+  </TabItem>
+</Tabs>
+
+We store our infrastructure files in the `infra/` directory in v3. You can refer to the [demo notes app](https://github.com/sst/demo-notes-app) to see how these are structured.
+
+---
+
+### Migrate runtime
+
+For your runtime code, your functions and frontend; there are fairly minimal changes. The clients or the _JS SDK_ have been reorganized.
+
+You can make these changes now or as you are migrating each construct. [**Check out**](#clients) the steps below.
+
+---
+
+### Migrate constructs
+
+
+Constructs in v2 have their equivalent _components_ in v3. Constructs fall into roughly these 3 categories:
+
+1. Transient — these don't contain data, like `Function`, `Topic`, or `Queue`.
+2. Data — these contain application data, like `RDS`, `Table`, or `Bucket`.
+3. Custom domains — these have custom domains configured, like `Api`, `StaticSite`, or `NextjsSite`.
+4. Subscribers — these are constructs that subscribe to other constructs, like the `Bucket`, `Queue`, or `Table` subscribers.
+
+We'll go over each of these types and copy our v2 constructs over as v3 components.
+
+---
+
+#### Transient constructs
+
+Constructs like `Function`, `Cron`, `Topic`, `Queue`, and `KinesisStream` do not contain data. They can be recreated in the v3 app.
+
+Simply copy them over using the [**reference below**](#constructs). 
+
+---
+
+#### Data constructs
+
+Constructs like `RDS`, `Table`, `Bucket`, and `Cognito` contain data. If you do not need to keep the data, you can recreate them like what you did above. This is often the case for non-production stages.
+
+However, for production stages, you need to import the underlying AWS resource into the v3 app.
+
+For example, here are the steps for importing an S3 bucket named `app-prod-MyBucket`.
+
+1. **Import the resource**
+    
+   Say the bucket is defined in SST v2, and the bucket name is `app-prod-MyBucket`.
+
+   ```ts title="v2"
+   const bucket = new Bucket(stack, "MyBucket");
+   ```
+
+   You can use the `import` and `transform` props to import it.
+
+   ```ts title="v3"
+   const bucket = new sst.aws.Bucket("MyBucket", {
+     transform: {
+       bucket: (args, opts) => {
+         args.bucket = "app-prod-MyBucket";
+         opts.import = "app-prod-MyBucket";
+       },
+       cors: (args, opts) => {
+         opts.import = "app-prod-MyBucket";
+       },
+       policy: (args, opts) => {
+         opts.import = "app-prod-MyBucket";
+       },
+       publicAccessBlock: (args, opts) => {
+         opts.import = "app-prod-MyBucket";
+       }		
+     }
+   });
+   ```
+
+   Import is a process of bringing previously created resources into your SST app and allowing it to manage it moving forward. Learn more about [importing resources](/docs/import-resources/).
+    
+2. **Deploy**
+    
+   You'll get an error if the resource configurations in your code does not match the exact configuration of the bucket in your AWS account.
+   
+   This is good because we don’t want to change our old resource.
+
+3. **Update props**
+   
+   In the error message, you'll see the props you need to change. Add them to the corresponding `transform` block.
+   
+ And deploy again.
+
+:::caution
+Make sure the v2 app is set to `retain` to avoid accidentally removing imported resources.
+:::
+    
+After the bucket has been imported, the v2 app can still make changes to the resource. If you try to remove the v2 app or remove the bucket from the v2 app, the S3 bucket will get removed. To prevent this, ensure that had the removal policy in the v2 app to `retain`.
+
+---
+
+#### Constructs with custom domains
+
+Constructs like the following have custom domains.
+
+- Frontends like `StaticSite`, `NextjsSite`, `SvelteKitSite`, `RemixSite`, `AstroSite`, `SolidStartSite`
+- APIs like `Api`, `ApiGatewayv1`, `AppSyncApi`, `WebSocketApi`
+- `Service`
+
+For non-prod stages you can just recreate them.
+
+However, if they have a custom domain, you need to deploy them in steps to avoid any downtime.
+
+1. First, create the resource in v3 without a custom domain. So for `Nextjs` for example.
+
+   <Tabs>
+     <TabItem label="v3">
+     ```ts title="sst.config.ts"
+     new sst.aws.Nextjs("MySite");
+     ```
+     </TabItem>
+     <TabItem label="v2">
+     ```ts title="sst.config.ts"
+     new NextjsSite(stack, "MySite", {
+       customDomain: "domain.com"
+     });
+     ```
+     </TabItem>
+   </Tabs>
+    
+2. Deploy your v3 app.
+
+3. When you are ready, flip the domain using the `override` prop.
+    
+   ```ts title="sst.config.ts" {4}
+   new sst.aws.Nextjs("MySite", {
+     domain: {
+      name: "domain.com",
+      dns: sst.aws.dns({ override: true })
+   });
+   ```
+
+   This updates the DNS record to point to your new Next.js app.
+
+And deploy again.
+
+:::caution
+Make sure the v2 app is set to `retain` to avoid accidentally removing imported resources.
+:::
+
+After the DNS record has been overridden, the v2 app can still make changes to it. If you try to remove the v2 app, the record will get removed. To prevent this, ensure that the removal policy in the v2 app to `retain`.
+
+---
+
+#### Subscriber constructs
+
+Many constructs have subscribers that help with async processing. For example, the `Queue` has a consumer, `Bucket` has the notification, and `Table` constructs have streams. You can recreate the constructs in your v3 app.
+
+However recreating the subscribers for a production stage with an imported resource is not straight forward:
+
+- Recreating the consumer for an imported Queue will fail because a `Queue` can only have 1 consumer.
+- And, recreating the consumer for an imported DynamoDB Table will result in double processing. As in, an event will be processed both in your v2 and v3 app.
+
+Here's how we recommend getting around this.
+
+1. Deploy the v3 app without the subscribers. Either by commenting out the `.subscribe()` call, or by returning early in the subscriber function.
+2. When you are ready to flip, remove the subscribers in the v2 app and deploy.
+3. Add the subscribers to the v3 app and deploy.
+
+This ensures that the same subscriber is only attached once to a resource.
+
+---
+
+### Clean up
+
+Now that your v3 app is handling production traffic. We can optionally go clean up a few things from the v2 app.
+
+:::tip
+We recommend doing a clean up after your v3 app has been in production for a good amount of time.
+:::
+
+The resources that were recreated in v3, the ones that were not imported, can now be removed. However, since we have v2 app set to `retain`, this is going to be a manual process.
+
+You can go to the CloudFormation console, look at the list of resources in your v2 app's stacks and remove them manually.
+
+Finally, when you run `sst remove` for your v2 app, it'll remove the CloudFormation stacks as well.
+
+---
+
+## sst.config.ts
+
+Listed below are some of the changes to your [`sst.config.ts`](/docs/reference/config/) in general.
+
+---
+
+#### No imports
+
+All the constructs or _components_ are available in the global context. So there's no need to import anything. Your app's `package.json` only needs the `sst` package. There are no extra CDK or infrastructure related packages.
+
+---
+
+#### Globals
+
+There are a couple of global variables, `$app` and `$dev` that replace the `app` argument that's passed into the `stacks()` method of your `sst.config.ts`.
+
+1. `$app.name` gives you the name of app. Used to be `app.name`.
+2. `$app.stage` gives you the name of stage. Used to be `app.stage`.
+3. `$dev === true` tells you if you are in dev mode. Used to be `app.mode === "dev`.
+4. `$dev === false` tells you if it's being deployed. Used to be `app.mode === "deploy`.
+5. There is no `app.mode === remove` replacement since your components are not evaluated on `sst remove`.
+6. There is no `app.region` since in v3 you can deploy resources to different regions or AWS profiles or _providers_. To get the default AWS provider you can use `aws.getRegionOutput().name`.
+
+---
+
+#### No stacks
+
+Also since there are no stacks. You don't have access to the `stack` argument inside your stack function. And no `stack.addOutputs({})` method.
+
+You can still group your constructs or _components_ in files. But to output something you return in the `run` method of your config.
+
+```ts title="sst.config.ts"
+async run() {
+  const auth = await import("./infra/auth");
+
+  return {
+    UserPool: auth.userPool.id,
+    IdentityPool: auth.identityPool.id,
+    UserPoolClient: auth.userPoolClient.id
+  };
+}
+```
+
+---
+
+#### Defaults
+
+The set of functions that applied defaults to all the functions in your app like; `addDefaultFunctionBinding`, `addDefaultFunctionEnv`, `addDefaultFunctionPermissions`, and `setDefaultFunctionProps` can be replaced with the global `$transform`.
+
+```ts title="sst.config.ts"
+$transform(sst.aws.Function, (args, opts) => {
+  args.runtime = "nodejs18.x";
+})
+```
+
+Learn more about [`$transform`](/docs/reference/global/#transform).
+
+---
+
+## Clients
+
+The Node.js client, now called the [JS SDK](/docs/reference/sdk/) has a couple of minor changes.
+
+Update `sst` to the latest version in your `package.json`. If you have a monorepo, make sure to update `sst` in all your packages.
+
+---
+
+### Bind
+
+In SST v3, you access all bound or _linked_ resources through the `Resource` module.
+
+Say you link a bucket to a function.
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts" {5}
+  const bucket = new sst.aws.Bucket("MyBucket");
+
+  new sst.aws.Function("MyFunction", {
+    handler: "src/lambda.handler",
+    link: [bucket]
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts" {5}
+  const bucket = new Bucket(stack, "MyBucket");
+
+  new Function(stack, "MyFunction", {
+    handler: "src/lambda.handler",
+    bind: [bucket]
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+In your function you would access it like so.
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="src/lambda.ts" "Resource.MyBucket.name" "sst"
+  import { Resource } from "sst";
+
+  console.log(Resource.MyBucket.name);
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="src/lambda.ts" "Bucket.MyBucket.bucketName" "sst/node/bucket"
+  import { Bucket } from "sst/node/bucket";
+
+  console.log(Bucket.MyBucket.bucketName);
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Config
+
+The same applies to `Config` as well. Let's look at a secret.
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts" {5}
+  const secret = new sst.Secret("MySecret");
+
+  new sst.aws.Function("MyFunction", {
+    handler: "src/lambda.handler",
+    link: [secret]
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts" {5}
+  const secret = new Config.Secret(stack, "MySecret");
+
+  new Function(stack, "MyFunction", {
+    handler: "src/lambda.handler",
+    bind: [secret]
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+And in your function you access it in the same way.
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="src/lambda.ts" "Resource.MySecret.value" "sst"
+  import { Resource } from "sst";
+
+  console.log(Resource.MySecret.value);
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="src/lambda.ts" "Config.MySecret" "sst/node/config"
+  import { Config } from "sst/node/config";
+
+  console.log(Config.MySecret);
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Constructs
+
+Below shows the v3 component version of a v2 construct.
+
+---
+
+### Api
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const api = new sst.aws.ApiGatewayV2("MyApi", {
+    domain: "api.example.com"
+  });
+
+  api.route("GET /", "src/get.handler");
+  api.route("POST /", "src/post.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const api = new Api(stack, "MyApi", {
+    customDomain: "api.example.com"
+  });
+
+  api.addRoutes(stack, {
+    "GET /": "src/get.main",
+    "POST /": "src/post.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### RDS
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.Postgres("MyDatabase", {
+    version: "15.5",
+    databaseName: "acme"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new RDS(stack, "MyDatabase", {
+    engine: "postgresql15.5",
+    defaultDatabaseName: "acme",
+    migrations: "path/to/migration/scripts"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+For migrations, we recommend using [Drizzle Kit](https://orm.drizzle.team/kit-docs/overview). Check out our [Drizzle example](/docs/start/aws/drizzle/).
+
+---
+
+### Cron
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.Cron("MyCronJob", {
+    schedule: "rate(1 minute)",
+    job: "src/cron.handler"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new Cron(stack, "MyCronJob", {
+    schedule: "rate(1 minute)",
+    job: "src/cron.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Table
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const table = new sst.aws.Dynamo("MyTable", {
+    fields: {
+      id: "string"
+    },
+    primaryIndex: { hashKey: "id" }
+  });
+
+  table.subscribe("src/subscriber.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const table = new Table(stack, "MyTable", {
+    fields: {
+      id: "string"
+    },
+    primaryIndex: { partitionKey: "id" }
+  });
+
+  table.addConsumers(stack, {
+    consumer: "src/subscriber.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Topic
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const topic = new sst.aws.SnsTopic("MyTopic");
+
+  topic.subscribe("src/subscriber.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const topic = new Topic(stack, "MyTopic");
+
+  topic.addSubscribers(stack, {
+    subscriber: "src/subscriber.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Queue
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const queue = new sst.aws.Queue("MyQueue");
+
+  queue.subscribe("src/subscriber.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const queue = new Queue(stack, "MyQueue");
+
+  queue.addConsumer(stack, "src/subscriber.handler");
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Config
+
+The `Config` construct is now broken into a `Secret` component and v3 has a separate way to bind any value or _parameter_.
+
+---
+
+#### Secret
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const secret = new sst.Secret("MySecret");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const secret = new Config.Secret(stack, "MySecret");
+  ```
+  </TabItem>
+</Tabs>
+
+There's also a slight change to the CLI for setting secrets.
+
+<Tabs>
+  <TabItem label="v3">
+  ```bash "secret"
+  npx sst secret set MySecret sk_test_abc123
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```bash "secrets"
+  npx sst secrets set MySecret sk_test_abc123
+  ```
+  </TabItem>
+</Tabs>
+
+
+---
+
+#### Parameter
+
+The `Linkable` component lets you bind or _link_ any value.
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const secret = new sst.Linkable("MyParameter", {
+    properties: { version: "1.2.0" }
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const secret = new Config.Parameter(stack, "MyParameter", {
+    value: "1.2.0"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+In your function you'd access this using.
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="src/lambda.ts"
+  import { Resource } from "sst";
+
+  console.log(Resource.MyParameter.version);
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="src/lambda.ts"
+  import { Config } from "sst/node/config";
+
+  console.log(Config.MyParameter);
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Bucket
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const bucket = new sst.aws.Bucket("MyBucket");
+
+  bucket.subscribe("src/subscriber.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const bucket = new Bucket(stack, "MyBucket");
+
+  bucket.addNotifications(stack, {
+    notification: "src/notification.main"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Service
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const cluster = new sst.aws.Cluster("MyCluster", {
+    vpc: {
+      id: "vpc-0d19d2b8ca2b268a1",
+      securityGroups: ["sg-0399348378a4c256c"],
+      publicSubnets: ["subnet-0b6a2b73896dc8c4c", "subnet-021389ebee680c2f0"],
+      privateSubnets: ["subnet-0db7376a7ad4db5fd ", "subnet-06fc7ee8319b2c0ce"]
+    }
+  });
+
+  cluster.addService("MyService", {
+    public: {
+      domain: "my-app.com",
+      ports: [
+        { listen: "80/http" }
+      ]
+    }
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new Service(stack, "MyService", {
+    customDomain: "my-app.com",
+    path: "./service",
+    port: 80,
+    cdk: {
+      vpc: Vpc.fromLookup(stack, "VPC", {
+        vpcId: "vpc-0d19d2b8ca2b268a1"
+      })
+    }
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Cognito
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const userPool = new sst.aws.CognitoUserPool("MyUserPool");
+
+  const client = userPool.addClient("MyClient");
+
+  new sst.aws.CognitoIdentityPool("MyIdentityPool", {
+    userPools: [{
+      userPool: userPool.id,
+      client: client.id
+    }]
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new Cognito(stack, "MyAuth");
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### Function
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.Function("MyFunction", {
+    handler: "src/lambda.handler"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new Function(stack, "MyFunction", {
+    handler: "src/lambda.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### AstroSite
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.Astro("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new AstroSite(stack, "MyWeb", {
+    customDomain: "my-app.com"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### StaticSite
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.StaticSite("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new StaticSite(stack, "MyWeb", {
+    customDomain: "my-app.com"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### RemixSite
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.Remix("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new RemixSite(stack, "MyWeb", {
+    customDomain: "my-app.com"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### NextjsSite
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.Nextjs("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new NextjsSite(stack, "MyWeb", {
+    customDomain: "my-app.com"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### AppSyncApi
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const api = new sst.aws.AppSync("MyApi", {
+    schema: "schema.graphql",
+    domain: "api.domain.com"
+  });
+
+  const lambdaDS = api.addDataSource({
+    name: "lambdaDS",
+    lambda: "src/lambda.handler"
+  });
+  api.addResolver("Query user", {
+    dataSource: lambdaDS.name
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const api = new AppSyncApi(stack, "MyApi", {
+    schema: "graphql/schema.graphql",
+    customDomain: "api.example.com"
+  });
+
+  api.addDataSources(stack, {
+    lambdaDS: "src/lambda.handler"
+  });
+  api.addResolvers(stack, {
+    "Query user": "lambdaDS"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### SvelteKitSite
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.SvelteKit("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new SvelteKitSite(stack, "MyWeb", {
+    customDomain: "my-app.com"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### SolidStartSite
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  new sst.aws.SolidStart("MyWeb", {
+    domain: "my-app.com"
+  });
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  new SolidStartSite(stack, "MyWeb", {
+    customDomain: "my-app.com"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### WebSocketApi
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const api = new sst.aws.ApiGatewayWebSocket("MyApi", {
+    domain: "api.example.com"
+  });
+
+  api.route("$connect", "src/connect.handler");
+  api.route("$disconnect", "src/disconnect.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const api = new WebSocketApi(stack, "MyApi", {
+    customDomain: "api.example.com"
+  });
+
+  api.addRoutes(stack, {
+    $connect: "src/connect.handler",
+    $disconnect: "src/disconnect.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### KinesisStream
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const stream = new sst.aws.KinesisStream("MyStream");
+
+  stream.subscribe("src/subscriber.handler");
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const stream = new KinesisStream(stack, "MyStream");
+
+  stream.addConsumers(stack, {
+    consumer: "src/subscriber.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+### ApiGatewayV1Api
+
+<Tabs>
+  <TabItem label="v3">
+  ```ts title="sst.config.ts"
+  const api = new sst.aws.ApiGatewayV1("MyApi", {
+    domain: "api.example.com"
+  });
+
+  api.route("GET /", "src/get.handler");
+  api.route("POST /", "src/post.handler");
+  api.deploy();
+  ```
+  </TabItem>
+  <TabItem label="v2">
+  ```ts title="sst.config.ts"
+  const api = new ApiGatewayV1Api(stack, "MyApi", {
+    customDomain: "api.example.com"
+  });
+
+  api.addRoutes(stack, {
+    "GET /": "src/get.handler",
+    "POST /": "src/post.handler"
+  });
+  ```
+  </TabItem>
+</Tabs>
+
+---
+
+Congrats on getting through the migration.
+
+If you find any errors or if you'd like to add some details to this guide, feel free to _Edit this page_ and submit a PR.
