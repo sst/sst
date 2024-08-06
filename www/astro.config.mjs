@@ -52,6 +52,7 @@ const sidebar = [
   {
     label: "How to",
     items: [
+      { label: "IAM Credentials", link: "/docs/iam-credentials/" },
       { label: "Migrate From v2", link: "/docs/migrate-from-v2/" },
       { label: "Custom Domains", link: "/docs/custom-domains/" },
       { label: "Import Resources", link: "/docs/import-resources/" },
