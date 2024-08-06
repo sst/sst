@@ -172,8 +172,16 @@ const sidebar = [
         link: "/docs/component/aws/cognito-user-pool-client/",
       },
       {
+        label: "BucketTopicSubscriber",
+        link: "/docs/component/aws/bucket-topic-subscriber/",
+      },
+      {
         label: "ApiGatewayV2UrlRoute",
         link: "/docs/component/aws/apigatewayv2-url-route/",
+      },
+      {
+        label: "BucketQueueSubscriber",
+        link: "/docs/component/aws/bucket-queue-subscriber/",
       },
       {
         label: "ApiGatewayV1Authorizer",

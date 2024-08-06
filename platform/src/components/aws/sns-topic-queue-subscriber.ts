@@ -28,7 +28,7 @@ export interface Args extends SnsTopicSubscriberArgs {
  * This component is not intended to be created directly.
  * :::
  *
- * You'll find this component returned by the `subscribe` method of the `SnsTopic` component.
+ * You'll find this component returned by the `subscribeQueue` method of the `SnsTopic` component.
  */
 export class SnsTopicQueueSubscriber extends Component {
   private readonly policy: sqs.QueuePolicy;

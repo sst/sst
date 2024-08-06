@@ -434,6 +434,108 @@ bucket.subscribe({
 ```
 </Segment>
 
+### subscribeQueue
+<Segment>
+<Section type="signature">
+```ts
+subscribeQueue(queueArn, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">queueArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the queue that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">BucketSubscriberArgs</code>](#bucketsubscriberargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketQueueSubscriber</code>](/docs/component/aws/bucket-queue-subscriber/)<code class="symbol">&gt;</code>
+</InlineSection>
+Subscribe to events from this bucket with an SQS Queue.
+
+For example, let's say you have a queue.
+
+```js title="sst.config.ts"
+const queue = sst.aws.Queue("MyQueue");
+```
+
+You can subscribe to this bucket with it.
+
+```js title="sst.config.ts"
+bucket.subscribe(queue.arn);
+```
+
+Subscribe to specific S3 events.
+
+```js title="sst.config.ts"
+bucket.subscribe(queue.arn, {
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+});
+```
+
+Subscribe to specific S3 events from a specific folder.
+
+```js title="sst.config.ts" {2}
+bucket.subscribe(queue.arn, {
+  filterPrefix: "images/",
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+});
+```
+</Segment>
+
+### subscribeTopic
+<Segment>
+<Section type="signature">
+```ts
+subscribeTopic(topicArn, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">topicArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the topic that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">BucketSubscriberArgs</code>](#bucketsubscriberargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketTopicSubscriber</code>](/docs/component/aws/bucket-topic-subscriber/)<code class="symbol">&gt;</code>
+</InlineSection>
+Subscribe to events from this bucket with an SNS Topic.
+
+For example, let's say you have a topic.
+
+```js title="sst.config.ts"
+const topic = sst.aws.SnsTopic("MyTopic");
+```
+
+You can subscribe to this bucket with it.
+
+```js title="sst.config.ts"
+bucket.subscribe(topic.arn);
+```
+
+Subscribe to specific S3 events.
+
+```js title="sst.config.ts"
+bucket.subscribe(topic.arn, {
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+});
+```
+
+Subscribe to specific S3 events from a specific folder.
+
+```js title="sst.config.ts" {2}
+bucket.subscribe(topic.arn, {
+  filterPrefix: "images/",
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+});
+```
+</Segment>
+
 ### static get
 <Segment>
 <Section type="signature">
@@ -538,6 +640,114 @@ Customize the subscriber function.
 sst.aws.Bucket.subscribe(bucketArn, {
   handler: "src/subscriber.handler",
   timeout: "60 seconds",
+});
+```
+</Segment>
+
+### static subscribeQueue
+<Segment>
+<Section type="signature">
+```ts
+Bucket.subscribeQueue(bucketArn, queueArn, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">bucketArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the S3 bucket to subscribe to.
+- <p><code class="key">queueArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the queue that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">BucketSubscriberArgs</code>](#bucketsubscriberargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketQueueSubscriber</code>](/docs/component/aws/bucket-queue-subscriber/)<code class="symbol">&gt;</code>
+</InlineSection>
+Subscribe to events of an S3 bucket that was not created in your app with an SQS Queue.
+
+For example, let's say you have an existing S3 bucket and SQS queue with the following ARNs.
+
+```js title="sst.config.ts"
+const bucketArn = "arn:aws:s3:::my-bucket";
+const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
+```
+
+You can subscribe to the bucket with the queue.
+
+```js title="sst.config.ts"
+sst.aws.Bucket.subscribe(bucketArn, queueArn);
+```
+
+Subscribe to specific S3 events.
+
+```js title="sst.config.ts"
+sst.aws.Bucket.subscribe(bucketArn, queueArn, {
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+});
+```
+
+Subscribe to specific S3 events from a specific folder.
+
+```js title="sst.config.ts" {2}
+sst.aws.Bucket.subscribe(bucketArn, queueArn, {
+  filterPrefix: "images/",
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+});
+```
+</Segment>
+
+### static subscribeTopic
+<Segment>
+<Section type="signature">
+```ts
+Bucket.subscribeTopic(bucketArn, topicArn, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">bucketArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the S3 bucket to subscribe to.
+- <p><code class="key">topicArn</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The ARN of the topic that'll be notified.
+- <p><code class="key">args?</code> [<code class="type">BucketSubscriberArgs</code>](#bucketsubscriberargs)</p>
+Configure the subscription.
+</Section>
+
+<InlineSection>
+**Returns** <code class="primitive">Output</code><code class="symbol">&lt;</code>[<code class="type">BucketTopicSubscriber</code>](/docs/component/aws/bucket-topic-subscriber/)<code class="symbol">&gt;</code>
+</InlineSection>
+Subscribe to events of an S3 bucket that was not created in your app with an SNS Topic.
+
+For example, let's say you have an existing S3 bucket and SNS topic with the following ARNs.
+
+```js title="sst.config.ts"
+const bucketArn = "arn:aws:s3:::my-bucket";
+const topicArn = "arn:aws:sns:us-east-1:123456789012:MyTopic";
+```
+
+You can subscribe to the bucket with the topic.
+
+```js title="sst.config.ts"
+sst.aws.Bucket.subscribe(bucketArn, topicArn);
+```
+
+Subscribe to specific S3 events.
+
+```js title="sst.config.ts"
+sst.aws.Bucket.subscribe(bucketArn, topicArn, {
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+});
+```
+
+Subscribe to specific S3 events from a specific folder.
+
+```js title="sst.config.ts" {2}
+sst.aws.Bucket.subscribe(bucketArn, topicArn, {
+  filterPrefix: "images/",
+  events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
 });
 ```
 </Segment>

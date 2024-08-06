@@ -22,6 +22,8 @@ import { parseBucketArn } from "./helpers/arn";
 import { BucketLambdaSubscriber } from "./bucket-lambda-subscriber";
 import { iam, s3 } from "@pulumi/aws";
 import { permission } from "./permission";
+import { BucketQueueSubscriber } from "./bucket-queue-subscriber";
+import { BucketTopicSubscriber } from "./bucket-topic-subscriber";
 
 interface BucketCorsArgs {
   /**
@@ -567,13 +569,8 @@ export class Bucket extends Component implements Link.Linkable {
     subscriber: string | FunctionArgs,
     args?: BucketSubscriberArgs,
   ) {
-    if (this.isSubscribed)
-      throw new VisibleError(
-        `Cannot subscribe to the "${this.constructorName}" bucket multiple times. An S3 bucket can only have one subscriber.`,
-      );
-    this.isSubscribed = true;
-
-    return Bucket._subscribe(
+    this.ensureNotSubscribed();
+    return Bucket._subscribeFunction(
       this.constructorName,
       this.bucket.bucket,
       this.bucket.arn,
@@ -637,54 +634,340 @@ export class Bucket extends Component implements Link.Linkable {
     const bucketName = output(bucketArn).apply(
       (bucketArn) => parseBucketArn(bucketArn).bucketName,
     );
-    return this._subscribe(bucketName, bucketName, bucketArn, subscriber, args);
+    return this._subscribeFunction(
+      bucketName,
+      bucketName,
+      bucketArn,
+      subscriber,
+      args,
+    );
   }
 
-  private static _subscribe(
+  private static _subscribeFunction(
     name: Input<string>,
     bucketName: Input<string>,
     bucketArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: BucketSubscriberArgs = {},
   ) {
-    return all([name, subscriber, args]).apply(([name, subscriber, args]) => {
-      // Build subscriber name
-      const prefix = logicalName(name);
-      const suffix = logicalName(
-        hashStringToPrettyString(
-          [
-            bucketArn,
-            // Temporarily only allowing one subscriber per bucket because of the
-            // AWS/Terraform issue that appending/removing a notification deletes
-            // all existing notifications.
-            //
-            // A solution would be to implement a dynamic provider. On create,
-            // get existing notifications then append. And on delete, get existing
-            // notifications then remove from the list.
-            //
-            // https://github.com/hashicorp/terraform-provider-aws/issues/501
-            //
-            // Commenting out the lines below to ensure the id never changes.
-            // Because on id change, the removal of notification happens after
-            // the creation of notification. And the newly created notification
-            // gets removed.
+    return all([name, bucketArn, subscriber, args]).apply(
+      ([name, bucketArn, subscriber, args]) => {
+        const subscriberId = this.buildSubscriberId(
+          bucketArn,
+          typeof subscriber === "string" ? subscriber : subscriber.handler,
+        );
 
-            //...events,
-            //args.filterPrefix ?? "",
-            //args.filterSuffix ?? "",
-            //typeof subscriber === "string" ? subscriber : subscriber.handler,
-          ].join(""),
-          6,
-        ),
+        return new BucketLambdaSubscriber(
+          `${logicalName(name)}Subscriber${subscriberId}`,
+          {
+            bucket: { name: bucketName, arn: bucketArn },
+            subscriber,
+            subscriberId,
+            ...args,
+          },
+        );
+      },
+    );
+  }
+
+  /**
+   * Subscribe to events from this bucket with an SQS Queue.
+   *
+   * @param queueArn The ARN of the queue that'll be notified.
+   * @param args Configure the subscription.
+   *
+   * @example
+   *
+   * For example, let's say you have a queue.
+   *
+   * ```js title="sst.config.ts"
+   * const queue = sst.aws.Queue("MyQueue");
+   * ```
+   *
+   * You can subscribe to this bucket with it.
+   *
+   * ```js title="sst.config.ts"
+   * bucket.subscribe(queue.arn);
+   * ```
+   *
+   * Subscribe to specific S3 events.
+   *
+   * ```js title="sst.config.ts"
+   * bucket.subscribe(queue.arn, {
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+   * });
+   * ```
+   *
+   * Subscribe to specific S3 events from a specific folder.
+   *
+   * ```js title="sst.config.ts" {2}
+   * bucket.subscribe(queue.arn, {
+   *   filterPrefix: "images/",
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+   * });
+   * ```
+   */
+  public subscribeQueue(
+    queueArn: Input<string>,
+    args: BucketSubscriberArgs = {},
+  ) {
+    this.ensureNotSubscribed();
+    return Bucket._subscribeQueue(
+      this.constructorName,
+      this.bucket.bucket,
+      this.arn,
+      queueArn,
+      args,
+    );
+  }
+
+  /**
+   * Subscribe to events of an S3 bucket that was not created in your app with an SQS Queue.
+   *
+   * @param bucketArn The ARN of the S3 bucket to subscribe to.
+   * @param queueArn The ARN of the queue that'll be notified.
+   * @param args Configure the subscription.
+   *
+   * @example
+   *
+   * For example, let's say you have an existing S3 bucket and SQS queue with the following ARNs.
+   *
+   * ```js title="sst.config.ts"
+   * const bucketArn = "arn:aws:s3:::my-bucket";
+   * const queueArn = "arn:aws:sqs:us-east-1:123456789012:MyQueue";
+   * ```
+   *
+   * You can subscribe to the bucket with the queue.
+   *
+   * ```js title="sst.config.ts"
+   * sst.aws.Bucket.subscribe(bucketArn, queueArn);
+   * ```
+   *
+   * Subscribe to specific S3 events.
+   *
+   * ```js title="sst.config.ts"
+   * sst.aws.Bucket.subscribe(bucketArn, queueArn, {
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+   * });
+   * ```
+   *
+   * Subscribe to specific S3 events from a specific folder.
+   *
+   * ```js title="sst.config.ts" {2}
+   * sst.aws.Bucket.subscribe(bucketArn, queueArn, {
+   *   filterPrefix: "images/",
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+   * });
+   * ```
+   */
+  public static subscribeQueue(
+    bucketArn: Input<string>,
+    queueArn: Input<string>,
+    args?: BucketSubscriberArgs,
+  ) {
+    const bucketName = output(bucketArn).apply(
+      (bucketArn) => parseBucketArn(bucketArn).bucketName,
+    );
+    return this._subscribeQueue(
+      bucketName,
+      bucketName,
+      bucketArn,
+      queueArn,
+      args,
+    );
+  }
+
+  private static _subscribeQueue(
+    name: Input<string>,
+    bucketName: Input<string>,
+    bucketArn: Input<string>,
+    queueArn: Input<string>,
+    args: BucketSubscriberArgs = {},
+  ) {
+    return all([name, bucketArn, queueArn, args]).apply(
+      ([name, bucketArn, queueArn, args]) => {
+        const subscriberId = this.buildSubscriberId(bucketArn, queueArn);
+
+        return new BucketQueueSubscriber(
+          `${logicalName(name)}Subscriber${subscriberId}`,
+          {
+            bucket: { name: bucketName, arn: bucketArn },
+            queue: queueArn,
+            subscriberId,
+            ...args,
+          },
+        );
+      },
+    );
+  }
+
+  /**
+   * Subscribe to events from this bucket with an SNS Topic.
+   *
+   * @param topicArn The ARN of the topic that'll be notified.
+   * @param args Configure the subscription.
+   *
+   * @example
+   *
+   * For example, let's say you have a topic.
+   *
+   * ```js title="sst.config.ts"
+   * const topic = sst.aws.SnsTopic("MyTopic");
+   * ```
+   *
+   * You can subscribe to this bucket with it.
+   *
+   * ```js title="sst.config.ts"
+   * bucket.subscribe(topic.arn);
+   * ```
+   *
+   * Subscribe to specific S3 events.
+   *
+   * ```js title="sst.config.ts"
+   * bucket.subscribe(topic.arn, {
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+   * });
+   * ```
+   *
+   * Subscribe to specific S3 events from a specific folder.
+   *
+   * ```js title="sst.config.ts" {2}
+   * bucket.subscribe(topic.arn, {
+   *   filterPrefix: "images/",
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+   * });
+   * ```
+   */
+  public subscribeTopic(
+    topicArn: Input<string>,
+    args: BucketSubscriberArgs = {},
+  ) {
+    this.ensureNotSubscribed();
+    return Bucket._subscribeTopic(
+      this.constructorName,
+      this.bucket.bucket,
+      this.arn,
+      topicArn,
+      args,
+    );
+  }
+
+  /**
+   * Subscribe to events of an S3 bucket that was not created in your app with an SNS Topic.
+   *
+   * @param bucketArn The ARN of the S3 bucket to subscribe to.
+   * @param topicArn The ARN of the topic that'll be notified.
+   * @param args Configure the subscription.
+   *
+   * @example
+   *
+   * For example, let's say you have an existing S3 bucket and SNS topic with the following ARNs.
+   *
+   * ```js title="sst.config.ts"
+   * const bucketArn = "arn:aws:s3:::my-bucket";
+   * const topicArn = "arn:aws:sns:us-east-1:123456789012:MyTopic";
+   * ```
+   *
+   * You can subscribe to the bucket with the topic.
+   *
+   * ```js title="sst.config.ts"
+   * sst.aws.Bucket.subscribe(bucketArn, topicArn);
+   * ```
+   *
+   * Subscribe to specific S3 events.
+   *
+   * ```js title="sst.config.ts"
+   * sst.aws.Bucket.subscribe(bucketArn, topicArn, {
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+   * });
+   * ```
+   *
+   * Subscribe to specific S3 events from a specific folder.
+   *
+   * ```js title="sst.config.ts" {2}
+   * sst.aws.Bucket.subscribe(bucketArn, topicArn, {
+   *   filterPrefix: "images/",
+   *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+   * });
+   * ```
+   */
+  public static subscribeTopic(
+    bucketArn: Input<string>,
+    topicArn: Input<string>,
+    args?: BucketSubscriberArgs,
+  ) {
+    const bucketName = output(bucketArn).apply(
+      (bucketArn) => parseBucketArn(bucketArn).bucketName,
+    );
+    return this._subscribeTopic(
+      bucketName,
+      bucketName,
+      bucketArn,
+      topicArn,
+      args,
+    );
+  }
+
+  private static _subscribeTopic(
+    name: Input<string>,
+    bucketName: Input<string>,
+    bucketArn: Input<string>,
+    topicArn: Input<string>,
+    args: BucketSubscriberArgs = {},
+  ) {
+    return all([name, bucketArn, topicArn, args]).apply(
+      ([name, bucketArn, topicArn, args]) => {
+        const subscriberId = this.buildSubscriberId(bucketArn, topicArn);
+
+        return new BucketTopicSubscriber(
+          `${logicalName(name)}Subscriber${subscriberId}`,
+          {
+            bucket: { name: bucketName, arn: bucketArn },
+            topic: topicArn,
+            subscriberId,
+            ...args,
+          },
+        );
+      },
+    );
+  }
+
+  private static buildSubscriberId(bucketArn: string, _discriminator: string) {
+    return logicalName(
+      hashStringToPrettyString(
+        [
+          bucketArn,
+          // Temporarily only allowing one subscriber per bucket because of the
+          // AWS/Terraform issue that appending/removing a notification deletes
+          // all existing notifications.
+          //
+          // A solution would be to implement a dynamic provider. On create,
+          // get existing notifications then append. And on delete, get existing
+          // notifications then remove from the list.
+          //
+          // https://github.com/hashicorp/terraform-provider-aws/issues/501
+          //
+          // Commenting out the lines below to ensure the id never changes.
+          // Because on id change, the removal of notification happens after
+          // the creation of notification. And the newly created notification
+          // gets removed.
+
+          //...events,
+          //args.filterPrefix ?? "",
+          //args.filterSuffix ?? "",
+          //discriminator,
+        ].join(""),
+        6,
+      ),
+    );
+  }
+
+  private ensureNotSubscribed() {
+    if (this.isSubscribed)
+      throw new VisibleError(
+        `Cannot subscribe to the "${this.constructorName}" bucket multiple times. An S3 bucket can only have one subscriber.`,
       );
-
-      return new BucketLambdaSubscriber(`${prefix}Subscriber${suffix}`, {
-        bucket: { name: bucketName, arn: bucketArn },
-        subscriber,
-        subscriberId: suffix,
-        ...args,
-      });
-    });
+    this.isSubscribed = true;
   }
 
   /** @internal */
