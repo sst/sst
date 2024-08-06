@@ -15,11 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/sst/ion/internal/util"
 
+	ecrTypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	ssmTypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 )
@@ -272,20 +274,23 @@ func AwsBootstrap(cfg aws.Config) (*AwsBootstrapData, error) {
 }
 
 type AwsBootstrapData struct {
-	Version int    `json:"version"`
-	Asset   string `json:"asset"`
-	State   string `json:"state"`
+	Version 					 int    `json:"version"`
+	Asset   					 string `json:"asset"`
+	AssetEcrRegistryId string `json:"assetEcrRegistryId"`
+	AssetEcrUrl 			 string `json:"assetEcrUrl"`
+	State   					 string `json:"state"`
 }
 
 type bootstrapStep = func(ctx context.Context, cfg aws.Config, data *AwsBootstrapData) error
 
 // never change these, only append more steps
 var steps = []bootstrapStep{
+	// Step: create the bootstrap bucket
 	func(ctx context.Context, cfg aws.Config, data *AwsBootstrapData) error {
 		region := cfg.Region
 		rand := util.RandomString(12)
-		assetName := fmt.Sprintf("sst-asset-%v", rand)
 		stateName := fmt.Sprintf("sst-state-%v", rand)
+		assetName := fmt.Sprintf("sst-asset-%v", rand)
 		slog.Info("creating bootstrap bucket", "name", assetName)
 		s3Client := s3.NewFromConfig(cfg)
 
@@ -330,6 +335,137 @@ var steps = []bootstrapStep{
 		}
 		data.Asset = assetName
 		data.State = stateName
+
+		return nil
+	},
+
+	// Step: create the bootstrap ECR repo
+	func(ctx context.Context, cfg aws.Config, data *AwsBootstrapData) error {
+		ecrClient := ecr.NewFromConfig(cfg)
+		repoName := "sst-asset"
+		slog.Info("creating bootstrap ECR repo", "name", repoName)
+
+		createRepoOutput, err := ecrClient.CreateRepository(ctx, &ecr.CreateRepositoryInput{
+			RepositoryName: aws.String(repoName),
+		})
+		if err != nil {
+				var repositoryAlreadyExists *ecrTypes.RepositoryAlreadyExistsException
+				if !errors.As(err, &repositoryAlreadyExists) {
+						return err
+				}
+				// Repository already exists, get the existing one
+				describeRepoOutput, err := ecrClient.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{
+						RepositoryNames: []string{repoName},
+				})
+				if err != nil {
+						return err
+				}
+				if len(describeRepoOutput.Repositories) > 0 {
+						createRepoOutput = &ecr.CreateRepositoryOutput{
+								Repository: &describeRepoOutput.Repositories[0],
+						}
+				} else {
+						return fmt.Errorf("failed to find existing ECR repository: %s", repoName)
+				}
+		}
+
+		if createRepoOutput.Repository != nil {
+				data.AssetEcrRegistryId = aws.ToString(createRepoOutput.Repository.RegistryId)
+				data.AssetEcrUrl = aws.ToString(createRepoOutput.Repository.RepositoryUri)
+		} else {
+				return fmt.Errorf("failed to create or find ECR repository: %s", repoName)
+		}
+
+		return nil
+	},
+
+	// Step: previously components code used to bootstrap separately. This step is to cleanup
+	// the old bootstrap
+	func(ctx context.Context, cfg aws.Config, data *AwsBootstrapData) error {
+		ssmClient := ssm.NewFromConfig(cfg)
+		s3Client := s3.NewFromConfig(cfg)
+
+		// Attempt to get the SSM parameter
+		ssmKey := "/sst/bootstrap/asset"
+		getParamOutput, err := ssmClient.GetParameter(ctx, &ssm.GetParameterInput{
+				Name: aws.String(ssmKey),
+		})
+		if err != nil {
+				var paramNotFound *ssmTypes.ParameterNotFound
+				if errors.As(err, &paramNotFound) {
+						// Parameter doesn't exist, nothing to do
+						return nil
+				}
+				return err
+		}
+
+		// Parameter exists, decode the value
+		var value struct {
+				Bucket string `json:"bucket"`
+		}
+		if err := json.Unmarshal([]byte(*getParamOutput.Parameter.Value), &value); err != nil {
+				return fmt.Errorf("failed to decode SSM parameter value: %w", err)
+		}
+
+		if value.Bucket != "" && value.Bucket != data.Asset {
+				// Empty the current asset bucket
+				var continuationToken *string
+				for {
+						listObjectsInput := &s3.ListObjectsV2Input{
+								Bucket: aws.String(data.Asset),
+						}
+						if continuationToken != nil {
+								listObjectsInput.ContinuationToken = continuationToken
+						}
+
+						listObjectsOutput, err := s3Client.ListObjectsV2(ctx, listObjectsInput)
+						if err != nil {
+								return err
+						}
+
+						if len(listObjectsOutput.Contents) == 0 {
+								break
+						}
+
+						objectIdentifiers := make([]s3types.ObjectIdentifier, len(listObjectsOutput.Contents))
+						for i, object := range listObjectsOutput.Contents {
+								objectIdentifiers[i] = s3types.ObjectIdentifier{Key: object.Key}
+						}
+
+						_, err = s3Client.DeleteObjects(ctx, &s3.DeleteObjectsInput{
+								Bucket: aws.String(data.Asset),
+								Delete: &s3types.Delete{Objects: objectIdentifiers},
+						})
+						if err != nil {
+								return err
+						}
+
+						if listObjectsOutput.IsTruncated == nil || !*listObjectsOutput.IsTruncated {
+								break
+						}
+						continuationToken = listObjectsOutput.NextContinuationToken
+				}
+
+				// Remove the previously created S3 bucket
+				_, err := s3Client.DeleteBucket(ctx, &s3.DeleteBucketInput{
+						Bucket: aws.String(data.Asset),
+				})
+				if err != nil {
+						return fmt.Errorf("failed to delete S3 bucket %s: %w", data.Asset, err)
+				}
+
+				// Assign the new bucket name
+				data.Asset = value.Bucket
+		}
+
+		// Remove the SSM parameter
+		_, err = ssmClient.DeleteParameter(ctx, &ssm.DeleteParameterInput{
+				Name: aws.String(ssmKey),
+		})
+		if err != nil {
+				return fmt.Errorf("failed to delete SSM parameter %s: %w", ssmKey, err)
+		}
+
 		return nil
 	},
 }

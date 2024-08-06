@@ -305,11 +305,11 @@ export class Service extends Component implements Link.Linkable {
       });
 
       // Get ECR repository
-      const repo = region.apply((region) =>
-        bootstrap.forRegion(region).then((d) => d.ecr),
+      const bootstrapData = region.apply((region) =>
+        bootstrap.forRegion(region),
       );
       const authToken = ecr.getAuthorizationTokenOutput({
-        registryId: repo.registryId,
+        registryId: bootstrapData.assetEcrRegistryId,
       });
 
       // Build image
@@ -326,7 +326,7 @@ export class Service extends Component implements Link.Linkable {
               args: imageArgs.args,
               platform: imageArgs.platform,
             })),
-            imageName: interpolate`${repo.url}:${name}`,
+            imageName: interpolate`${bootstrapData.assetEcrUrl}:${name}`,
             registry: authToken.apply((authToken) => ({
               password: secret(authToken.password),
               username: authToken.userName,
