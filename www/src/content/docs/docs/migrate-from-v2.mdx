@@ -3,6 +3,8 @@ title: Migrate From v2
 description: Migrate your SST v2 apps to v3.
 ---
 
+import config from '../../../../config.ts';
+
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 This guide will help you migrate your SST v2 apps to v3. We look at the major differences between v2 and v3 below. But to get a quick intro, we recommend reading the [What is SST](/docs/) and [Workflow](/docs/workflow/) docs.
@@ -12,6 +14,14 @@ We recently [migrated our demo notes app](https://github.com/sst/demo-notes-app/
 :::
 
 We'll then go over a migration plan that you can use. The exact details of this will be different from team to team depending on the resources in it, and sensitivity of downtime.
+
+---
+
+#### Getting help
+
+SST v3 has been around for a few months with a pretty sizeable community on <a href={config.discord}>Discord</a>. We've created a channel for folks looking to migrate.
+
+Join `#migrate-from-v2` on <a href={config.discord}>Discord</a>.
 
 ---
 
@@ -27,10 +37,6 @@ While the goal with v3 is to support most of what's in v2, there are a couple of
 | `EventBus` | [#67](https://github.com/sst/ion/issues/67) |
 | `RDS` MySQL | [#812](https://github.com/sst/ion/issues/812) |
 | `Function` non-Node.js runtimes | [#366](https://github.com/sst/ion/issues/366) [#640](https://github.com/sst/ion/issues/640) [#179](https://github.com/sst/ion/issues/179) |
-
-:::note
-We are currently not planning to support the handlers and hooks in the Node.js clients.
-:::
 
 Feel free to let us know via the linked GitHub issues if these are blockers for you. It'll help us prioritize this list.
 
@@ -51,6 +57,18 @@ No CloudFormation, means a couple of things:
 1. There are no stacks, all the resources are defined through the same function in the `sst.config.ts`.
 2. The outputs of constructs or _components_ are different. These used to be tokens that would get replaced on deploy. Now they are something called [_Outputs_](/docs/components/#outputs).
 3. The state of your app is stored locally and backed up to S3. Learn more about [State](/docs/state/).
+
+---
+
+#### No CDK
+
+And moving away from CDK means:
+
+1. You cannot fall back to CDK constructs if something isn't supported by SST. Instead there is the [AWS Classic](https://www.pulumi.com/registry/packages/aws/) provider from Pulumi that's built on Terraform. There are also 150+ other providers that allow you to build on any cloud. Check out the [Directory](/docs/providers/#directory).
+
+   If you are using a lot of higher level CDK constructs in your v2 app, it's going to be really hard to migrate to v3. The Pulumi/Terraform ecosystem is fairly complete but it's mainly made up of low level resources. You might not have ready replacements for your CDK constructs.
+
+2. Since the constructs or _components_ are no longer built on CDK; they don't have a `cdk` prop. Instead, there's a `transform` prop that lets you modify the props that a component sends to its underlying resources. Learn more about the [`transform`](/docs/components/#transform) prop.
 
 ---
 
