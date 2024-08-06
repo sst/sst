@@ -21,7 +21,6 @@ import { Input } from "../input.js";
 import { transform, type Prettify, type Transform } from "../component.js";
 import { VisibleError } from "../error.js";
 import { Cron } from "./cron.js";
-import { OriginAccessIdentity } from "./providers/origin-access-identity.js";
 import { BaseSiteFileOptions } from "../base/base-site.js";
 import { BaseSsrSiteArgs } from "../base/base-ssr-site.js";
 import {
@@ -225,14 +224,18 @@ export function createBucket(
   partition: Output<string>,
   args: SsrSiteArgs,
 ) {
-  const access = createCloudFrontOriginAccessIdentity();
+  const access = createCloudFrontOriginAccessControl();
   const bucket = createS3Bucket();
   return { access, bucket };
 
-  function createCloudFrontOriginAccessIdentity() {
-    return new OriginAccessIdentity(
-      `${name}OriginAccessIdentity`,
-      {},
+  function createCloudFrontOriginAccessControl() {
+    return new cloudfront.OriginAccessControl(
+      `${name}OriginAccessControl`,
+      {
+        originAccessControlOriginType: "s3",
+        signingBehavior: "always",
+        signingProtocol: "sigv4",
+      },
       { parent },
     );
   }
@@ -250,10 +253,8 @@ export function createBucket(
                   {
                     principals: [
                       {
-                        type: "AWS",
-                        identifiers: [
-                          interpolate`arn:${partition}:iam::cloudfront:user/CloudFront Origin Access Identity ${access.id}`,
-                        ],
+                        type: "Service",
+                        identifiers: ["cloudfront.amazonaws.com"],
                       },
                     ],
                     actions: ["s3:GetObject"],
@@ -310,7 +311,7 @@ export function createServersAndDistribution(
   name: string,
   args: SsrSiteArgs,
   outputPath: Output<string>,
-  access: OriginAccessIdentity,
+  access: cloudfront.OriginAccessControl,
   bucket: Bucket,
   plan: Input<Plan>,
 ) {
@@ -593,9 +594,7 @@ function handler(event) {
         originId: name,
         domainName: bucket.nodes.bucket.bucketRegionalDomainName,
         originPath: props.originPath ? `/${props.originPath}` : "",
-        s3OriginConfig: {
-          originAccessIdentity: interpolate`origin-access-identity/cloudfront/${access.id}`,
-        },
+        originAccessControlId: access.id,
       };
     }
 

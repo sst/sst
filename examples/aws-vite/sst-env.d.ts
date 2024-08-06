@@ -3,9 +3,9 @@
 import "sst"
 declare module "sst" {
   export interface Resource {
-    Web: {
-      type: "sst.aws.StaticSite"
-      url: string
+    "Web": {
+      "type": "sst.aws.StaticSite"
+      "url": string
     }
   }
 }

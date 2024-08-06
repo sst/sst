@@ -3,13 +3,13 @@
 import "sst"
 declare module "sst" {
   export interface Resource {
-    MyBucket: {
-      name: string
-      type: "sst.aws.Bucket"
+    "MyBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
     }
-    MyWeb: {
-      type: "sst.aws.Nextjs"
-      url: string
+    "MyWeb": {
+      "type": "sst.aws.Nextjs"
+      "url": string
     }
   }
 }
