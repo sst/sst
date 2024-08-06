@@ -24,6 +24,7 @@ import (
 	"github.com/sst/ion/cmd/sst/mosaic/aws/iot_writer"
 	"github.com/sst/ion/cmd/sst/mosaic/bus"
 	"github.com/sst/ion/cmd/sst/mosaic/watcher"
+	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/runtime"
@@ -155,17 +156,21 @@ func Start(
 	}
 
 	var pending sync.Map
+	initChan := make(chan MQTT.Message, 1000)
+	rebootChan := make(chan string, 1000)
+	shutdownChan := make(chan MQTT.Message, 1000)
 
 	prefix := fmt.Sprintf("ion/%s/%s", p.App().Name, p.App().Stage)
-	if token := mqttClient.Subscribe(prefix+"/+/response", 1, func(c MQTT.Client, m MQTT.Message) {
+	if token := mqttClient.Subscribe(prefix+"/+/response/#", 1, func(c MQTT.Client, m MQTT.Message) {
 		slog.Info("iot", "topic", m.Topic())
-		workerID := strings.Split(m.Topic(), "/")[3]
+		splits := strings.Split(m.Topic(), "/")
+		requestID := splits[5]
 		payload := m.Payload()
 		go func() {
-			write, ok := pending.Load(workerID)
+			write, ok := pending.Load(requestID)
 			if !ok {
-				slog.Info("asking for reboot", "workerID", workerID)
-				mqttClient.Publish(prefix+"/"+workerID+"/reboot", 1, false, []byte("reboot"))
+				workerID := splits[3]
+				rebootChan <- workerID
 				return
 			}
 			casted := write.(*io.PipeWriter)
@@ -183,9 +188,6 @@ func Start(
 		CurrentRequestID string
 		Env              []string
 	}
-
-	initChan := make(chan MQTT.Message, 1000)
-	shutdownChan := make(chan MQTT.Message, 1000)
 
 	type workerResponse struct {
 		response    *http.Response
@@ -347,6 +349,7 @@ func Start(
 				}
 				// only delete if a new worker hasn't already been started
 				if existing == info {
+					slog.Info("deleting worker", "workerID", info.WorkerID)
 					delete(workers, info.WorkerID)
 				}
 				break
@@ -390,6 +393,12 @@ func Start(
 					}
 					break
 				}
+			case workerID := <-rebootChan:
+				if _, ok := workers[workerID]; !ok {
+					slog.Info("asking for reboot", "workerID", workerID)
+					mqttClient.Publish(prefix+"/"+workerID+"/reboot", 1, false, []byte("reboot"))
+				}
+				break
 			case m := <-initChan:
 				slog.Info("got init")
 				bytes := m.Payload()
@@ -441,11 +450,15 @@ func Start(
 		path := strings.Split(r.URL.Path, "/")
 		slog.Info("lambda request", "path", path)
 		workerID := path[2]
-		slog.Info("lambda lock", "workerID", workerID)
-		writer := iot_writer.New(mqttClient, prefix+"/"+workerID+"/request")
+		requestID := util.RandomString(8)
+		writer := iot_writer.New(mqttClient, prefix+"/"+workerID+"/request/"+requestID)
 		read, write := io.Pipe()
-		pending.Store(workerID, write)
-		defer pending.Delete(workerID)
+		pending.Store(requestID, write)
+		slog.Info("forwarding request", "workerID", workerID, "requestID", requestID)
+		defer func() {
+			pending.Delete(requestID)
+			slog.Info("forwarding request done", "workerID", workerID, "requestID", requestID)
+		}()
 
 		writer.Write([]byte(r.Method + " /2018-06-01/" + strings.Join(path[3:], "/") + " HTTP/1.1\r\n"))
 		for name, headers := range r.Header {
