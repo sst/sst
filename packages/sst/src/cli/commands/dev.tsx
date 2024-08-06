@@ -1,16 +1,21 @@
 import type { CloudAssembly } from "aws-cdk-lib/cx-api";
 import type { Program } from "../program.js";
-import { VisibleError } from "../../error.js";
+import { SilentError, VisibleError } from "../../error.js";
 
 export const dev = (program: Program) =>
   program.command(
-    ["dev", "start"],
+    ["dev [filter]", "start [filter]"],
     "Work on your app locally",
     (yargs) =>
-      yargs.option("increase-timeout", {
-        type: "boolean",
-        description: "Increase function timeout",
-      }),
+      yargs
+        .option("increase-timeout", {
+          type: "boolean",
+          description: "Increase function timeout",
+        })
+        .positional("filter", {
+          type: "string",
+          describe: "Optionally filter stacks to deploy",
+        }),
     async (args) => {
       const { Logger } = await import("../../logger.js");
       const { Colors } = await import("../colors.js");
@@ -22,7 +27,7 @@ export const dev = (program: Program) =>
       const { exit, exitWithError, trackDevError, trackDevRunning } =
         await import("../program.js");
       const { createSpinner } = await import("../spinner.js");
-      const { bold, dim, yellow } = await import("colorette");
+      const { bold, dim, yellow, blue } = await import("colorette");
       const { useLocalServer } = await import("../local/server.js");
       const fs = await import("fs/promises");
       const crypto = await import("crypto");
@@ -192,6 +197,14 @@ export const dev = (program: Program) =>
           const { render } = await import("ink");
           const React = await import("react");
 
+          const isActiveStack = (stackId: string) =>
+            !args.filter ||
+            stackId
+              .toLowerCase()
+              .replace(project.config.name.toLowerCase(), "")
+              .replace(project.config.stage.toLowerCase(), "")
+              .includes(args.filter.toLowerCase());
+
           const scriptVersion = Date.now().toString();
           let lastDeployed: string;
           let isWorking = false;
@@ -224,6 +237,7 @@ export const dev = (program: Program) =>
                 fn: project.stacks,
                 outDir: `.sst/cdk.out`,
                 mode: "dev",
+                isActiveStack,
               });
 
               Logger.debug("Directory", assembly.directory);
@@ -295,7 +309,14 @@ export const dev = (program: Program) =>
 
             const component = render(<DeploymentUI assembly={assembly} />);
             const { Stacks } = await import("../../stacks/index.js");
-            const results = await Stacks.deployMany(assembly.stacks);
+
+            const target = assembly.stacks.filter((s) => isActiveStack(s.id));
+            if (!target.length) {
+              Colors.line(`No stacks found matching ${blue(args.filter!)}`);
+              throw new SilentError(`No stacks found matching ${args.filter!}`);
+            }
+
+            const results = await Stacks.deployMany(target);
             component.clear();
             component.unmount();
             printDeploymentResults(assembly, results);
