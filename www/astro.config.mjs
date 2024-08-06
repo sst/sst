@@ -56,6 +56,7 @@ const sidebar = [
       { label: "Migrate From v2", link: "/docs/migrate-from-v2/" },
       { label: "Custom Domains", link: "/docs/custom-domains/" },
       { label: "Import Resources", link: "/docs/import-resources/" },
+      { label: "Set up a Monorepo", link: "/docs/set-up-a-monorepo/" },
       { label: "Share Across Stages", link: "/docs/share-across-stages/" },
       { label: "Reference Resources", link: "/docs/reference-resources/" },
     ],
