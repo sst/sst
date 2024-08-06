@@ -107,10 +107,10 @@ Let's look at the commands in the SST CLI.
 
 ### `sst dev`
 
-Starts up a local development environment for your Lambda functions, powered by [Live Lambda Dev](../live-lambda-development.md). It allows you to make changes and test your functions without having to deploy them.
+Starts up a local development environment for your Lambda functions, powered by [Live Lambda Dev](../live-lambda-development.md). It allows you to make changes and test your functions without having to deploy them. Or optionally deploy a specific stack by passing in a `filter`.
 
 ```bash
-npx sst dev [options]
+npx sst dev [filter] [options]
 ```
 
 In addition to the [global options](#global-options), the following options are supported.
