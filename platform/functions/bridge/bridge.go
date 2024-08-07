@@ -156,20 +156,12 @@ func run() error {
 	slog.Info("prefix", "prefix", prefix)
 	slog.Info("get lambda runtime api", "url", LAMBDA_RUNTIME_API)
 
-	requestChan := make(chan msg, 0)
+	requestChan := make(chan iot_writer.ReadMsg, 1000)
+	reader := iot_writer.NewReader()
 	if token := mqttClient.Subscribe(prefix+"/request/#", 1, func(c MQTT.Client, m MQTT.Message) {
-		slog.Info("iot", "topic", m.Topic())
-		payload := m.Payload()
-		topic := m.Topic()
-		requestID := strings.Split(topic, "/")[5]
-		slog.Info("received message", "topic", topic, "requestID", requestID, "payload", string(payload))
-		go func() {
-			requestChan <- msg{
-				time:      time.Now(),
-				data:      payload,
-				requestID: requestID,
-			}
-		}()
+		for _, msg := range reader.Read(m) {
+			requestChan <- msg
+		}
 	}); token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
@@ -243,17 +235,23 @@ type msg struct {
 	requestID string
 }
 
-func forwardRequest(ctx context.Context, requestChan chan msg, conn net.Conn) (string, error) {
+func forwardRequest(ctx context.Context, requestChan chan iot_writer.ReadMsg, conn net.Conn) (string, error) {
+	count := 0
 	for {
 		select {
 		case payload := <-requestChan:
-			slog.Info("forwarding request")
-			conn.Write(payload.data)
-			return payload.requestID, nil
+			if len(payload.Data) == 0 {
+				return payload.RequestID, nil
+			}
+			count++
+			conn.Write(payload.Data)
+			continue
 		case <-ctx.Done():
 			return "", fmt.Errorf("context cancelled")
 		case <-time.After(time.Second * 1):
-			return "", fmt.Errorf("timed out waiting for request from sst dev")
+			if count == 0 {
+				return "", fmt.Errorf("timed out waiting for request from sst dev")
+			}
 		}
 	}
 }
@@ -265,7 +263,7 @@ func forwardResponse(ctx context.Context, writer *iot_writer.IoTWriter, conn net
 		conn.SetReadDeadline(time.Now().Add(time.Second * 1))
 		select {
 		case <-ctx.Done():
-			break
+			return fmt.Errorf("context cancelled")
 		default:
 			n, err := conn.Read(buf)
 			if err != nil {
@@ -274,7 +272,7 @@ func forwardResponse(ctx context.Context, writer *iot_writer.IoTWriter, conn net
 					return nil
 				}
 				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-					break
+					continue
 				}
 				slog.Info("read error", "err", err)
 				return err

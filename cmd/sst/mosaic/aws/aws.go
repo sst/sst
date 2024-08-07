@@ -161,22 +161,21 @@ func Start(
 	shutdownChan := make(chan MQTT.Message, 1000)
 
 	prefix := fmt.Sprintf("ion/%s/%s", p.App().Name, p.App().Stage)
+	reader := iot_writer.NewReader()
 	if token := mqttClient.Subscribe(prefix+"/+/response/#", 1, func(c MQTT.Client, m MQTT.Message) {
 		slog.Info("iot", "topic", m.Topic())
-		splits := strings.Split(m.Topic(), "/")
-		requestID := splits[5]
-		payload := m.Payload()
-		go func() {
-			write, ok := pending.Load(requestID)
+		for _, msg := range reader.Read(m) {
+			write, ok := pending.Load(msg.RequestID)
 			if !ok {
-				workerID := splits[3]
+				workerID := strings.Split(m.Topic(), "/")[3]
+				slog.Info("unknown response, potentially needs a reboot", "workerID", workerID, "requestID", msg.RequestID)
 				rebootChan <- workerID
 				return
 			}
 			casted := write.(*io.PipeWriter)
-			casted.Write(payload)
+			casted.Write(msg.Data)
 			casted.Close()
-		}()
+		}
 	}); token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
@@ -397,7 +396,9 @@ func Start(
 				if _, ok := workers[workerID]; !ok {
 					slog.Info("asking for reboot", "workerID", workerID)
 					mqttClient.Publish(prefix+"/"+workerID+"/reboot", 1, false, []byte("reboot"))
+					break
 				}
+				slog.Info("reboot not needed", "workerID", workerID)
 				break
 			case m := <-initChan:
 				slog.Info("got init")
@@ -454,10 +455,8 @@ func Start(
 		writer := iot_writer.New(mqttClient, prefix+"/"+workerID+"/request/"+requestID)
 		read, write := io.Pipe()
 		pending.Store(requestID, write)
-		slog.Info("forwarding request", "workerID", workerID, "requestID", requestID)
 		defer func() {
 			pending.Delete(requestID)
-			slog.Info("forwarding request done", "workerID", workerID, "requestID", requestID)
 		}()
 
 		writer.Write([]byte(r.Method + " /2018-06-01/" + strings.Join(path[3:], "/") + " HTTP/1.1\r\n"))
@@ -479,6 +478,7 @@ func Start(
 			io.Copy(write, r.Body)
 		}
 		writer.Flush()
+		writer.Close()
 
 		hijacker, ok := w.(http.Hijacker)
 		if !ok {
