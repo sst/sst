@@ -382,6 +382,7 @@ var steps = []bootstrapStep{
 	// Step: previously components code used to bootstrap separately. This step is to cleanup
 	// the old bootstrap
 	func(ctx context.Context, cfg aws.Config, data *AwsBootstrapData) error {
+		slog.Info("cleaning up old bootstrap bucket", "name", data.Asset)
 		ssmClient := ssm.NewFromConfig(cfg)
 		s3Client := s3.NewFromConfig(cfg)
 
@@ -420,6 +421,9 @@ var steps = []bootstrapStep{
 
 						listObjectsOutput, err := s3Client.ListObjectsV2(ctx, listObjectsInput)
 						if err != nil {
+								if strings.Contains(err.Error(), "NoSuchBucket") {
+									break
+								}
 								return err
 						}
 
@@ -451,7 +455,9 @@ var steps = []bootstrapStep{
 						Bucket: aws.String(data.Asset),
 				})
 				if err != nil {
-						return fmt.Errorf("failed to delete S3 bucket %s: %w", data.Asset, err)
+						if !strings.Contains(err.Error(), "NoSuchBucket") {
+								return fmt.Errorf("failed to delete S3 bucket %s: %w", data.Asset, err)
+						}
 				}
 
 				// Assign the new bucket name
