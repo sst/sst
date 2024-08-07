@@ -16,7 +16,7 @@ import { Function, FunctionArgs } from "./function.js";
 import { useProvider } from "./helpers/provider.js";
 import { Bucket, BucketArgs } from "./bucket.js";
 import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
-import { logicalName } from "../naming.js";
+import { logicalName, physicalName } from "../naming.js";
 import { Input } from "../input.js";
 import { transform, type Prettify, type Transform } from "../component.js";
 import { VisibleError } from "../error.js";
@@ -31,6 +31,7 @@ import {
   lambda,
   types,
 } from "@pulumi/aws";
+import { OriginAccessControl } from "./providers/origin-access-control.js";
 
 type CloudFrontFunctionConfig = { injections: string[] };
 type EdgeFunctionConfig = { function: Unwrap<FunctionArgs> };
@@ -229,13 +230,9 @@ export function createBucket(
   return { access, bucket };
 
   function createCloudFrontOriginAccessControl() {
-    return new cloudfront.OriginAccessControl(
-      `${name}OriginAccessControl`,
-      {
-        originAccessControlOriginType: "s3",
-        signingBehavior: "always",
-        signingProtocol: "sigv4",
-      },
+    return new OriginAccessControl(
+      `${name}S3AccessControl`,
+      { name: physicalName(64, name) },
       { parent },
     );
   }
@@ -311,7 +308,7 @@ export function createServersAndDistribution(
   name: string,
   args: SsrSiteArgs,
   outputPath: Output<string>,
-  access: cloudfront.OriginAccessControl,
+  access: OriginAccessControl,
   bucket: Bucket,
   plan: Input<Plan>,
 ) {
