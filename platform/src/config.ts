@@ -278,7 +278,7 @@ export interface Target {
      */
     engine: "codebuild";
     /**
-     * The timeout for the build. CodeBuild supports a timeout of up to 8 hours.
+     * The timeout for the build. It can be from `5 minutes` to `1 hour`.
      * @default `1 hour`
      */
     timeout?: `${number} ${"minute" | "minutes" | "hour" | "hours"}`;
