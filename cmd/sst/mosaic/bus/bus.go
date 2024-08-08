@@ -35,7 +35,7 @@ func SubscribeAll() chan interface{} {
 	bus.mu.Lock()
 	defer bus.mu.Unlock()
 
-	ch := make(chan interface{}, 1)
+	ch := make(chan interface{}, 10_000)
 	bus.all = append(bus.all, ch)
 	return ch
 }
@@ -50,16 +50,12 @@ func Publish(event interface{}) {
 	// Send to type-specific subscribers
 	if chans, found := bus.subscribers[t]; found {
 		for _, ch := range chans {
-			go func(ch chan interface{}) {
-				ch <- event
-			}(ch)
+			ch <- event
 		}
 	}
 
 	// Send to all subscribers
 	for _, ch := range bus.all {
-		go func(ch chan interface{}) {
-			ch <- event
-		}(ch)
+		ch <- event
 	}
 }

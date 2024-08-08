@@ -76,11 +76,12 @@ func Start(ctx context.Context, p *project.Project, server *server.Server) error
 
 	server.Mux.HandleFunc("/api/env", func(w http.ResponseWriter, r *http.Request) {
 		directory := r.URL.Query().Get("directory")
+		name := r.URL.Query().Get("name")
 		cwd, _ := os.Getwd()
 		for _, d := range complete.Devs {
 			full := filepath.Join(cwd, d.Directory)
 			slog.Info("matching dev", "full", full, "directory", directory)
-			if full == directory {
+			if (directory != "" && full == directory) || (name != "" && d.Name == name) {
 				env, err := p.EnvFor(ctx, complete, d.Name)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -158,8 +159,8 @@ func Stream(ctx context.Context, url string, types ...interface{}) (chan any, er
 	return out, nil
 }
 
-func Env(ctx context.Context, directory string, url string) (map[string]string, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", url+"/api/env?directory="+directory, nil)
+func Env(ctx context.Context, query string, url string) (map[string]string, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", url+"/api/env?"+query, nil)
 	if err != nil {
 		return nil, err
 	}
