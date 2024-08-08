@@ -15,6 +15,7 @@ import (
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server/aws"
 	"github.com/sst/ion/pkg/server/resource"
+	"github.com/sst/ion/pkg/server/scrap"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -49,6 +50,7 @@ func (s *Server) Start(ctx context.Context, p *project.Project) error {
 
 	resource.Register(ctx, p, s.Rpc)
 	aws.Register(ctx, p, s.Rpc)
+	scrap.Register(ctx, p, s.Rpc)
 
 	var wg errgroup.Group
 	server := &http.Server{

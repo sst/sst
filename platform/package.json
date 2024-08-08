@@ -31,6 +31,7 @@
     "@pulumi/random": "4.15.0",
     "@pulumi/tls": "5.0.1",
     "@smithy/smithy-client": "2.1.18",
+    "@tsconfig/node18": "18.2.2",
     "@types/node": "20.10.5",
     "acorn": "8.11.3",
     "acorn-walk": "8.3.2",
@@ -39,10 +40,10 @@
     "aws4fetch": "1.0.18",
     "esbuild": "0.20.2",
     "glob": "10.3.10",
-    "@tsconfig/node18": "18.2.2",
     "path-to-regexp": "6.2.1",
     "prettier": "3.1.1",
-    "typescript": "5.3.3"
+    "typescript": "5.3.3",
+    "undici": "^6.19.5"
   },
   "devDependencies": {
     "@aws-sdk/client-iot": "3.501.0",

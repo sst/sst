@@ -1,4 +1,5 @@
 import { CustomResourceOptions, dynamic, runtime } from "@pulumi/pulumi";
+import { fetch, Agent } from "undici";
 
 export module rpc {
   export class MethodNotFoundError extends Error {
@@ -12,6 +13,9 @@ export module rpc {
         "Content-Type": "application/json",
       },
       method: "POST",
+      dispatcher: new Agent({
+        headersTimeout: Number.MAX_SAFE_INTEGER,
+      }),
       body: JSON.stringify({
         jsonrpc: "1.0",
         method,

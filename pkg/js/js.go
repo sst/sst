@@ -71,6 +71,7 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 		},
 		External: []string{
 			"@pulumi/*",
+			"undici",
 			"@pulumiverse/*",
 			"@sst-provider/*",
 			"@aws-sdk/*",
