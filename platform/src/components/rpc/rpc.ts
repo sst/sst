@@ -1,5 +1,5 @@
-import { CustomResourceOptions, dynamic, runtime } from "@pulumi/pulumi";
-import { fetch, Agent } from "undici";
+import { dynamic } from "@pulumi/pulumi";
+import http from "http";
 
 export module rpc {
   export class MethodNotFoundError extends Error {
@@ -8,30 +8,62 @@ export module rpc {
     }
   }
   export async function call<T = any>(method: string, args: any) {
-    return fetch($cli.rpc, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-      dispatcher: new Agent({
-        headersTimeout: Number.MAX_SAFE_INTEGER,
-      }),
-      body: JSON.stringify({
+    return new Promise<T>((resolve, reject) => {
+      const url = new URL($cli.rpc);
+      const options = {
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      const req = http.request(options, (res) => {
+        let data = "";
+
+        res.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        res.on("end", () => {
+          if (res.statusCode !== 200) {
+            reject(new Error(`Failed to call RPC: ${data}`));
+            return;
+          }
+          try {
+            const json = JSON.parse(data);
+            if (json.error) {
+              if (json.error.startsWith("rpc: can't find")) {
+                reject(new MethodNotFoundError(method));
+                return;
+              }
+              reject(new Error(json.error));
+              return;
+            }
+            resolve(json.result);
+          } catch (error: any) {
+            reject(new Error(`Failed to parse JSON: ${error.message}`));
+          }
+        });
+      });
+
+      req.on("error", (error) => {
+        reject(error);
+      });
+
+      // Set timeout to 0 to prevent any timeout
+      req.setTimeout(0);
+
+      const body = JSON.stringify({
         jsonrpc: "1.0",
         method,
         params: [args],
-      }),
-    }).then(async (res) => {
-      if (res.status !== 200) {
-        throw new Error("Failed to call RPC: " + (await res.text()));
-      }
-      const json: any = await res.json();
-      if (json.error) {
-        if (json.error.startsWith("rpc: can't find"))
-          throw new MethodNotFoundError(method);
-        throw new Error(json.error);
-      }
-      return json.result as T;
+      });
+
+      req.write(body);
+      req.end();
     });
   }
 
