@@ -190,6 +190,7 @@ export class Component extends ComponentResource {
                 "aws:apigateway/restApi:RestApi",
                 "aws:apigatewayv2/api:Api",
                 "aws:apigatewayv2/authorizer:Authorizer",
+                "aws:apigatewayv2/vpcLink:VpcLink",
                 "aws:cognito/userPool:UserPool",
                 "aws:iot/authorizer:Authorizer",
               ],

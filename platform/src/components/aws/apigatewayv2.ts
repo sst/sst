@@ -14,6 +14,7 @@ import { ApiGatewayV2Authorizer } from "./apigatewayv2-authorizer";
 import { apigatewayv2, cloudwatch, types } from "@pulumi/aws";
 import { ApiGatewayV2UrlRoute } from "./apigatewayv2-url-route";
 import { Duration, toSeconds } from "../duration";
+import { ApiGatewayV2PrivateRoute } from "./apigatewayv2-private-route";
 
 interface ApiGatewayV2CorsArgs {
   /**
@@ -193,6 +194,30 @@ export interface ApiGatewayV2Args {
     retention?: Input<keyof typeof RETENTION>;
   }>;
   /**
+   * Configure the API to connect to private resources in a virtual private cloud or VPC.
+   * This creates a VPC link for your HTTP API.
+   *
+   * @example
+   * ```js
+   * {
+   *   vpc: {
+   *     securityGroups: ["sg-0399348378a4c256c"],
+   *     subnets: ["subnet-0b6a2b73896dc8c4c", "subnet-021389ebee680c2f0"]
+   *   }
+   * }
+   * ```
+   */
+  vpc?: Input<{
+    /**
+     * A list of VPC security group IDs.
+     */
+    securityGroups: Input<Input<string>[]>;
+    /**
+     * A list of VPC subnet IDs.
+     */
+    subnets: Input<Input<string>[]>;
+  }>;
+  /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
@@ -209,6 +234,10 @@ export interface ApiGatewayV2Args {
      * Transform the API Gateway HTTP API domain name resource.
      */
     domainName?: Transform<apigatewayv2.DomainNameArgs>;
+    /**
+     * Transform the API Gateway HTTP API VPC link resource.
+     */
+    vpcLink?: Transform<apigatewayv2.VpcLinkArgs>;
     /**
      * Transform the CloudWatch LogGroup resource used for access logs.
      */
@@ -494,6 +523,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
   private apigDomain?: apigatewayv2.DomainName;
   private apiMapping?: Output<apigatewayv2.ApiMapping>;
   private logGroup: cloudwatch.LogGroup;
+  private vpcLink?: apigatewayv2.VpcLink;
 
   constructor(
     name: string,
@@ -508,6 +538,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     const domain = normalizeDomain();
     const cors = normalizeCors();
 
+    const vpcLink = createVpcLink();
     const api = createApi();
     const logGroup = createLogGroup();
     createStage();
@@ -523,6 +554,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     this.apigDomain = apigDomain;
     this.apiMapping = apiMapping;
     this.logGroup = logGroup;
+    this.vpcLink = vpcLink;
 
     this.registerOutputs({
       _hint: this.url,
@@ -577,6 +609,22 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
               maxAge: cors.maxAge && toSeconds(cors.maxAge),
             };
       });
+    }
+
+    function createVpcLink() {
+      if (!args.vpc) return;
+
+      return new apigatewayv2.VpcLink(
+        ...transform(
+          args.transform?.vpcLink,
+          `${name}VpcLink`,
+          {
+            securityGroupIds: output(args.vpc).securityGroups,
+            subnetIds: output(args.vpc).subnets,
+          },
+          { parent },
+        ),
+      );
     }
 
     function createApi() {
@@ -775,6 +823,10 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
        * The CloudWatch LogGroup for the access logs.
        */
       logGroup: this.logGroup,
+      /**
+       * The API Gateway HTTP API VPC link.
+       */
+      vpcLink: this.vpcLink,
     };
   }
 
@@ -868,14 +920,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     args: ApiGatewayV2RouteArgs = {},
   ) {
     const route = this.parseRoute(rawRoute);
-    const prefix = this.constructorName;
-    const suffix = logicalName(
-      hashStringToPrettyString([this.api.id, route].join(""), 6),
-    );
-
     const transformed = transform(
       this.constructorArgs.transform?.route?.args,
-      `${prefix}Route${suffix}`,
+      this.buildRouteId(route),
       args,
       {},
     );
@@ -883,7 +930,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       transformed[0],
       {
         api: {
-          name: prefix,
+          name: this.constructorName,
           id: this.api.id,
           executionArn: this.api.executionArn,
         },
@@ -942,6 +989,79 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
         },
         route,
         url,
+        ...transformed[1],
+      },
+      transformed[2],
+    );
+  }
+
+  /**
+   * Adds a private route to the API Gateway HTTP API.
+   *
+   * To add private routes, you need to have a VPC link. Make sure to pass in a `vpc`.
+   * Learn more about [adding private routes](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-private.html).
+   *
+   * :::tip
+   * You need to pass `vpc` to add a private route.
+   * :::
+   *
+   * @param rawRoute The path for the route.
+   * @param arn The ARN of the AWS Load Balander or Cloud Map service.
+   * @param args Configure the route.
+   *
+   * @example
+   * Add a route to Application Load Balander.
+   *
+   * ```js title="sst.config.ts"
+   * const loadBalancerArn = "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188";
+   * api.routePrivate("GET /", loadBalancerArn);
+   * ```
+   *
+   * Add a route to AWS Cloud Map service.
+   *
+   * ```js title="sst.config.ts"
+   * const serviceArn = "arn:aws:servicediscovery:us-east-2:123456789012:service/srv-id?stage=prod&deployment=green_deployment";
+   * api.routePrivate("GET /", serviceArn);
+   * ```
+   *
+   * Enable IAM authentication for a route.
+   *
+   * ```js title="sst.config.ts"
+   * api.routePrivate("GET /", serviceArn, {
+   *   auth: {
+   *     iam: true
+   *   }
+   * });
+   * ```
+   */
+  public routePrivate(
+    rawRoute: string,
+    arn: string,
+    args: ApiGatewayV2RouteArgs = {},
+  ) {
+    if (!this.vpcLink)
+      throw new VisibleError(
+        "To add private routes, you need to have a VPC link. Pass `vpc` to the `ApiGatewayV2` component to create a VPC link.",
+      );
+
+    const route = this.parseRoute(rawRoute);
+    const transformed = transform(
+      this.constructorArgs.transform?.route?.args,
+      this.buildRouteId(route),
+      args,
+      {},
+    );
+    return new ApiGatewayV2PrivateRoute(
+      transformed[0],
+      {
+        api: {
+          name: this.constructorName,
+          id: this.api.id,
+          executionArn: this.api.executionArn,
+        },
+        route,
+        vpcLink: this.vpcLink.id,
+        arn,
         ...transformed[1],
       },
       transformed[2],

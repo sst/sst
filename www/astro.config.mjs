@@ -208,6 +208,10 @@ const sidebar = [
         link: "/docs/component/aws/dynamo-lambda-subscriber/",
       },
       {
+        label: "ApiGatewayV2PrivateRoute",
+        link: "/docs/component/aws/apigatewayv2-private-route/",
+      },
+      {
         label: "RealtimeLambdaSubscriber",
         link: "/docs/component/aws/realtime-lambda-subscriber/",
       },

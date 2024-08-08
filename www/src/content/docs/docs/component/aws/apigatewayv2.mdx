@@ -512,6 +512,7 @@ By default there is no base path, so if the `name` is `api.example.com`, the ful
   - <p>[<code class="key">args?</code>](#transform-route-args)</p>
   - <p>[<code class="key">handler?</code>](#transform-route-handler)</p>
 - <p>[<code class="key">stage?</code>](#transform-stage)</p>
+- <p>[<code class="key">vpcLink?</code>](#transform-vpclink)</p>
 </Section>
 [Transform](/docs/components#transform) how this component creates its underlying
 resources.
@@ -622,6 +623,57 @@ Transform the handler function of the route.
 Transform the API Gateway HTTP API stage resource.
 
 </Segment>
+<NestedTitle id="transform-vpclink" Tag="h4" parent="transform.">vpcLink?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">VpcLinkArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/vpclink/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">VpcLinkArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/vpclink/#inputs)<code class="symbol">, </code><code class="primitive">opts</code><code class="symbol">: </code>[<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)<code class="symbol">, </code><code class="primitive">name</code><code class="symbol">: </code><code class="primitive">string</code><code class="symbol">)</code><code class="symbol"> => </code><code class="primitive">void</code>
+</InlineSection>
+</Section>
+Transform the API Gateway HTTP API VPC link resource.
+
+</Segment>
+### vpc?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">securityGroups</code>](#vpc-securitygroups)</p>
+- <p>[<code class="key">subnets</code>](#vpc-subnets)</p>
+</Section>
+Configure the API to connect to private resources in a virtual private cloud or VPC.
+This creates a VPC link for your HTTP API.
+
+```js
+{
+  vpc: {
+    securityGroups: ["sg-0399348378a4c256c"],
+    subnets: ["subnet-0b6a2b73896dc8c4c", "subnet-021389ebee680c2f0"]
+  }
+}
+```
+</Segment>
+<NestedTitle id="vpc-securitygroups" Tag="h4" parent="vpc.">securityGroups</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+A list of VPC security group IDs.
+
+</Segment>
+<NestedTitle id="vpc-subnets" Tag="h4" parent="vpc.">subnets</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+A list of VPC subnet IDs.
+
+</Segment>
 
 ## Properties
 
@@ -633,6 +685,7 @@ Transform the API Gateway HTTP API stage resource.
 </InlineSection>
 - <p>[<code class="key">api</code>](#nodes-api)</p>
 - <p>[<code class="key">logGroup</code>](#nodes-loggroup)</p>
+- <p>[<code class="key">vpcLink</code>](#nodes-vpclink)</p>
 - <p>[<code class="key">domainName</code>](#nodes-domainname)</p>
 </Section>
 The underlying [resources](/docs/components/#nodes) this component creates.
@@ -654,6 +707,15 @@ The Amazon API Gateway HTTP API.
 </InlineSection>
 </Section>
 The CloudWatch LogGroup for the access logs.
+</Segment>
+<NestedTitle id="nodes-vpclink" Tag="h4" parent="nodes.">vpcLink</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">undefined</code><code class="symbol"> | </code>[<code class="type">VpcLink</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/vpclink/)
+</InlineSection>
+</Section>
+The API Gateway HTTP API VPC link.
 </Segment>
 <NestedTitle id="nodes-domainname" Tag="h4" parent="nodes.">domainName</NestedTitle>
 <Segment>
@@ -828,6 +890,61 @@ Customize the route handler.
 api.route("GET /", {
   handler: "src/get.handler",
   memory: "2048 MB"
+});
+```
+</Segment>
+
+### routePrivate
+<Segment>
+<Section type="signature">
+```ts
+routePrivate(rawRoute, arn, args?)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">rawRoute</code> <code class="primitive">string</code></p>
+The path for the route.
+- <p><code class="key">arn</code> <code class="primitive">string</code></p>
+The ARN of the AWS Load Balander or Cloud Map service.
+- <p><code class="key">args?</code> [<code class="type">ApiGatewayV2RouteArgs</code>](#apigatewayv2routeargs)</p>
+Configure the route.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">ApiGatewayV2PrivateRoute</code>](/docs/component/aws/apigatewayv2-private-route/)
+</InlineSection>
+Adds a private route to the API Gateway HTTP API.
+
+To add private routes, you need to have a VPC link. Make sure to pass in a `vpc`.
+Learn more about [adding private routes](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-private.html).
+
+:::tip
+You need to pass `vpc` to add a private route.
+:::
+
+Add a route to Application Load Balander.
+
+```js title="sst.config.ts"
+const loadBalancerArn = "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188";
+api.routePrivate("GET /", loadBalancerArn);
+```
+
+Add a route to AWS Cloud Map service.
+
+```js title="sst.config.ts"
+const serviceArn = "arn:aws:servicediscovery:us-east-2:123456789012:service/srv-id?stage=prod&deployment=green_deployment";
+api.routePrivate("GET /", serviceArn);
+```
+
+Enable IAM authentication for a route.
+
+```js title="sst.config.ts"
+api.routePrivate("GET /", serviceArn, {
+  auth: {
+    iam: true
+  }
 });
 ```
 </Segment>
