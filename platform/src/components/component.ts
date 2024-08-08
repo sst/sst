@@ -49,6 +49,7 @@ export class Component extends ComponentResource {
     }
     super(type, name, args, {
       transformations: [
+        // Ensure logical and physical names are prefixed
         (args) => {
           // Ensure names are prefixed with parent's name
           if (
@@ -276,6 +277,10 @@ export class Component extends ComponentResource {
             opts: args.opts,
           };
         },
+        // When renaming a CloudFront function, when `deleteBeforeReplace` is not set,
+        // the engine tries to remove the existing function first, and fails with in-use
+        // error. Setting `deleteBeforeReplace` to `false` seems to force the new one
+        // gets created and attached first.
         (args) => {
           let override = {};
           if (args.type === "aws:cloudfront/function:Function") {
@@ -286,6 +291,14 @@ export class Component extends ComponentResource {
             opts: { ...args.opts, ...override },
           };
         },
+        // Set child resources `retainOnDelete` if set on component
+        (args) => ({
+          props: args.props,
+          opts: {
+            ...args.opts,
+            retainOnDelete: args.opts.retainOnDelete ?? opts?.retainOnDelete,
+          },
+        }),
         ...(opts?.transformations ?? []),
       ],
       ...opts,
