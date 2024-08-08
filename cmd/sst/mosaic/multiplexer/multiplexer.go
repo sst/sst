@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"runtime/debug"
 	"strings"
 	"syscall"
 	"time"
@@ -95,7 +96,7 @@ func (s *Multiplexer) Start() {
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
-						slog.Error("panic", "recovery", r)
+						slog.Error("mutliplexer panic", "err", r, "stack", string(debug.Stack()))
 					}
 				}()
 
