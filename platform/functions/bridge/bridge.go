@@ -248,10 +248,6 @@ func forwardRequest(ctx context.Context, requestChan chan iot_writer.ReadMsg, co
 			continue
 		case <-ctx.Done():
 			return "", fmt.Errorf("context cancelled")
-		case <-time.After(time.Second * 2):
-			if count == 0 {
-				return "", fmt.Errorf("timed out waiting for request from sst dev")
-			}
 		}
 	}
 }
