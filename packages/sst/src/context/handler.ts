@@ -8,6 +8,8 @@ import {
   APIGatewayProxyStructuredResultV2,
   APIGatewayProxyWebsocketEventV2,
   Context as LambdaContext,
+  DynamoDBBatchResponse,
+  DynamoDBStreamEvent,
   SQSBatchResponse,
   SQSEvent,
 } from "aws-lambda";
@@ -32,6 +34,10 @@ export interface Handlers {
   sqs: {
     event: SQSEvent;
     response: SQSBatchResponse;
+  };
+  ddb: {
+    event: DynamoDBStreamEvent;
+    response: DynamoDBBatchResponse;
   };
 }
 
