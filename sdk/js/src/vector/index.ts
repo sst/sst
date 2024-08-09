@@ -169,13 +169,18 @@ export interface RemoveEvent {
 
 export interface QueryResponse {
   /**
-   * Metadata for the event that was provided when storing the vector.
+   * List of results matching the query.
    */
-  metadata: Record<string, any>;
-  /**
-   * The similarity score between the prompt and the queried vector.
-   */
-  score: number;
+  results: {
+    /**
+     * Metadata for the event that was provided when storing the vector.
+     */
+    metadata: Record<string, any>;
+    /**
+     * The similarity score between the prompt and the queried vector.
+     */
+    score: number;
+  }[];
 }
 
 export interface VectorClientResponse {
@@ -245,11 +250,11 @@ export function VectorClient<
   T extends keyof {
     // @ts-expect-error
     [key in keyof Resource as "sst.aws.Vector" extends Resource[key]["type"]
-    ? string extends key
-    ? never
-    : key
-    : never]: Resource[key];
-  },
+      ? string extends key
+        ? never
+        : key
+      : never]: Resource[key];
+  }
 >(name: T): VectorClientResponse {
   return {
     put: async (event: PutEvent) => {
