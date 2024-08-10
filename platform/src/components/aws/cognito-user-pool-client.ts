@@ -1,25 +1,15 @@
-import { ComponentResourceOptions } from "@pulumi/pulumi";
+import { ComponentResourceOptions, output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
 import { CognitoUserPoolClientArgs } from "./cognito-user-pool.js";
 import { Link } from "../link";
 import { cognito } from "@pulumi/aws";
 
-export interface ClientArgs extends CognitoUserPoolClientArgs {
+export interface Args extends CognitoUserPoolClientArgs {
   /**
    * The Cognito user pool ID.
    */
   userPool: Input<string>;
-  /**
-   * [Transform](/docs/components#transform) how this component creates its underlying
-   * resources.
-   */
-  transform?: {
-    /**
-     * Transform the Cognito User Pool client resource.
-     */
-    client?: Transform<cognito.UserPoolClientArgs>;
-  };
 }
 
 /**
@@ -35,14 +25,20 @@ export interface ClientArgs extends CognitoUserPoolClientArgs {
 export class CognitoUserPoolClient extends Component implements Link.Linkable {
   private client: cognito.UserPoolClient;
 
-  constructor(name: string, args: ClientArgs, opts?: ComponentResourceOptions) {
+  constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
 
     const parent = this;
 
+    const providers = normalizeProviders();
     const client = createClient();
 
     this.client = client;
+
+    function normalizeProviders() {
+      if (!args.providers) return ["COGNITO"];
+      return output(args.providers);
+    }
 
     function createClient() {
       return new cognito.UserPoolClient(
@@ -62,7 +58,7 @@ export class CognitoUserPoolClient extends Component implements Link.Linkable {
               "aws.cognito.signin.user.admin",
             ],
             callbackUrls: ["https://example.com"],
-            supportedIdentityProviders: ["COGNITO"],
+            supportedIdentityProviders: providers,
           },
           { parent },
         ),

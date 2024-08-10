@@ -37,7 +37,7 @@ new CognitoUserPoolClient(name, args, opts?)
 <Section type="parameters">
 #### Parameters
 - <p><code class="key">name</code> <code class="primitive">string</code></p>
-- <p><code class="key">args</code> [<code class="type">ClientArgs</code>](#clientargs)</p>
+- <p><code class="key">args</code> [<code class="type">Args</code>](#args)</p>
 - <p><code class="key">opts?</code> [<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)</p>
 </Section>
 </Segment>
@@ -103,7 +103,21 @@ This is accessible through the `Resource` object in the [SDK](/docs/reference/sd
 </Section>
 </Segment>
 
-## ClientArgs
+## Args
+### providers?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">["COGNITO"]</code>
+</InlineSection>
+A list of provider names for the identity providers that are supported on this client.
+
+</Segment>
 ### transform?
 <Segment>
 <Section type="parameters">

@@ -109,6 +109,7 @@ export class Component extends ComponentResource {
               "aws:cloudwatch/eventTarget:EventTarget",
               "aws:cloudwatch/logGroup:LogGroup",
               "aws:cognito/identityPoolRoleAttachment:IdentityPoolRoleAttachment",
+              "aws:cognito/identityProvider:IdentityProvider",
               "aws:cognito/userPoolClient:UserPoolClient",
               "aws:lambda/eventSourceMapping:EventSourceMapping",
               "aws:lambda/functionUrl:FunctionUrl",

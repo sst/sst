@@ -76,6 +76,37 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-bucket-
 
 
 ---
+## Subscribe to queues
+
+Create an SQS queue, subscribe to it, and publish to it from a function.
+```ts title="sst.config.ts"
+// create dead letter queue
+const dlq = new sst.aws.Queue("DeadLetterQueue");
+dlq.subscribe("subscriber.dlq");
+
+// create main queue
+const queue = new sst.aws.Queue("MyQueue", {
+  dlq: dlq.arn,
+});
+queue.subscribe("subscriber.main");
+
+const app = new sst.aws.Function("MyApp", {
+  handler: "publisher.handler",
+  link: [queue],
+  url: true,
+});
+
+return {
+  app: app.url,
+  queue: queue.url,
+  dlq: dlq.url,
+};
+```
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-dead-letter-queue).
+
+
+---
 ## DynamoDB streams
 
 Create a DynamoDB table, enable streams, and subscribe to it with a function.
@@ -190,22 +221,21 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-info).
 
 Create a Kinesis stream, and subscribe to it with a function.
 ```ts title="sst.config.ts"
-const stream = new sst.aws.Kinesis("MyStream");
-stream.subscribe("subscriber.handler");
-stream.subscribe(
-  {
-    handler: "subscriber-with-filter.handler",
-  },
-  {
-    filters: [
-      {
-        data: {
-          type: ["filter"],
-        },
+const stream = new sst.aws.KinesisStream("MyStream");
+
+// Create a function subscribing to all events
+stream.subscribe("subscriber.all");
+
+// Create a function subscribing to events of `bar` type
+stream.subscribe("subscriber.filtered", {
+  filters: [
+    {
+      data: {
+        type: ["bar"],
       },
-    ],
-  }
-);
+    },
+  ],
+});
 
 const app = new sst.aws.Function("MyApp", {
   handler: "publisher.handler",
@@ -216,11 +246,10 @@ const app = new sst.aws.Function("MyApp", {
 return {
   app: app.url,
   stream: stream.name,
-  streamArn: stream.arn,
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-kinesis).
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-kinesis-stream).
 
 
 ---
@@ -230,7 +259,7 @@ A full-stack TypeScript monorepo template that deploys a frontend, a database, a
 to AWS.
 
 While, [drop-in mode](/docs/#drop-in-mode) is great for simple projects, we recommend using
-this template for projects that are going to have multiple packages. 
+this template for projects that are going to have multiple packages.
 
 #### Project structure
 
@@ -307,7 +336,7 @@ The `packages/` directory includes the following:
   ```bash
   npm run shell src/example.ts
   ```
-  
+
  #### Infrastructure
 
  The `infra/` directory allows you to logically split the infrastructure of your app into
@@ -331,6 +360,7 @@ const infra = await import("./infra");
 
 return {
   api: infra.api.url,
+  astro: infra.astro.url,
 };
 ```
 

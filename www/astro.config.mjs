@@ -196,6 +196,10 @@ const sidebar = [
         link: "/docs/component/aws/queue-lambda-subscriber/",
       },
       {
+        label: "CognitoIdentityProvider",
+        link: "/docs/component/aws/cognito-identity-provider/",
+      },
+      {
         label: "BucketLambdaSubscriber",
         link: "/docs/component/aws/bucket-lambda-subscriber/",
       },

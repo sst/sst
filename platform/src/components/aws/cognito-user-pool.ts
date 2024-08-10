@@ -2,6 +2,7 @@ import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
 import { Link } from "../link";
+import { CognitoIdentityProvider } from "./cognito-identity-provider";
 import { CognitoUserPoolClient } from "./cognito-user-pool-client";
 import { Function, FunctionArgs } from "./function.js";
 import { VisibleError } from "../error";
@@ -172,7 +173,37 @@ export interface CognitoUserPoolArgs {
   };
 }
 
+export interface CognitoIdentityProviderArgs {
+  /**
+   * Type of the identity provider.
+   */
+  type: Input<"oidc" | "saml" | "google" | "facebook" | "apple" | "amazon">;
+  /**
+   * Configure the identity provider details, including the scopes, URLs, and identifiers.
+   */
+  details: Input<Record<string, Input<string>>>;
+  /**
+   * Defines mappings between identity provider attributes and user pool attributes.
+   */
+  attributes?: Input<Record<string, Input<string>>>;
+  /**
+   * [Transform](/docs/components#transform) how this component creates its underlying
+   * resources.
+   */
+  transform?: {
+    /**
+     * Transform the Cognito identity provider resource.
+     */
+    identityProvider?: Transform<cognito.IdentityProviderArgs>;
+  };
+}
+
 export interface CognitoUserPoolClientArgs {
+  /**
+   * A list of provider names for the identity providers that are supported on this client.
+   * @default `["COGNITO"]`
+   */
+  providers?: Input<Input<string>[]>;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -209,6 +240,27 @@ export interface CognitoUserPoolClientArgs {
  *   triggers: {
  *     preAuthentication: "src/preAuthentication.handler",
  *     postAuthentication: "src/postAuthentication.handler",
+ *   },
+ * });
+ * ```
+ *
+ * #### Add Google identity provider
+ *
+ * ```ts title="sst.config.ts"
+ * const GoogleClientId = new sst.Secret("GOOGLE_CLIENT_ID");
+ * const GoogleClientSecret = new sst.Secret("GOOGLE_CLIENT_SECRET");
+ *
+ * userPool.addIdentityProvider({
+ *   type: "google",
+ *   details: {
+ *     authorize_scopes: "email profile",
+ *     client_id: GoogleClientId.value,
+ *     client_secret: GoogleClientSecret.value,
+ *   },
+ *   attributes: {
+ *     email: "email",
+ *     name: "name",
+ *     username: "sub",
  *   },
  * });
  * ```
@@ -429,6 +481,63 @@ export class CognitoUserPool extends Component implements Link.Linkable {
    */
   public addClient(name: string, args?: CognitoUserPoolClientArgs) {
     return new CognitoUserPoolClient(name, {
+      userPool: this.id,
+      ...args,
+    });
+  }
+
+  /**
+   * Add a federated identity provider to the user pool.
+   *
+   * @param name Name of the identity provider.
+   * @param args Configure the identity provider.
+   *
+   * @example
+   *
+   * Add a GitHub (OIDC) identity provider.
+   *
+   * ```ts
+   * const GithubClientId = new sst.Secret("GITHUB_CLIENT_ID");
+   * const GithubClientSecret = new sst.Secret("GITHUB_CLIENT_SECRET");
+   *
+   * userPool.addIdentityProvider("GitHub", {
+   *   type: "oidc",
+   *   details: {
+   *      authorize_scopes: "read:user user:email",
+   *      client_id: GithubClientId.value,
+   *      client_secret: GithubClientSecret.value,
+   *      oidc_issuer: "https://github.com/",
+   *   },
+   *   attributes: {
+   *     email: "email",
+   *     username: "sub",
+   *   },
+   * });
+   * ```
+   *
+   * Add a Google identity provider.
+   *
+   * ```ts
+   * const GoogleClientId = new sst.Secret("GOOGLE_CLIENT_ID");
+   * const GoogleClientSecret = new sst.Secret("GOOGLE_CLIENT_SECRET");
+   *
+   * userPool.addIdentityProvider("Google", {
+   *   type: "google",
+   *   details: {
+   *     authorize_scopes: "email profile",
+   *     client_id: GoogleClientId.value,
+   *     client_secret: GoogleClientSecret.value,
+   *   },
+   *   attributes: {
+   *     email: "email",
+   *     name: "name",
+   *     username: "sub",
+   *   },
+   * });
+   * ```
+   */
+  public addIdentityProvider(name: string, args: CognitoIdentityProviderArgs) {
+    return new CognitoIdentityProvider(name, {
       userPool: this.id,
       ...args,
     });
