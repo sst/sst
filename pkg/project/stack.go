@@ -109,6 +109,7 @@ type CompleteEvent struct {
 	Devs        Devs
 	Outputs     map[string]interface{}
 	Hints       map[string]string
+	Versions    map[string]int
 	Errors      []Error
 	Finished    bool
 	Old         bool
@@ -192,6 +193,8 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		return ErrPassphraseInvalid
 	}
 
+	outfile := filepath.Join(p.PathPlatformDir(), fmt.Sprintf("sst.config.%v.mjs", time.Now().UnixMilli()))
+
 	env := map[string]string{}
 	for key, value := range p.Env() {
 		env[key] = value
@@ -209,83 +212,6 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	env["PULUMI_SKIP_UPDATE_CHECK"] = "true"
 	// env["PULUMI_DISABLE_AUTOMATIC_PLUGIN_ACQUISITION"] = "true"
 	env["NODE_OPTIONS"] = "--enable-source-maps --no-deprecation"
-
-	cli := map[string]interface{}{
-		"command": input.Command,
-		"dev":     input.Dev,
-		"paths": map[string]string{
-			"home":     global.ConfigDir(),
-			"root":     p.PathRoot(),
-			"work":     p.PathWorkingDir(),
-			"platform": p.PathPlatformDir(),
-		},
-	}
-	if input.ServerPort != 0 {
-		cli["rpc"] = fmt.Sprintf("http://localhost:%v/rpc", input.ServerPort)
-	}
-	cliBytes, err := json.Marshal(cli)
-	if err != nil {
-		return err
-	}
-	appBytes, err := json.Marshal(p.app)
-	if err != nil {
-		return err
-	}
-
-	providerShim := []string{}
-	for _, entry := range p.lock {
-		providerShim = append(providerShim, fmt.Sprintf("import * as %s from \"%s\";", entry.Alias, entry.Package))
-	}
-	providerShim = append(providerShim, fmt.Sprintf("import * as sst from \"%s\";", path.Join(p.PathPlatformDir(), "src/components")))
-
-	buildResult, err := js.Build(js.EvalOptions{
-		Dir: p.PathRoot(),
-		Define: map[string]string{
-			"$app": string(appBytes),
-			"$cli": string(cliBytes),
-			"$dev": fmt.Sprintf("%v", input.Dev),
-		},
-		Inject:  []string{filepath.Join(p.PathWorkingDir(), "platform/src/shim/run.js")},
-		Globals: strings.Join(providerShim, "\n"),
-		Code: fmt.Sprintf(`
-      import { run } from "%v";
-      import mod from "%v/sst.config.ts";
-      const result = await run(mod.run);
-      export default result;
-    `,
-			path.Join(p.PathWorkingDir(), "platform/src/auto/run.ts"),
-			p.PathRoot(),
-		),
-	})
-	if err != nil {
-		publish(&BuildFailedEvent{
-			Error: err.Error(),
-		})
-		return err
-	}
-	if !flag.SST_NO_CLEANUP {
-		defer js.Cleanup(buildResult)
-	}
-	outfile := buildResult.OutputFiles[1].Path
-
-	if input.OnFiles != nil {
-		var meta = map[string]interface{}{}
-		err := json.Unmarshal([]byte(buildResult.Metafile), &meta)
-		if err != nil {
-			return err
-		}
-		files := []string{}
-		for key := range meta["inputs"].(map[string]interface{}) {
-			absPath, err := filepath.Abs(key)
-			if err != nil {
-				continue
-			}
-			files = append(files, absPath)
-		}
-		input.OnFiles(files)
-	}
-	slog.Info("tracked files")
-
 	pulumiPath := flag.SST_PULUMI_PATH
 	if pulumiPath == "" {
 		pulumiPath = filepath.Join(global.BinPath(), "..")
@@ -327,15 +253,92 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	}
 	slog.Info("built stack")
 
-	go func() {
-		completed, err := getCompletedEvent(ctx, stack)
+	completed, err := getCompletedEvent(ctx, stack)
+	if err != nil {
+		return nil
+	}
+	completed.Finished = true
+	completed.Old = true
+	publish(completed)
+
+	cli := map[string]interface{}{
+		"command": input.Command,
+		"dev":     input.Dev,
+		"paths": map[string]string{
+			"home":     global.ConfigDir(),
+			"root":     p.PathRoot(),
+			"work":     p.PathWorkingDir(),
+			"platform": p.PathPlatformDir(),
+		},
+		"state": map[string]interface{}{
+			"version": completed.Versions,
+		},
+	}
+	if input.ServerPort != 0 {
+		cli["rpc"] = fmt.Sprintf("http://localhost:%v/rpc", input.ServerPort)
+	}
+	cliBytes, err := json.Marshal(cli)
+	if err != nil {
+		return err
+	}
+	appBytes, err := json.Marshal(p.app)
+	if err != nil {
+		return err
+	}
+
+	providerShim := []string{}
+	for _, entry := range p.lock {
+		providerShim = append(providerShim, fmt.Sprintf("import * as %s from \"%s\";", entry.Alias, entry.Package))
+	}
+	providerShim = append(providerShim, fmt.Sprintf("import * as sst from \"%s\";", path.Join(p.PathPlatformDir(), "src/components")))
+
+	buildResult, err := js.Build(js.EvalOptions{
+		Dir:     p.PathRoot(),
+		Outfile: outfile,
+		Define: map[string]string{
+			"$app": string(appBytes),
+			"$cli": string(cliBytes),
+			"$dev": fmt.Sprintf("%v", input.Dev),
+		},
+		Inject:  []string{filepath.Join(p.PathWorkingDir(), "platform/src/shim/run.js")},
+		Globals: strings.Join(providerShim, "\n"),
+		Code: fmt.Sprintf(`
+      import { run } from "%v";
+      import mod from "%v/sst.config.ts";
+      const result = await run(mod.run);
+      export default result;
+    `,
+			path.Join(p.PathWorkingDir(), "platform/src/auto/run.ts"),
+			p.PathRoot(),
+		),
+	})
+	if err != nil {
+		publish(&BuildFailedEvent{
+			Error: err.Error(),
+		})
+		return err
+	}
+	if !flag.SST_NO_CLEANUP {
+		defer js.Cleanup(buildResult)
+	}
+
+	if input.OnFiles != nil {
+		var meta = map[string]interface{}{}
+		err := json.Unmarshal([]byte(buildResult.Metafile), &meta)
 		if err != nil {
-			return
+			return err
 		}
-		completed.Finished = true
-		completed.Old = true
-		publish(completed)
-	}()
+		files := []string{}
+		for key := range meta["inputs"].(map[string]interface{}) {
+			absPath, err := filepath.Abs(key)
+			if err != nil {
+				continue
+			}
+			files = append(files, absPath)
+		}
+		input.OnFiles(files)
+	}
+	slog.Info("tracked files")
 
 	config := auto.ConfigMap{}
 	for provider, args := range p.app.Providers {
@@ -789,6 +792,7 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 	json.Unmarshal(exported.Deployment, &deployment)
 	complete := &CompleteEvent{
 		Links:       Links{},
+		Versions:    map[string]int{},
 		ImportDiffs: map[string][]ImportDiff{},
 		Receivers:   Receivers{},
 		Devs:        Devs{},
@@ -806,6 +810,13 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 
 	for _, resource := range complete.Resources {
 		outputs := decrypt(resource.Outputs).(map[string]interface{})
+		if resource.URN.Type().Module().Package().Name() == "sst" {
+			version, ok := outputs["_version"]
+			if !ok {
+				version = 1
+			}
+			complete.Versions[resource.URN.Name()] = version.(int)
+		}
 		if match, ok := outputs["_live"].(map[string]interface{}); ok {
 			data, _ := json.Marshal(match)
 			var entry Warp
