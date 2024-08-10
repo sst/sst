@@ -253,5 +253,8 @@ declare global {
       work: string;
       platform: string;
     };
+    state: {
+      version: Record<string, number>;
+    };
   };
 }
