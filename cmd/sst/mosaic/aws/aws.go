@@ -165,10 +165,10 @@ func Start(
 	if token := mqttClient.Subscribe(prefix+"/+/response/#", 1, func(c MQTT.Client, m MQTT.Message) {
 		slog.Info("iot", "topic", m.Topic())
 		for _, msg := range reader.Read(m) {
-			write, ok := pending.Load(msg.RequestID)
+			write, ok := pending.Load(msg.ID)
 			if !ok {
 				workerID := strings.Split(m.Topic(), "/")[3]
-				slog.Info("unknown response, potentially needs a reboot", "workerID", workerID, "requestID", msg.RequestID)
+				slog.Info("unknown response, potentially needs a reboot", "workerID", workerID, "requestID", msg.ID)
 				rebootChan <- workerID
 				return
 			}
@@ -322,6 +322,9 @@ func Start(
 						RequestID:  info.CurrentRequestID,
 						Input:      responseBody,
 					})
+					topic := prefix + "/" + info.WorkerID + "/ack"
+					slog.Info("acking", "topic", topic)
+					mqttClient.Publish(topic, 1, false, []byte{1}).Wait()
 				}
 				if evt.path[len(evt.path)-1] == "response" {
 					bus.Publish(&FunctionResponseEvent{

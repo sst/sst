@@ -89,8 +89,8 @@ type Reader struct {
 }
 
 type ReadMsg struct {
-	RequestID string
-	Data      []byte
+	ID   string
+	Data []byte
 }
 
 func NewReader() *Reader {
@@ -107,14 +107,13 @@ func (r *Reader) Read(m MQTT.Message) []ReadMsg {
 	topic := m.Topic()
 	requestID := strings.Split(topic, "/")[5]
 	requestBuffer, ok := r.buffer[requestID]
-	slog.Info("iot_writer: processing message", "requestID", requestID)
 	if !ok {
 		requestBuffer = map[int]ReadMsg{}
 		r.buffer[requestID] = requestBuffer
 	}
 	requestBuffer[id] = ReadMsg{
-		Data:      payload,
-		RequestID: requestID,
+		Data: payload,
+		ID:   requestID,
 	}
 	result := []ReadMsg{}
 	for {
@@ -126,7 +125,6 @@ func (r *Reader) Read(m MQTT.Message) []ReadMsg {
 		delete(requestBuffer, next)
 		r.next[requestID]++
 		result = append(result, match)
-		slog.Info("iot_writer: flushed message", "requestID", requestID, "next", next)
 	}
 	return result
 }

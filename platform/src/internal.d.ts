@@ -9,6 +9,9 @@ declare global {
       platform: string;
     };
     home: string;
+    state: {
+      version: Record<string, number>;
+    };
   };
 }
 
