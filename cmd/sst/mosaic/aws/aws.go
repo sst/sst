@@ -157,7 +157,6 @@ func Start(
 
 	var pending sync.Map
 	initChan := make(chan MQTT.Message, 1000)
-	rebootChan := make(chan string, 1000)
 	shutdownChan := make(chan MQTT.Message, 1000)
 
 	prefix := fmt.Sprintf("ion/%s/%s", p.App().Name, p.App().Stage)
@@ -167,9 +166,6 @@ func Start(
 		for _, msg := range reader.Read(m) {
 			write, ok := pending.Load(msg.ID)
 			if !ok {
-				workerID := strings.Split(m.Topic(), "/")[3]
-				slog.Info("unknown response, potentially needs a reboot", "workerID", workerID, "requestID", msg.ID)
-				rebootChan <- workerID
 				return
 			}
 			casted := write.(*io.PipeWriter)
@@ -395,20 +391,13 @@ func Start(
 					}
 					break
 				}
-			case workerID := <-rebootChan:
-				if _, ok := workers[workerID]; !ok {
-					slog.Info("asking for reboot", "workerID", workerID)
-					mqttClient.Publish(prefix+"/"+workerID+"/reboot", 1, false, []byte("reboot"))
-					break
-				}
-				slog.Info("reboot not needed", "workerID", workerID)
-				break
 			case m := <-initChan:
 				slog.Info("got init")
 				bytes := m.Payload()
 				workerID := strings.Split(m.Topic(), "/")[3]
 				existingWorker, exists := workers[workerID]
 				if exists {
+					continue
 					existingWorker.Worker.Stop()
 				}
 				var payload struct {

@@ -18,7 +18,6 @@ const app = new Hono()
       Key: crypto.randomUUID(),
       Bucket: Resource.MyBucket.name,
     });
-
     return c.text(await getSignedUrl(s3, command));
   })
   .get("/latest", async (c) => {
