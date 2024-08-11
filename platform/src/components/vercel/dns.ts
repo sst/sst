@@ -120,10 +120,7 @@ export function dns(args: DnsArgs) {
             `${namePrefix}${record.type}Record${nameSuffix}`,
             {
               domain: args.domain,
-              type:
-                recordName === "" && record.type === "CNAME"
-                  ? "ALIAS"
-                  : record.type,
+              type: record.type,
               name: recordName,
               value: record.value,
               teamId: DEFAULT_TEAM_ID,
