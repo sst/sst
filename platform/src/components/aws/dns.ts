@@ -93,9 +93,40 @@ export interface DnsArgs {
 export function dns(args: DnsArgs = {}) {
   return {
     provider: "aws",
+    createAlias,
     createRecord,
-    createAliasRecords,
   } satisfies Dns;
+
+  /**
+   * Creates alias records in the hosted zone.
+   *
+   * @param namePrefix The prefix to use for the resource names.
+   * @param record The alias record to create.
+   * @param opts The component resource options.
+   */
+  function createAlias(
+    namePrefix: string,
+    record: AliasRecord,
+    opts: ComponentResourceOptions,
+  ) {
+    return ["A", "AAAA"].map((type) =>
+      _createRecord(
+        namePrefix,
+        {
+          type,
+          name: record.name,
+          aliases: [
+            {
+              name: record.aliasName,
+              zoneId: record.aliasZone,
+              evaluateTargetHealth: true,
+            },
+          ],
+        },
+        opts,
+      ),
+    );
+  }
 
   /**
    * Creates a DNS record in the hosted zone.
@@ -118,37 +149,6 @@ export function dns(args: DnsArgs = {}) {
         records: [record.value],
       },
       opts,
-    );
-  }
-
-  /**
-   * Creates alias records in the hosted zone.
-   *
-   * @param namePrefix The prefix to use for the resource names.
-   * @param record The alias record to create.
-   * @param opts The component resource options.
-   */
-  function createAliasRecords(
-    namePrefix: string,
-    record: AliasRecord,
-    opts: ComponentResourceOptions,
-  ) {
-    return ["A", "AAAA"].map((type) =>
-      _createRecord(
-        namePrefix,
-        {
-          type,
-          name: record.name,
-          aliases: [
-            {
-              name: record.aliasName,
-              zoneId: record.aliasZone,
-              evaluateTargetHealth: true,
-            },
-          ],
-        },
-        opts,
-      ),
     );
   }
 

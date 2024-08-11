@@ -47,21 +47,23 @@ type CreateAliasRecord = (
   namePrefix: string,
   record: AliasRecord,
   opts: ComponentResourceOptions,
-) => Output<Resource>[];
+) => Output<Resource> | Output<Resource>[];
 
 type AwsDns = {
   provider: "aws";
   createRecord: CreateRecord;
-  createAliasRecords: CreateAliasRecord;
+  createAlias: CreateAliasRecord;
 };
 
 type CloudflareDns = {
   provider: "cloudflare";
   createRecord: CreateRecord;
+  createAlias: CreateAliasRecord;
 };
 type VercelDns = {
   provider: "vercel";
   createRecord: CreateRecord;
+  createAlias: CreateAliasRecord;
 };
 
 export type Dns = AwsDns | CloudflareDns | VercelDns;

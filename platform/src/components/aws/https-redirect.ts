@@ -117,27 +117,15 @@ export class HttpsRedirect extends Component {
 
     all([args.dns, args.sourceDomains]).apply(([dns, sourceDomains]) => {
       for (const recordName of sourceDomains) {
-        if (dns.provider === "aws") {
-          dns.createAliasRecords(
-            name,
-            {
-              name: recordName,
-              aliasName: distribution.domainName,
-              aliasZone: distribution.hostedZoneId,
-            },
-            { parent },
-          );
-        } else {
-          dns.createRecord(
-            name,
-            {
-              type: "CNAME",
-              name: recordName,
-              value: distribution.domainName,
-            },
-            { parent },
-          );
-        }
+        dns.createAlias(
+          name,
+          {
+            name: recordName,
+            aliasName: distribution.domainName,
+            aliasZone: distribution.hostedZoneId,
+          },
+          { parent },
+        );
       }
     });
   }

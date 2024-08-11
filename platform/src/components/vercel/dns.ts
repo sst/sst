@@ -35,7 +35,7 @@
  */
 
 import { DnsRecord, DnsRecordArgs } from "@pulumiverse/vercel";
-import { Dns, Record } from "../dns";
+import { AliasRecord, Dns, Record } from "../dns";
 import { logicalName } from "../naming";
 import { ComponentResourceOptions, all } from "@pulumi/pulumi";
 import { Transform, transform } from "../component";
@@ -70,27 +70,27 @@ export function dns(args: DnsArgs) {
   let caaRecord: DnsRecord;
   return {
     provider: "vercel",
+    createAlias,
     createRecord,
   } satisfies Dns;
 
-  function useCAARecord(namePrefix: string, opts: ComponentResourceOptions) {
-    if (!caaRecord) {
-      caaRecord = new DnsRecord(
-        ...transform(
-          args.transform?.record,
-          `${namePrefix}CAARecord`,
-          {
-            domain: args.domain,
-            type: "CAA",
-            name: "",
-            value: `0 issue "amazonaws.com"`,
-            teamId: DEFAULT_TEAM_ID,
-          },
-          opts,
+  function createAlias(
+    namePrefix: string,
+    record: AliasRecord,
+    opts: ComponentResourceOptions,
+  ) {
+    return createRecord(
+      namePrefix,
+      {
+        name: record.name,
+        // Cannot set CNAME record on the apex domain
+        type: all([args.domain, record.name]).apply(([domain, recordName]) =>
+          recordName.startsWith(domain) ? "ALIAS" : "CNAME",
         ),
-      );
-    }
-    return caaRecord;
+        value: record.aliasName,
+      },
+      opts,
+    );
   }
 
   function createRecord(
@@ -120,7 +120,10 @@ export function dns(args: DnsArgs) {
             `${namePrefix}${record.type}Record${nameSuffix}`,
             {
               domain: args.domain,
-              type: record.type,
+              type:
+                recordName === "" && record.type === "CNAME"
+                  ? "ALIAS"
+                  : record.type,
               name: recordName,
               value: record.value,
               teamId: DEFAULT_TEAM_ID,
@@ -131,5 +134,25 @@ export function dns(args: DnsArgs) {
         );
       }
     });
+  }
+
+  function useCAARecord(namePrefix: string, opts: ComponentResourceOptions) {
+    if (!caaRecord) {
+      caaRecord = new DnsRecord(
+        ...transform(
+          args.transform?.record,
+          `${namePrefix}CAARecord`,
+          {
+            domain: args.domain,
+            type: "CAA",
+            name: "",
+            value: `0 issue "amazonaws.com"`,
+            teamId: DEFAULT_TEAM_ID,
+          },
+          opts,
+        ),
+      );
+    }
+    return caaRecord;
   }
 }

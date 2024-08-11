@@ -673,27 +673,15 @@ export class Service extends Component implements Link.Linkable {
       pub.domain.apply((domain) => {
         if (!domain?.dns) return;
 
-        if (domain.dns.provider === "aws") {
-          domain.dns.createAliasRecords(
-            name,
-            {
-              name: domain.name,
-              aliasName: loadBalancer!.dnsName,
-              aliasZone: loadBalancer!.zoneId,
-            },
-            { parent: self },
-          );
-        } else {
-          domain.dns.createRecord(
-            name,
-            {
-              type: "CNAME",
-              name: domain.name,
-              value: loadBalancer!.dnsName,
-            },
-            { parent: self },
-          );
-        }
+        domain.dns.createAlias(
+          name,
+          {
+            name: domain.name,
+            aliasName: loadBalancer!.dnsName,
+            aliasZone: loadBalancer!.zoneId,
+          },
+          { parent: self },
+        );
       });
     }
 

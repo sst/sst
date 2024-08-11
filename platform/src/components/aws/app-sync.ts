@@ -601,27 +601,15 @@ export class AppSync extends Component implements Link.Linkable {
       domain.apply((domain) => {
         if (!domain.dns) return;
 
-        if (domain.dns.provider === "aws") {
-          domain.dns.createAliasRecords(
-            name,
-            {
-              name: domain.name,
-              aliasName: domainName.appsyncDomainName,
-              aliasZone: domainName.hostedZoneId,
-            },
-            { parent },
-          );
-        } else {
-          domain.dns.createRecord(
-            name,
-            {
-              type: "CNAME",
-              name: domain.name,
-              value: domainName.appsyncDomainName,
-            },
-            { parent },
-          );
-        }
+        domain.dns.createAlias(
+          name,
+          {
+            name: domain.name,
+            aliasName: domainName.appsyncDomainName,
+            aliasZone: domainName.hostedZoneId,
+          },
+          { parent },
+        );
       });
     }
   }

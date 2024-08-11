@@ -257,59 +257,59 @@ export interface CdnArgs {
   invalidation?: Input<
     | boolean
     | {
-      /**
-       * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
-       *
-       * :::tip
-       * For non-prod environments it might make sense to pass in `false`.
-       * :::
-       *
-       * Waiting for this process to finish ensures that new content will be available after the deploy finishes. However, this process can sometimes take more than 5 mins.
-       * @default `false`
-       * @example
-       * ```js
-       * {
-       *   invalidation: {
-       *     wait: true
-       *   }
-       * }
-       * ```
-       */
-      wait?: Input<boolean>;
-      /**
-       * The invalidation token is used to determine if the cache should be invalidated. If the
-       * token is the same as the previous deployment, the cache will not be invalidated.
-       *
-       * @default A unique value is auto-generated on each deploy
-       * @example
-       * ```js
-       * {
-       *   invalidation: {
-       *     token: "foo123"
-       *   }
-       * }
-       * ```
-       */
-      token?: Input<string>;
-      /**
-       * Specify an array of glob pattern of paths to invalidate.
-       *
-       * :::note
-       * Each glob pattern counts as a single invalidation. However, invalidating `/*` counts as a single invalidation as well.
-       * :::
-       * @default `["/*"]`
-       * @example
-       * Invalidate the `index.html` and all files under the `products/` route. This counts as two invalidations.
-       * ```js
-       * {
-       *   invalidation: {
-       *     paths: ["/index.html", "/products/*"]
-       *   }
-       * }
-       * ```
-       */
-      paths?: Input<Input<string>[]>;
-    }
+        /**
+         * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
+         *
+         * :::tip
+         * For non-prod environments it might make sense to pass in `false`.
+         * :::
+         *
+         * Waiting for this process to finish ensures that new content will be available after the deploy finishes. However, this process can sometimes take more than 5 mins.
+         * @default `false`
+         * @example
+         * ```js
+         * {
+         *   invalidation: {
+         *     wait: true
+         *   }
+         * }
+         * ```
+         */
+        wait?: Input<boolean>;
+        /**
+         * The invalidation token is used to determine if the cache should be invalidated. If the
+         * token is the same as the previous deployment, the cache will not be invalidated.
+         *
+         * @default A unique value is auto-generated on each deploy
+         * @example
+         * ```js
+         * {
+         *   invalidation: {
+         *     token: "foo123"
+         *   }
+         * }
+         * ```
+         */
+        token?: Input<string>;
+        /**
+         * Specify an array of glob pattern of paths to invalidate.
+         *
+         * :::note
+         * Each glob pattern counts as a single invalidation. However, invalidating `/*` counts as a single invalidation as well.
+         * :::
+         * @default `["/*"]`
+         * @example
+         * Invalidate the `index.html` and all files under the `products/` route. This counts as two invalidations.
+         * ```js
+         * {
+         *   invalidation: {
+         *     paths: ["/index.html", "/products/*"]
+         *   }
+         * }
+         * ```
+         */
+        paths?: Input<Input<string>[]>;
+      }
   >;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying resources.
@@ -448,19 +448,19 @@ export class Cdn extends Component {
             },
             aliases: domain
               ? output(domain).apply((domain) => [
-                domain.name,
-                ...domain.aliases,
-              ])
+                  domain.name,
+                  ...domain.aliases,
+                ])
               : [],
             viewerCertificate: certificateArn
               ? {
-                acmCertificateArn: certificateArn,
-                sslSupportMethod: "sni-only",
-                minimumProtocolVersion: "TLSv1.2_2021",
-              }
+                  acmCertificateArn: certificateArn,
+                  sslSupportMethod: "sni-only",
+                  minimumProtocolVersion: "TLSv1.2_2021",
+                }
               : {
-                cloudfrontDefaultCertificate: true,
-              },
+                  cloudfrontDefaultCertificate: true,
+                },
             waitForDeployment: false,
           },
           { parent },
@@ -504,27 +504,15 @@ export class Cdn extends Component {
         if (!domain.dns) return;
 
         for (const recordName of [domain.name, ...domain.aliases]) {
-          if (domain.dns.provider === "aws") {
-            domain.dns.createAliasRecords(
-              name,
-              {
-                name: recordName,
-                aliasName: distribution.domainName,
-                aliasZone: distribution.hostedZoneId,
-              },
-              { parent },
-            );
-          } else {
-            domain.dns.createRecord(
-              name,
-              {
-                type: "CNAME",
-                name: recordName,
-                value: distribution.domainName,
-              },
-              { parent },
-            );
-          }
+          domain.dns.createAlias(
+            name,
+            {
+              name: recordName,
+              aliasName: distribution.domainName,
+              aliasZone: distribution.hostedZoneId,
+            },
+            { parent },
+          );
         }
       });
     }

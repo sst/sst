@@ -41,7 +41,7 @@
  */
 
 import * as cloudflare from "@pulumi/cloudflare";
-import { Dns, Record } from "../dns";
+import { AliasRecord, Dns, Record } from "../dns";
 import { logicalName } from "../naming";
 import { ZoneLookup } from "./providers/zone-lookup";
 import { ComponentResourceOptions, output } from "@pulumi/pulumi";
@@ -91,8 +91,25 @@ export interface DnsArgs {
 export function dns(args: DnsArgs = {}) {
   return {
     provider: "cloudflare",
+    createAlias,
     createRecord,
   } satisfies Dns;
+
+  function createAlias(
+    namePrefix: string,
+    record: AliasRecord,
+    opts: ComponentResourceOptions,
+  ) {
+    return createRecord(
+      namePrefix,
+      {
+        name: record.name,
+        type: "CNAME",
+        value: record.aliasName,
+      },
+      opts,
+    );
+  }
 
   function createRecord(
     namePrefix: string,

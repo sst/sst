@@ -381,27 +381,15 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
       domain.dns.apply((dns) => {
         if (!dns) return;
 
-        if (dns.provider === "aws") {
-          dns.createAliasRecords(
-            name,
-            {
-              name: domain.name,
-              aliasName: apigDomain.domainNameConfiguration.targetDomainName,
-              aliasZone: apigDomain.domainNameConfiguration.hostedZoneId,
-            },
-            { parent },
-          );
-        } else {
-          dns.createRecord(
-            name,
-            {
-              type: "CNAME",
-              name: domain.name,
-              value: apigDomain.domainNameConfiguration.targetDomainName,
-            },
-            { parent },
-          );
-        }
+        dns.createAlias(
+          name,
+          {
+            name: domain.name,
+            aliasName: apigDomain.domainNameConfiguration.targetDomainName,
+            aliasZone: apigDomain.domainNameConfiguration.hostedZoneId,
+          },
+          { parent },
+        );
       });
     }
 
