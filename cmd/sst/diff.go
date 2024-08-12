@@ -10,6 +10,7 @@ import (
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/pkg/project"
+	"github.com/sst/ion/pkg/server"
 	"github.com/yalp/jsonpath"
 	"golang.org/x/sync/errgroup"
 )
@@ -31,6 +32,14 @@ func CmdDiff(c *cli.Cli) error {
 	outputs := []*apitype.ResOutputsEvent{}
 	out := make(chan interface{})
 	u := ui.New(c.Context)
+	s, err := server.New()
+	if err != nil {
+		return err
+	}
+	wg.Go(func() error {
+		defer c.Cancel()
+		return s.Start(c.Context, p)
+	})
 	wg.Go(func() error {
 		for evt := range out {
 			u.Event(evt)
@@ -42,11 +51,13 @@ func CmdDiff(c *cli.Cli) error {
 		return nil
 	})
 	defer u.Destroy()
+	defer c.Cancel()
 	err = p.Run(c.Context, &project.StackInput{
-		Command: "diff",
-		Dev:     c.Bool("dev"),
-		Out:     out,
-		Target:  target,
+		Command:    "diff",
+		ServerPort: s.Port,
+		Dev:        c.Bool("dev"),
+		Out:        out,
+		Target:     target,
 	})
 	close(out)
 	if err != nil {
