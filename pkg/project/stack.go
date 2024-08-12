@@ -145,9 +145,11 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 
 	publish := func(evt any) {
-		if input.Out != nil {
-			input.Out <- evt
-		}
+		go func() {
+			if input.Out != nil {
+				input.Out <- evt
+			}
+		}()
 	}
 
 	publish(&StackCommandEvent{
@@ -336,7 +338,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 			}
 			files = append(files, absPath)
 		}
-		input.OnFiles(files)
+		go input.OnFiles(files)
 	}
 	slog.Info("tracked files")
 

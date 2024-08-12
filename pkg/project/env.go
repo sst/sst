@@ -19,7 +19,6 @@ func (p *Project) EnvFor(ctx context.Context, complete *CompleteEvent, name stri
 		awsProvider := prov.(*provider.AwsProvider)
 		stsClient := sts.NewFromConfig(awsProvider.Config())
 		sessionName := "sst-dev"
-		slog.Info("assuming role", "role", dev.Aws.Role)
 		result, err := stsClient.AssumeRole(ctx, &sts.AssumeRoleInput{
 			RoleArn:         &dev.Aws.Role,
 			RoleSessionName: &sessionName,
@@ -39,7 +38,6 @@ func (p *Project) EnvFor(ctx context.Context, complete *CompleteEvent, name stri
 	}
 	env["SST_RESOURCE_App"] = fmt.Sprintf(`{"name": "%s", "stage": "%s" }`, p.App().Name, p.App().Stage)
 	for key, value := range dev.Environment {
-		slog.Info("setting env", "key", key, "value", value)
 		env[key] = value
 	}
 	return env, nil
