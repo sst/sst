@@ -23,7 +23,7 @@ func Subscribe(eventTypes ...interface{}) <-chan interface{} {
 	bus.mu.Lock()
 	defer bus.mu.Unlock()
 
-	ch := make(chan interface{}, 1)
+	ch := make(chan interface{}, 10_000)
 	for _, eventType := range eventTypes {
 		t := reflect.TypeOf(eventType)
 		bus.subscribers[t] = append(bus.subscribers[t], ch)
