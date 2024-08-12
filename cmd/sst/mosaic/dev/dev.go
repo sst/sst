@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/sst/ion/cmd/sst/mosaic/bus"
 	"github.com/sst/ion/cmd/sst/mosaic/deployer"
+	"github.com/sst/ion/pkg/bus"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server"
 	"golang.org/x/sync/errgroup"

@@ -73,9 +73,9 @@ func (m *footer) Start(ctx context.Context) {
 			}
 			width, _, _ := terminal.GetSize(int(os.Stdout.Fd()))
 			switch evt := val.(type) {
-			case lineMsg:
+			case *StdoutEvent:
 				m.clear()
-				fmt.Println(evt)
+				fmt.Println(evt.Line)
 			default:
 				m.Update(val)
 			}
@@ -136,8 +136,6 @@ func (m *footer) Render(width int, next string) {
 	os.Stdout.Write(out.Bytes())
 	m.previous = next
 }
-
-type lineMsg string
 
 func (m *footer) Reset() {
 	m.started = false
@@ -319,4 +317,8 @@ func (u *footer) formatURN(urn string) string {
 		result = child.Name() + " " + child.Type().DisplayName() + " → " + result
 	}
 	return result
+}
+
+type StdoutEvent struct {
+	Line string
 }

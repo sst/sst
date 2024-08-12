@@ -10,9 +10,9 @@ import (
 
 	"github.com/cloudflare/cloudflare-go"
 	"github.com/gorilla/websocket"
-	"github.com/sst/ion/cmd/sst/mosaic/bus"
 	"github.com/sst/ion/cmd/sst/mosaic/watcher"
 	"github.com/sst/ion/internal/util"
+	"github.com/sst/ion/pkg/bus"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/runtime"

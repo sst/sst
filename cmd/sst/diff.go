@@ -9,6 +9,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
+	"github.com/sst/ion/pkg/bus"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server"
 	"github.com/yalp/jsonpath"
@@ -30,7 +31,6 @@ func CmdDiff(c *cli.Cli) error {
 	var wg errgroup.Group
 	defer wg.Wait()
 	outputs := []*apitype.ResOutputsEvent{}
-	out := make(chan interface{})
 	u := ui.New(c.Context)
 	s, err := server.New()
 	if err != nil {
@@ -40,8 +40,11 @@ func CmdDiff(c *cli.Cli) error {
 		defer c.Cancel()
 		return s.Start(c.Context, p)
 	})
+
+	events := bus.SubscribeAll()
+	defer close(events)
 	wg.Go(func() error {
-		for evt := range out {
+		for evt := range events {
 			u.Event(evt)
 			switch evt := evt.(type) {
 			case *apitype.ResOutputsEvent:
@@ -56,10 +59,8 @@ func CmdDiff(c *cli.Cli) error {
 		Command:    "diff",
 		ServerPort: s.Port,
 		Dev:        c.Bool("dev"),
-		Out:        out,
 		Target:     target,
 	})
-	close(out)
 	if err != nil {
 		return err
 	}

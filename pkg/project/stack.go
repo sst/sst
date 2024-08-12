@@ -27,6 +27,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/tokens"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/workspace"
 	"github.com/sst/ion/internal/fs"
+	"github.com/sst/ion/pkg/bus"
 	"github.com/sst/ion/pkg/flag"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/js"
@@ -38,8 +39,6 @@ type BuildFailedEvent struct {
 }
 
 type StackInput struct {
-	Out        chan interface{}
-	OnFiles    func(files []string)
 	Command    string
 	Target     []string
 	ServerPort int
@@ -51,6 +50,10 @@ type ConcurrentUpdateEvent struct{}
 type ProviderDownloadEvent struct {
 	Name    string
 	Version string
+}
+
+type BuildSuccessEvent struct {
+	Files []string
 }
 
 type Links map[string]interface{}
@@ -144,15 +147,7 @@ var ErrPassphraseInvalid = fmt.Errorf("passphrase invalid")
 func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	slog.Info("running stack command", "cmd", input.Command)
 
-	publish := func(evt any) {
-		go func() {
-			if input.Out != nil {
-				input.Out <- evt
-			}
-		}()
-	}
-
-	publish(&StackCommandEvent{
+	bus.Publish(&StackCommandEvent{
 		App:     p.app.Name,
 		Stage:   p.app.Stage,
 		Config:  p.PathConfig(),
@@ -165,7 +160,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		err := p.Lock(updateID, input.Command)
 		if err != nil {
 			if err == provider.ErrLockExists {
-				publish(&ConcurrentUpdateEvent{})
+				bus.Publish(&ConcurrentUpdateEvent{})
 			}
 			return err
 		}
@@ -261,7 +256,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	}
 	completed.Finished = true
 	completed.Old = true
-	publish(completed)
+	bus.Publish(completed)
 
 	cli := map[string]interface{}{
 		"command": input.Command,
@@ -315,7 +310,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		),
 	})
 	if err != nil {
-		publish(&BuildFailedEvent{
+		bus.Publish(&BuildFailedEvent{
 			Error: err.Error(),
 		})
 		return err
@@ -324,22 +319,20 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		defer js.Cleanup(buildResult)
 	}
 
-	if input.OnFiles != nil {
-		var meta = map[string]interface{}{}
-		err := json.Unmarshal([]byte(buildResult.Metafile), &meta)
-		if err != nil {
-			return err
-		}
-		files := []string{}
-		for key := range meta["inputs"].(map[string]interface{}) {
-			absPath, err := filepath.Abs(key)
-			if err != nil {
-				continue
-			}
-			files = append(files, absPath)
-		}
-		go input.OnFiles(files)
+	var meta = map[string]interface{}{}
+	err = json.Unmarshal([]byte(buildResult.Metafile), &meta)
+	if err != nil {
+		return err
 	}
+	files := []string{}
+	for key := range meta["inputs"].(map[string]interface{}) {
+		absPath, err := filepath.Abs(key)
+		if err != nil {
+			continue
+		}
+		files = append(files, absPath)
+	}
+	bus.Publish(&BuildSuccessEvent{files})
 	slog.Info("tracked files")
 
 	config := auto.ConfigMap{}
@@ -421,7 +414,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 				}
 
 				for _, field := range getNotNilFields(event) {
-					publish(field)
+					bus.Publish(field)
 				}
 
 				if event.SummaryEvent != nil {
@@ -448,7 +441,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		complete.Finished = finished
 		complete.Errors = errors
 		complete.ImportDiffs = importDiffs
-		defer publish(complete)
+		defer bus.Publish(complete)
 		if input.Command == "diff" {
 			return
 		}
@@ -615,7 +608,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 				splits := strings.Split(plugin, "-")
 				for _, item := range p.lock {
 					if item.Name == splits[0] {
-						publish(&ProviderDownloadEvent{Name: splits[0], Version: splits[1]})
+						bus.Publish(&ProviderDownloadEvent{Name: splits[0], Version: splits[1]})
 						break
 					}
 				}

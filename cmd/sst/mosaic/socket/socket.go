@@ -10,7 +10,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 	"github.com/gorilla/websocket"
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
-	"github.com/sst/ion/cmd/sst/mosaic/bus"
+	"github.com/sst/ion/pkg/bus"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server"
 )
