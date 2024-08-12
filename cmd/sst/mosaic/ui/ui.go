@@ -17,6 +17,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
 	"github.com/sst/ion/cmd/sst/mosaic/cloudflare"
+	"github.com/sst/ion/cmd/sst/mosaic/ui/common"
 	"github.com/sst/ion/pkg/project"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -101,7 +102,7 @@ func (u *UI) println(args ...interface{}) {
 		fmt.Println(fmt.Sprint(u.buffer...))
 	}
 	if u.footer != nil {
-		u.footer.Send(&StdoutEvent{fmt.Sprint(u.buffer...)})
+		u.footer.Send(&common.StdoutEvent{Line: fmt.Sprint(u.buffer...)})
 	}
 	u.buffer = []interface{}{}
 	u.hasBlank = false
@@ -300,21 +301,12 @@ func (u *UI) Event(unknown interface{}) {
 
 		if evt.Severity == "info" {
 			for _, line := range strings.Split(strings.TrimRightFunc(ansi.Strip(evt.Message), unicode.IsSpace), "\n") {
-				slog.Info("line", "line", line)
-				u.printEvent(
-					TEXT_DIM,
-					"Log",
-					line,
-				)
+				u.println(line)
 			}
 		}
 
 		if evt.Severity == "info#err" {
-			u.printEvent(
-				TEXT_DIM,
-				"Log",
-				strings.TrimRightFunc(ansi.Strip(evt.Message), unicode.IsSpace),
-			)
+			u.println(strings.TrimRightFunc(ansi.Strip(evt.Message), unicode.IsSpace))
 		}
 
 	case *project.ProviderDownloadEvent:

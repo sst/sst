@@ -408,7 +408,7 @@ export class React extends Component implements Link.Linkable {
     }
 
     const { access, bucket } = createBucket(parent, name, partition, args);
-    const outputPath = buildApp(name, args, sitePath);
+    const outputPath = buildApp(parent, name, args, sitePath);
     const buildMeta = loadBuildMetadata();
     const plan = buildPlan();
     const { distribution, ssrFunctions, edgeFunctions } =
@@ -490,36 +490,36 @@ export class React extends Component implements Link.Linkable {
             defaultRootObject: indexPage,
             errorResponses: !serverConfig
               ? [
-                {
-                  errorCode: 403,
-                  responsePagePath: interpolate`/${indexPage}`,
-                  responseCode: 200,
-                },
-                {
-                  errorCode: 404,
-                  responsePagePath: interpolate`/${indexPage}`,
-                  responseCode: 200,
-                },
-              ]
+                  {
+                    errorCode: 403,
+                    responsePagePath: interpolate`/${indexPage}`,
+                    responseCode: 200,
+                  },
+                  {
+                    errorCode: 404,
+                    responsePagePath: interpolate`/${indexPage}`,
+                    responseCode: 200,
+                  },
+                ]
               : [],
             edgeFunctions:
               edge && serverConfig
                 ? {
-                  server: {
-                    function: serverConfig,
-                  },
-                }
+                    server: {
+                      function: serverConfig,
+                    },
+                  }
                 : undefined,
             origins: {
               ...(edge || !serverConfig
                 ? {}
                 : {
-                  server: {
                     server: {
-                      function: serverConfig,
+                      server: {
+                        function: serverConfig,
+                      },
                     },
-                  },
-                }),
+                  }),
               s3: {
                 s3: {
                   copy: [
@@ -535,35 +535,35 @@ export class React extends Component implements Link.Linkable {
             behaviors: [
               ...(!serverConfig
                 ? [
-                  {
-                    cacheType: "static",
-                    cfFunction: "serverCfFunction",
-                    origin: "s3",
-                  } as const,
-                ]
-                : [
-                  edge
-                    ? ({
-                      cacheType: "server",
+                    {
+                      cacheType: "static",
                       cfFunction: "serverCfFunction",
-                      edgeFunction: "server",
                       origin: "s3",
-                    } as const)
-                    : ({
-                      cacheType: "server",
-                      cfFunction: "serverCfFunction",
-                      origin: "server",
-                    } as const),
-                  ...buildMeta.staticRoutes.map(
-                    (route) =>
-                      ({
-                        cacheType: "static",
-                        pattern: route,
-                        cfFunction: "staticCfFunction",
-                        origin: "s3",
-                      }) as const,
-                  ),
-                ]),
+                    } as const,
+                  ]
+                : [
+                    edge
+                      ? ({
+                          cacheType: "server",
+                          cfFunction: "serverCfFunction",
+                          edgeFunction: "server",
+                          origin: "s3",
+                        } as const)
+                      : ({
+                          cacheType: "server",
+                          cfFunction: "serverCfFunction",
+                          origin: "server",
+                        } as const),
+                    ...buildMeta.staticRoutes.map(
+                      (route) =>
+                        ({
+                          cacheType: "static",
+                          pattern: route,
+                          cfFunction: "staticCfFunction",
+                          origin: "s3",
+                        }) as const,
+                    ),
+                  ]),
             ],
           });
         },

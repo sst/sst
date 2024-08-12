@@ -254,7 +254,13 @@ export class StaticSite extends Component implements Link.Linkable {
 
     const parent = this;
     const { sitePath, environment, indexPage } = prepare(args);
-    const outputPath = buildApp(name, args.build, sitePath, environment);
+    const outputPath = buildApp(
+      parent,
+      name,
+      args.build,
+      sitePath,
+      environment,
+    );
     const storage = createKvStorage();
     const assetManifest = generateAssetManifest();
     const kvData = uploadAssets();

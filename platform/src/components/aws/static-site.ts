@@ -406,7 +406,13 @@ export class StaticSite extends Component implements Link.Linkable {
       return;
     }
 
-    const outputPath = buildApp(name, args.build, sitePath, environment);
+    const outputPath = buildApp(
+      parent,
+      name,
+      args.build,
+      sitePath,
+      environment,
+    );
     const access = createCloudFrontOriginAccessControl();
     const bucket = createS3Bucket();
     const bucketFile = uploadAssets();
@@ -451,9 +457,7 @@ export class StaticSite extends Component implements Link.Linkable {
         return request;
     }`,
         },
-        {
-          parent,
-        },
+        { parent },
       );
     }
 

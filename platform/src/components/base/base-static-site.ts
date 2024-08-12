@@ -1,15 +1,12 @@
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
-import { all, output, Output } from "@pulumi/pulumi";
-import { Hint } from "../hint.js";
-import { Link } from "../link.js";
+import { all, output, Output, Resource } from "@pulumi/pulumi";
 import { VisibleError } from "../error.js";
 import { Input } from "../input.js";
 import { Prettify } from "../component.js";
-import { BaseSiteFileOptions, limiter } from "./base-site.js";
-import { Semaphore } from "../../util/semaphore.js";
+import { BaseSiteFileOptions } from "./base-site.js";
 import { DevArgs } from "../dev.js";
+import { Run } from "../providers/run.js";
 
 export interface BaseStaticSiteArgs {
   path?: Input<string>;
@@ -273,48 +270,40 @@ export function prepare(args: BaseStaticSiteArgs) {
 }
 
 export function buildApp(
+  parent: Resource,
   name: string,
   build: BaseStaticSiteArgs["build"],
   sitePath: ReturnType<typeof prepare>["sitePath"],
   environment: ReturnType<typeof prepare>["environment"],
 ) {
-  return all([build, sitePath, environment]).apply(
-    async ([build, sitePath, environment]) => {
-      if ($dev)
-        return path.join($cli.paths.platform, "functions", "empty-site");
-      if (!build) return sitePath;
+  if ($dev) return path.join($cli.paths.platform, "functions", "empty-site");
+  if (!build) return sitePath;
 
-      // Run build
-      if (!process.env.SKIP) {
-        try {
-          await limiter.acquire("build for " + name);
-          console.debug(`running "${build.command}" script for ${name}`);
-          execSync(build.command, {
-            cwd: sitePath,
-            stdio: "inherit",
-            env: {
-              ...process.env,
-              ...environment,
-            },
-          });
-        } catch (e) {
-          throw new VisibleError(`There was a problem building "${name}".`);
-        } finally {
-          limiter.release();
-        }
-      }
-
-      // Validate build output
-      const outputPath = path.join(sitePath, build.output);
-      if (!fs.existsSync(outputPath)) {
-        throw new VisibleError(
-          `No build output found at "${path.resolve(outputPath)}".`,
-        );
-      }
-
-      return outputPath;
+  const result = new Run(
+    `${name}Build`,
+    {
+      command: output(build).command,
+      cwd: sitePath,
+      env: environment,
+      version: Date.now().toString(),
+    },
+    {
+      parent,
+      ignoreChanges: process.env.SKIP ? ["*"] : undefined,
     },
   );
+
+  // Validate build output
+  return all([sitePath, build, result.id]).apply(([sitePath, build, _id]) => {
+    const outputPath = path.join(sitePath, build.output);
+    if (!fs.existsSync(outputPath)) {
+      throw new VisibleError(
+        `No build output found at "${path.resolve(outputPath)}".`,
+      );
+    }
+
+    return outputPath;
+  });
 }
 
 export function cleanup(

@@ -1,12 +1,13 @@
 import path from "path";
 import fs from "fs";
 import { execSync } from "child_process";
-import { Output, all, output } from "@pulumi/pulumi";
+import { Output, Resource, all, output } from "@pulumi/pulumi";
 import { Prettify } from "../component";
 import { Input } from "../input";
 import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
 import { BaseSiteFileOptions, limiter } from "./base-site";
+import { Run } from "../providers/run";
 
 export interface BaseSsrSiteArgs {
   assets?: Input<{
@@ -103,22 +104,23 @@ export interface BaseSsrSiteArgs {
 }
 
 export function buildApp(
+  parent: Resource,
   name: string,
   args: BaseSsrSiteArgs,
   sitePath: Output<string>,
   buildCommand?: Output<string>,
 ) {
+  if ($dev) return sitePath;
+
   return all([
     sitePath,
     buildCommand ?? args.buildCommand,
     args.link,
     args.environment,
   ]).apply(([sitePath, userCommand, links, environment]) => {
-    if (process.env.SKIP) return output(sitePath);
-    if ($dev) return output(sitePath);
-
     const cmd = resolveBuildCommand();
-    return runBuild();
+    const result = runBuild();
+    return result.id.apply(() => sitePath);
 
     function resolveBuildCommand() {
       if (userCommand) return userCommand;
@@ -174,32 +176,23 @@ export function buildApp(
       });
 
       // Run build
-      return linkEnvs.apply(async (linkEnvs) => {
-        try {
-          await limiter.acquire("build for " + name);
-          console.debug(`running "${cmd}" script for ${name}`);
-          execSync(cmd, {
-            cwd: sitePath,
-            stdio: "inherit",
-            env: {
-              ...process.env,
-              SST: "1",
-              AWS_ACCESS_KEY_ID: process.env.SST_AWS_ACCESS_KEY_ID,
-              AWS_SESSION_TOKEN: process.env.SST_AWS_SESSION_TOKEN,
-              AWS_SECRET_ACCESS_KEY: process.env.SST_AWS_SECRET_ACCESS_KEY,
-              AWS_REGION: process.env.SST_AWS_REGION,
-              ...environment,
-              ...linkEnvs,
-            },
-          });
-        } catch (e) {
-          throw new VisibleError(`There was a problem building "${name}".`);
-        } finally {
-          limiter.release();
-        }
-
-        return sitePath;
-      });
+      return new Run(
+        `${name}Build`,
+        {
+          command: cmd,
+          cwd: sitePath,
+          env: linkEnvs.apply((linkEnvs) => ({
+            SST: "1",
+            ...environment,
+            ...linkEnvs,
+          })),
+          version: Date.now().toString(),
+        },
+        {
+          parent,
+          ignoreChanges: process.env.SKIP ? ["*"] : undefined,
+        },
+      );
     }
   });
 }
