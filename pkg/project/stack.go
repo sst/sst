@@ -252,11 +252,12 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 
 	completed, err := getCompletedEvent(ctx, stack)
 	if err != nil {
-		return nil
+		return err
 	}
 	completed.Finished = true
 	completed.Old = true
 	bus.Publish(completed)
+	slog.Info("got previous deployment")
 
 	cli := map[string]interface{}{
 		"command": input.Command,
