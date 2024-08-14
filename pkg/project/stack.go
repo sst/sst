@@ -808,11 +808,17 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 	for _, resource := range complete.Resources {
 		outputs := decrypt(resource.Outputs).(map[string]interface{})
 		if resource.URN.Type().Module().Package().Name() == "sst" {
-			version, ok := outputs["_version"]
-			if !ok {
-				version = 1
+			if resource.Type == "sst:sst:Version" {
+				complete.Versions[outputs["target"].(string)] = int(outputs["version"].(float64))
 			}
-			complete.Versions[resource.URN.Name()] = version.(int)
+
+			if resource.Type != "sst:sst:Version" {
+				name := resource.URN.Name()
+				_, ok := complete.Versions[name]
+				if !ok {
+					complete.Versions[name] = 1
+				}
+			}
 		}
 		if match, ok := outputs["_live"].(map[string]interface{}); ok {
 			data, _ := json.Marshal(match)

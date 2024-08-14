@@ -393,3 +393,45 @@ $resolve([bucket.name, worker.url]).apply(([bucketName, workerUrl]) => {
 ```
 
 Read more about [`$resolve`](/docs/reference/global/#resolve).
+
+---
+
+## Versioning
+
+SST components evolve over time, sometimes introducing breaking changes. To maintain backward compatibility, we implement component versioning.
+
+By default, the deployment process will raise an error if a component's version has been updated. This ensures you're aware of potential breaking changes before they affect your application.
+
+---
+
+#### Use a previous version
+
+If you prefer to continue using a previous version of a component, you can pin it explicitly:
+
+```ts
+const vpc = new sst.aws.Vpc.v1("MyVpc");
+
+new sst.aws.Function("MyFunction", {
+  handler: "src/lambda.handler",
+  vpc
+})
+```
+
+---
+
+#### Update to the latest version
+
+To update to the latest version of a component, you need to rename the component. This process removes the previously created component and recreates it with the new name and the latest version.
+
+```ts
+const vpc = new sst.aws.Vpc("NewVpc");
+
+new sst.aws.Function("MyFunction", {
+  handler: "src/lambda.handler",
+  vpc
+})
+```
+
+:::caution
+Replacing components may cause temporary downtime in your application.
+:::

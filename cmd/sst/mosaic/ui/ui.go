@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
+	"slices"
 	"strings"
 	"time"
 	"unicode"
@@ -24,6 +25,8 @@ import (
 )
 
 type ProgressMode string
+
+var IGNORED_RESOURCES = []string{"sst:sst:Version", "sst:sst:LinkRef", "pulumi:pulumi:Stack"}
 
 const (
 	ProgressModeDeploy  ProgressMode = "deploy"
@@ -207,7 +210,7 @@ func (u *UI) Event(unknown interface{}) {
 
 	case *apitype.ResourcePreEvent:
 		u.timing[evt.Metadata.URN] = time.Now()
-		if evt.Metadata.Type == "pulumi:pulumi:Stack" || evt.Metadata.Type == "sst:sst:LinkRef" {
+		if slices.Contains(IGNORED_RESOURCES, evt.Metadata.Type) {
 			return
 		}
 
@@ -227,7 +230,7 @@ func (u *UI) Event(unknown interface{}) {
 		break
 
 	case *apitype.ResOutputsEvent:
-		if evt.Metadata.Type == "pulumi:pulumi:Stack" || evt.Metadata.Type == "sst:sst:LinkRef" {
+		if slices.Contains(IGNORED_RESOURCES, evt.Metadata.Type) {
 			return
 		}
 
@@ -562,7 +565,7 @@ func (u *UI) FormatURN(urn string) string {
 		if parent == "" {
 			break
 		}
-		if parent.Type().DisplayName() == "pulumi:pulumi:Stack" || parent.Type().DisplayName() == "sst:sst:LinkRef" {
+		if slices.Contains(IGNORED_RESOURCES, parent.Type().DisplayName()) {
 			break
 		}
 		child = parent

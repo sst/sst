@@ -485,6 +485,9 @@ async function generateComponentDoc(
   console.info(`Generating ${component.name}...`);
   const sourceFile = component.sources![0].fileName;
   const className = useClassName(component);
+  const fullClassName = `${useClassProviderNamespace(component)}.${className}`;
+  const matchRet = component.name.match(/-(v\d+)$/);
+  const version = matchRet ? `.${matchRet[1]}` : "";
 
   // Remove leading `components/`
   // module.name = "components/aws/bucket"
@@ -498,16 +501,16 @@ async function generateComponentDoc(
     outputFilePath,
     [
       renderHeader(
-        useClassName(component),
-        `Reference doc for the \`${useClassProviderNamespace(
-          component
-        )}.${className}\` component.`
+        useClassName(component) + version,
+        `Reference doc for the \`${fullClassName + version}\` component.`
       ),
       renderSourceMessage(sourceFile),
       renderImports(outputFilePath),
       renderBodyBegin(),
       renderAbout(useClassComment(component)),
-      renderConstructor(component),
+      renderConstructor(component)
+        .join("\n")
+        .replace(`new ${className}`, `new ${className}${version}`),
       renderInterfacesAtH2Level(component, {
         filter: (c) => c.name === `${className}Args`,
       }),
@@ -1971,6 +1974,7 @@ async function buildComponents() {
       "../platform/src/components/aws/static-site.ts",
       "../platform/src/components/aws/svelte-kit.ts",
       "../platform/src/components/aws/vpc.ts",
+      "../platform/src/components/aws/vpc-v1.ts",
       "../platform/src/components/cloudflare/worker.ts",
       "../platform/src/components/cloudflare/bucket.ts",
       "../platform/src/components/cloudflare/d1.ts",

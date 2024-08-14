@@ -1,9 +1,9 @@
 ---
-title: Vpc
-description: Reference doc for the `sst.aws.Vpc` component.
+title: Vpc.v1
+description: Reference doc for the `sst.aws.Vpc.v1` component.
 ---
 
-{/* DO NOT EDIT. AUTO-GENERATED FROM "platform/src/components/aws/vpc.ts" */}
+{/* DO NOT EDIT. AUTO-GENERATED FROM "platform/src/components/aws/vpc-v1.ts" */}
 
 import Segment from '../../../../../../src/components/tsdoc/Segment.astro';
 import Section from '../../../../../../src/components/tsdoc/Section.astro';
@@ -13,28 +13,25 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 <div class="tsdoc">
 
 <Section type="about">
-The `Vpc` component lets you add a VPC to your app. It uses [Amazon VPC](https://docs.aws.amazon.com/vpc/). This is useful for services like RDS and Fargate that need to be hosted inside
-a VPC.
+The `Vpc` component lets you add a VPC to your app, but it has been deprecated because
+it does not support modifying the number of Availability Zones (AZs) after VPC creation.
 
-Let's see look at a few common use cases for VPC and how to create them.
+For existig usage, rename `sst.aws.Vpc` to `sst.aws.Vpc.v1`. For new VPCs, use
+the latest [`Vpc`](/docs/component/aws/vpc) component instead.
 
-#### Default setup
+:::caution
+This component has been deprecated .
+:::
 
-```ts title="sst.config.ts"
-new sst.aws.Vpc("MyVPC");
-```
-
-This creates a VPC with 1 Availability Zones by default. It creates the following
+This creates a VPC with 2 Availability Zones by default. It also creates the following
 resources:
 
-1. A VPC with CIDR block `10.0.0.0/16`.
-2. A security group blocking all incoming internet traffic.
-3. A public subnet with CIDR block `10.0.1.0/24`
-4. A private subnet with CIDR block `10.0.2.0/24`.
-5. An Internet Gateway. All the traffic from the public subnets are routed through it.
-
-This setup is useful for services like Fargate where containers are deployed in the
-public subnet.
+1. A security group.
+2. A public subnet in each AZ.
+3. A private subnet in each AZ.
+4. An Internet Gateway, all the traffic from the public subnets are routed through it.
+5. A NAT Gateway in each AZ. All the traffic from the private subnets are routed to the
+   NAT Gateway in the same AZ.
 
 :::note
 By default, this creates two NAT Gateways, one in each AZ. And it roughly costs $33 per
@@ -45,14 +42,16 @@ NAT Gateways are billed per hour and per gigabyte of data processed. By default,
 this creates a NAT Gateway in each AZ. And this would be roughly $33 per NAT
 Gateway per month. Make sure to [review the pricing](https://aws.amazon.com/vpc/pricing/).
 
-
 #### Create a VPC
 
+```ts title="sst.config.ts"
+new sst.aws.Vpc.v1("MyVPC");
+```
 
 #### Create it with 3 Availability Zones
 
 ```ts title="sst.config.ts" {2}
-new sst.aws.Vpc("MyVPC", {
+new sst.aws.Vpc.v1("MyVPC", {
   az: 3
 });
 ```
@@ -65,7 +64,7 @@ new sst.aws.Vpc("MyVPC", {
 <Segment>
 <Section type="signature">
 ```ts
-new Vpc(name, args?, opts?)
+new Vpc.v1(name, args?, opts?)
 ```
 </Section>
 
@@ -90,33 +89,11 @@ new Vpc(name, args?, opts?)
 **Default** <code class="primitive">2</code>
 </InlineSection>
 Number of Availability Zones or AZs for the VPC. By default, it creates a VPC with 2
-availability zones since services like RDS and Fargate need at least 2 AZs.
+AZs since services like RDS and Fargate need at least 2 AZs.
 
 ```ts
 {
   az: 3
-}
-```
-</Segment>
-### nat?
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">managed</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
-</InlineSection>
-</Section>
-
-<InlineSection>
-**Default** <code class="primitive">false</code>
-</InlineSection>
-Configures NAT. Enabling NAT allows resources in private subnets to connect to the internet.
-The following options are available:
-- `false` Disables NAT.
-- `gateway` Enables AWS NAT Gateway.
-
-```ts
-{
-  nat: "gateway"
 }
 ```
 </Segment>
@@ -407,8 +384,8 @@ instead of creating a new VPC, you want to share the VPC from `dev`.
 
 ```ts title="sst.config.ts"
 const vpc = $app.stage === "frank"
-  ? sst.aws.Vpc.get("MyVPC", "vpc-0be8fa4de860618bb")
-  : new sst.aws.Vpc("MyVPC");
+  ? sst.aws.Vpc.v1.get("MyVPC", "vpc-0be8fa4de860618bb")
+  : new sst.aws.Vpc.v1("MyVPC");
 ```
 
 Here `vpc-0be8fa4de860618bb` is the ID of the VPC created in the `dev` stage.

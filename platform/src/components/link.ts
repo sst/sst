@@ -75,8 +75,10 @@ export module Link {
       const resource = args.resource;
       process.nextTick(() => {
         if (Link.isLinkable(resource) && !args.opts.parent) {
-          const link = resource.getSSTLink();
-          new Ref(args.name, args.type, link.properties);
+          try {
+            const link = resource.getSSTLink();
+            new Ref(args.name, args.type, link.properties);
+          } catch (e) {}
         }
       });
       return {

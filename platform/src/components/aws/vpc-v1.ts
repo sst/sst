@@ -2,13 +2,12 @@ import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
 import { ec2, getAvailabilityZonesOutput } from "@pulumi/aws";
-import { Vpc as VpcV1 } from "./vpc-v1";
-export type { VpcArgs as VpcV1Args } from "./vpc-v1";
+import { InternetGateway } from "@pulumi/aws/ec2";
 
 export interface VpcArgs {
   /**
    * Number of Availability Zones or AZs for the VPC. By default, it creates a VPC with 2
-   * availability zones since services like RDS and Fargate need at least 2 AZs.
+   * AZs since services like RDS and Fargate need at least 2 AZs.
    * @default `2`
    * @example
    * ```ts
@@ -18,21 +17,6 @@ export interface VpcArgs {
    * ```
    */
   az?: Input<number>;
-  /**
-   * Configures NAT. Enabling NAT allows resources in private subnets to connect to the internet.
-   * The following options are available:
-   * - `false` Disables NAT.
-   * - `gateway` Enables AWS NAT Gateway.
-   *
-   * @default `false`
-   * @example
-   * ```ts
-   * {
-   *   nat: "gateway"
-   * }
-   * ```
-   */
-  nat?: Input<"managed">;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -91,47 +75,48 @@ interface VpcRef {
 }
 
 /**
- * The `Vpc` component lets you add a VPC to your app. It uses [Amazon VPC](https://docs.aws.amazon.com/vpc/). This is useful for services like RDS and Fargate that need to be hosted inside
- * a VPC.
+ * The `Vpc` component lets you add a VPC to your app, but it has been deprecated because
+ * it does not support modifying the number of Availability Zones (AZs) after VPC creation.
+ *
+ * For existig usage, rename `sst.aws.Vpc` to `sst.aws.Vpc.v1`. For new VPCs, use
+ * the latest [`Vpc`](/docs/component/aws/vpc) component instead.
+ *
+ * :::caution
+ * This component has been deprecated .
+ * :::
  *
  * This creates a VPC with 2 Availability Zones by default. It also creates the following
  * resources:
  *
- * 1. A default security group blocking all incoming internet traffic.
+ * 1. A security group.
  * 2. A public subnet in each AZ.
  * 3. A private subnet in each AZ.
- * 4. An Internet Gateway. All the traffic from the public subnets are routed through it.
- * 5. If `nat` is enabled, a NAT Gateway in each AZ. All the traffic from the private subnets
- *    are routed to the NAT Gateway in the same AZ.
+ * 4. An Internet Gateway, all the traffic from the public subnets are routed through it.
+ * 5. A NAT Gateway in each AZ. All the traffic from the private subnets are routed to the
+ *    NAT Gateway in the same AZ.
  *
  * :::note
- * By default, this does not create NAT Gateways.
+ * By default, this creates two NAT Gateways, one in each AZ. And it roughly costs $33 per
+ * NAT Gateway per month.
  * :::
  *
- * NAT Gateways are billed per hour and per gigabyte of data processed. Each NAT Gateway
- * roughly costs $33 per month. Make sure to [review the pricing](https://aws.amazon.com/vpc/pricing/).
+ * NAT Gateways are billed per hour and per gigabyte of data processed. By default,
+ * this creates a NAT Gateway in each AZ. And this would be roughly $33 per NAT
+ * Gateway per month. Make sure to [review the pricing](https://aws.amazon.com/vpc/pricing/).
  *
  * @example
  *
  * #### Create a VPC
  *
  * ```ts title="sst.config.ts"
- * new sst.aws.Vpc("MyVPC");
+ * new sst.aws.Vpc.v1("MyVPC");
  * ```
  *
  * #### Create it with 3 Availability Zones
  *
  * ```ts title="sst.config.ts" {2}
- * new sst.aws.Vpc("MyVPC", {
+ * new sst.aws.Vpc.v1("MyVPC", {
  *   az: 3
- * });
- * ```
- *
- * #### Enable NAT
- *
- * ```ts title="sst.config.ts" {2}
- * new sst.aws.Vpc("MyVPC", {
- *   nat: "managed"
  * });
  * ```
  */
@@ -145,11 +130,9 @@ export class Vpc extends Component {
   private _privateSubnets: Output<ec2.Subnet[]>;
   private publicRouteTables: Output<ec2.RouteTable[]>;
   private privateRouteTables: Output<ec2.RouteTable[]>;
-  public static v1 = VpcV1;
 
   constructor(name: string, args?: VpcArgs, opts?: ComponentResourceOptions) {
-    const _version = 2;
-    super(__pulumiType, name, args, opts, _version);
+    super(__pulumiType, name, args, opts);
 
     if (args && "ref" in args) {
       const ref = args as VpcRef;
@@ -164,10 +147,10 @@ export class Vpc extends Component {
       this.elasticIps = ref.elasticIps;
       return;
     }
+
     const parent = this;
 
     const zones = normalizeAz();
-    const nat = normalizeNat();
 
     const vpc = createVpc();
     const internetGateway = createInternetGateway();
@@ -195,11 +178,6 @@ export class Vpc extends Component {
           .fill(0)
           .map((_, i) => zones.names[i]),
       );
-    }
-
-    function normalizeNat() {
-      if (!args?.nat) return;
-      return output(args?.nat);
     }
 
     function createVpc() {
@@ -231,7 +209,7 @@ export class Vpc extends Component {
     }
 
     function createSecurityGroup() {
-      return new ec2.DefaultSecurityGroup(
+      return new ec2.SecurityGroup(
         ...transform(
           args?.transform?.securityGroup,
           `${name}SecurityGroup`,
@@ -250,8 +228,7 @@ export class Vpc extends Component {
                 fromPort: 0,
                 toPort: 0,
                 protocol: "-1",
-                // Restricts inbound traffic to only within the VPC
-                cidrBlocks: [vpc.cidrBlock],
+                cidrBlocks: ["0.0.0.0/0"],
               },
             ],
           },
@@ -261,10 +238,8 @@ export class Vpc extends Component {
     }
 
     function createNatGateways() {
-      const ret = all([nat, publicSubnets]).apply(([nat, subnets]) => {
-        if (!nat) return [];
-
-        return subnets.map((subnet, i) => {
+      const ret = publicSubnets.apply((subnets) =>
+        subnets.map((subnet, i) => {
           const elasticIp = new ec2.Eip(
             ...transform(
               args?.transform?.elasticIp,
@@ -288,8 +263,8 @@ export class Vpc extends Component {
             ),
           );
           return { elasticIp, natGateway };
-        });
-      });
+        }),
+      );
 
       return {
         elasticIps: ret.apply((ret) => ret.map((r) => r.elasticIp)),
@@ -306,7 +281,7 @@ export class Vpc extends Component {
               `${name}PublicSubnet${i + 1}`,
               {
                 vpcId: vpc.id,
-                cidrBlock: `10.0.${8 * i}.0/22`,
+                cidrBlock: `10.0.${i + 1}.0/24`,
                 availabilityZone: zone,
                 mapPublicIpOnLaunch: true,
               },
@@ -359,7 +334,7 @@ export class Vpc extends Component {
               `${name}PrivateSubnet${i + 1}`,
               {
                 vpcId: vpc.id,
-                cidrBlock: `10.0.${8 * i + 4}.0/22`,
+                cidrBlock: `10.0.${zones.length + i + 1}.0/24`,
                 availabilityZone: zone,
               },
               { parent },
@@ -372,16 +347,12 @@ export class Vpc extends Component {
               `${name}PrivateRouteTable${i + 1}`,
               {
                 vpcId: vpc.id,
-                routes: natGateways.apply((natGateways) =>
-                  natGateways[i]
-                    ? [
-                        {
-                          cidrBlock: "0.0.0.0/0",
-                          natGatewayId: natGateways[i].id,
-                        },
-                      ]
-                    : [],
-                ),
+                routes: [
+                  {
+                    cidrBlock: "0.0.0.0/0",
+                    natGatewayId: natGateways[i].id,
+                  },
+                ],
               },
               { parent },
             ),
@@ -501,8 +472,8 @@ export class Vpc extends Component {
    *
    * ```ts title="sst.config.ts"
    * const vpc = $app.stage === "frank"
-   *   ? sst.aws.Vpc.get("MyVPC", "vpc-0be8fa4de860618bb")
-   *   : new sst.aws.Vpc("MyVPC");
+   *   ? sst.aws.Vpc.v1.get("MyVPC", "vpc-0be8fa4de860618bb")
+   *   : new sst.aws.Vpc.v1("MyVPC");
    * ```
    *
    * Here `vpc-0be8fa4de860618bb` is the ID of the VPC created in the `dev` stage.

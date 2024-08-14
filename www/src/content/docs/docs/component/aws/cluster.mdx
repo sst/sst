@@ -198,7 +198,7 @@ its load balancer will be placed in the public subnets.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-A list of VPC security group IDs.
+A list of VPC security group IDs for the service.
 
 </Segment>
 
@@ -1066,6 +1066,7 @@ The amount of ephemeral storage (in GB) allocated to a container in this service
 - <p>[<code class="key">image?</code>](#transform-image)</p>
 - <p>[<code class="key">listener?</code>](#transform-listener)</p>
 - <p>[<code class="key">loadBalancer?</code>](#transform-loadbalancer)</p>
+- <p>[<code class="key">loadBalancerSecurityGroup?</code>](#transform-loadbalancersecuritygroup)</p>
 - <p>[<code class="key">logGroup?</code>](#transform-loggroup)</p>
 - <p>[<code class="key">service?</code>](#transform-service)</p>
 - <p>[<code class="key">target?</code>](#transform-target)</p>
@@ -1104,6 +1105,16 @@ Transform the AWS Load Balancer listener resource.
 </InlineSection>
 </Section>
 Transform the AWS Load Balancer resource.
+
+</Segment>
+<NestedTitle id="transform-loadbalancersecuritygroup" Tag="h4" parent="transform.">loadBalancerSecurityGroup?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">SecurityGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/securitygroup/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">SecurityGroupArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/ec2/securitygroup/#inputs)<code class="symbol">, </code><code class="primitive">opts</code><code class="symbol">: </code>[<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)<code class="symbol">, </code><code class="primitive">name</code><code class="symbol">: </code><code class="primitive">string</code><code class="symbol">)</code><code class="symbol"> => </code><code class="primitive">void</code>
+</InlineSection>
+</Section>
+Transform the AWS Security Group resource for the Load Balancer.
 
 </Segment>
 <NestedTitle id="transform-loggroup" Tag="h4" parent="transform.">logGroup?</NestedTitle>

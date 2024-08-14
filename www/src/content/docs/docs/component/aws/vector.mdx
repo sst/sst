@@ -381,11 +381,22 @@ The vector used to query the database.
 <InlineSection>
 **Type** <code class="primitive">Object</code>
 </InlineSection>
-- <p>[<code class="key">metadata</code>](#queryresponse-metadata)</p>
-- <p>[<code class="key">score</code>](#queryresponse-score)</p>
+- <p>[<code class="key">results</code>](#queryresponse-results) <code class="primitive">Object</code><code class="symbol">[]</code></p>
+  - <p>[<code class="key">metadata</code>](#queryresponse-results-metadata)</p>
+  - <p>[<code class="key">score</code>](#queryresponse-results-score)</p>
 </Section>
 </Segment>
-<NestedTitle id="queryresponse-metadata" Tag="h4" parent="QueryResponse.">metadata</NestedTitle>
+<NestedTitle id="queryresponse-results" Tag="h4" parent="QueryResponse.">results</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Object</code><code class="symbol">[]</code>
+</InlineSection>
+</Section>
+List of results matching the query.
+
+</Segment>
+<NestedTitle id="queryresponse-results-metadata" Tag="h5" parent="QueryResponse.results[].">metadata</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>
@@ -395,7 +406,7 @@ The vector used to query the database.
 Metadata for the event that was provided when storing the vector.
 
 </Segment>
-<NestedTitle id="queryresponse-score" Tag="h4" parent="QueryResponse.">score</NestedTitle>
+<NestedTitle id="queryresponse-results-score" Tag="h5" parent="QueryResponse.results[].">score</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>

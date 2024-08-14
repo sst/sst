@@ -985,8 +985,9 @@ Transform the server Function resource.
 <InlineSection>
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
+- <p>[<code class="key">privateSubnets</code>](#vpc-privatesubnets)</p>
 - <p>[<code class="key">securityGroups</code>](#vpc-securitygroups)</p>
-- <p>[<code class="key">subnets</code>](#vpc-subnets)</p>
+- <p>[<code class="key">subnets?</code>](#vpc-subnets)</p>
 </Section>
 Configure the [server function](#nodes-server) in your Astro site to connect
 to private subnets in a virtual private cloud or VPC. This allows your site to
@@ -1001,6 +1002,16 @@ access private resources.
 }
 ```
 </Segment>
+<NestedTitle id="vpc-privatesubnets" Tag="h4" parent="vpc.">privateSubnets</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+A list of VPC subnet IDs.
+
+</Segment>
 <NestedTitle id="vpc-securitygroups" Tag="h4" parent="vpc.">securityGroups</NestedTitle>
 <Segment>
 <Section type="parameters">
@@ -1011,7 +1022,7 @@ access private resources.
 A list of VPC security group IDs.
 
 </Segment>
-<NestedTitle id="vpc-subnets" Tag="h4" parent="vpc.">subnets</NestedTitle>
+<NestedTitle id="vpc-subnets" Tag="h4" parent="vpc.">subnets?</NestedTitle>
 <Segment>
 <Section type="parameters">
 <InlineSection>

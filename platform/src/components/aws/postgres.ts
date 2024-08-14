@@ -284,7 +284,7 @@ export class Postgres extends Component implements Link.Linkable {
           args.transform?.subnetGroup,
           `${name}SubnetGroup`,
           {
-            subnetIds: output(args.vpc).apply((vpc) => vpc.privateSubnets),
+            subnetIds: output(args.vpc).privateSubnets,
           },
           { parent },
         ),

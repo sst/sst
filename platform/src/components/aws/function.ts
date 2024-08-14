@@ -33,6 +33,7 @@ import {
   types,
 } from "@pulumi/aws";
 import { Permission, permission } from "./permission.js";
+import { Vpc } from "./vpc.js";
 
 export type FunctionPermissionArgs = {
   /**
@@ -793,8 +794,8 @@ export interface FunctionArgs {
    * ```js
    * {
    *   vpc: {
+   *     privateSubnets: ["subnet-0b6a2b73896dc8c4c", "subnet-021389ebee680c2f0"]
    *     securityGroups: ["sg-0399348378a4c256c"],
-   *     subnets: ["subnet-0b6a2b73896dc8c4c", "subnet-021389ebee680c2f0"]
    *   }
    * }
    * ```
@@ -807,7 +808,12 @@ export interface FunctionArgs {
     /**
      * A list of VPC subnet IDs.
      */
-    subnets: Input<Input<string>[]>;
+    privateSubnets: Input<Input<string>[]>;
+    /**
+     * A list of VPC subnet IDs.
+     * @deprecated Use `privateSubnets` instead.
+     */
+    subnets?: Input<Input<string>[]>;
   }>;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -956,6 +962,7 @@ export class Function extends Component implements Link.Linkable {
     const logging = normalizeLogging();
     const url = normalizeUrl();
     const copyFiles = normalizeCopyFiles();
+    const vpc = normalizeVpc();
 
     const linkData = buildLinkData();
     const linkPermissions = buildLinkPermissions();
@@ -1124,6 +1131,35 @@ export class Function extends Component implements Link.Linkable {
       );
     }
 
+    function normalizeVpc() {
+      // "vpc" is undefined
+      if (!args.vpc) return;
+
+      // "vpc" is a Vpc component
+      if (args.vpc instanceof Vpc) {
+        const result = {
+          privateSubnets: args.vpc.privateSubnets,
+          securityGroups: args.vpc.securityGroups,
+        };
+        return args.vpc.nodes.natGateways.apply((natGateways) => {
+          if (natGateways.length === 0)
+            throw new VisibleError(
+              `The VPC configured for the function does not have NAT enabled. Enable NAT by configuring "nat" on the "sst.aws.Vpc" component.`,
+            );
+          return result;
+        });
+      }
+
+      // "vpc" is object
+      return output(args.vpc).apply((vpc) => {
+        if (vpc.subnets)
+          throw new VisibleError(
+            `The "vpc.subnets" property has been renamed to "vpc.privateSubnets". Update your code to use "vpc.privateSubnets" instead.`,
+          );
+
+        return vpc;
+      });
+    }
     function calculateHash() {
       return zipPath.apply(async (zipPath) => {
         const hash = crypto.createHash("sha256");
@@ -1482,7 +1518,7 @@ export class Function extends Component implements Link.Linkable {
             },
             vpcConfig: args.vpc && {
               securityGroupIds: output(args.vpc).securityGroups,
-              subnetIds: output(args.vpc).subnets,
+              subnetIds: output(args.vpc).privateSubnets,
             },
             layers: args.layers,
           },

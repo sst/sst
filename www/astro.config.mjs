@@ -241,6 +241,11 @@ const sidebar = [
       },
     ],
   },
+  {
+    label: "Deprecated",
+    collapsed: true,
+    items: [{ label: "Vpc.v1", link: "/docs/component/aws/vpc-v1/" }],
+  },
   { label: "Examples", link: "/docs/examples/" },
 ];
 
