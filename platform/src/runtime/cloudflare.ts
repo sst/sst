@@ -39,18 +39,6 @@ export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
       resolveDir: parsed.dir,
     },
     platform: "node",
-    plugins: [
-      {
-        name: "node-prefix",
-        setup(build) {
-          build.onResolve({ filter: /.*/ }, (args) => {
-            if (BUILTIN_MODULES.has(args.path)) {
-              return { path: "node:" + args.path, external: true };
-            }
-          });
-        },
-      },
-    ],
 
     loader: build.loader,
     keepNames: true,
@@ -65,10 +53,20 @@ export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
     conditions: ["worker"],
     minify: build.minify,
     ...build.esbuild,
-    external: [
-      ...(build.esbuild?.external ?? []),
-      "cloudflare:workers"
+    plugins: [
+      {
+        name: "node-prefix",
+        setup(build) {
+          build.onResolve({ filter: /.*/ }, (args) => {
+            if (BUILTIN_MODULES.has(args.path)) {
+              return { path: "node:" + args.path, external: true };
+            }
+          });
+        },
+      },
+      ...(build.esbuild?.plugins ?? []),
     ],
+    external: [...(build.esbuild?.external ?? []), "cloudflare:workers"],
     banner: {
       js: [build.banner || "", build.esbuild?.banner || ""].join("\n"),
     },
