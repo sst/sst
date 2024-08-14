@@ -252,6 +252,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 
 	completed, err := getCompletedEvent(ctx, stack)
 	if err != nil {
+		slog.Info("state file might be corrupted", "err", err)
 		return err
 	}
 	completed.Finished = true
