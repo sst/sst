@@ -830,7 +830,9 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 		outputs := decrypt(resource.Outputs).(map[string]interface{})
 		if resource.URN.Type().Module().Package().Name() == "sst" {
 			if resource.Type == "sst:sst:Version" {
-				complete.Versions[outputs["target"].(string)] = int(outputs["version"].(float64))
+				if outputs["target"] != nil && outputs["version"] != nil {
+					complete.Versions[outputs["target"].(string)] = int(outputs["version"].(float64))
+				}
 			}
 
 			if resource.Type != "sst:sst:Version" {
