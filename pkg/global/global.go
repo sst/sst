@@ -190,13 +190,20 @@ func InstallBun() error {
 			}
 			defer f.Close()
 
-			outFile, err := os.Create(bunPath)
+			tmpFile := filepath.Join(BinPath(), "sst-bun-download")
+			outFile, err := os.Create(tmpFile)
 			if err != nil {
 				return err
 			}
 			defer outFile.Close()
 
 			_, err = io.Copy(outFile, f)
+			if err != nil {
+				return err
+			}
+			outFile.Close()
+
+			err = os.Rename(tmpFile, bunPath)
 			if err != nil {
 				return err
 			}
