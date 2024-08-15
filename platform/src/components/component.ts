@@ -330,9 +330,9 @@ export class Component extends ComponentResource {
           ].join(" "),
         );
       }
-      if (newVersion > 1) {
-        new Version(name, newVersion, { parent: this });
-      }
+    }
+    if (newVersion > 1) {
+      new Version(name, newVersion, { parent: this });
     }
   }
 }
