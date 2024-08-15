@@ -527,7 +527,7 @@ export class Vpc extends Component {
       ec2
         .getSecurityGroupsOutput({
           filters: [
-            { name: "group-name", values: ["*SecurityGroup*"] },
+            { name: "group-name", values: ["default"] },
             { name: "vpc-id", values: [vpc.id] },
           ],
         })
@@ -573,14 +573,20 @@ export class Vpc extends Component {
         ),
       ),
     );
-    const natGateways = publicSubnets.apply((subnets) =>
-      subnets.map((subnet, i) =>
-        ec2.NatGateway.get(
-          `${name}NatGateway${i + 1}`,
-          ec2.getNatGatewayOutput({ subnetId: subnet.id }).id,
-        ),
-      ),
-    );
+    const natGateways = publicSubnets.apply((subnets) => {
+      const natGatewayIds = subnets.map((subnet, i) =>
+        ec2
+          .getNatGatewaysOutput({
+            filters: [{ name: "subnet-id", values: [subnet.id] }],
+          })
+          .ids.apply((ids) => ids[0]),
+      );
+      return output(natGatewayIds).apply((ids) =>
+        ids
+          .filter((id) => id)
+          .map((id, i) => ec2.NatGateway.get(`${name}NatGateway${i + 1}`, id)),
+      );
+    });
     const elasticIps = natGateways.apply((nats) =>
       nats.map((nat, i) =>
         ec2.Eip.get(
