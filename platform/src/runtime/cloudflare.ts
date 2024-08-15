@@ -50,7 +50,7 @@ export async function build(name: string, input: pulumi.Unwrap<WorkerArgs>) {
     mainFields: ["module", "main"],
     outfile: target,
     sourcemap: false,
-    conditions: ["worker"],
+    conditions: ["workerd", "worker", "browser"],
     minify: build.minify,
     ...build.esbuild,
     plugins: [

@@ -79,7 +79,7 @@ func (w *WorkerRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOut
 			Loader:     esbuild.LoaderTS,
 		},
 		External:   []string{"node:*", "cloudflare:workers"},
-		Conditions: []string{"worker"},
+		Conditions: []string{"workerd", "worker", "browser"},
 		Sourcemap:  esbuild.SourceMapNone,
 		Loader:     loader,
 		KeepNames:  true,
