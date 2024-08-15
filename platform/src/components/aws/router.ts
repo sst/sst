@@ -64,7 +64,7 @@ export interface RouterArgs {
    * The `/*` route is a default or catch-all route.
    * :::
    *
-   *  The `/*` route is a _default_ route, meaning that if no routes match, the `/*` route will be used. It does not matter where the `/*` route is listed in the routes object.
+   * The `/*` route is a _default_ route, meaning that if no routes match, the `/*` route will be used. It does not matter where the `/*` route is listed in the routes object.
    *
    * :::note
    * If you don't have a `/*` route, you'll get a 404 error for any requests that don't match a route.
@@ -80,12 +80,13 @@ export interface RouterArgs {
    *     "/api/*.json": "https://example1.com",
    *     "/api/*": "https://example2.com",
    *     "/*.xml": "https://example3.com",
+   *   }
    * }
    * ```
    *
    * A request to `/api/sample.xml` will match `/api/*` first and route to it; even though it matches `/*.xml`.
    *
-   *  However for this case, a request to `/api/users` will route to `/api/*` even though it comes after `/*`. This is because the `/*` route is the default route.
+   * However for this case, a request to `/api/users` will route to `/api/*` even though it comes after `/*`. This is because the `/*` route is the default route.
    *
    * ```js
    * {
