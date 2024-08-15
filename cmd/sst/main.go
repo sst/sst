@@ -72,7 +72,7 @@ func main() {
 			}
 		} else {
 			slog.Error("exited with error", "err", err)
-			ui.Error("Unexpected error occurred. Please check the logs or run with --verbose for more details.")
+			ui.Error("Unexpected error occurred. Please check the logs in .sst/log/sst.log")
 		}
 		os.Exit(1)
 		return
@@ -228,7 +228,7 @@ var root = &cli.Command{
 				Short: "Enable verbose logging",
 				Long: strings.Join([]string{
 					"",
-					"Enables verbose logging for the CLI output.",
+					"Enables verbose logging that includes extra information in logs.",
 					"",
 					"```bash",
 					"sst [command] --verbose",

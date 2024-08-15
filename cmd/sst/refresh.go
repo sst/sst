@@ -48,6 +48,7 @@ func CmdRefresh(c *cli.Cli) error {
 		Command:    "refresh",
 		Target:     target,
 		ServerPort: s.Port,
+		Verbose:    c.Bool("verbose"),
 	})
 	if err != nil {
 		return err

@@ -18,6 +18,7 @@ import (
 
 	"github.com/nrednav/cuid2"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto/debug"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/events"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optdestroy"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optpreview"
@@ -43,6 +44,7 @@ type StackInput struct {
 	Target     []string
 	ServerPort int
 	Dev        bool
+	Verbose    bool
 }
 
 type ConcurrentUpdateEvent struct{}
@@ -621,9 +623,22 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		}
 	}()
 
+	debugLogging := debug.LoggingOptions{}
+	if input.Verbose {
+		slog.Info("enabling verbose logging")
+		logLevel := uint(11)
+		debugLogging = debug.LoggingOptions{
+			LogLevel:      &logLevel,
+			FlowToPlugins: true,
+			Debug:         true,
+			Tracing:       "file://" + filepath.Join(p.PathWorkingDir(), "log", "trace.json"),
+		}
+	}
+
 	switch input.Command {
 	case "deploy":
 		result, derr := stack.Up(ctx,
+			optup.DebugLogging(debugLogging),
 			optup.Target(input.Target),
 			optup.TargetDependents(),
 			optup.ProgressStreams(pulumiLog),
@@ -635,6 +650,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 
 	case "remove":
 		result, derr := stack.Destroy(ctx,
+			optdestroy.DebugLogging(debugLogging),
 			optdestroy.ContinueOnError(),
 			optdestroy.Target(input.Target),
 			optdestroy.TargetDependents(),
@@ -647,6 +663,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 
 	case "refresh":
 		result, derr := stack.Refresh(ctx,
+			optrefresh.DebugLogging(debugLogging),
 			optrefresh.Target(input.Target),
 			optrefresh.ProgressStreams(pulumiLog),
 			optrefresh.ErrorProgressStreams(pulumiErrWriter),
@@ -656,6 +673,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		summary = result.Summary
 	case "diff":
 		_, derr := stack.Preview(ctx,
+			optpreview.DebugLogging(debugLogging),
 			optpreview.Diff(),
 			optpreview.Target(input.Target),
 			optpreview.ProgressStreams(pulumiLog),

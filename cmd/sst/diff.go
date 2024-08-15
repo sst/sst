@@ -60,6 +60,7 @@ func CmdDiff(c *cli.Cli) error {
 		ServerPort: s.Port,
 		Dev:        c.Bool("dev"),
 		Target:     target,
+		Verbose:    c.Bool("verbose"),
 	})
 	if err != nil {
 		return err

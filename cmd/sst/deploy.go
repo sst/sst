@@ -50,6 +50,7 @@ func CmdDeploy(c *cli.Cli) error {
 		Command:    "deploy",
 		Target:     target,
 		ServerPort: s.Port,
+		Verbose:    c.Bool("verbose"),
 	})
 	if err != nil {
 		return err
