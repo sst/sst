@@ -6,6 +6,11 @@ import pulumi from "@pulumi/pulumi";
 import { findAbove } from "../util/fs.js";
 import { FunctionArgs } from "../components/aws/function.js";
 import fsSync from "fs";
+import { Semaphore } from "../util/semaphore.js";
+
+const limiter = new Semaphore(
+  parseInt(process.env.SST_BUILD_CONCURRENCY || "4"),
+);
 
 export async function build(
   name: string,
@@ -110,6 +115,7 @@ export async function build(
   };
   Object.assign(options, nodejs.esbuild);
   try {
+    await limiter.acquire(name);
     const result = await esbuild.build(options);
 
     // Install node_modules
@@ -213,5 +219,7 @@ export async function build(
       type: "error" as const,
       errors: [ex.toString()],
     };
+  } finally {
+    limiter.release();
   }
 }
