@@ -237,7 +237,8 @@ func (r *NodeRuntime) Match(runtime string) bool {
 
 func (r *NodeRuntime) getFile(input *BuildInput) (string, bool) {
 	dir := filepath.Dir(input.Warp.Handler)
-	base := strings.Split(filepath.Base(input.Warp.Handler), ".")[0]
+	fileSplit := strings.Split(filepath.Base(input.Warp.Handler), ".")
+	base := strings.Join(fileSplit[:len(fileSplit)-1], ".")
 	for _, ext := range NODE_EXTENSIONS {
 		file := filepath.Join(input.Project.PathRoot(), dir, base+ext)
 		if _, err := os.Stat(file); err == nil {
