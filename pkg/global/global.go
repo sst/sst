@@ -19,7 +19,7 @@ import (
 
 var PULUMI_VERSION = "v" + sdk.Version.String()
 
-const BUN_VERSION = "1.1.0"
+const BUN_VERSION = "1.1.24"
 
 var configDir = (func() string {
 	home, err := os.UserConfigDir()

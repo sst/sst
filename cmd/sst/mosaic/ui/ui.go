@@ -206,6 +206,7 @@ func (u *UI) Event(unknown interface{}) {
 		u.blank()
 
 	case *project.BuildFailedEvent:
+		u.reset()
 		u.printEvent(TEXT_DANGER, "Error", evt.Error)
 
 	case *apitype.ResourcePreEvent:
