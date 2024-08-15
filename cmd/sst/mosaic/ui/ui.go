@@ -105,7 +105,7 @@ func (u *UI) println(args ...interface{}) {
 		fmt.Println(fmt.Sprint(u.buffer...))
 	}
 	if u.footer != nil {
-		u.footer.Send(&common.StdoutEvent{Line: fmt.Sprint(u.buffer...)})
+		u.footer.Send(lineMsg(fmt.Sprint(u.buffer...)))
 	}
 	u.buffer = []interface{}{}
 	u.hasBlank = false
@@ -132,6 +132,9 @@ func (u *UI) Event(unknown interface{}) {
 		defer u.footer.Send(unknown)
 	}
 	switch evt := unknown.(type) {
+
+	case *common.StdoutEvent:
+		u.println(evt.Line)
 
 	case *aws.FunctionInvokedEvent:
 		u.workerTime[evt.WorkerID] = time.Now()

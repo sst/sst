@@ -14,7 +14,6 @@ import (
 	"github.com/charmbracelet/x/ansi"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
-	"github.com/sst/ion/cmd/sst/mosaic/ui/common"
 	"github.com/sst/ion/pkg/project"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -75,9 +74,9 @@ func (m *footer) Start(ctx context.Context) {
 			}
 			width, _, _ := terminal.GetSize(int(os.Stdout.Fd()))
 			switch evt := val.(type) {
-			case *common.StdoutEvent:
+			case lineMsg:
 				m.clear()
-				fmt.Println(evt.Line)
+				fmt.Println(evt)
 			default:
 				m.Update(val)
 			}
@@ -320,3 +319,5 @@ func (u *footer) formatURN(urn string) string {
 	}
 	return result
 }
+
+type lineMsg = string
