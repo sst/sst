@@ -26,7 +26,7 @@ Take SST for a spin and create your first project.
 You'll need at least [Node.js 18](https://nodejs.org/) and [npm 7](https://www.npmjs.com/). You also need to have an AWS account and [**AWS credentials configured locally**](advanced/iam-credentials.md#loading-from-a-file).
 
 :::tip
-If you are new to SST, we recommend you start with our latest version instead. [**Learn more about Ion**](https://ion.sst.dev/docs/).
+If you are new to SST, we recommend you start with our latest version instead. [**Learn more about SST v3**](https://sst.dev/).
 :::
 
 ---
