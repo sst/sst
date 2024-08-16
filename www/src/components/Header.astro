@@ -8,21 +8,6 @@ import SiteTitle from "@astrojs/starlight/components/SiteTitle.astro";
 import config from '../../config';
 
 import HeaderLinks from "./HeaderLinks.astro";
-
-function formatStars(num) {
-  return num > 999
-    ? parseFloat((num / 1000).toFixed(0)) + "K"
-    : num;
-}
-
-let stars = "0K";
-
-if (import.meta.env.MODE !== "development") {
-  const response = await fetch("https://api.github.com/repos/sst/sst");
-  const data = await response.json();
-  stars = formatStars(data.stargazers_count);
-}
-
 ---
 
 <div class="header sl-flex">
@@ -37,7 +22,7 @@ if (import.meta.env.MODE !== "development") {
   <div class="sl-hidden md:sl-flex right-group">
     <div class="sl-flex github">
       <a class="stars" href={config.github} target="_blank">
-        <Icon name="github" size="1rem" /><span>{stars}</span>
+        <Icon name="github" size="1rem" /><span>{config.starsPlaceholder}</span>
       </a>
     </div>
     <div class="sl-flex search-options">
@@ -159,3 +144,21 @@ if (import.meta.env.MODE !== "development") {
   }
 }
 </style>
+
+<script>
+  function formatStars(num) {
+    return num > 999
+      ? parseFloat((num / 1000).toFixed(0)) + "K"
+      : num;
+  }
+
+  if (import.meta.env.MODE !== "development") {
+    const starsEl = document.querySelector(".stars span");
+
+    const response = await fetch("https://api.github.com/repos/sst/sst");
+    const data = await response.json();
+    const stars = formatStars(data.stargazers_count);
+
+    starsEl.innerText = stars;
+  }
+</script>
