@@ -1,6 +1,6 @@
 {
   "name": "@sst/docs",
-  "version": "2.11.3",
+  "version": "2.11.4",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
