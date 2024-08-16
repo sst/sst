@@ -67,6 +67,7 @@ try {
   console.log(nextPkg);
   await Bun.write("package.json", JSON.stringify(nextPkg, null, 2));
   await $`npm publish --access public --tag ${tag}`;
+  if (!snapshot) await $`npm publish --access public --tag ion`;
 } finally {
   await Bun.write("package.json", JSON.stringify(pkg, null, 2));
   await fs.rmdir(tmp, { recursive: true });
