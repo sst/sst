@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.11.4
+
+### Patch Changes
+
+- [`a68ca8416`](https://github.com/sst/sst/commit/a68ca84160bc87460e4fb09a4893640ad11daebf) Thanks [@thdxr](https://github.com/thdxr)! - switch to v2 tag
+
 ## 2.11.3
 
 ### Patch Changes
