@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/kballard/go-shellquote"
 	"github.com/sst/ion/cmd/sst/cli"
@@ -63,12 +64,21 @@ func CmdMosaic(c *cli.Cli) error {
 		}
 		var cmd *exec.Cmd
 		env := map[string]string{}
-		restarting := false
+		processExited := make(chan bool)
 		for {
 			select {
 			case <-c.Context.Done():
-				fmt.Println("")
 				return nil
+			case <-processExited:
+				c.Cancel()
+				continue
+			case <-time.After(45 * time.Minute):
+				env = map[string]string{}
+				go func() {
+					evts <- true
+				}()
+				fmt.Println("[timeout]")
+				continue
 			case _, ok := <-evts:
 				if !ok {
 					return nil
@@ -83,12 +93,10 @@ func CmdMosaic(c *cli.Cli) error {
 				}
 				if diff(env, nextEnv) {
 					if cmd != nil {
-						restarting = true
 						cmd.Process.Signal(syscall.SIGINT)
-						cmd.Wait()
+						<-processExited
 						fmt.Println("\n[restarting]")
 					}
-					restarting = false
 					cmd = exec.Command(
 						args[0],
 						args[1:]...,
@@ -103,10 +111,7 @@ func CmdMosaic(c *cli.Cli) error {
 					cmd.Start()
 					go func() {
 						cmd.Wait()
-						if restarting {
-							return
-						}
-						c.Cancel()
+						processExited <- true
 					}()
 				}
 				env = nextEnv
