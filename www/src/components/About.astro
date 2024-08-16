@@ -1,0 +1,152 @@
+---
+import yc from "../assets/about/yc.svg?raw";
+import sv from "../assets/about/sv-angel.svg?raw";
+
+import config from "../../config.ts";
+---
+<div class="about">
+  <div class="background">
+    <p>Launched in 2021 with the goal of helping developers build applications that scale from idea to IPO.</p>
+    <hr />
+    <p>We started our journey back in 2017 when we authored the <a target="_blank" href="https://guide.sst.dev">Serverless Stack Guide</a>. It's now the most widely read resource for building full-stack applications. In 2018, we also built <a target="_blank" href="https://seed.run">Seed</a>, a service that thousands of teams use to deploy their serverless applications.
+  </div>
+  <hr />
+  <div class="investors">
+    <p>We are lucky to have some of the greatest investors of Silicon Valley on our side.</p>
+    <div class="highlight">
+      <a target="_blank" href="https://svangel.com"><Fragment set:html={sv} /></a>
+      <a target="_blank" href="https://www.ycombinator.com/"><Fragment set:html={yc} /></a>
+    </div>
+    <ul class="grid not-content">
+      <li>
+        <a target="_blank" href="http://en.wikipedia.org/wiki/Reid_Hoffman">Reid Hoffman</a>
+        <p>Founded LinkedIn</p>
+      </li>
+      <li>
+        <a target="_blank" href="http://en.wikipedia.org/wiki/Max_Levchin">Max Levchin</a>
+        <p>Founded PayPal</p>
+      </li>
+      <li>
+        <a target="_blank" href="http://en.wikipedia.org/wiki/Steve_Chen_(YouTube)">Steve Chen</a>
+        <p>Founded YouTube</p>
+      </li>
+      <li>
+        <a target="_blank" href="http://en.wikipedia.org/wiki/Russel_Simmons">Russ Simmons</a>
+        <p>Founded Yelp</p>
+      </li>
+      <li>
+        <a target="_blank" href="https://en.wikipedia.org/wiki/Aber_Whitcomb">Aber Whitcomb</a>
+        <p>Founded MySpace</p>
+      </li>
+      <li>
+        <a target="_blank" href="https://en.wikipedia.org/wiki/Ashwin_Navin">Ashwin Navin</a>
+        <p>Founded BitTorrent Inc.</p>
+      </li>
+      <li>
+        <a target="_blank" href="https://www.linkedin.com/in/jimydotorg/">Jim Young</a>
+        <p>Founded Hot or Not</p>
+      </li>
+      <li>
+        <a target="_blank" href="https://angel.co/jhong">James Hong</a>
+        <p>Founded Hot or Not</p>
+      </li>
+      <li>
+        <a target="_blank" href="https://angel.co/tgm">Tom McInerney</a>
+        <p>Investor</p>
+      </li>
+      <li>
+        <a target="_blank" href="https://www.linkedin.com/in/harryhcheung/">Harry Cheung</a>
+        <p>Investor</p>
+      </li>
+      <li>
+        <a target="_blank" href="https://angel.co/company/bragiel-brothers">Paul &amp; Dan Bragiel</a>
+        <p>Investors</p>
+      </li>
+      <li>&hellip;and more</li>
+    </ul>
+    <hr />
+    <div class="info">
+      <p><a target="_blank" href="https://github.com/sst/identity">Brand Guidelines</a></p>
+      <p><a href={`mailto:${config.email}`}>{config.email}</a></p>
+    </div>
+  </div>
+</div>
+
+<style>
+.about {
+  --font-size: var(--sl-text-h3);
+}
+@media (max-width: 50rem) {
+  .about {
+    --font-size: var(--sl-text-h4);
+  }
+}
+.about {
+  margin: auto;
+  padding: 3rem var(--sl-content-pad-x);
+  max-width: 52.5rem;
+}
+.background p {
+  font-size: var(--font-size);
+}
+
+.investors > p {
+  font-size: var(--font-size);
+}
+.investors > .highlight {
+  margin-top: calc(2 * var(--paragraph-spacing));
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+.highlight :global(svg) {
+  color: var(--color-text-secondary);
+}
+.highlight a:first-child :global(svg) {
+  width: 2.5rem;
+}
+.highlight a:last-child :global(svg) {
+  width: 10rem;
+}
+.grid {
+  margin: 0 auto;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+.investors > .grid > li {
+  margin: 0;
+  padding: 1rem 0;
+  width: 15rem;
+}
+@media (max-width: 50rem) {
+  .investors > .grid > li {
+    width: 12.5rem;
+  }
+}
+.investors > .grid > li:before {
+  content: none;
+}
+.grid li a {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+.grid li a:hover {
+  color: var(--sl-color-text-accent);
+}
+.investors > ul.grid > li > p {
+  margin: 0;
+  color: var(--color-text-dimmed);
+}
+.investors > ul.grid > li:last-child {
+  color: var(--color-text-dimmed);
+  font-size: var(--sl-text-sm);
+}
+.info p {
+  font-size: var(--font-size);
+}
+</style>

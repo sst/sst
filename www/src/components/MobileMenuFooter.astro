@@ -11,36 +11,36 @@ import HeaderLinks from "./HeaderLinks.astro";
   <HeaderLinks {...Astro.props} />
 </div>
 <div class="mobile-preferences sl-flex">
-	<div class="sl-flex social-icons">
-		<SocialIcons {...Astro.props} />
-	</div>
+  <div class="sl-flex social-icons">
+    <SocialIcons {...Astro.props} />
+  </div>
   <!--
-	<ThemeSelect {...Astro.props} />
+  <ThemeSelect {...Astro.props} />
   -->
 </div>
 
 <style>
-	.mobile-nav-links {
-		border-top: 1px solid var(--sl-color-hairline);
+  .mobile-nav-links {
+    border-top: 1px solid var(--sl-color-hairline);
     display: flex;
     flex-direction: column;
     gap: 1rem;
     padding-block: 1.125rem;
   }
-	.mobile-preferences {
-		justify-content: space-between;
-		flex-wrap: wrap;
-		border-top: 1px solid var(--sl-color-hairline);
-		column-gap: 1rem;
-	}
-	.social-icons {
-		margin-inline-end: auto;
-		gap: 1rem;
-		align-items: center;
-		padding-block: 1.5rem;
-	}
-	.social-icons:empty {
-		display: none;
-	}
+  .mobile-preferences {
+    justify-content: space-between;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--sl-color-hairline);
+    column-gap: 1rem;
+  }
+  .social-icons {
+    margin-inline-end: auto;
+    gap: 1rem;
+    align-items: center;
+    padding-block: 1.5rem;
+  }
+  .social-icons:empty {
+    display: none;
+  }
 </style>
 

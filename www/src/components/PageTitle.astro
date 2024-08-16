@@ -1,25 +1,84 @@
 ---
 import type { Props } from '@astrojs/starlight/props';
+import config from '../../config.ts';
 
-const { title, description } = Astro.props.entry.data;
+const options = { 
+  year: 'numeric', 
+  month: 'long', 
+  day: 'numeric' 
+};
+
+const { title, author, description, lastUpdated } = Astro.props.entry.data;
+const slug = Astro.props.entry.slug;
+
+const isBlogPost = slug.startsWith('blog/');
 ---
 
-<h1 id="_top">{title}</h1>
-
-{ description && <p class="page-description">{description}</p>}
+{ isBlogPost
+  ? <Fragment>
+      <a href="/blog" class="back-link">Blog</a>
+      <h1 class="blog" id="_top">{title}</h1>
+      <div class="meta">
+        <a target="_blank" href={config.authors[author].twitter}>
+          {config.authors[author].name}
+        </a>
+        <span>
+          { lastUpdated
+            ? lastUpdated.toLocaleDateString('en-US', options)
+            : "1971-01-01"
+          }
+        </span>
+      </div>
+    </Fragment>
+  : <Fragment>
+      <h1 id="_top">{title}</h1>
+      { description && <p class="page-description">{description}</p> }
+    </Fragment>
+}
 
 <style>
-	h1 {
-		font-weight: 500;
-		color: var(--sl-color-white);
-		line-height: var(--sl-line-height-headings);
-    font-size: var(--sl-text-h1);
-    font-family: var(--__sl-font-headings);
-    letter-spacing: -1px;
-	}
-  p.page-description {
-    margin-top: 0.5rem;
-    line-height: 1.5;
-    color: var(--color-text-secondary);
-  }
+h1 {
+  font-weight: 500;
+  color: var(--sl-color-white);
+  line-height: var(--sl-line-height-headings);
+  font-size: var(--sl-text-h1);
+  font-family: var(--__sl-font-headings);
+  letter-spacing: -1px;
+}
+p.page-description {
+  margin-top: 0.5rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+h1.blog {
+  margin-top: 0.25rem;
+}
+a.back-link {
+  color: var(--sl-color-text-accent);
+  text-decoration: none;
+  text-underline-offset: 0.1875rem;
+}
+a.back-link:hover {
+  text-decoration: underline;
+}
+.meta {
+  margin-top: 0.125rem;
+  display: flex;
+  gap: 1.125rem;
+  align-items: center;
+}
+.meta a {
+  text-decoration: none;
+  color: var(--color-text-dimmed);
+  font-size: var(--sl-text-sm);
+}
+.meta a:hover {
+  color: var(--sl-color-text-accent);
+  text-decoration: none;
+}
+.meta span {
+  color: var(--color-text-dimmed);
+  font-size: var(--sl-text-sm);
+}
 </style>

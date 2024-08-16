@@ -5,23 +5,29 @@ import Default from '@astrojs/starlight/components/Head.astro'
 import config from '../../config';
 
 const  slug = Astro.props.entry.slug;
-const { title } = Astro.props.entry.data;
+const { cover, title } = Astro.props.entry.data;
 
 const encodedTitle = encodeURIComponent(
-    Base64.encode(
-      // Convert to ASCII
-      encodeURIComponent(
-        // Truncate to fit S3's max key size
-        slug === "" ? config.description : title.substring(0, 700)
-      )
+  Base64.encode(
+    // Convert to ASCII
+    encodeURIComponent(
+      // Truncate to fit S3's max key size
+      slug === "" || slug === "404"
+        ? config.tagline
+        : title.substring(0, 700)
     )
-  );
+  )
+);
 
-// Get the URL of the generated image for the current page using its
-// ID and replace the file extension with `.png`.
-const ogImageUrl = slug === ""
-  ? `${config.socialCard}/ion-lander/${encodedTitle}.png`
-  : `${config.socialCard}/ion/${encodedTitle}.png`;
+const ogImageUrl = cover
+  ? `${import.meta.env.SITE}${cover}`
+  // Get the URL of the generated image for the current page using its
+  // ID and replace the file extension with `.png`.
+  : slug.startsWith("docs")
+    ? `${config.socialCard}/v3-docs/${encodedTitle}.png`
+    : slug.startsWith("blog/")
+      ? `${config.socialCard}/v3-blog/${encodedTitle}.png`
+      : `${config.socialCard}/v3-lander/${encodedTitle}.png`;
 ---
 
 { slug === "" && (

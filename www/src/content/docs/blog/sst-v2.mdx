@@ -1,0 +1,114 @@
+---
+title: SST v2
+description: "SST v2 is ready. Here's what's new and how you can learn more about it."
+lastUpdated: 2023-02-27
+template: splash
+author: jay
+cover: /social-cards/blog/sst-v2.png
+pagefind: false
+---
+
+SST v2 is ready. Here's what's new and how you can learn more about it.
+
+## What is SST v2
+
+We completely rewrote SST to be simpler, faster, and easier to work with. [Check out this video](https://youtu.be/v97-SJY1Mb0) to get a quick sense of what SST v2 is all about.
+
+<div class="youtube-container">
+  <iframe src="https://www.youtube-nocookie.com/embed/v97-SJY1Mb0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+Adam and Dax also did a whole [podcast episode on SST v2](https://tomorrow.fm/8) and the rewrite process.
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/episode/3CFJlgN9vEcLh1P0V52gy2?utm_source=generator" style="height: 352px!important" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+
+We also did a [launch livestream](https://www.youtube.com/watch?v=v6oqlnY6-Vc) where we talked about what's new in v2, how to upgrade, and deep dive into the new codebase. We also answered some questions from the community.
+
+<div class="youtube-container">
+  <iframe src="https://www.youtube-nocookie.com/embed/v6oqlnY6-Vc" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+---
+
+## Upgrade to v2
+
+In general most of the changes are ergonomic and it should be a pretty simple upgrade process. Check out our docs for the **upgrade guide**.
+
+---
+
+## Features
+
+Here's a quick rundown of the major changes.
+
+- **Monopackage**
+
+  The first major change is that we are moving to a new npm package — [**`sst`**](https://www.npmjs.com/package/sst)
+
+  We are also moving to a monopackage architecture. So instead of installing `@serverless-stack/cli` or `@serverless-stack/resources`; you simply need to install `sst`.
+
+  All the constructs can be imported from `sst/constructs`. And the Node client is under `sst/node`.
+
+- **New CLI**
+
+  This new package also powers a brand new CLI. It's faster and has a cleaner UI to go with it.
+
+  ```bash
+  SST v2.0.38  ready!
+
+  → App:     my-sst-app
+    Stage:   Jay
+    Console: https://console.sst.dev/my-sst-app/Jay
+
+  ✓ Deployed:
+    Database
+    Api
+    API: https://4f574d6lqc.execute-api.us-east-1.amazonaws.com
+    Web
+    SITE: https://localhost:3000
+  ```
+
+- **Faster Live Lambda**
+
+  We've reworked how [Live Lambda](/docs/live/) works! It's a lot faster than before and it does not need to deploy any new infrastructure for it. So no more _Debug Stack_!
+
+  You can [read more about the changes here](/docs/live/).
+
+- **`sst.config.ts`**
+
+  We've also changed how you configure your SST apps. We've replaced the old `sst.json` with a `sst.config.ts`.
+
+  ```typescript
+  export default {
+    config(_input) {
+      return {
+        name: "my-sst-app",
+        region: "us-east-1",
+      };
+    },
+    stacks(app) {
+      app.stack(Database).stack(Api).stack(Web);
+    },
+  } satisfies SSTConfig;
+  ```
+
+- **New frontends**
+
+  With SST v2, we've upgraded support for all the modern frontends out there. Our `NextjsSite` construct supports Next.js 13, thanks to our new [OpenNext](https://open-next.js.org) project.
+
+  We also added a `AstroSite` construct for [Astro](https://astro.build) and the `SolidStartSite` construct for [Solid](https://www.solidjs.com).
+
+- **pnpm support**
+
+  SST now natively supports [pnpm](https://pnpm.io)! Our new monorepo templates are now built to work with pnpm as well.
+
+- _**And more...**_
+
+  There's also a new cleaned up functions API, a better way to generate types, and more. For all the details check out this preview of SST v2 we did recently.
+
+  <div class="youtube-container">
+    <iframe src="https://www.youtube-nocookie.com/embed/qEKUNZWbj-8" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  </div>
+
+---
+
+[**Seed**](https://seed.run) also [supports SST v2](https://seed.run/blog/sst-v2-support). So go ahead and upgrade your apps and **join us on Discord** if you have any questions!

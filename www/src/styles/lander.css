@@ -1,0 +1,92 @@
+:root[data-has-hero] {
+  --l-content-pad-x: 1.5rem;
+  --l-footer-height: 3rem;
+
+  --l-min-content-height: calc(
+    100vh
+    - var(--sl-nav-height)
+    - var(--l-footer-height)
+  );
+}
+@media (max-width: 30rem) {
+  :root[data-has-hero] {
+    --l-content-pad-x: 1rem;
+    --l-footer-height: auto;
+    --l-min-content-height: 20rem;
+  }
+}
+:root[data-has-hero] {
+  --l-border-top-color: hsl(var(--hue), var(--sat), 24%);
+  --l-border-bottom-color: hsl(var(--hue), var(--sat), 20%);
+  --l-background-top-color: hsl(var(--hue), var(--sat), 17%);
+  --l-background-bottom-color: hsl(var(--hue), var(--sat), 15%);
+
+  --l-code-inner-glow-color: rgba(255, 255, 255, 0.02);
+
+  --l-code-shadow-color: 240deg 26% 6%;
+  --l-code-shadow:
+    0px 1px 1.5px hsl(var(--l-code-shadow-color) / 0.04),
+    0.1px 5.1px 7.7px hsl(var(--l-code-shadow-color) / 0.04),
+    0.1px 8.6px 12.9px hsl(var(--l-code-shadow-color) / 0.04),
+    0.1px 12px 18px hsl(var(--l-code-shadow-color) / 0.08),
+    0.2px 15.7px 23.6px hsl(var(--l-code-shadow-color) / 0.08),
+    0.2px 20.3px 30.5px hsl(var(--l-code-shadow-color) / 0.08),
+    0.3px 26px 39px hsl(var(--l-code-shadow-color) / 0.08),
+    0.3px 33.4px 50.1px hsl(var(--l-code-shadow-color) / 0.1),
+    0.4px 42.9px 64.4px hsl(var(--l-code-shadow-color) / 0.1),
+    0.6px 55px 82.5px hsl(var(--l-code-shadow-color) / 0.1);
+}
+:root[data-has-hero][data-theme='light'] {
+  --l-border-top-color: hsl(var(--hue), var(--sat), 95%);
+  --l-border-bottom-color: hsl(var(--hue), var(--sat), 92%);
+  --l-background-top-color: hsl(var(--hue), var(--sat), 99%);
+  --l-background-bottom-color: hsl(var(--hue), var(--sat), 98%);
+
+  --l-code-inner-glow-color: rgba(255, 255, 255, 0.9);
+  --l-code-shadow-color: 0deg 0% 78%;
+
+  --l-code-shadow:
+    0px 1px 1.5px hsl(var(--l-code-shadow-color) / 0.04),
+    0.1px 5.1px 7.7px hsl(var(--l-code-shadow-color) / 0.04),
+    0.1px 8.6px 12.9px hsl(var(--l-code-shadow-color) / 0.04),
+    0.1px 12px 18px hsl(var(--l-code-shadow-color) / 0.08),
+    0.2px 15.7px 23.6px hsl(var(--l-code-shadow-color) / 0.08),
+    0.2px 20.3px 30.5px hsl(var(--l-code-shadow-color) / 0.08),
+    0.3px 26px 39px hsl(var(--l-code-shadow-color) / 0.08),
+    0.3px 33.4px 50.1px hsl(var(--l-code-shadow-color) / 0.1),
+    0.4px 42.9px 64.4px hsl(var(--l-code-shadow-color) / 0.1),
+    0.6px 55px 82.5px hsl(var(--l-code-shadow-color) / 0.1);
+}
+
+:root[data-has-hero] .main-pane > main,
+:root[data-has-hero] .main-pane > main > .content-panel {
+  padding: 0;
+}
+:root[data-has-hero] .main-pane > main > .content-panel .sl-container {
+  max-width: none;
+}
+:root[data-has-hero] .main-pane > main > .content-panel .sl-markdown-content {
+  margin: 0;
+}
+
+/* Footer */
+:root[data-has-hero] .main-pane > main > .content-panel footer.splash {
+  height: var(--l-footer-height);
+  padding-inline: var(--sl-nav-pad-x);
+}
+
+/* 404 page */
+:root[data-has-hero] .main-pane > main > .content-panel div.hero {
+  padding: 0 var(--l-content-pad-x);
+  min-height: var(--l-min-content-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+:root[data-has-hero] .main-pane > main > .content-panel div.hero .copy {
+  align-items: flex-start;
+}
+:root[data-has-hero] .main-pane > main > .content-panel div.hero .tagline {
+  color: var(--color-text-secondary);
+  text-align: left;
+}

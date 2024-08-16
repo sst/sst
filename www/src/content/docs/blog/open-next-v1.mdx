@@ -1,0 +1,50 @@
+---
+title: OpenNext 1.0
+template: splash
+description: OpenNext is an open-source Next.js serverless adapter created by SST.
+author: jay
+lastUpdated: 2023-04-17
+pagefind: false
+---
+
+OpenNext 1.0 is out. You can try it now with the `NextjsSite` construct.
+
+## What is OpenNext
+
+[OpenNext](https://open-next.js.org) is an open-source Next.js serverless adapter created by the SST team. It allows you to self-host Next.js _serverlessly_.
+
+To celebrate the 1.0 release, we created a fun video.
+
+<div class="youtube-container">
+  <iframe src="https://www.youtube-nocookie.com/embed/k_8lBdPC3gk" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+## Background
+
+Next.js does not support self-hosting your app using serverless. There have been several projects to try and fix this. However, this is not easy to do, as it requires reverse engineering how Vercel deploys Next.js internally. As a result most of these attempts have failed or have ended up as closed source paid implementations.
+
+The goal of OpenNext is to create a free open source, framework agnostic, serverless adapter for Next.js.
+
+## OpenNext 1.0
+
+OpenNext was created back in December, 2022. Since then the repo has grown to over 1000 stars on GitHub. The community has really come together to ensure that OpenNext supports all of Next.js 13's features. The OpenNext channel is also one of the most active channels on our Discord.
+
+While OpenNext is already being used in production, the [1.0 release](https://github.com/sst/open-next/releases/tag/v1.0.0) marks a significant milestone in terms of stability and performance.
+
+We'd love for you to take it for a spin.
+
+## Get started
+
+Here's how you can use OpenNext to deploy your Next.js app to AWS with SST.
+
+```bash
+npx create-next-app
+npx create-sst
+npx sst deploy
+```
+
+[**Check out the full tutorial**](/docs/start/aws/nextjs/). If you are using a different framework, check out the [other deployment options](https://github.com/sst/open-next/blob/main/README.md#deployment).
+
+---
+
+We could use your support in maintaining OpenNext, make sure to join `#open-next` on Discord and [star us on GitHub](https://github.com/sst/open-next).

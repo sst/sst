@@ -173,6 +173,24 @@ You can display a tabbed interface using the `<Tabs>` and `<TabItem>` components
 
 ### Code Blocks
 
+```ts title="sst.config.ts"
+export default $config({
+  app(input) {
+    return {
+      name: "my-sst-app",
+      home: "aws"
+    };
+  },
+  async run() {
+    const bucket = new sst.aws.Bucket("MyBucket");
+
+    return {
+      bucket: bucket.name
+    };
+  }
+});
+```
+
 #### With Frame
 
 <Tabs>
@@ -204,21 +222,21 @@ yarn create astro --template starlight
 <Tabs>
 <TabItem label="npm">
 
-```bash
+```bash frame="none"
 npm create astro@latest -- --template starlight
 ```
 
 </TabItem>
 <TabItem label="pnpm">
 
-```bash
+```bash frame="none"
 pnpm create astro --template starlight
 ```
 
 </TabItem>
 <TabItem label="Yarn">
 
-```bash
+```bash frame="none"
 yarn create astro --template starlight
 ```
 

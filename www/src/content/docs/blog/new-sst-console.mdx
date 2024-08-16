@@ -1,0 +1,55 @@
+---
+template: splash
+title: New SST Console
+author: jay
+lastUpdated: 2023-09-22
+description: The new SST Console is out.
+pagefind: false
+---
+
+The new SST Console is out. You can [learn more](/docs/console/) about it over on our docs.
+
+### What is the SST Console
+
+The SST Console is a web based dashboard to manage your SST apps. With it you can invoke functions, debug issues, view logs, and manage all your apps with your team — [**console.sst.dev**](https://console.sst.dev/)
+
+### Features
+
+#### Logs
+
+With the SST Console, you don't need to go to CloudWatch to look at the logs for your functions. It also supports a couple of modes; _recent_, _live_, and _time intervals_.
+
+#### Issues
+
+The SST Console will automatically show you any errors in your Lambda functions in real-time. There is:
+  - **Nothing to setup**, no code to instrument
+  - **Source maps** are supported **automatically**, no need to upload
+  - **No impact on performance** or cold starts, since the functions aren't modified
+
+#### Local logs
+
+When the Console starts up, it checks if you are running `sst dev` locally. If so, then it'll show you real-time logs from your local terminal.
+
+### Open source
+
+The Console is built with SST, deployed with [Seed](https://seed.run), and you can [view the source on GitHub](https://github.com/sst/console).
+
+The codebase is also a good example of what a production SST app looks like.
+
+### Your team and AWS accounts
+
+You can create a workspace in the Console, invite your team, and connect all your AWS accounts. It'll automatically discover your SST apps.
+
+### Pricing
+
+The SST Console pricing is based on the number of times the Lambda functions in your SST apps are invoked per month. It comes with a free tier of 1M invocations.
+
+You can [read more about it over on the docs](/docs/console/#pricing).
+
+### Old Console
+
+The old SST Console is still accessible at [old.console.sst.dev](https://old.console.sst.dev). But we'll be moving away from it in the future.
+
+### Learn more
+
+[Learn more about the new SST Console](/docs/console/). And if you have any questions, join us over on Discord.

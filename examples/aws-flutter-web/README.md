@@ -1,15 +1,15 @@
-# SST Ion Flutter Web
+# SST v3 Flutter Web
 
-This project demonstrates how to deploy a Flutter website to AWS CloudFront using SST Ion.
+This project demonstrates how to deploy a Flutter website to AWS CloudFront using SST v3.
 
-It's a simple setup where a Flutter-based web application (a demo counter app) is built and deployed directly through SST Ion with minimal configuration.
+It's a simple setup where a Flutter-based web application (a demo counter app) is built and deployed directly through SST v3 with minimal configuration.
 
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
 
 - AWS Credentials ([Guide on loading from a file](https://docs.sst.dev/advanced/iam-credentials#loading-from-a-file))
-- SST CLI ([Documentation](https://ion.sst.dev/docs/reference/cli))
+- SST CLI ([Documentation](https://sst.dev/docs/reference/cli))
 
 ## Getting Started
 
@@ -21,9 +21,9 @@ Create a new Flutter project:
 flutter create aws_flutter_web
 ```
 
-### Step 2: Initialize SST Ion
+### Step 2: Initialize SST v3
 
-Navigate to the root folder of your project and initialize SST Ion, selecting AWS as your cloud provider:
+Navigate to the root folder of your project and initialize SST v3, selecting AWS as your cloud provider:
 
 ```bash
 sst init

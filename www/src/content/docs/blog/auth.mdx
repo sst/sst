@@ -1,0 +1,64 @@
+---
+template: splash
+title: Auth
+description: We are launching a modern lightweight authentication library for your SST apps.
+author: jay
+pagefind: false
+image: /social-cards/blog/sst-auth.png
+lastUpdated: 2022-09-01
+---
+
+Today we are launching `Auth` — a modern lightweight authentication library for your SST apps.
+
+With a simple set of configuration, it'll create a function that'll handle various authentication flows. You can then attach this function to your API and SST will help you manage the session tokens.
+
+`Auth` is completely stateless, standards based, and free to use.
+
+You can read more about it over on our docs.
+
+## Overview
+
+`Auth` is made up of the following pieces:
+
+1. `Auth` — a construct that creates the necessary infrastructure.
+
+   - The API routes to handle the authentication flows.
+   - Securely generates a RSA public/private keypair to sign sessions.
+   - Stores the RSA keypair as secrets in the app's `Config`.
+
+2. `AuthHandler` — a Lambda handler function that can handle authentication flows for various providers.
+
+   - High level adapters for common providers like Google, GitHub, Twitch, etc.
+   - OIDC and OAuth adapters that work with any compatible service.
+   - A `LinkAdapter` to generate login links that can be sent over email or SMS.
+   - Can be extended with custom adapters to support more complex workflows, like multi-tenant SSO.
+
+3. Session — a library for issuing and validating authentication sessions in your Lambda function code.
+
+   - Implemented with stateless JWT tokens that are signed with the RSA keypairs mentioned above.
+   - Support for passing tokens to the frontend via a cookie or the query string.
+   - Full typesafety for issuing and validating sessions with the `useSession` hook.
+
+## Launch event
+
+We hosted a [launch livestream on YouTube](https://www.youtube.com/watch?v=cO9Chk6sUW4) where we did a demo and a deep dive into the internals.
+
+<div class="youtube-container">
+  <iframe src="https://www.youtube-nocookie.com/embed/cO9Chk6sUW4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+The video is timestamped and here's roughly what we covered.
+
+1. Intro
+2. What is Auth?
+3. Setting up the construct
+4. Configuring the AuthHandler function
+5. Magic link adapter
+6. Issuing a session
+7. Validating a session
+8. Behind the scenes
+9. Outro
+
+## Get started
+
+Follow the **Setup** section in our docs to get started.

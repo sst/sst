@@ -1,0 +1,461 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+import { Code } from 'astro-expressive-code/components';
+import { Icon } from '@astrojs/starlight/components';
+import config from '../../config';
+
+import copy from "../assets/lander/copy.svg?raw";
+import check from "../assets/lander/check.svg?raw";
+import logoHbo from "../assets/lander/hbo.svg?raw";
+import logoShell from "../assets/lander/shell.svg?raw";
+import logoAmazon from "../assets/lander/amazon.svg?raw";
+import logoComcast from "../assets/lander/comcast.svg?raw";
+import logoAnalogDevices from "../assets/lander/analog-devices.svg?raw";
+
+const download = config.npm;
+
+// const code = `
+// export default $config({
+//   app(input) {
+//     return {
+//       name: "my-sst-app",
+//       home: "aws"
+//     };
+//   },
+//   async run() {
+//     const bucket = new sst.aws.Bucket("MyBucket");
+//
+//     return {
+//       bucket: bucket.name
+//     };
+//   }
+// });
+// `;
+//
+// const api = new sst.cloudflare.Worker("Api", {
+//   link: [db, email],
+//   handler: "./src/api.ts",
+//   domain: "api.example.com"
+// })
+const code = `
+const db = new planetscale.Database("Db")
+
+const email = new sst.aws.Email("Email", {
+  sender: "mail@example.com"
+})
+
+const api = new sst.aws.Service("Api", {
+  memory: "4 GB",
+  image: "./rails",
+  link: [db, email]
+})
+
+const web = new sst.aws.Nextjs("Web", {
+  link: [api],
+  path: "./nextjs",
+  domain: "example.com",
+  dns: sst.cloudflare.dns()
+})
+`;
+---
+<div class="lander">
+  <div class="lander-body">
+    <div class="columns">
+      <div class="left">
+        <div class="code-block-frame">
+          <Code
+            wrap
+            lang="ts"
+            code={code}
+            frame="terminal"
+            class="code-block"
+            title="sst.config.ts"
+          />
+          <div class="dot-mask"></div>
+        </div>
+      </div>
+      <div class="right">
+        <div class="row">
+          <h1>{config.tagline}</h1>
+          <p class="description">Deploy everything your app needs with a single config.</p>
+        </div>
+        <div class="row">
+          <button class="command" data-command={`${download.command} ${download.package}`}>
+            <code>{download.command}&nbsp;<span class="highlight">{download.package}</span></code>
+            <span class="copy">
+              <Fragment set:html={copy} />
+              <Fragment set:html={check} />
+            </span>
+          </button>
+        </div>
+        <div class="row">
+          <div class="announcement">
+            <a href="/blog/moving-away-from-cdk">
+              Read the announcement<Icon name="right-caret" size="1.25rem" />
+            </a>
+          </div>
+          <div class="actions">
+            <a href="/docs/">What is SST</a>
+            <a href="/docs/start/aws/nextjs">Get Started</a>
+          </div>
+          <div class="logos">
+            <p>Loved by thousands of teams</p>
+            <div class="icons">
+              <Fragment set:html={logoAmazon} />
+              <Fragment set:html={logoAnalogDevices} />
+              <Fragment set:html={logoShell} />
+              <Fragment set:html={logoComcast} />
+              <Fragment set:html={logoHbo} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.lander {
+  --min-content-pad-y: 4.5rem;
+  --column-gap: 3rem;
+  --h1-font-size: 3.5rem;
+}
+@media (max-width: 30rem) {
+  .lander {
+    --column-gap: 2rem;
+    --h1-font-size: 2.5rem;
+  }
+}
+.lander {
+  padding: var(--min-content-pad-y) var(--l-content-pad-x);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--l-min-content-height);
+}
+@media (max-width: 50rem) {
+  .lander {
+    padding-block: 0;
+    margin-block: calc(2 * var(--l-content-pad-x)) calc(3 * var(--l-content-pad-x));
+  }
+}
+@media (max-width: 30rem) {
+  .lander {
+    padding-block: 0;
+    padding-inline: var(--sl-nav-pad-x);
+    margin-block: var(--l-content-pad-x) calc(3 * var(--l-content-pad-x));
+  }
+}
+.lander-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.columns {
+  flex: 1;
+  display: flex;
+  gap: var(--column-gap);
+  align-items: stretch;
+}
+@media (max-width: 50rem) {
+  .columns {
+    flex-direction: column;
+  }
+}
+.left {
+  flex: 0 0 auto;
+}
+.right {
+  flex: 1;
+  max-width: 25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+@media (max-width: 50rem) {
+  .right {
+    gap: 1.5rem;
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 30rem) {
+  .right {
+    gap: 1rem;
+  }
+}
+.right .row {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.right .bottom {
+  flex: 0;
+  padding-bottom: 0.125rem;
+}
+
+.announcement {
+  margin-bottom: 0.25rem;
+  text-align: left;
+}
+.announcement a {
+  color: var(--color-text-secondary);
+  text-underline-offset: 0.375rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.announcement a:hover {
+  color: var(--sl-color-text-accent);
+}
+
+h1 {
+  margin-bottom: 0.25rem;
+  text-align: left;
+  font-family: var(--sl-font-mono);
+  font-size: 3rem;
+  font-weight: 600;
+  letter-spacing: -1px;
+  line-height: normal;
+}
+p.description {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.command {
+  all: unset;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  justify-content: flex-start;
+  cursor: pointer;
+}
+
+.command code {
+  color: var(--color-text-secondary);
+}
+.command code:before {
+  content: '> ';
+  opacity: 0.3;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.command code .highlight {
+  color: var(--color-text);
+}
+
+.command .copy {
+  line-height: 1;
+  padding: 0;
+  height: 1rem;
+}
+.command .copy :global(svg) {
+  width: 1rem;
+  height: 1rem;
+  margin-bottom: 1px;
+}
+.command .copy :global(svg:first-child) {
+  display: none;
+  color: var(--color-text-dimmed);
+}
+.command .copy :global(svg:last-child) {
+  color: var(--sl-color-accent);
+  display: none;
+}
+.command:hover .copy :global(svg:first-child) {
+  display: inline;
+}
+.command.success .copy {
+  pointer-events: none;
+  color: red;
+}
+.command.success .copy :global(svg:first-child) {
+  display: none;
+}
+.command.success .copy :global(svg:last-child) {
+  display: inline;
+}
+
+.actions {
+  display: flex;
+  flex-direction: row;
+  gap: 0.8rem;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+.actions a {
+  color: var(--color-text);
+  text-underline-offset: 0.375rem;
+  text-decoration: none;
+  letter-spacing: 0;
+  line-height: normal;
+  text-decoration: none;
+}
+.actions a:hover {
+  color: var(--sl-color-text-accent);
+}
+
+.code-block-frame {
+  position: relative;
+}
+.blob {
+  position: absolute;
+  top: 50%;
+  left: 80%;
+  transform: translate(-80%, -50%);
+  margin-left: -100px;
+  margin-top: -100px;
+  z-index: -2;
+  width: 200px;
+  height: 200px;
+  border-radius: 19rem;
+  background: #E27152;
+  background-blend-mode: normal;
+  filter: blur(100px);
+  animation: moveTriangle 30s linear infinite;
+}
+@keyframes moveTriangle {
+  0% {
+    top: 50%;
+    left: 80%;
+    transform: translate(-80%, -50%);
+  }
+  33% {
+    top: 100%;
+    left: 100%;
+    transform: translate(-100%, -100%);
+  }
+  66% {
+    top: 100%;
+    left: 0;
+    transform: translate(0, -100%);
+  }
+  100% {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+.dot-mask {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  height: calc(100% + 2 * var(--min-content-pad-y));
+  width: min(calc(100% + 12rem), 100vw);
+  background-image: radial-gradient(var(--divider-color) 1px, transparent 1px);
+  background-size: 16px 16px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 50% 50% at 50% 50%,
+    #000 90%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 50% 50% at 50% 50%,
+    #000 90%,
+    transparent 100%
+  );
+}
+@media (max-width: 50rem) {
+  .dot-mask {
+  }
+}
+@media (max-width: 30rem) {
+  .dot-mask {
+    top: 0%;
+    transform: translate(-50%, 0%);
+    height: calc(100% + 10rem);
+  }
+}
+
+.logos {
+  padding-bottom: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+.logos p {
+  color: var(--color-text-dimmed);
+  opacity: 0.75;
+  text-transform: uppercase;
+  font-size: var(--sl-text-xs);
+  letter-spacing: 0.5px;
+}
+.logos .icons {
+  display: flex;
+  gap: 0.875rem;
+  align-items: center;
+}
+.logos .icons :global(svg) {
+  color: var(--color-text-dimmed);
+}
+.logos .icons :global(svg:nth-child(1)) { width: 60px; }
+.logos .icons :global(svg:nth-child(2)) { width: 66px; }
+.logos .icons :global(svg:nth-child(3)) { width: 23px; }
+.logos .icons :global(svg:nth-child(4)) { width: 60px; }
+.logos .icons :global(svg:nth-child(5)) { width: 41px; }
+</style>
+<style is:global>
+.code-block {
+  box-shadow: var(--l-code-shadow), inset 0 0 2px 1px var(--l-code-inner-glow-color);
+  background:
+    linear-gradient(to bottom, var(--l-background-top-color) 0%, var(--l-background-top-color) 40%, var(--l-background-bottom-color) 70%, var(--l-background-bottom-color) 100%),
+    linear-gradient(to bottom, var(--l-border-top-color) 0%, var(--l-border-top-color) 35%, var(--l-border-bottom-color) 65%, var(--l-border-bottom-color) 100%);
+  border: 1px solid transparent;
+  border-radius: calc(2 * var(--border-radius));
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+}
+.code-block figure.frame pre {
+  border-radius: calc(var(--border-radius)*2);
+  border-color: var(--divider-color);
+  border-width: 0px;
+  background: transparent;
+}
+.code-block figure.frame pre code {
+  font-size: var(--sl-text-sm);
+  padding-block-start: 0.1875rem;
+  padding-block-end: calc(0.625rem + 1px);
+}
+.code-block figure.frame .copy {
+  display: none;
+}
+.code-block figure.frame.is-terminal .header {
+  font-size: var(--sl-text-sm);
+  font-weight: normal;
+  border-radius: calc(2*var(--border-radius)) calc(var(--border-radius)*2) 0 0;
+
+  background: transparent;
+  border-color: var(--divider-color);
+  padding-block-start: 0.5rem;
+  padding-block-end: 0;
+  border-width: 0px;
+}
+.code-block figure.frame.is-terminal .header:after {
+  border-width: 0px;
+}
+.code-block figure.frame.is-terminal .header .title {
+  color: var(--color-text-dimmed);
+  user-select: none;
+  -webkit-user-select: none;
+}
+</style>
+
+<script>
+  const button = document.querySelector("button.command");
+
+  button.addEventListener("click", () => {
+    navigator.clipboard.writeText(button.dataset.command);
+    button.classList.toggle("success");
+    setTimeout(() => {
+      button.classList.toggle("success");
+    }, 1500);
+  });
+</script>

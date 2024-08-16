@@ -76,6 +76,7 @@
   font-size: var(--sl-text-code);
 }
 .sl-markdown-content .starlight-aside__content code:not(:where(.not-content *)) {
+  background-color: transparent;
   font-size: var(--sl-text-code-sm);
 }
 .sl-markdown-content .starlight-aside a:not(:where(.not-content *)),

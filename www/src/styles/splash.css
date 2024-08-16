@@ -1,0 +1,49 @@
+@media (min-width: 72rem) {
+  :root:not([data-has-hero]):not([data-has-toc]):not([data-has-sidebar]) .main-pane {
+    --sl-content-width: 52.5rem;
+  }
+}
+
+:root:not([data-has-hero]):not([data-has-toc]):not([data-has-sidebar]) .main-pane > main {
+  padding: 0;
+}
+:root:not([data-has-hero]):not([data-has-toc]):not([data-has-sidebar]) .main-pane > main > .content-panel {
+  padding-inline: 0;
+}
+:root:not([data-has-hero]):not([data-has-toc]):not([data-has-sidebar]) .main-pane > main > .content-panel:first-child .sl-container {
+  padding-inline: var(--sl-nav-pad-x);
+}
+:root:not([data-has-hero]):not([data-has-toc]):not([data-has-sidebar]) .main-pane > main > .content-panel:last-child .sl-container {
+  max-width: none;
+}
+:root:not([data-has-hero]):not([data-has-toc]):not([data-has-sidebar]) .main-pane > main > .content-panel:last-child .sl-container .sl-markdown-content {
+  margin: auto;
+  max-width: var(--sl-content-width);
+  padding-inline: var(--sl-nav-pad-x);
+  padding-bottom: 4rem;
+}
+
+:root:not([data-has-hero]):not([data-has-toc]):not([data-has-sidebar]) .main-pane > main > .content-panel:last-child .sl-container .sl-markdown-content .youtube-container {
+  margin-bottom: 15px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+:root:not([data-has-hero]):not([data-has-toc]):not([data-has-sidebar]) .main-pane > main > .content-panel:last-child .sl-container .sl-markdown-content .youtube-container:after {
+  padding-top: 56.25%;
+  display: block;
+  content: "";
+}
+:root:not([data-has-hero]):not([data-has-toc]):not([data-has-sidebar]) .main-pane > main > .content-panel:last-child .sl-container .sl-markdown-content .youtube-container > iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+:root:not([data-has-hero]):not([data-has-toc]):not([data-has-sidebar]) .main-pane > main > .content-panel:last-child footer.splash {
+  border-top: 1px solid var(--sl-color-hairline);
+  padding-top: 1.5rem;
+  padding-inline: var(--sl-nav-pad-x);
+}

@@ -1,0 +1,107 @@
+---
+title: Config
+author: jay
+image: /social-cards/blog/sst-config.png
+template: splash
+description: We are launching a set of tools to securely manage secrets and environment variables in your SST apps.
+pagefind: false
+lastUpdated: 2022-08-22
+---
+
+We are launching a set of tools to securely manage secrets and environment variables in your SST apps, called `Config`.
+
+You can [**read more about it in detail over on our docs**](/docs/). The `Config` libraries include:
+
+1. Constructs to define them
+   1. `Config.Secret`
+   2. `Config.Parameter`
+2. CLI to set secrets `sst secrets [action]`
+3. Lambda helpers to fetch them `@serverless-stack/node/config`
+   - Throws an error if they are not defined
+   - Fetches them automatically at runtime
+   - Provides typesafety and autocomplete
+
+Behind the scenes, Secrets and Parameters are stored as [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) Parameters in your AWS account. They are stored with the _Standard Parameter type_ and _Standard Throughput_.
+
+This makes Config [**free to use**](https://aws.amazon.com/systems-manager/pricing/) in your SST apps.
+
+## Launch event
+
+We hosted a [launch livestream on YouTube](https://www.youtube.com/watch?v=6sMTfoeshLo) where we did a deep dive of the Config and its internals.
+
+<div class="youtube-container">
+  <iframe src="https://www.youtube-nocookie.com/embed/6sMTfoeshLo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+The video is timestamped and here's roughly what we covered.
+
+1. Intro
+2. Demo
+3. Deep Dive
+   1. Deep dive into the Parameters code
+   1. Parameter vs Lambda environment variables
+   1. Deep dive into the Secrets code
+   1. IAM permission for fetching secrets
+   1. CLI command `sst secrets`
+   1. Secrets fallback
+4. Q&A
+   1. Q: What is the AWS cost of using Config?
+   1. Q: What does the SSM path look like?
+   1. Q: Managing secrets in my CI pipeline
+   1. Q: Managing secrets across AWS accounts
+   1. Q: Accessing Config inside or outside the handler
+   1. Q: Would changing a secret require redeployment?
+   1. Q: Using Config for tests
+   1. Q: SSM vs Secret Manager
+   1. Q: Export secrets to a .env file
+   1. Q: Reference Config across multiple SST apps
+
+## Get started
+
+To get started, define a secret in your stacks.
+
+```typescript
+import { Config, StackContext } from "@serverless-stack/resources";
+
+export default function SecretsStack({ stack }: StackContext) {
+  const STRIPE_KEY = new Config.Secret(stack, "STRIPE_KEY");
+
+  return { STRIPE_KEY };
+}
+```
+
+Use the config option to pass the secret into the function.
+
+```typescript
+import { use, Function, StackContext } as sst from "@serverless-stack/resources";
+import SecretsStack from "./SecretsStack";
+
+export default function MyStack({ stack }: StackContext) {
+  const { STRIPE_KEY } = use(SecretsStack);
+
+  new Function(stack, "MyFunction", {
+    handler: "lambda.handler",
+    config: [STRIPE_KEY],
+  }
+};
+```
+
+In your terminal, run the `sst secrets` command to set a value for the secret:
+
+```bash
+$ npx sst secrets set STRIPE_KEY sk_test_abc123
+```
+
+Finally in your function code, use the `@serverless-stack/node/config` library to reference the secret value:
+
+```typescript
+import { Config } from "@serverless-stack/node/config";
+
+export const handler = async () => {
+  console.log(Config.STRIPE_KEY);
+
+  // ...
+};
+```
+
+To learn more [**check out our docs**](/docs/).

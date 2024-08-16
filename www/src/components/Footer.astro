@@ -34,25 +34,29 @@ else if (slug === "docs/examples") {
 
 {
   template === "doc" && (
-    <footer>
+    <footer class="doc">
       <div class="meta sl-flex">
         <div>
-          <a href={editUrl} class="sl-flex">
+          <a href={editUrl} target="_blank" class="sl-flex">
             <Icon name="pencil" size="1em" />
             Edit this page
           </a>
-          <a href={`${config.github}/issues/new`} class="sl-flex">
+          <a href={config.twitter} target="_blank" class="sl-flex">
+            <Icon name="x.com" size="1em" />
+            Follow us on X.com
+          </a>
+          <a href={`${config.github}/issues/new`} target="_blank" class="sl-flex">
             <Icon name="github" size="1em" />
             Find a bug? Open an issue
           </a>
-          <a href={config.discord} class="sl-flex">
+          <a href={config.discord} target="_blank" class="sl-flex">
             <Icon name="discord" size="1em" />
             Join our Discord community
           </a>
         </div>
         <div>
           <p>
-            Built with <a href={`${config.github}/tree/dev/www/sst.config.ts`}>Astro &amp; SST</a>
+            Built with <a target="_blank" href={`${config.github}/tree/dev/www/sst.config.ts`}>Astro &amp; SST</a>
           </p>
           <p>
             Last updated —{' '}
@@ -63,19 +67,53 @@ else if (slug === "docs/examples") {
             )}
           </p>
           <p>
-            &copy; {new Date().getFullYear()}&nbsp;<a href="https://anoma.ly">Anomaly Innovations</a>
+            &copy; {new Date().getFullYear()}&nbsp;<a target="_blank" href="https://anoma.ly">Anomaly Innovations</a>
           </p>
         </div>
       </div>
     </footer>
  )
 }
+{
+  template === "splash" && (
+    <footer class="splash">
+      <p>
+        &copy; {new Date().getFullYear()}&nbsp;<a target="_blank" href="https://anoma.ly">Anomaly Innovations</a>
+      </p>
+      <div class="links">
+        <div class="pages">
+          <a href="/blog">Blog</a>
+          <a href="/about">About</a>
+          <a href={`mailto:${config.email}`}>Contact</a>
+        </div>
+        <div class="social">
+          <a href={config.youtube} target="_blank">
+            <Icon name="youtube" size="1em" />
+          </a>
+          <a href={config.discord} target="_blank">
+            <Icon name="discord" size="1em" />
+          </a>
+          <a href={config.github} target="_blank">
+            <Icon name="github" size="1em" />
+          </a>
+          <a href={config.linkedin} target="_blank">
+            <Icon name="linkedin" size="1em" />
+          </a>
+          <a href={config.twitter} target="_blank">
+            <Icon name="x.com" size="1em" />
+          </a>
+        </div>
+      </div>
+    </footer>
+  )
+}
 
 <style>
-  footer {
+  footer.doc {
     margin-top: 3rem;
     border-top: 1px solid var(--divider-color);
   }
+
   .meta {
     gap: 0.75rem 3rem;
     justify-content: space-between;
@@ -88,31 +126,110 @@ else if (slug === "docs/examples") {
       flex-direction: row;
     }
   }
-  a, p {
+  .doc a, .doc p {
     padding-block: 0.125rem;
   }
-  a {
+  .doc a {
     gap: 0.4375rem;
     align-items: center;
     text-decoration: none;
     color: var(--color-text);
     font-size: var(--sl-text-sm);
   }
-  a svg {
+  .doc a svg {
     opacity: var(--icon-opacity);
   }
-  a:hover {
+  .doc a:hover {
     color: var(--sl-color-text-accent);
   }
-  p {
+  .doc p {
     color: var(--color-text-dimmed);
   }
   @media (min-width: 30rem) {
-    p {
+    .doc p {
       text-align: right;
     }
   }
-  p a {
+  .doc p a {
     color: var(--color-text-dimmed);
+  }
+
+  footer.splash {
+    margin: 0;
+    flex: 0 0 auto;
+    padding-block: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    align-self: stretch;
+    justify-content: space-between;
+  }
+  @media (max-width: 50rem) {
+    footer.splash {
+      border-top: 1px solid var(--sl-color-hairline);
+    }
+  }
+  @media (max-width: 30rem) {
+    footer.splash {
+      flex-direction: column;
+      align-items: flex-start;
+      padding-block: var(--sl-nav-pad-y);
+    }
+  }
+  .splash p {
+    color: var(--color-text-dimmed);
+    font-size: var(--sl-text-sm);
+  }
+  .splash p a {
+    color: var(--color-text-dimmed);
+    text-decoration: none;
+  }
+  .splash a:hover {
+    color: var(--sl-color-text-accent);
+  }
+  .splash .links {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 2.5rem;
+  }
+  @media (max-width: 30rem) {
+    .splash .links {
+      gap: 0;
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+  .splash .links .pages {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  @media (max-width: 30rem) {
+    .splash .links .pages {
+      gap: 1rem;
+    }
+  }
+  .splash .links .pages a {
+    color: var(--color-text-dimmed);
+    text-decoration: none;
+    font-size: var(--sl-text-sm);
+  }
+  .splash .links .pages a:hover {
+    color: var(--sl-color-text-accent);
+  }
+  .splash .links .social {
+    display: flex;
+    align-items: center;
+    gap: 0.8125rem;
+  }
+  .splash .links .social a {
+    color: var(--color-text-dimmed);
+  }
+  .splash .links .social a svg {
+    vertical-align: middle;
+  }
+  .splash .links .social a:hover {
+    color: var(--sl-color-text-accent);
   }
 </style>
