@@ -9,7 +9,7 @@ export module rpc {
   }
   export async function call<T = any>(method: string, args: any) {
     return new Promise<T>((resolve, reject) => {
-      const url = new URL($cli.rpc);
+      const url = new URL(process.env.SST_SERVER! + "/rpc");
       const options = {
         hostname: url.hostname,
         port: url.port,

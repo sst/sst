@@ -211,6 +211,9 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	env["PULUMI_SKIP_UPDATE_CHECK"] = "true"
 	// env["PULUMI_DISABLE_AUTOMATIC_PLUGIN_ACQUISITION"] = "true"
 	env["NODE_OPTIONS"] = "--enable-source-maps --no-deprecation"
+	if input.ServerPort != 0 {
+		env["SST_SERVER"] = fmt.Sprintf("http://localhost:%v", input.ServerPort)
+	}
 	pulumiPath := flag.SST_PULUMI_PATH
 	if pulumiPath == "" {
 		pulumiPath = filepath.Join(global.BinPath(), "..")
@@ -277,9 +280,6 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		"state": map[string]interface{}{
 			"version": completed.Versions,
 		},
-	}
-	if input.ServerPort != 0 {
-		cli["rpc"] = fmt.Sprintf("http://localhost:%v/rpc", input.ServerPort)
 	}
 	cliBytes, err := json.Marshal(cli)
 	if err != nil {
