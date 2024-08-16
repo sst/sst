@@ -61,7 +61,7 @@ Now initialize SST in your project root.
 <TabItem value="npm">
 
 ```bash
-npx create-sst@latest
+npx create-sst@two
 ```
 
 </TabItem>

@@ -62,7 +62,7 @@ Now initialize SST in the root of your new Next.js project.
 
 ```bash
 cd my-app
-npx create-sst@latest
+npx create-sst@two
 ```
 
 </TabItem>

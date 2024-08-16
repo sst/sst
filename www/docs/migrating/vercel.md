@@ -41,7 +41,7 @@ my-nextjs-app/
 Simply run the following in your package root.
 
 ```bash
-npx create-sst@latest
+npx create-sst@two
 ```
 
 This will detect that it's running in a Next.js app and will add a `sst.config.ts` to the root.

@@ -16,13 +16,13 @@ Here's how it works at a high level.
    - If you have an existing Next.js app, just run `npx create-sst` at the root and it'll configure SST in [_drop-in mode_](../what-is-sst.md#drop-in-mode).
 
      ```bash
-     npx create-sst@latest
+     npx create-sst@two
      ```
 
    - If you are starting from scratch, we recommend using our monorepo starter in [_standalone mode_](../what-is-sst.md#standalone-mode).
 
      ```bash
-     npx create-sst@latest --template standard/nextjs
+     npx create-sst@two --template standard/nextjs
      ```
 
 2. This adds the `NextjsSite` construct to your stacks code.

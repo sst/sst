@@ -31,7 +31,7 @@ Let's look at this in detail!
 Start by creating a new SST + Next.js app by running the following command in your terminal. We are using Next.js for this example but you can use your favorite frontend.
 
 ```bash
-npx create-sst@latest --template standard/nextjs
+npx create-sst@two --template standard/nextjs
 ```
 
 ---

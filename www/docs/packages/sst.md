@@ -25,21 +25,21 @@ Install the [`sst`](https://www.npmjs.com/package/sst) npm package in your proje
 <TabItem value="npm">
 
 ```bash
-npm install sst --save-exact
+npm install sst@two --save-exact
 ```
 
 </TabItem>
 <TabItem value="yarn">
 
 ```bash
-yarn add sst --exact
+yarn add sst@two --exact
 ```
 
 </TabItem>
 <TabItem value="pnpm">
 
 ```bash
-pnpm add sst --save-exact
+pnpm add sst@two --save-exact
 ```
 
 </TabItem>

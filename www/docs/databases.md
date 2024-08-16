@@ -27,7 +27,7 @@ We'll also look at the other serverless database options like — Amazon RDS, Mo
 Start by creating a new SST + Next.js app by running the following command in your terminal. We are using Next.js for this example but you can use your favorite frontend.
 
 ```bash
-npx create-sst@latest --template standard/nextjs
+npx create-sst@two --template standard/nextjs
 ```
 
 Let's create a simple hit counter in our app.

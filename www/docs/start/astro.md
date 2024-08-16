@@ -62,7 +62,7 @@ Now initialize SST in your project root.
 
 ```bash
 cd astro-project
-npx create-sst@latest
+npx create-sst@two
 ```
 
 </TabItem>

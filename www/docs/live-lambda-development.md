@@ -35,7 +35,7 @@ Changes are automatically detected, built, and **live reloaded** in under 10 mil
 
 ## Quick start
 
-To give it a try, create a new SST app by running `npx create-sst@latest`. Once the app is created, install the dependencies.
+To give it a try, create a new SST app by running `npx create-sst@two`. Once the app is created, install the dependencies.
 
 To start the Live Lambda Development environment run:
 

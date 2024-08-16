@@ -122,7 +122,7 @@ Watch the [**SST in 100 seconds**](https://youtu.be/JY_d0vf-rfw) video to learn 
   </div>
   <div>
     <div className={styles.startCode}>
-      <code>> npm create sst@latest</code>
+      <code>> npm create sst@two</code>
     </div>
     <a className={styles.startCta} href={useBaseUrl("/start/standalone")}>
       Get Started

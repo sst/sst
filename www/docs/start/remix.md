@@ -62,7 +62,7 @@ Now initialize SST in your project root.
 
 ```bash
 cd my-remix-app
-npx create-sst@latest
+npx create-sst@two
 ```
 
 </TabItem>

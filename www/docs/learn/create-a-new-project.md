@@ -32,7 +32,7 @@ Let's create our starter. We'll be using the [`create sst`](../packages/create-s
 <TabItem value="npm">
 
 ```bash
-npx create-sst@latest --template=graphql/rds
+npx create-sst@two --template=graphql/rds
 ```
 
 </TabItem>

@@ -24,7 +24,7 @@ There's no need to install this CLI. Just use it directly to create your project
 <TabItem value="npm">
 
 ```bash
-npx create-sst@latest
+npx create-sst@two
 ```
 
 </TabItem>
@@ -60,7 +60,7 @@ Instead of the standard starter, you can choose to use one of our <a href={`${co
 <TabItem value="npm">
 
 ```bash
-npx create-sst@latest --template=other/go
+npx create-sst@two --template=other/go
 ```
 
 </TabItem>
@@ -92,7 +92,7 @@ Specify a project name, instead of typing it into the interactive prompt.
 <TabItem value="npm">
 
 ```bash
-npx create-sst@latest my-sst-app
+npx create-sst@two my-sst-app
 ```
 
 </TabItem>

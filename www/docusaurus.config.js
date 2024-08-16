@@ -1,8 +1,8 @@
 const config = require("./config");
 
 module.exports = {
-  title: "SST",
-  tagline: "SST Docs",
+  title: "SST v2",
+  tagline: "SST v2 Docs",
   url: "https://docs.sst.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
@@ -31,7 +31,7 @@ module.exports = {
     metaImage: "img/og-image.png",
     announcementBar: {
       id: "console",
-      content: `Check out Ion, a new version of SST. <a href="https://ion.sst.dev/docs/">Learn more</a>.`,
+      content: `Check out SST v3, a new version of SST. <a href="https://sst.dev/">Learn more</a>.`,
       backgroundColor: "#395C6B",
       textColor: "#FFFFFF",
       isCloseable: false,

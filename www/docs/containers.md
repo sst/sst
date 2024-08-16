@@ -26,7 +26,7 @@ Let's look at an example where we invoke a Lambda container function through a c
 Start by creating a new SST app by running the following command in your terminal.
 
 ```bash
-npx create-sst@latest
+npx create-sst@two
 ```
 
 ---

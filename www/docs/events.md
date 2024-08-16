@@ -32,7 +32,7 @@ Let's look at it in detail.
 Start by creating a new SST app by running the following command in your terminal.
 
 ```bash
-npx create-sst@latest
+npx create-sst@two
 ```
 
 ---

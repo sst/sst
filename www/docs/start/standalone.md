@@ -39,7 +39,7 @@ Create a new SST app.
 <TabItem value="npm">
 
 ```bash
-npx create-sst@latest my-sst-app
+npx create-sst@two my-sst-app
 ```
 
 </TabItem>
