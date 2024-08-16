@@ -4,7 +4,7 @@ import * as cxapi from "@aws-cdk/cx-api";
 import * as cdk_assets from "cdk-assets";
 import { AssetManifest, IManifestEntry } from "cdk-assets";
 import { Tag } from "sst-aws-cdk/lib/cdk-toolkit.js";
-import { debug, warning } from "sst-aws-cdk/lib/logging.js";
+import { debug, warning, error } from "sst-aws-cdk/lib/logging.js";
 import {
   buildAssets,
   publishAssets,
@@ -33,8 +33,7 @@ import {
 import {
   loadCurrentTemplateWithNestedStacks,
   loadCurrentTemplate,
-  flattenNestedStackNames,
-  TemplateWithNestedStackCount,
+  RootTemplateWithNestedStacks,
 } from "sst-aws-cdk/lib/api/nested-stack-helpers.js";
 import {
   CloudFormationStack,
@@ -297,6 +296,7 @@ export interface DestroyStackOptions {
 export interface StackExistsOptions {
   stack: cxapi.CloudFormationStackArtifact;
   deployName?: string;
+  tryLookupRole?: boolean;
 }
 
 export interface DeploymentsProps {
@@ -366,20 +366,14 @@ export class Deployments {
   public async readCurrentTemplateWithNestedStacks(
     rootStackArtifact: cxapi.CloudFormationStackArtifact,
     retrieveProcessedTemplate: boolean = false
-  ): Promise<Template> {
+  ): Promise<RootTemplateWithNestedStacks> {
     const sdk = (await this.prepareSdkWithLookupOrDeployRole(rootStackArtifact))
       .stackSdk;
-    const templateWithNestedStacks = await loadCurrentTemplateWithNestedStacks(
+    return loadCurrentTemplateWithNestedStacks(
       rootStackArtifact,
       sdk,
       retrieveProcessedTemplate
     );
-    return {
-      deployedTemplate: templateWithNestedStacks.deployedTemplate,
-      nestedStackCount: flattenNestedStackNames(
-        templateWithNestedStacks.nestedStackNames
-      ).length,
-    };
   }
 
   public async readCurrentTemplate(
@@ -513,11 +507,15 @@ export class Deployments {
   }
 
   public async stackExists(options: StackExistsOptions): Promise<boolean> {
-    const { stackSdk } = await this.prepareSdkFor(
-      options.stack,
-      undefined,
-      Mode.ForReading
-    );
+    let stackSdk;
+    if (options.tryLookupRole) {
+      stackSdk = (await this.prepareSdkWithLookupOrDeployRole(options.stack))
+        .stackSdk;
+    } else {
+      stackSdk = (
+        await this.prepareSdkFor(options.stack, undefined, Mode.ForReading)
+      ).stackSdk;
+    }
     const stack = await CloudFormationStack.lookup(
       stackSdk.cloudFormation(),
       options.deployName ?? options.stack.stackName
@@ -639,8 +637,8 @@ export class Deployments {
 
     // try to assume the lookup role
     const warningMessage = `Could not assume ${arns.lookupRoleArn}, proceeding anyway.`;
-    const upgradeMessage = `(To get rid of this warning, please upgrade to bootstrap version >= ${stack.lookupRole?.requiresBootstrapStackVersion})`;
     try {
+      // Trying to assume lookup role and cache the sdk for the environment
       const stackSdk = await this.cachedSdkForEnvironment(
         resolvedEnvironment,
         Mode.ForReading,
@@ -666,26 +664,31 @@ export class Deployments {
         );
         if (version < stack.lookupRole.requiresBootstrapStackVersion) {
           throw new Error(
-            `Bootstrap stack version '${stack.lookupRole.requiresBootstrapStackVersion}' is required, found version '${version}'.`
+            `Bootstrap stack version '${stack.lookupRole.requiresBootstrapStackVersion}' is required, found version '${version}'. To get rid of this error, please upgrade to bootstrap version >= ${stack.lookupRole.requiresBootstrapStackVersion}`
           );
         }
-        // we may not have assumed the lookup role because one was not provided
-        // if that is the case then don't print the upgrade warning
-      } else if (
-        !stackSdk.didAssumeRole &&
-        stack.lookupRole?.requiresBootstrapStackVersion
-      ) {
-        warning(upgradeMessage);
+      } else if (!stackSdk.didAssumeRole) {
+        const lookUpRoleExists = stack.lookupRole ? true : false;
+        warning(
+          `Lookup role ${
+            lookUpRoleExists ? "exists but" : "does not exist, hence"
+          } was not assumed. Proceeding with default credentials.`
+        );
       }
       return { ...stackSdk, resolvedEnvironment, envResources };
     } catch (e: any) {
       debug(e);
-      // only print out the warnings if the lookupRole exists AND there is a required
-      // bootstrap version, otherwise the warnings will print `undefined`
-      if (stack.lookupRole && stack.lookupRole.requiresBootstrapStackVersion) {
+
+      // only print out the warnings if the lookupRole exists
+      if (stack.lookupRole) {
         warning(warningMessage);
-        warning(upgradeMessage);
       }
+
+      // This error should be shown even if debug mode is off
+      if (e instanceof Error && e.message.includes("Bootstrap stack version")) {
+        error(e.message);
+      }
+
       throw e;
     }
   }

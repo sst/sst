@@ -83,7 +83,7 @@ test("default", async () => {
   expect(site.cdk!.distribution.distributionDomainName).toBeDefined();
   expect(site.cdk!.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
-  countResources(stack, "AWS::Lambda::Function", 3);
+  countResources(stack, "AWS::Lambda::Function", 4);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: {
@@ -318,7 +318,7 @@ test("edge: true", async () => {
   expect(site.cdk!.distribution.distributionDomainName).toBeDefined();
   expect(site.cdk!.certificate).toBeUndefined();
   countResources(stack, "AWS::S3::Bucket", 1);
-  countResources(stack, "AWS::Lambda::Function", 4);
+  countResources(stack, "AWS::Lambda::Function", 5);
   countResources(stack, "AWS::CloudFront::Distribution", 1);
   hasResource(stack, "AWS::CloudFront::Distribution", {
     DistributionConfig: {
@@ -647,29 +647,10 @@ test("warm: defined", async () => {
   countResourcesLike(stack, "AWS::Lambda::Function", 1, {
     Environment: {
       Variables: {
-        FUNCTION_NAME: ANY,
-        CONCURRENCY: ANY,
+        WARM_PARAMS: ANY,
       },
     },
   });
-  hasResource(stack, "AWS::Lambda::Function", {
-    Environment: {
-      Variables: {
-        FUNCTION_NAME: { Ref: "SiteServerFunction70E7C026" },
-        CONCURRENCY: "2",
-      },
-    },
-  });
-});
-test("warm: edge", async () => {
-  expect(async () => {
-    await createSite({
-      // @ts-expect-error: "sstTest" is not exposed in props
-      sstTest: true,
-      warm: 2,
-      edge: true,
-    });
-  }).rejects.toThrow(/warming is currently supported/);
 });
 
 test("regional.enableServerUrlIamAuth: undefined", async () => {

@@ -1,5 +1,17 @@
 # @serverless-stack/docs
 
+## 2.11.4
+
+### Patch Changes
+
+- [`a68ca8416`](https://github.com/sst/sst/commit/a68ca84160bc87460e4fb09a4893640ad11daebf) Thanks [@thdxr](https://github.com/thdxr)! - switch to v2 tag
+
+## 2.11.3
+
+### Patch Changes
+
+- [#3815](https://github.com/sst/sst/pull/3815) [`b4119671b`](https://github.com/sst/sst/commit/b4119671bb1e99dc22917ef88f493d5855cb58e1) Thanks [@mattzcarey](https://github.com/mattzcarey)! - SSTBootstrap: Add description to bootstrap stack
+
 ## 2.11.2
 
 ### Patch Changes

@@ -1,5 +1,27 @@
 # create-sst
 
+## 2.43.6
+
+### Patch Changes
+
+- [`a68ca8416`](https://github.com/sst/sst/commit/a68ca84160bc87460e4fb09a4893640ad11daebf) Thanks [@thdxr](https://github.com/thdxr)! - switch to v2 tag
+
+## 2.43.5
+
+## 2.43.4
+
+## 2.43.3
+
+## 2.43.2
+
+## 2.43.1
+
+## 2.43.0
+
+## 2.42.0
+
+## 2.41.5
+
 ## 2.41.4
 
 ## 2.41.3

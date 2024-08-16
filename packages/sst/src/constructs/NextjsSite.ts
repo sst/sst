@@ -1,21 +1,19 @@
 import fs from "fs";
 import path from "path";
-import zlib from "zlib";
 import crypto from "crypto";
-import { globSync } from "glob";
 import { Construct } from "constructs";
 import {
   Duration as CdkDuration,
   RemovalPolicy,
   CustomResource,
+  Fn,
 } from "aws-cdk-lib/core";
 import {
   Code,
   Runtime,
   Function as CdkFunction,
-  FunctionProps,
+  FunctionProps as CdkFunctionProps,
   Architecture,
-  LayerVersion,
 } from "aws-cdk-lib/aws-lambda";
 import {
   AttributeType,
@@ -26,18 +24,86 @@ import { Provider } from "aws-cdk-lib/custom-resources";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Stack } from "./Stack.js";
-import { SsrSite, SsrSiteNormalizedProps, SsrSiteProps } from "./SsrSite.js";
+import {
+  EdgeFunctionConfig,
+  FunctionOriginConfig,
+  SsrSite,
+  SsrSiteNormalizedProps,
+  SsrSiteProps,
+} from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
-import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { VisibleError } from "../error.js";
 import { CachePolicyProps } from "aws-cdk-lib/aws-cloudfront";
 import { SsrFunction } from "./SsrFunction.js";
-import { Asset } from "aws-cdk-lib/aws-s3-assets";
-import { useFunctions } from "./Function.js";
-import { useDeferredTasks } from "./deferred_task.js";
 import { Logger } from "../logger.js";
+type BaseFunction = {
+  handler: string;
+  bundle: string;
+};
+
+type OpenNextFunctionOrigin = {
+  type: "function";
+  streaming?: boolean;
+} & BaseFunction;
+
+type OpenNextECSOrigin = {
+  type: "ecs";
+  bundle: string;
+  dockerfile: string;
+};
+
+type OpenNextS3Origin = {
+  type: "s3";
+  originPath: string;
+  copy: {
+    from: string;
+    to: string;
+    cached: boolean;
+    versionedSubDir?: string;
+  }[];
+};
+
+type OpenNextOrigins =
+  | OpenNextFunctionOrigin
+  | OpenNextECSOrigin
+  | OpenNextS3Origin;
+
+type BaseOrigins<T extends Record<string, OpenNextOrigins>> = {
+  s3: OpenNextS3Origin;
+  default: OpenNextFunctionOrigin | OpenNextECSOrigin;
+  imageOptimizer: OpenNextFunctionOrigin | OpenNextECSOrigin;
+} & T;
+
+type IEdgeFunctions<T extends Record<string, BaseFunction>> = {
+  middleware?: BaseFunction;
+} & T;
+
+interface OpenNextOutput<
+  Origins extends BaseOrigins<
+    Record<string, OpenNextOrigins>
+  > = BaseOrigins<{}>,
+  EdgeFunctions extends IEdgeFunctions<
+    Record<string, BaseFunction>
+  > = IEdgeFunctions<{}>
+> {
+  edgeFunctions: EdgeFunctions;
+  origins: Origins;
+  behaviors: {
+    pattern: string;
+    origin?: keyof Origins;
+    edgeFunction?: keyof EdgeFunctions;
+  }[];
+  additionalProps?: {
+    disableIncrementalCache?: boolean;
+    disableTagCache?: boolean;
+    initializationFunction?: BaseFunction;
+    warmer?: BaseFunction;
+    revalidationFunction?: BaseFunction;
+  };
+}
 
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   /**
@@ -49,17 +115,6 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    * ```
    */
   openNextVersion?: string;
-  /**
-   * How the logs are stored in CloudWatch
-   * - "combined" - Logs from all routes are stored in the same log group.
-   * - "per-route" - Logs from each route are stored in a separate log group.
-   * @default "per-route"
-   * @example
-   * ```js
-   * logging: "combined",
-   * ```
-   */
-  logging?: "combined" | "per-route";
   /**
    * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
    * @default false
@@ -77,59 +132,20 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
      * ```
      */
     memorySize?: number | Size;
-  };
-  openNext?: {
     /**
-     * Specify a custom build output path for cases when running OpenNext from
-     * a monorepo with decentralized build output. This is passed to the
-     * `--build-output-path` flag of OpenNext.
-     * @default Default build output path
-     * @example
-     * ```js
-     * buildOutputPath: "dist/apps/example-app"
-     * ```
-     */
-    buildOutputPath?: string;
-  };
-  experimental?: {
-    /**
-     * Enable streaming. Currently an experimental feature in OpenNext.
+     * If set to true, already computed image will return 304 Not Modified.
+     * This means that image needs to be immutable, the etag will be computed based on the image href, format and width and the next BUILD_ID.
      * @default false
      * @example
      * ```js
-     * experimental: {
-     *   streaming: true,
+     * imageOptimization: {
+     *  staticImageOptimization: true,
      * }
-     * ```
      */
-    streaming?: boolean;
-    /**
-     * Disabling incremental cache will cause the entire page to be revalidated on each request. This can result in ISR and SSG pages to be in an inconsistent state. Specify this option if you are using SSR pages only.
-     *
-     * Note that it is possible to disable incremental cache while leaving on-demand revalidation enabled.
-     * @default false
-     * @example
-     * ```js
-     * experimental: {
-     *   disableIncrementalCache: true,
-     * }
-     * ```
-     */
-    disableIncrementalCache?: boolean;
-    /**
-     * Disabling DynamoDB cache will cause on-demand revalidation by path (`revalidatePath`) and by cache tag (`revalidateTag`) to fail silently.
-     * @default false
-     * @example
-     * ```js
-     * experimental: {
-     *   disableDynamoDBCache: true,
-     * }
-     * ```
-     */
-    disableDynamoDBCache?: boolean;
+    staticImageOptimization?: boolean;
   };
   cdk?: SsrSiteProps["cdk"] & {
-    revalidation?: Pick<FunctionProps, "vpc" | "vpcSubnets">;
+    revalidation?: Pick<CdkFunctionProps, "vpc" | "vpcSubnets">;
     /**
      * Override the CloudFront cache policy properties for responses from the
      * server rendering Lambda.
@@ -161,17 +177,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   };
 }
 
-const LAYER_VERSION = "2";
-const DEFAULT_OPEN_NEXT_VERSION = "2.3.7";
-const DEFAULT_CACHE_POLICY_ALLOWED_HEADERS = [
-  "accept",
-  "rsc",
-  "next-router-prefetch",
-  "next-router-state-tree",
-  "next-url",
-  "x-prerender-bypass",
-  "x-prerender-revalidate"
-];
+const DEFAULT_OPEN_NEXT_VERSION = "3.0.2";
 
 type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
 
@@ -207,141 +213,176 @@ export class NextjsSite extends SsrSite {
     version: number;
     routes: Record<string, unknown>;
   };
+  private openNextOutput?: OpenNextOutput;
 
-  constructor(scope: Construct, id: string, rawProps?: NextjsSiteProps) {
-    const props = {
-      logging: rawProps?.logging ?? "per-route",
-      experimental: {
-        streaming: rawProps?.experimental?.streaming ?? false,
-        disableDynamoDBCache:
-          rawProps?.experimental?.disableDynamoDBCache ?? false,
-        disableIncrementalCache:
-          rawProps?.experimental?.disableIncrementalCache ?? false,
-        ...rawProps?.experimental,
-      },
-      ...rawProps,
-    };
-
+  constructor(scope: Construct, id: string, props: NextjsSiteProps = {}) {
     super(scope, id, {
       buildCommand: [
         "npx",
         "--yes",
         `open-next@${props?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
         "build",
-        ...(props.openNext?.buildOutputPath
-          ? ["--build-output-path", props.openNext.buildOutputPath]
-          : []),
-        ...(props.experimental.streaming ? ["--streaming"] : []),
-        ...(props.experimental.disableDynamoDBCache
-          ? ["--dangerously-disable-dynamodb-cache"]
-          : []),
-        ...(props.experimental.disableIncrementalCache
-          ? ["--dangerously-disable-incremental-cache"]
-          : []),
       ].join(" "),
       ...props,
     });
 
+    const disableIncrementalCache =
+      this.openNextOutput?.additionalProps?.disableIncrementalCache ?? false;
+    const disableTagCache =
+      this.openNextOutput?.additionalProps?.disableTagCache ?? false;
+
     this.handleMissingSourcemap();
 
-    if (this.isPerRouteLoggingEnabled()) {
-      //this.disableDefaultLogging();
-      this.uploadSourcemaps();
+    if (this.openNextOutput?.edgeFunctions?.middleware) {
+      this.setMiddlewareEnv();
     }
 
-    if (!props.experimental.disableIncrementalCache) {
+    if (!disableIncrementalCache) {
       this.createRevalidationQueue();
-      if (!props.experimental.disableDynamoDBCache) {
+      if (!disableTagCache) {
         this.createRevalidationTable();
       }
     }
   }
 
-  public static override buildDefaultServerCachePolicyProps(): CachePolicyProps {
-    return super.buildDefaultServerCachePolicyProps(
-      DEFAULT_CACHE_POLICY_ALLOWED_HEADERS
-    );
-  }
-
-  protected plan(bucket: Bucket) {
-    const {
-      path: sitePath,
-      edge,
-      experimental,
-      imageOptimization,
-      cdk,
-    } = this.props;
-    const stack = Stack.of(this);
-    const serverConfig = {
-      description: "Next.js server",
-      bundle: path.join(sitePath, ".open-next", "server-function"),
-      handler: "index.handler",
+  private createFunctionOrigin(
+    fn: OpenNextFunctionOrigin,
+    key: string,
+    bucket: Bucket
+  ): FunctionOriginConfig {
+    const { path: sitePath, environment, cdk } = this.props;
+    const baseServerConfig = {
+      description: "Next.js Server",
       environment: {
         CACHE_BUCKET_NAME: bucket.bucketName,
         CACHE_BUCKET_KEY_PREFIX: "_cache",
         CACHE_BUCKET_REGION: Stack.of(this).region,
       },
-      layers: this.isPerRouteLoggingEnabled()
-        ? [
-            LayerVersion.fromLayerVersionArn(
-              this,
-              "SSTExtension",
-              cdk?.server?.architecture?.name === Architecture.X86_64.name
-                ? `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-amd64:${LAYER_VERSION}`
-                : `arn:aws:lambda:${stack.region}:226609089145:layer:sst-extension-arm64:${LAYER_VERSION}`
-            ),
-          ]
-        : undefined,
     };
-    this.removeSourcemaps();
+    return {
+      type: "function" as const,
+      constructId: `${key}ServerFunction`,
+      function: {
+        ...baseServerConfig,
+        handler: fn.handler,
+        bundle: path.join(sitePath, fn.bundle),
+        runtime: this.props.runtime ?? ("nodejs18.x" as const),
+        architecture: Architecture.ARM_64,
+        memorySize: this.props.memorySize ?? 1536,
+        environment: {
+          ...environment,
+          ...baseServerConfig.environment,
+        },
+      },
+      streaming: fn.streaming,
+      injections: [],
+    };
+  }
+
+  private createEcsOrigin(
+    ecs: OpenNextECSOrigin,
+    key: string,
+    bucket: Bucket
+  ): FunctionOriginConfig {
+    throw new Error("Ecs origin are not supported yet");
+  }
+
+  private createEdgeOrigin(
+    fn: BaseFunction,
+    key: string,
+    bucket: Bucket
+  ): EdgeFunctionConfig {
+    const { path: sitePath, cdk, environment } = this.props;
+    const baseServerConfig = {
+      environment: {
+        CACHE_BUCKET_NAME: bucket.bucketName,
+        CACHE_BUCKET_KEY_PREFIX: "_cache",
+        CACHE_BUCKET_REGION: Stack.of(this).region,
+      },
+    };
+    return {
+      constructId: `${key}EdgeFunction`,
+      function: {
+        handler: fn.handler,
+        bundle: path.join(sitePath, fn.bundle),
+        runtime: "nodejs18.x" as const,
+        memorySize: 1024,
+        environment: {
+          ...environment,
+          ...baseServerConfig.environment,
+        },
+      },
+    };
+  }
+
+  protected plan(bucket: Bucket) {
+    const { path: sitePath } = this.props;
+    const imageOptimization = this.props.imageOptimization;
+
+    const openNextOutputPath = path.join(
+      sitePath ?? ".",
+      ".open-next",
+      "open-next.output.json"
+    );
+    if (!fs.existsSync(openNextOutputPath)) {
+      throw new VisibleError(
+        `Failed to load ".open-next/output.json" for the "${this.id}" site.`
+      );
+    }
+    const openNextOutput = JSON.parse(
+      fs.readFileSync(openNextOutputPath).toString()
+    ) as OpenNextOutput;
+    this.openNextOutput = openNextOutput;
+
+    const imageOpt = openNextOutput.origins
+      .imageOptimizer as OpenNextFunctionOrigin;
+    const defaultOrigin = openNextOutput.origins.default;
+    const remainingOrigins = Object.entries(openNextOutput.origins).filter(
+      ([key, value]) => {
+        const result =
+          key !== "imageOptimizer" && key !== "default" && key !== "s3";
+        return result;
+      }
+    ) as [string, OpenNextFunctionOrigin | OpenNextECSOrigin][];
+
+    const edgeFunctions = Object.entries(openNextOutput.edgeFunctions).reduce(
+      (acc, [key, value]) => {
+        return { ...acc, [key]: this.createEdgeOrigin(value, key, bucket) };
+      },
+      {} as Record<string, EdgeFunctionConfig>
+    );
+
     return this.validatePlan({
-      edge: edge ?? false,
+      edge: false,
       cloudFrontFunctions: {
         serverCfFunction: {
           constructId: "CloudFrontFunction",
           injections: [
             this.useCloudFrontFunctionHostHeaderInjection(),
-            this.useCloudFrontFunctionPrerenderBypassHeaderInjection(),
+            this.useCloudFrontFunctionCacheHeaderKey(),
+            this.useCloudfrontGeoHeadersInjection(),
           ],
         },
       },
-      edgeFunctions: edge
-        ? {
-            edgeServer: {
-              constructId: "ServerFunction",
-              function: serverConfig,
-            },
-          }
-        : undefined,
+      edgeFunctions,
       origins: {
-        ...(edge
-          ? {}
-          : {
-              regionalServer: {
-                type: "function",
-                constructId: "ServerFunction",
-                function: serverConfig,
-                streaming: experimental?.streaming,
-                injections: this.isPerRouteLoggingEnabled()
-                  ? [this.useServerFunctionPerRouteLoggingInjection()]
-                  : [],
-              },
-            }),
+        s3: openNextOutput.origins.s3,
         imageOptimizer: {
           type: "image-optimization-function",
-          constructId: "ImageFunction",
           function: {
-            description: "Next.js image optimizer",
-            handler: "index.handler",
-            code: Code.fromAsset(
-              path.join(sitePath, ".open-next/image-optimization-function")
-            ),
+            description: "Next.js Image Optimization Function",
+            handler: imageOpt.handler,
+            code: Code.fromAsset(path.join(sitePath, imageOpt.bundle)),
             runtime: Runtime.NODEJS_18_X,
             architecture: Architecture.ARM_64,
             environment: {
               BUCKET_NAME: bucket.bucketName,
               BUCKET_KEY_PREFIX: "_assets",
+              ...(this.props.imageOptimization?.staticImageOptimization
+                ? { OPENNEXT_STATIC_ETAG: "true" }
+                : {}),
             },
+            permissions: ["s3"],
             memorySize: imageOptimization?.memorySize
               ? typeof imageOptimization.memorySize === "string"
                 ? toCdkSize(imageOptimization.memorySize).toMebibytes()
@@ -349,105 +390,66 @@ export class NextjsSite extends SsrSite {
               : 1536,
           },
         },
-        s3: {
-          type: "s3",
-          originPath: "_assets",
-          copy: [
-            {
-              from: ".open-next/assets",
-              to: "_assets",
-              cached: true,
-              versionedSubDir: "_next",
-            },
-            { from: ".open-next/cache", to: "_cache", cached: false },
-          ],
-        },
-      },
-      behaviors: [
-        ...(edge
-          ? [
-              {
-                cacheType: "server",
-                cfFunction: "serverCfFunction",
-                edgeFunction: "edgeServer",
-                origin: "s3",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: this.prefixPattern("api/*"),
-                cfFunction: "serverCfFunction",
-                edgeFunction: "edgeServer",
-                origin: "s3",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: this.prefixPattern("_next/data/*"),
-                cfFunction: "serverCfFunction",
-                edgeFunction: "edgeServer",
-                origin: "s3",
-              } as const,
-            ]
-          : [
-              {
-                cacheType: "server",
-                cfFunction: "serverCfFunction",
-                origin: "regionalServer",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: this.prefixPattern("api/*"),
-                cfFunction: "serverCfFunction",
-                origin: "regionalServer",
-              } as const,
-              {
-                cacheType: "server",
-                pattern: this.prefixPattern("_next/data/*"),
-                cfFunction: "serverCfFunction",
-                origin: "regionalServer",
-              } as const,
-            ]),
-        {
-          cacheType: "server",
-          pattern: this.prefixPattern("_next/image*"),
-          cfFunction: "serverCfFunction",
-          origin: "imageOptimizer",
-        },
-        // create 1 behaviour for each top level asset file/folder
-        ...fs.readdirSync(path.join(sitePath, ".open-next/assets")).map(
-          (item) =>
-            ({
-              cacheType: "static",
-              pattern: this.prefixPattern(
-                fs
-                  .statSync(path.join(sitePath, ".open-next/assets", item))
-                  .isDirectory()
-                  ? `${item}/*`
-                  : item
-              ),
-              origin: "s3",
-            } as const)
+        default:
+          defaultOrigin.type === "ecs"
+            ? this.createEcsOrigin(defaultOrigin, "default", bucket)
+            : this.createFunctionOrigin(defaultOrigin, "default", bucket),
+        ...Object.fromEntries(
+          remainingOrigins.map(([key, value]) => [
+            key,
+            value.type === "ecs"
+              ? this.createEcsOrigin(value, key, bucket)
+              : this.createFunctionOrigin(value, key, bucket),
+          ])
         ),
-      ],
-      serverCachePolicy: {
-        allowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
       },
+      behaviors: openNextOutput.behaviors.map((behavior) => {
+        return {
+          pattern: behavior.pattern === "*" ? undefined : behavior.pattern,
+          origin: behavior.origin!,
+          cacheType: behavior.origin === "s3" ? "static" : "server",
+          cfFunction: "serverCfFunction",
+          edgeFunction: behavior.edgeFunction ?? "",
+        };
+      }),
       buildId: this.getBuildId(),
+      warmer: openNextOutput.additionalProps?.warmer
+        ? {
+            function: path.join(
+              sitePath,
+              openNextOutput.additionalProps.warmer.bundle
+            ),
+          }
+        : undefined,
+      serverCachePolicy: {
+        allowedHeaders: ["x-open-next-cache-key"],
+      },
     });
   }
 
-  private prefixPattern(pattern: string): string {
-    // Prefix CloudFront distribution behavior path patterns with `basePath` if configured
-    const { basePath } = this.useRoutesManifest();
-    return basePath && basePath.length > 0
-      ? `${basePath.slice(1)}/${pattern}`
-      : pattern;
+  private setMiddlewareEnv() {
+    const origins = this.serverFunctions.reduce((acc, server) => {
+      return {
+        ...acc,
+        [server.function
+          ? server.id.replace("ServerFunction", "")
+          : server.id.replace("ServerContainer", "")]: {
+          host: Fn.parseDomainName(server.url ?? ""),
+          port: 443,
+          protocol: "https",
+        },
+      };
+    }, {} as Record<string, { host: string; port: number; protocol: string }>);
+    this.edgeFunctions?.middleware?.addEnvironment(
+      "OPEN_NEXT_ORIGIN",
+      Fn.toJsonString(origins)
+    );
   }
 
   private createRevalidationQueue() {
     if (!this.serverFunction) return;
 
     const { cdk } = this.props;
-    const server = this.serverFunction;
 
     const queue = new Queue(this, "RevalidationQueue", {
       fifo: true,
@@ -465,17 +467,18 @@ export class NextjsSite extends SsrSite {
     });
     consumer.addEventSource(new SqsEventSource(queue, { batchSize: 5 }));
 
-    // Allow server to send messages to the queue
-    server.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
-    server.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
-    queue.grantSendMessages(server.role!);
+    this.serverFunctions.forEach((server) => {
+      // Allow server to send messages to the queue
+      server.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
+      server.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
+      queue.grantSendMessages(server.role!);
+    });
   }
 
   private createRevalidationTable() {
     if (!this.serverFunction) return;
 
     const { path: sitePath } = this.props;
-    const server = this.serverFunction;
 
     const table = new Table(this, "RevalidationTable", {
       partitionKey: { name: "tag", type: AttributeType.STRING },
@@ -492,8 +495,10 @@ export class NextjsSite extends SsrSite {
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    server?.addEnvironment("CACHE_DYNAMO_TABLE", table.tableName);
-    table.grantReadWriteData(server.role!);
+    this.serverFunctions.forEach((server) => {
+      server?.addEnvironment("CACHE_DYNAMO_TABLE", table.tableName);
+      table.grantReadWriteData(server.role!);
+    });
 
     const dynamodbProviderPath = path.join(
       sitePath,
@@ -549,37 +554,10 @@ export class NextjsSite extends SsrSite {
   }
 
   public getConstructMetadata() {
-    const metadata = this.getConstructMetadataBase();
     return {
-      ...metadata,
       type: "NextjsSite" as const,
-      data: {
-        ...metadata.data,
-        routes: this.isPerRouteLoggingEnabled()
-          ? {
-              logGroupPrefix: `/sst/lambda/${
-                (this.serverFunction as SsrFunction).functionName
-              }`,
-              data: this.useRoutes().map(({ route, logGroupPath }) => ({
-                route,
-                logGroupPath,
-              })),
-            }
-          : undefined,
-      },
+      ...this.getConstructMetadataBase(),
     };
-  }
-
-  private removeSourcemaps() {
-    const { path: sitePath } = this.props;
-    const files = globSync("**/*.js.map", {
-      cwd: path.join(sitePath, ".open-next", "server-function"),
-      nodir: true,
-      dot: true,
-    });
-    for (const file of files) {
-      fs.rmSync(path.join(sitePath, ".open-next", "server-function", file));
-    }
   }
 
   private useRoutes() {
@@ -745,40 +723,58 @@ export class NextjsSite extends SsrSite {
     }
   }
 
-  private useServerFunctionPerRouteLoggingInjection() {
+  // This function is used to improve cache hit ratio by setting the cache key based on the request headers and the path
+  // next/image only need the accept header, and this header is not useful for the rest of the query
+  private useCloudFrontFunctionCacheHeaderKey() {
     return `
-if (event.rawPath) {
-  const routeData = ${JSON.stringify(
-    // @ts-expect-error
-    this.useRoutes().map(({ regexMatch, prefixMatch, logGroupPath }) => ({
-      regex: regexMatch,
-      prefix: prefixMatch,
-      logGroupPath,
-    }))
-  )}.find(({ regex, prefix }) => {
-    if (regex) return event.rawPath.match(new RegExp(regex));
-    if (prefix) return event.rawPath === prefix || (event.rawPath === prefix + "/");
-    return false;
-  });
-  if (routeData) {
-    console.log("::sst::" + JSON.stringify({
-      action:"log.split",
-      properties: {
-        logGroupName:"/sst/lambda/" + context.functionName + routeData.logGroupPath,
-      },
-    }));
+function getHeader(key) {
+  var header = request.headers[key];
+  if(header) {
+      if(header.multiValue){
+          return header.multiValue.map((header) => header.value).join(",");
+      }
+      if(header.value){
+          return header.value;
+      }
   }
-}`;
+  return ""
+  }
+  var cacheKey = "";
+  if(request.uri.startsWith("/_next/image")) {
+    cacheKey = getHeader("accept");
+  }else {
+    cacheKey = getHeader("rsc") + getHeader("next-router-prefetch") + getHeader("next-router-state-tree") + getHeader("next-url") + getHeader("x-prerender-revalidate");
+  }
+  if(request.cookies["__prerender_bypass"]) {
+    cacheKey += request.cookies["__prerender_bypass"] ? request.cookies["__prerender_bypass"].value : "";
+  }
+  var crypto = require('crypto');
+  
+  var hashedKey = crypto.createHash('md5').update(cacheKey).digest('hex');
+  request.headers["x-open-next-cache-key"] = {value: hashedKey};
+  `;
   }
 
-  private useCloudFrontFunctionPrerenderBypassHeaderInjection() {
-    // In Next.js page router preview mode (depends on the cookie __prerender_bypass),
-    // to ensure we receive the cached page instead of the preview version, we set the
-    // header "x-prerender-bypass", and add it to cache policy's allowed headers.
+  // Inject the CloudFront viewer country, region, latitude, and longitude headers into the request headers
+  // for OpenNext to use them
+  private useCloudfrontGeoHeadersInjection() {
     return `
-if (request.cookies["__prerender_bypass"]) { 
-  request.headers["x-prerender-bypass"] = { value: "true" }; 
-}`;
+if(request.headers["cloudfront-viewer-city"]) {
+  request.headers["x-open-next-city"] = request.headers["cloudfront-viewer-city"];
+}
+if(request.headers["cloudfront-viewer-country"]) {
+  request.headers["x-open-next-country"] = request.headers["cloudfront-viewer-country"];
+}
+if(request.headers["cloudfront-viewer-region"]) {
+  request.headers["x-open-next-region"] = request.headers["cloudfront-viewer-region"];
+}
+if(request.headers["cloudfront-viewer-latitude"]) {
+  request.headers["x-open-next-latitude"] = request.headers["cloudfront-viewer-latitude"];
+}
+if(request.headers["cloudfront-viewer-longitude"]) {
+  request.headers["x-open-next-longitude"] = request.headers["cloudfront-viewer-longitude"];
+}
+    `;
   }
 
   private getBuildId() {
@@ -860,14 +856,6 @@ if (request.cookies["__prerender_bypass"]) {
     return sourcemapPath;
   }
 
-  private isPerRouteLoggingEnabled() {
-    return (
-      !this.doNotDeploy &&
-      !this.props.edge &&
-      this.props.logging === "per-route"
-    );
-  }
-
   private handleMissingSourcemap() {
     if (this.doNotDeploy || this.props.edge) return;
 
@@ -877,53 +865,6 @@ if (request.cookies["__prerender_bypass"]) {
     if (!hasMissingSourcemap) return;
 
     (this.serverFunction as SsrFunction)._overrideMissingSourcemap();
-  }
-
-  private disableDefaultLogging() {
-    const stack = Stack.of(this);
-    const server = this.serverFunction as SsrFunction;
-
-    const policy = new Policy(this, "DisableLoggingPolicy", {
-      statements: [
-        new PolicyStatement({
-          effect: Effect.DENY,
-          actions: [
-            "logs:CreateLogGroup",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents",
-          ],
-          resources: [
-            `arn:aws:logs:${stack.region}:${stack.account}:log-group:/aws/lambda/${server.functionName}`,
-            `arn:aws:logs:${stack.region}:${stack.account}:log-group:/aws/lambda/${server.functionName}:*`,
-          ],
-        }),
-      ],
-    });
-    server.role?.attachInlinePolicy(policy);
-  }
-
-  private uploadSourcemaps() {
-    const stack = Stack.of(this);
-    const server = this.serverFunction as SsrFunction;
-
-    this.useRoutes().forEach(({ sourcemapPath, sourcemapKey }) => {
-      if (!sourcemapPath || !sourcemapKey) return;
-
-      useDeferredTasks().add(async () => {
-        // zip sourcemap
-        const zipPath = `${sourcemapPath}.gz.zip`;
-        const data = await fs.promises.readFile(sourcemapPath);
-        await fs.promises.writeFile(zipPath, zlib.gzipSync(data));
-        const asset = new Asset(this, `Sourcemap-${sourcemapKey}`, {
-          path: zipPath,
-        });
-
-        useFunctions().sourcemaps.add(stack.stackName, {
-          asset,
-          tarKey: path.join(server.functionArn, sourcemapKey),
-        });
-      });
-    });
   }
 
   private static buildCloudWatchRouteName(route: string) {

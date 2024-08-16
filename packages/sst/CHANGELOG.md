@@ -1,5 +1,97 @@
 # @serverless-stack/cli2
 
+## 2.43.6
+
+### Patch Changes
+
+- [`a68ca8416`](https://github.com/sst/sst/commit/a68ca84160bc87460e4fb09a4893640ad11daebf) Thanks [@thdxr](https://github.com/thdxr)! - switch to v2 tag
+
+## 2.43.5
+
+### Patch Changes
+
+- [#3829](https://github.com/sst/sst/pull/3829) [`9c52c86c4`](https://github.com/sst/sst/commit/9c52c86c4daf4321360002327a6773b039c11e22) Thanks [@scarperharper](https://github.com/scarperharper)! - SsrSite: fix query params with no values should be strings
+
+- [#3803](https://github.com/sst/sst/pull/3803) [`1c542ab86`](https://github.com/sst/sst/commit/1c542ab86ca67d5ce8402f4a884473c76f015b2f) Thanks [@JacksonBowe](https://github.com/JacksonBowe)! - fix: fix dockerfile build commands for python 3.12
+
+- [#3815](https://github.com/sst/sst/pull/3815) [`b4119671b`](https://github.com/sst/sst/commit/b4119671bb1e99dc22917ef88f493d5855cb58e1) Thanks [@mattzcarey](https://github.com/mattzcarey)! - SSTBootstrap: Add description to bootstrap stack
+
+- [#3799](https://github.com/sst/sst/pull/3799) [`baa633cd6`](https://github.com/sst/sst/commit/baa633cd687e0e87f3a5ba86070c785d70b8510e) Thanks [@blair55](https://github.com/blair55)! - enhancement: make magic link expiry configurable
+
+- [#3779](https://github.com/sst/sst/pull/3779) [`04717fb1c`](https://github.com/sst/sst/commit/04717fb1ca51d272811bfc8a8a30f8271528f3d8) Thanks [@omikader](https://github.com/omikader)! - misc(rds): expose migration methods
+
+- [#3794](https://github.com/sst/sst/pull/3794) [`436f2aa39`](https://github.com/sst/sst/commit/436f2aa393a056f4249e78829ac3ce45dd4330da) Thanks [@gronxb](https://github.com/gronxb)! - fix: support npm versions 10 and above
+
+## 2.43.4
+
+### Patch Changes
+
+- [`d39eb43a4`](https://github.com/sst/sst/commit/d39eb43a4d3dc3791bc2439ce6d9bb0ce4efbd0d) Thanks [@fwang](https://github.com/fwang)! - Service: support reusing cache policy
+
+## 2.43.3
+
+### Patch Changes
+
+- [#3782](https://github.com/sst/sst/pull/3782) [`be041741c`](https://github.com/sst/sst/commit/be041741cfffbd71145a14c35a5bb230f392596a) Thanks [@henrycrib](https://github.com/henrycrib)! - Function: update rust runtime to PROVIDED_AL2023
+
+- [#3785](https://github.com/sst/sst/pull/3785) [`da3770f9b`](https://github.com/sst/sst/commit/da3770f9baffdf994766d5e0075f830626ff08f1) Thanks [@relsunkaev](https://github.com/relsunkaev)! - NextjsSite: respect runtime and memorySize configs
+
+## 2.43.2
+
+### Patch Changes
+
+- [#3776](https://github.com/sst/sst/pull/3776) [`75fde55fa`](https://github.com/sst/sst/commit/75fde55fa81a4a2601f740a8812478d22fd0aca2) Thanks [@srodriki](https://github.com/srodriki)! - SST Node: Remove dependency between future/auth and old auth
+
+- [`4d74e9717`](https://github.com/sst/sst/commit/4d74e9717ffce0391f6a6f08a777e9be93bc4e75) Thanks [@thdxr](https://github.com/thdxr)! - force install deps
+
+- [#3788](https://github.com/sst/sst/pull/3788) [`e88de771d`](https://github.com/sst/sst/commit/e88de771d45ac4cf4cedde12a78b688c8de3a319) Thanks [@omikader](https://github.com/omikader)! - chore(auth): expose session.verify in non-future auth
+
+## 2.43.1
+
+### Patch Changes
+
+- [#3780](https://github.com/sst/sst/pull/3780) [`64d42db1a`](https://github.com/sst/sst/commit/64d42db1a209c11befcdd40cc0abebb8db4161a2) Thanks [@vidalmatheus](https://github.com/vidalmatheus)! - fix: google and apple adapter
+
+- [#3790](https://github.com/sst/sst/pull/3790) [`a53a8d18f`](https://github.com/sst/sst/commit/a53a8d18fe34ba04407e5d0b843e3352e0948c93) Thanks [@dan-turner](https://github.com/dan-turner)! - fix: wrap output in single quotes to allow for multi-line secrets
+
+- [#3778](https://github.com/sst/sst/pull/3778) [`1ed9b3927`](https://github.com/sst/sst/commit/1ed9b3927d9741d26597ce9764ce653f7d30d7db) Thanks [@blair55](https://github.com/blair55)! - Add missing dotnet8 bootstrap support copy command
+
+## 2.43.0
+
+### Minor Changes
+
+- [#3567](https://github.com/sst/sst/pull/3567) [`96b99e08f`](https://github.com/sst/sst/commit/96b99e08f3cfbbbdf9f25f920be73e368b0599d0) Thanks [@conico974](https://github.com/conico974)! - NextjsSite: update to OpenNext v3
+
+## 2.42.0
+
+### Minor Changes
+
+- [#3764](https://github.com/sst/sst/pull/3764) [`3c62d50b7`](https://github.com/sst/sst/commit/3c62d50b79daa22d1fd1d4c4e160d506f18d3c0f) Thanks [@berenddeboer](https://github.com/berenddeboer)! - chore: update aws-cdk-lib to 2.142.1 from 2.132.1.
+
+### Patch Changes
+
+- [#3722](https://github.com/sst/sst/pull/3722) [`6f8fb48f2`](https://github.com/sst/sst/commit/6f8fb48f2b6dd195a732114abf33bd4e9f68439f) Thanks [@adrianisk](https://github.com/adrianisk)! - Fix cacheTo Function/container prop
+
+- [#3729](https://github.com/sst/sst/pull/3729) [`7026c46db`](https://github.com/sst/sst/commit/7026c46dbbedcc3f2936db4002644a56704ef47c) Thanks [@jamesgibbons92](https://github.com/jamesgibbons92)! - [Function]: Update go runtime
+
+- [#3759](https://github.com/sst/sst/pull/3759) [`b51f1fb75`](https://github.com/sst/sst/commit/b51f1fb75901353537d5e34cd8a3b3f99c08ba04) Thanks [@adminCitify](https://github.com/adminCitify)! - RDS: support postgresql13.12
+
+- [#3762](https://github.com/sst/sst/pull/3762) [`17069475e`](https://github.com/sst/sst/commit/17069475e073eb117327a27a6712e164d5fe64c2) Thanks [@lostra01](https://github.com/lostra01)! - Proxy issuer calls to avoid timeouts on unused auth adapters
+
+## 2.41.5
+
+### Patch Changes
+
+- [#3727](https://github.com/sst/sst/pull/3727) [`0acf9c68e`](https://github.com/sst/sst/commit/0acf9c68e9731755105899e20cad1fba1b118d3c) Thanks [@neilsaccardo](https://github.com/neilsaccardo)! - NextjsSite: update OpenNext version to 2.3.8
+
+- [#3734](https://github.com/sst/sst/pull/3734) [`b2ecaeb23`](https://github.com/sst/sst/commit/b2ecaeb239f112c4493c3d03d15ca883c460f576) Thanks [@blair55](https://github.com/blair55)! - Function: add support for dotnet 8 runtime
+
+- [#3745](https://github.com/sst/sst/pull/3745) [`3835298d2`](https://github.com/sst/sst/commit/3835298d24a0d5c00228ee6a3130e4b4c417e40d) Thanks [@gtdudu](https://github.com/gtdudu)! - RDS: support postgresql engines 14.10, 15.4 and 16.1
+
+- [#3741](https://github.com/sst/sst/pull/3741) [`e3e15286c`](https://github.com/sst/sst/commit/e3e15286ca938f6812586d289bc534b62ec669bc) Thanks [@chrisdlangham](https://github.com/chrisdlangham)! - Function: logs errors to stdout for dotnet8
+
+- [#3735](https://github.com/sst/sst/pull/3735) [`10c339b91`](https://github.com/sst/sst/commit/10c339b9113bf5561bc8bed540725230696f2387) Thanks [@ZacharySpilinek](https://github.com/ZacharySpilinek)! - NextjsSite: allow overriding error responses
+
 ## 2.41.4
 
 ### Patch Changes
