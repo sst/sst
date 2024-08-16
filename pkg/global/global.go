@@ -126,6 +126,10 @@ func BinPath() string {
 	return filepath.Join(configDir, "bin")
 }
 
+func CertPath() string {
+	return filepath.Join(configDir, "cert")
+}
+
 func NeedsBun() bool {
 	path := BunPath()
 	slog.Info("checking for bun", "path", path)

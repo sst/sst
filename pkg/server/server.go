@@ -7,16 +7,19 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/rpc"
 	"net/rpc/jsonrpc"
+	"net/url"
 	"os"
+	"path/filepath"
 	"syscall"
 
+	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server/aws"
 	"github.com/sst/ion/pkg/server/resource"
 	"github.com/sst/ion/pkg/server/scrap"
-	"golang.org/x/sync/errgroup"
 )
 
 type Server struct {
@@ -52,22 +55,38 @@ func (s *Server) Start(ctx context.Context, p *project.Project) error {
 	aws.Register(ctx, p, s.Rpc)
 	scrap.Register(ctx, p, s.Rpc)
 
-	var wg errgroup.Group
 	server := &http.Server{
 		Handler: s.Mux,
 	}
 	server.Addr = fmt.Sprintf("0.0.0.0:%d", s.Port)
 	slog.Info("server", "addr", server.Addr)
 	serverPath := resolveServerFile(p.PathConfig(), p.App().Stage)
-	os.WriteFile(serverPath, []byte("http://"+server.Addr), 0644)
+	u, _ := url.Parse("http://" + server.Addr)
+	os.WriteFile(serverPath, []byte(u.String()), 0644)
 	defer os.Remove(serverPath)
-	wg.Go(func() error {
-		go server.ListenAndServe()
-		<-ctx.Done()
-		server.Shutdown(ctx)
-		return nil
-	})
-	return wg.Wait()
+	go server.ListenAndServe()
+
+	keyPath := filepath.Join(global.CertPath(), "key.pem")
+	certPath := filepath.Join(global.CertPath(), "cert.pem")
+	if _, err := os.Stat(keyPath); err == nil {
+		slog.Info("https enabled")
+		proxy := httputil.NewSingleHostReverseProxy(u)
+		go http.ListenAndServeTLS(
+			fmt.Sprintf("0.0.0.0:%d", s.Port+1000),
+			certPath,
+			keyPath,
+			proxy,
+		)
+		if err != nil {
+			slog.Error("failed to start https server", "err", err)
+			return err
+		}
+	}
+
+	<-ctx.Done()
+	slog.Info("shutting down server")
+	go server.Shutdown(ctx)
+	return nil
 }
 
 func port() (int, error) {

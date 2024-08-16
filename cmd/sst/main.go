@@ -1238,5 +1238,6 @@ var root = &cli.Command{
 				},
 			},
 		},
+		CmdCert,
 	},
 }
