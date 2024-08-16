@@ -7,8 +7,7 @@
       "type": "npm",
       "properties": {
         "file": "package.json",
-        "package": "sst",
-        "version": "ion"
+        "package": "sst"
       }
     },
     {

@@ -12,7 +12,7 @@
     "@solidjs/router": "^0.13.6",
     "@solidjs/start": "1.0.2",
     "solid-js": "^1.8.17",
-    "sst": "ion",
+    "sst": "latest",
     "vinxi": "^0.3.12"
   },
   "engines": {

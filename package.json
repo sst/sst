@@ -1,5 +1,5 @@
 {
-  "name": "ion",
+  "name": "sst",
   "workspaces": [
     "www",
     "platform",

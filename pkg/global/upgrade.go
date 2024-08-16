@@ -110,7 +110,7 @@ func Upgrade(existingVersion string, nextVersion string) (string, error) {
 func UpgradeNode(existingVersion string, nextVersion string) (map[string]string, error) {
 	result := make(map[string]string)
 	if nextVersion == "" {
-		pkg, err := npm.Get("sst", "ion")
+		pkg, err := npm.Get("sst", "latest")
 		if err != nil {
 			return result, err
 		}
