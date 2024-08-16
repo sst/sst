@@ -1,5 +1,5 @@
 export default {
-  starsPlaceholder: "22K",
+  starsPlaceholder: "21K",
   download: {
     curl: "curl -fsSL",
     url: "https://sst.dev/install",
