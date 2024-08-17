@@ -10,19 +10,13 @@ export const github  = config.github;
 
 SST is a framework that makes it easy to build modern full-stack applications on your own infrastructure.
 
+:::note
+If you are looking for SST v2, you can head over to [v2.sst.dev](https://v2.sst.dev).
+:::
+
 What makes SST different is that your _entire_ app is **defined in code** — in a single `sst.config.ts` file. This includes databases, buckets, queues, Stripe webhooks, or any one of **150+ providers**.
 
 With SST, **everything is automated**.
-
----
-
-SST v3 uses [Pulumi](https://www.pulumi.com) and [Terraform](https://www.terraform.io). Previously, SST v2 used [CDK and CloudFormation](https://sst.dev/blog/moving-away-from-cdk.html).
-
-:::note
-SST is open source, does not require a Pulumi account, and only depends on the open source parts of Pulumi and Terraform.
-:::
-
-If you are new to SST, here's how it works.
 
 ---
 
@@ -340,6 +334,14 @@ Learn more about the [Console](/docs/console/).
 ## FAQ
 
 Here are some questions that we frequently get.
+
+---
+
+**Is SST open-source if it's based on Pulumi and Terraform?**
+
+SST uses Pulumi behind the scenes for the providers and the deployment engine. And Terraform's providers are _bridged_ through Pulumi.
+
+SST only relies on the open-source parts of Pulumi and Terraform. It does not require a Pulumi account and all the data about your app and its resources stay on your side.
 
 ---
 
