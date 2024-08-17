@@ -60,7 +60,13 @@ import HeaderLinks from "./HeaderLinks.astro";
 .middle-group > .sl-flex {
   justify-content: flex-end;
   gap: calc(var(--sl-nav-gap) + 0.5rem);
-  display: flex;
+}
+@media (max-width: 50rem) {
+  :global(:root[data-has-sidebar]) {
+    .middle-group > .sl-flex {
+      display: none;
+    }
+  }
 }
 @media (min-width: 50rem) {
   .middle-group > .sl-flex {
