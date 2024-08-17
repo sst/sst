@@ -144,21 +144,3 @@ import HeaderLinks from "./HeaderLinks.astro";
   }
 }
 </style>
-
-<script>
-  function formatStars(num) {
-    return num > 999
-      ? parseFloat((num / 1000).toFixed(0)) + "K"
-      : num;
-  }
-
-  if (import.meta.env.MODE !== "development") {
-    const starsEl = document.querySelector(".stars span");
-
-    const response = await fetch("https://api.github.com/repos/sst/sst");
-    const data = await response.json();
-    const stars = formatStars(data.stargazers_count);
-
-    starsEl.innerText = stars;
-  }
-</script>

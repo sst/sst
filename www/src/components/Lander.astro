@@ -14,29 +14,6 @@ import logoAnalogDevices from "../assets/lander/analog-devices.svg?raw";
 
 const download = config.npm;
 
-// const code = `
-// export default $config({
-//   app(input) {
-//     return {
-//       name: "my-sst-app",
-//       home: "aws"
-//     };
-//   },
-//   async run() {
-//     const bucket = new sst.aws.Bucket("MyBucket");
-//
-//     return {
-//       bucket: bucket.name
-//     };
-//   }
-// });
-// `;
-//
-// const api = new sst.cloudflare.Worker("Api", {
-//   link: [db, email],
-//   handler: "./src/api.ts",
-//   domain: "api.example.com"
-// })
 const code = `
 const db = new planetscale.Database("Db")
 
@@ -451,7 +428,7 @@ p.description {
 <script>
   const button = document.querySelector("button.command");
 
-  button.addEventListener("click", () => {
+  button?.addEventListener("click", () => {
     navigator.clipboard.writeText(button.dataset.command);
     button.classList.toggle("success");
     setTimeout(() => {
