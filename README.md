@@ -18,6 +18,8 @@ SST makes it easy to build modern full-stack applications on AWS. Watch the [**S
 $ npx create-sst@latest
 ```
 
+> For v2 docs, head over to [v2.sst.dev](https://v2.sst.dev)
+
 ### Pick your frontend
 
 Deploy Next.js, Svelte, Remix, Astro, Solid, or any static site to AWS.
