@@ -171,9 +171,10 @@ else if (slug === "docs/examples") {
   }
   @media (max-width: 30rem) {
     footer.splash {
+      gap: 0.5rem;
       flex-direction: column;
       align-items: flex-start;
-      padding-block: var(--sl-nav-pad-y);
+      padding-block: calc(2 * var(--sl-nav-pad-y));
     }
   }
   .splash p {
@@ -195,7 +196,7 @@ else if (slug === "docs/examples") {
   }
   @media (max-width: 30rem) {
     .splash .links {
-      gap: 0;
+      gap: 0.5rem;
       align-items: flex-start;
       flex-direction: column;
     }
@@ -207,7 +208,7 @@ else if (slug === "docs/examples") {
   }
   @media (max-width: 30rem) {
     .splash .links .pages {
-      gap: 1rem;
+      gap: 1.5rem;
     }
   }
   .splash .links .pages a {
@@ -222,6 +223,11 @@ else if (slug === "docs/examples") {
     display: flex;
     align-items: center;
     gap: 0.8125rem;
+  }
+  @media (max-width: 30rem) {
+    .splash .links .social {
+      gap: 1rem;
+    }
   }
   .splash .links .social a {
     color: var(--color-text-dimmed);

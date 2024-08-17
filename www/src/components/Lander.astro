@@ -159,7 +159,7 @@ const web = new sst.aws.Nextjs("Web", {
 }
 @media (max-width: 30rem) {
   .right {
-    gap: 1rem;
+    gap: 3.25rem;
   }
 }
 .right .row {
@@ -190,13 +190,13 @@ const web = new sst.aws.Nextjs("Web", {
 }
 
 h1 {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.625rem;
   text-align: left;
   font-family: var(--sl-font-mono);
   font-size: 3rem;
   font-weight: 600;
   letter-spacing: -1px;
-  line-height: normal;
+  line-height: 1.1;
 }
 p.description {
   font-size: 1.25rem;
@@ -206,7 +206,6 @@ p.description {
 
 .command {
   all: unset;
-  font-size: 1.25rem;
   display: flex;
   align-items: center;
   gap: 0.625rem;
@@ -216,6 +215,7 @@ p.description {
 
 .command code {
   color: var(--color-text-secondary);
+  font-size: 1.5rem;
 }
 .command code:before {
   content: '> ';
@@ -230,12 +230,11 @@ p.description {
 .command .copy {
   line-height: 1;
   padding: 0;
-  height: 1rem;
 }
 .command .copy :global(svg) {
   width: 1rem;
   height: 1rem;
-  margin-bottom: 1px;
+  vertical-align: middle;
 }
 .command .copy :global(svg:first-child) {
   display: none;
@@ -369,6 +368,11 @@ p.description {
   display: flex;
   gap: 0.875rem;
   align-items: center;
+}
+@media (max-width: 30rem) {
+  .logos .icons {
+    gap: 1rem;
+  }
 }
 .logos .icons :global(svg) {
   color: var(--color-text-dimmed);

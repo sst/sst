@@ -1,7 +1,7 @@
 <a class="links" href="/docs/">Docs</a>
-<a class="links" target="_blank" href="https://guide.sst.dev">Guide</a>
-<a class="links" target="_blank" href="https://console.sst.dev">Console</a>
-<a class="links" href="/docs/examples/">Examples</a>
+<a class="links sm" target="_blank" href="https://guide.sst.dev">Guide</a>
+<a class="links sm" target="_blank" href="https://console.sst.dev">Console</a>
+<a class="links sm" href="/docs/examples/">Examples</a>
 
 <style>
   a.links {
@@ -13,5 +13,10 @@
   }
   a.links:hover {
     color: var(--sl-color-text-accent);
+  }
+  @media (max-width: 30rem) {
+    a.links.sm {
+      display: none;
+    }
   }
 </style>

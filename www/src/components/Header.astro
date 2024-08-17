@@ -43,12 +43,16 @@ import HeaderLinks from "./HeaderLinks.astro";
   gap: calc(var(--sl-nav-gap) + 0.5rem);
   align-items: center;
   height: 100%;
+  justify-content: space-between;
 }
 @media (min-width: 50rem) {
   .header {
     gap: var(--sl-nav-gap);
-    justify-content: space-between;
   }
+}
+
+.header > div:first-child {
+  flex: 0 0 auto;
 }
 
 .middle-group {
@@ -56,7 +60,7 @@ import HeaderLinks from "./HeaderLinks.astro";
 .middle-group > .sl-flex {
   justify-content: flex-end;
   gap: calc(var(--sl-nav-gap) + 0.5rem);
-  display: none;
+  display: flex;
 }
 @media (min-width: 50rem) {
   .middle-group > .sl-flex {
