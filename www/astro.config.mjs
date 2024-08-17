@@ -183,6 +183,7 @@ export default defineConfig({
   },
   redirects: {
     "/install": "https://raw.githubusercontent.com/sst/ion/dev/install",
+    "/guide": "https://guide.sst.dev",
   },
   integrations: [
     sitemap({

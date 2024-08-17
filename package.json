@@ -4,5 +4,8 @@
     "www",
     "platform",
     "sdk/js"
-  ]
+  ],
+  "dependencies": {
+    "@astro-community/astro-embed-youtube": "^0.5.3"
+  }
 }

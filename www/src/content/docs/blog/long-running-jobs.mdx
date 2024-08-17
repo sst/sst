@@ -8,6 +8,8 @@ lastUpdated: 2022-09-23
 pagefind: false
 ---
 
+import { YouTube } from '@astro-community/astro-embed-youtube';
+
 We launched a new construct that makes it easy to run functions longer than 15 minutes — `Job]
 
 These are useful for cases where you are running async tasks like video processing, ETL, and ML. A `Job` can run for up to 8 hours.
@@ -22,9 +24,7 @@ These are useful for cases where you are running async tasks like video processi
 
 We hosted a [launch livestream](https://www.youtube.com/watch?v=7sYdSbmi-ik) where we demoed the new construct, did a deep dive, and answered some questions.
 
-<div class="youtube-container">
-  <iframe src="https://www.youtube-nocookie.com/embed/7sYdSbmi-ik" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</div>
+<YouTube id="7sYdSbmi-ik" posterQuality="high" />
 
 The video is timestamped and here's roughly what we covered.
 

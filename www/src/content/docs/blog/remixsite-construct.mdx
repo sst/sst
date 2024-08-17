@@ -8,6 +8,8 @@ lastUpdated: 2022-07-19
 pagefind: false
 ---
 
+import { YouTube } from '@astro-community/astro-embed-youtube';
+
 The new `RemixSite` construct makes it easy to deploy [Remix](https://remix.run) apps to AWS.
 
 Remix is a frontend focused framework that delivers modern web experiences but by relying on web standards. The SST community has been looking for a way to deploy a Remix app with SST.
@@ -27,9 +29,7 @@ It allows you to:
 
 We hosted a [launch livestream on YouTube](https://www.youtube.com/watch?v=ZBbRZTTCwvU) where we did a deep dive of the construct and its features.
 
-<div class="youtube-container">
-  <iframe src="https://www.youtube-nocookie.com/embed/ZBbRZTTCwvU" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</div>
+<YouTube id="ZBbRZTTCwvU" posterQuality="high" />
 
 We also, took a look at the internal architecture and the construct code. Here's roughly what we covered.
 
