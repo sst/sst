@@ -6,9 +6,6 @@ export default $config({
       name: "www",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
-      providers: {
-        aws: true,
-      },
     };
   },
   console: {
