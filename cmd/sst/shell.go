@@ -10,6 +10,7 @@ import (
 
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/internal/util"
+	"github.com/sst/ion/pkg/project/provider"
 )
 
 func CmdShell(c *cli.Cli) error {
@@ -61,17 +62,35 @@ func CmdShell(c *cli.Cli) error {
 		}
 	}
 	if target == "" {
-		cmd.Env = append(cmd.Env, os.Environ()...)
+		env := map[string]string{}
+		for _, item := range os.Environ() {
+			key, value, _ := strings.Cut(item, "=")
+			env[key] = value
+		}
 		for resource, value := range complete.Links {
 			jsonValue, err := json.Marshal(value)
 			if err != nil {
 				return err
 			}
-			envVar := fmt.Sprintf("SST_RESOURCE_%s=%s", resource, jsonValue)
-			cmd.Env = append(cmd.Env, envVar)
+			env[fmt.Sprintf("SST_RESOURCE_%s", resource)] = string(jsonValue)
 		}
-		cmd.Env = append(cmd.Env, fmt.Sprintf(`SST_RESOURCE_App={"name": "%s", "stage": "%s" }`, p.App().Name, p.App().Stage))
-		for key, val := range p.Env() {
+		env["SST_RESOURCE_App"] = fmt.Sprintf(`{"name": "%s", "stage": "%s" }`, p.App().Name, p.App().Stage)
+
+		aws, ok := p.Provider("aws")
+		if ok {
+			// newer versions of aws-sdk do not like it when you specify both profile and credentials
+			delete(env, "AWS_PROFILE")
+			provider := aws.(*provider.AwsProvider)
+			creds, err := provider.Config().Credentials.Retrieve(c.Context)
+			if err != nil {
+				return err
+			}
+			cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", creds.AccessKeyID))
+			cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", creds.SecretAccessKey))
+			cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_SESSION_TOKEN=%s", creds.SessionToken))
+		}
+
+		for key, val := range env {
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
 		}
 	}
