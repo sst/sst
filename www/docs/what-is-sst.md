@@ -13,11 +13,11 @@ SST is a framework that makes it easy to build modern full-stack applications on
 
 </HeadlineText>
 
-:::tip
-If you are new to SST, we recommend you start with our latest version instead. [**Learn more about SST v3**](https://sst.dev/).
-:::
-
 Deploy a serverless Next.js, Svelte, Remix, Astro, or Solid app to your AWS account and add any backend feature to it.
+
+---
+
+We recently launched v3, a new version of SST. If you are new to SST, we recommend you start with v3 instead. [**Learn more about SST v3**](https://sst.dev/).
 
 ---
 

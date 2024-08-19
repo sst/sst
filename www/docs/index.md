@@ -26,6 +26,10 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
   </li>
 </ul>
 
+:::tip
+If you are new to SST, we recommend you start with our latest version instead. [**Learn more about SST v3**](https://sst.dev/).
+:::
+
 <div className={styles.heading}>
   <h3>Pick Your Frontend</h3>
   <p>Start with a Next.js, Svelte, Remix, Astro, or Solid app and deploy it to AWS with SST.</p>
