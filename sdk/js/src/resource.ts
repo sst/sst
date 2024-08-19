@@ -25,6 +25,9 @@ export function fromCloudflareEnv(input: any) {
       } catch {}
     }
     raw[key] = value;
+    if (key.startsWith("SST_RESOURCE_")) {
+      raw[key.replace("SST_RESOURCE_", "")] = value;
+    }
   }
 }
 
