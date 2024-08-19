@@ -11,7 +11,7 @@ import { PrivateKey } from "@pulumi/tls";
 import { s3 } from "@pulumi/aws";
 
 export interface AuthArgs {
-  authenticator: FunctionArgs;
+  authenticator: Omit<FunctionArgs, "url">;
   transform?: {
     bucketPolicy?: Transform<s3.BucketPolicyArgs>;
   };
@@ -32,7 +32,6 @@ export class Auth extends Component implements Link.Linkable {
       return new Function(`${name}Authenticator`, {
         ...args,
         url: true,
-        streaming: !$dev,
         environment: {
           ...args.environment,
           AUTH_PRIVATE_KEY: secret(this.key.privateKeyPemPkcs8),

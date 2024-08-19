@@ -12,7 +12,7 @@ export module auth {
   >(...args: Parameters<typeof AuthHandler<Providers, Sessions>>) {
     const hono = AuthHandler(...args);
     return (
-      process.env.SST_LIVE ? handle(hono) : streamHandle(hono)
+      args[0].stream ? streamHandle(hono) : handle(hono) 
     ) as Handler<any, any>;
   }
   export const sessions = createSessionBuilder;

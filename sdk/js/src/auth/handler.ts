@@ -65,6 +65,7 @@ export function AuthHandler<
     >;
   }[keyof Providers],
 >(input: {
+  stream?: boolean;
   session?: Sessions;
   providers: Providers;
   callbacks: {
