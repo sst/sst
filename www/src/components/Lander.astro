@@ -121,7 +121,7 @@ const web = new sst.aws.Nextjs("Web", {
   .lander {
     padding-block: 0;
     padding-inline: var(--sl-nav-pad-x);
-    margin-block: var(--l-content-pad-x) calc(3 * var(--l-content-pad-x));
+    margin-block: calc( 1.5 * var(--l-content-pad-x)) calc(2.5 * var(--l-content-pad-x));
   }
 }
 .lander-body {
@@ -144,6 +144,11 @@ const web = new sst.aws.Nextjs("Web", {
 .left {
   flex: 0 0 auto;
 }
+@media (max-width: 30rem) {
+  .left {
+    order: 1;
+  }
+}
 .right {
   flex: 1;
   max-width: 25rem;
@@ -160,6 +165,7 @@ const web = new sst.aws.Nextjs("Web", {
 @media (max-width: 30rem) {
   .right {
     gap: 3.25rem;
+    max-width: none;
   }
 }
 .right .row {
