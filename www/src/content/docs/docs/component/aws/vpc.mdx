@@ -16,44 +16,42 @@ import InlineSection from '../../../../../../src/components/tsdoc/InlineSection.
 The `Vpc` component lets you add a VPC to your app. It uses [Amazon VPC](https://docs.aws.amazon.com/vpc/). This is useful for services like RDS and Fargate that need to be hosted inside
 a VPC.
 
-Let's see look at a few common use cases for VPC and how to create them.
+This creates a VPC with 2 Availability Zones by default. It also creates the following
+resources:
 
-#### Default setup
+1. A default security group blocking all incoming internet traffic.
+2. A public subnet in each AZ.
+3. A private subnet in each AZ.
+4. An Internet Gateway. All the traffic from the public subnets are routed through it.
+5. If `nat` is enabled, a NAT Gateway in each AZ. All the traffic from the private subnets
+   are routed to the NAT Gateway in the same AZ.
+
+:::note
+By default, this does not create NAT Gateways.
+:::
+
+NAT Gateways are billed per hour and per gigabyte of data processed. Each NAT Gateway
+roughly costs $33 per month. Make sure to [review the pricing](https://aws.amazon.com/vpc/pricing/).
+
+#### Create a VPC
 
 ```ts title="sst.config.ts"
 new sst.aws.Vpc("MyVPC");
 ```
-
-This creates a VPC with 1 Availability Zones by default. It creates the following
-resources:
-
-1. A VPC with CIDR block `10.0.0.0/16`.
-2. A security group blocking all incoming internet traffic.
-3. A public subnet with CIDR block `10.0.1.0/24`
-4. A private subnet with CIDR block `10.0.2.0/24`.
-5. An Internet Gateway. All the traffic from the public subnets are routed through it.
-
-This setup is useful for services like Fargate where containers are deployed in the
-public subnet.
-
-:::note
-By default, this creates two NAT Gateways, one in each AZ. And it roughly costs $33 per
-NAT Gateway per month.
-:::
-
-NAT Gateways are billed per hour and per gigabyte of data processed. By default,
-this creates a NAT Gateway in each AZ. And this would be roughly $33 per NAT
-Gateway per month. Make sure to [review the pricing](https://aws.amazon.com/vpc/pricing/).
-
-
-#### Create a VPC
-
 
 #### Create it with 3 Availability Zones
 
 ```ts title="sst.config.ts" {2}
 new sst.aws.Vpc("MyVPC", {
   az: 3
+});
+```
+
+#### Enable NAT
+
+```ts title="sst.config.ts" {2}
+new sst.aws.Vpc("MyVPC", {
+  nat: "managed"
 });
 ```
 </Section>

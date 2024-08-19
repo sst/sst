@@ -300,7 +300,12 @@ export interface Target {
      * - `small`: 4 GB, 2 vCPUs
      * - `large`: 8 GB, 4 vCPUs
      *
+     * To increase the memory used by your Node.js process in the build environment, you'll want
+     * to set the `NODE_OPTIONS` environment variable to `--max-old-space-size=xyz`. Where `xyz`
+     * is the memory size in MB. By default, this is set to 1.5 GB.
+     *
      * Read more about the [CodeBuild build environments](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+     *
      * @default `small`
      */
     compute?: "small" | "medium" | "large" | "xlarge";
