@@ -1086,6 +1086,10 @@ export class Service extends Construct implements SSTConstruct {
     service: FargateService,
     target?: ApplicationTargetGroup
   ) {
+    if (this.props.scaling === null) {
+      return
+    }
+
     const {
       minContainers,
       maxContainers,
@@ -1098,6 +1102,7 @@ export class Service extends Construct implements SSTConstruct {
       minCapacity: minContainers ?? 1,
       maxCapacity: maxContainers ?? 1,
     });
+
     scaling.scaleOnCpuUtilization("CpuScaling", {
       targetUtilizationPercent: cpuUtilization ?? 70,
       scaleOutCooldown: CdkDuration.seconds(300),
