@@ -95,7 +95,7 @@ export module rpc {
 
     async read(id: string, props: any): Promise<dynamic.ReadResult> {
       return call(this.name("Read"), { id, props }).catch((ex) => {
-        if (ex instanceof MethodNotFoundError) return { id };
+        if (ex instanceof MethodNotFoundError) return { id, props };
         throw ex;
       });
     }
