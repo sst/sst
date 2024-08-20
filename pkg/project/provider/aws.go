@@ -474,4 +474,49 @@ var steps = []bootstrapStep{
 
 		return nil
 	},
+
+	// Step: enforce bucket requests to use SSL
+	func(ctx context.Context, cfg aws.Config, data *AwsBootstrapData) error {
+    s3Client := s3.NewFromConfig(cfg)
+
+    buckets := []string{data.Asset, data.State}
+    for _, bucket := range buckets {
+        slog.Info("enforcing SSL for bucket", "name", bucket)
+        policy := map[string]interface{}{
+            "Version": "2012-10-17",
+            "Statement": []map[string]interface{}{
+                {
+                    "Sid":       "EnforceSSLRequests",
+                    "Effect":    "Deny",
+                    "Principal": "*",
+                    "Action":    "s3:*",
+                    "Resource": []string{
+                        fmt.Sprintf("arn:aws:s3:::%s", bucket),
+                        fmt.Sprintf("arn:aws:s3:::%s/*", bucket),
+                    },
+                    "Condition": map[string]interface{}{
+                        "Bool": map[string]interface{}{
+                            "aws:SecureTransport": "false",
+                        },
+                    },
+                },
+            },
+        }
+
+        policyJSON, err := json.Marshal(policy)
+        if err != nil {
+            return fmt.Errorf("failed to marshal policy for bucket %s: %w", bucket, err)
+        }
+
+        _, err = s3Client.PutBucketPolicy(ctx, &s3.PutBucketPolicyInput{
+            Bucket: aws.String(bucket),
+            Policy: aws.String(string(policyJSON)),
+        })
+        if err != nil {
+            return fmt.Errorf("failed to put bucket policy for %s: %w", bucket, err)
+        }
+    }
+
+    return nil
+	},
 }
