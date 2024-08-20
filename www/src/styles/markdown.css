@@ -93,6 +93,7 @@
  .sl-markdown-content blockquote:not(:where(.not-content *)) {
   border-inline-start: 5px solid var(--divider-color);
   padding-inline-start: 1rem;
+  font-size: var(--sl-text-h4);
 }
 
 /**

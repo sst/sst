@@ -26,7 +26,7 @@ export default {
   email: "hello@sst.dev",
   sst: "https://sst.dev",
   github: "https://github.com/sst/ion",
-  discord: "https://sst.dev/discord",
+  discord: "/discord",
   twitter: "https://x.com/SST_dev",
   youtube: "https://www.youtube.com/c/sst-dev",
   linkedin: "https://www.linkedin.com/company/sst-dev",

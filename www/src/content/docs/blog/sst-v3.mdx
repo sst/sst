@@ -1,0 +1,188 @@
+---
+template: splash
+title: SST v3
+description: Ion is now officially SST v3.
+author: jay
+lastUpdated: 2024-08-20
+pagefind: false
+---
+
+import config from '../../../../config.ts';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { YouTube } from '@astro-community/astro-embed-youtube';
+
+Earlier this year we had [announced](/blog/moving-away-from-cdk) that we were working on a new deployment engine for SST called Ion. After months of testing and a gradual rollout, Ion is now officially being released as SST v3.
+
+---
+
+## Background
+
+SST was built on AWS CDK and CloudFormation. But after nearly 3 years of working with CDK and CloudFormation we hit some of its underlying design flaws and were forced to look at alternatives. We talked about this at length in a [**previous blog post**](/blog/moving-awa-from-cdk).
+
+Late last year we started work on a new deployment engine that would use [Pulumi](https://www.pulumi.com) and [Terraform](https://www.terraform.io), as opposed to CDK and CloudFormation.
+
+### How We Got Here
+
+This new deployment engine, code named Ion has now been around for roughly half a year. And for the past few months we've been recommending people start new projects with Ion instead.
+
+> The number of people using Ion is close to the number of people using v2.
+
+Fast forward to today, and the number of people actively using Ion is fairly close to the number of people using SST v2. Ion is also being used in production by a sizeable number of teams.
+
+However given the nature of the change, the plan has been to get to a place where we'd feel comfortable enough to recommend migrating to Ion.
+
+---
+
+## Ion → SST v3
+
+After months of hard work, we are finally here. We are now releasing Ion as SST v3.
+
+> The simpler deployment model has also led to far fewer gotchas.
+
+Aside from being a lot faster, v3 addressed most of the issues that we had found with the CDK and CFN setup. The simpler deployment model has also led to far fewer _gotchas_. And it has allowed us to expand past AWS and support the broader ecosystem.
+
+Along with the v3 release, we're also making a couple of changes to our websites, how we do support, the SST Console, and more. In this post we'll go over all of these changes and the migration process.
+
+### New Docs
+
+Starting with the first big change, [ion.sst.dev](https://ion.sst.dev) is now just [sst.dev](https://sst.dev). You might've already noticed the new design.
+
+The docs, [sst.dev/docs](/doc/) are also brand new. The API and reference docs are completely generated from code. This means that they're always up to date and you can view them inline in your code editor.
+
+---
+
+## Major Changes
+
+As expected, there are some major changes in v3.
+
+1. **No CloudFormation**
+
+   This one is obvious but it means that there are no stacks and no resource limits. The deployment happens right from your local machine. And the state is stored locally and backed up to S3 in your AWS account.
+
+2. **No CDK**
+
+   There are no CDK constructs. Instead there is an AWS provider from Pulumi that's built on Terraform. These are like your CDK L1 constructs. That said, the Pulumi/Terraform ecosystem is fairly complete. Aside from AWS, SST now supports [**150+ other providers**](/docs/providers/#directory).
+
+3. `sst.config.ts`
+
+   The structure of the SST config has changed a little.
+
+   <Tabs>
+     <TabItem label="v3">
+     ```ts title="sst.config.ts"
+     export default $config({
+       // Your app's config
+       app(input) {
+         return {
+           name: "my-sst-app",
+           home: "aws"
+         };
+       },
+       // Your app's resources
+       async run() { }
+     });
+     ```
+     </TabItem>
+     <TabItem label="v2">
+     ```ts title="sst.config.ts"
+     export default {
+       // Your app's config
+       config(_input) {
+         return {
+           name: "my-sst-app",
+           region: "us-east-1"
+         };
+       },
+       // Your app's resources
+       stacks(app) { }
+     } satisfies SSTConfig;
+     ```
+     </TabItem>
+   </Tabs>
+
+4. `sst dev`
+
+   The `sst dev` CLI now runs a _multiplexer_ that deploys your app and runs your frontends locally. So now you don't have to run `sst dev` and then go start your frontend. You also don't need to wrap your frontend's `dev` script with `sst bind`.
+
+And more. We have a section in our [migration doc](/docs/migrate-from-v2#major-changes) that goes over all the changes in detail.
+
+---
+
+## Learning More
+
+Given that v3 is such a big change, we've got a couple of resources that can help you learn more about it.
+
+These are great for getting started with SST in general. But we also recommend checking them out even if you've been using v2.
+
+- **Docs**
+  
+  Start with the [What is SST](/docs/) and [Workflow](/docs/workflow/) docs. These give you a good overview and lead you to other docs that expand on the various concepts.
+
+- **Guide**
+
+  Our [SST Guide](https://guide.sst.dev) has been updated to use v3. It teaches you how to build a full-stack app on AWS with SST.
+
+- **Video**
+
+  To get a more in-depth look at a v3 app in production, we put together this video detailing how [terminal](https://www.terminal.shop) was built with v3. It's comprehensive and you can [view the repo on GitHub](https://github.com/terminaldotshop/terminal) as well.
+
+  <YouTube id="POlZS8PcyZw" posterQuality="high" />
+
+---
+
+## Migration
+
+We've created a [**detailed migration guide**](/docs/migrate-from-v2) on how to migrate your v2 apps to v3.
+
+> It's a lot simpler to import resources.
+
+One of the biggest advantages with this new deployment engine is that it's a lot simpler to [import resources](/docs/import-resources). This makes migrating to v3 easier.
+
+That said, there are some caveats:
+
+- If you were heavily reliant on L3 CDK Constructs in your SST apps, it's going to be hard to find direct replacements for those in the Pulumi/Terraform ecosystem.
+- There are something that aren't supported yet. But they are on our roadmap.
+  - Some constructs; like `Job`, `Auth`, `EventBus` that we haven't added support for yet.
+  - Non-Node runtimes for Lambda functions aren't supported yet either.
+  - SST v3 does not work on Windows yet, you'll need to use WSL.
+
+---
+
+## Support
+
+We know that you are going to need some help migrating to v3. To prepare for this we've made some changes to how we do support.
+
+We are now using GitHub Issues as our primary channel. We've been using it while working on Ion and we are using it to track both issues and feature requests.
+
+We also streamlined our Discord channels. Instead of having separate channels for the different parts of SST, you can just post your questions in `#general`.
+
+---
+
+## Console
+
+The [**Console**](/docs/console/) has also been updated to support v3. There are a couple of key things that the Console does a better job of with v3 apps.
+
+1. **Resources**:
+   The Console shows you all the resources in your app, not just the SST components. This includes the outputs of each of the resources as well.
+2. **Updates**:
+   You can also see all the updates that are made to your app along with the resources that've been changed. So you can see when a resource was added, removed, or modified.
+3. **Autodeploy**:
+   You can now connect your GitHub repo to the Console and it'll auto-deploy your v3 apps when you _git push_ to it. You can also customize this workflow through your `sst.config.ts`. 
+
+If you are using [Seed](https://seed.run) to deploy your SST v2 apps, we recommend migrating over to the Console for v3. We are currently not planning to support v3 in Seed.
+
+---
+
+## What About v2
+
+The v3 migration is not simple and there are likely a few of you that won't be able to make the change. So we are planning on keeping v2 updated.
+
+We'll accept PRs and release updates. But we won't add new constructs or introduce breaking changes.
+
+The SST v2 docs have been moved to [v2.sst.dev](https://v2.sst.dev).
+
+---
+
+We know this is a big change and you might have some concerns about it. Feel free to <a href={config.discord}>join us on Discord</a> and we'll be happy to address them.
+
+If you are an enterprise you can <a href={`mailto:${config.email}`}>**get in touch with us directly via email**</a> as well.
