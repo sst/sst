@@ -10,6 +10,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/joho/godotenv"
 	"github.com/sst/ion/internal/util"
+	"github.com/sst/ion/pkg/flag"
 	"github.com/sst/ion/pkg/project"
 )
 
@@ -99,7 +100,7 @@ func (c *Cli) InitProject() (*project.Project, error) {
 
 func (c *Cli) configureLog() {
 	writers := []io.Writer{logFile}
-	if c.Bool("print-logs") {
+	if c.Bool("print-logs") || flag.SST_PRINT_LOGS {
 		writers = append(writers, os.Stderr)
 	}
 	writer := io.MultiWriter(writers...)
