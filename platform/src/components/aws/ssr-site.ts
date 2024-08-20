@@ -141,6 +141,38 @@ export interface SsrSiteArgs extends BaseSsrSiteArgs {
      * ```
      */
     architecture?: FunctionArgs["architecture"];
+    /**
+     * Dependencies that need to be excluded from the server function package.
+     *
+     * Certain npm packages cannot be bundled using esbuild. This allows you to exclude them
+     * from the bundle. Instead they'll be moved into a `node_modules/` directory in the
+     * function package.
+     *
+     * :::tip
+     * If esbuild is giving you an error about a package, try adding it to the `install` list.
+     * :::
+     *
+     * This will allow your functions to be able to use these dependencies when deployed. They
+     * just won't be tree shaken. You however still need to have them in your `package.json`.
+     *
+     * :::caution
+     * Packages listed here still need to be in your `package.json`.
+     * :::
+     *
+     * Esbuild will ignore them while traversing the imports in your code. So these are the
+     * **package names as seen in the imports**. It also works on packages that are not directly
+     * imported by your code.
+     *
+     * @example
+     * ```js
+     * {
+     *   server: {
+     *     install: ["sharp"]
+     *   }
+     * }
+     * ```
+     */
+    install?: Input<string[]>;
   };
   vpc?: FunctionArgs["vpc"];
   /**
@@ -612,6 +644,7 @@ function handler(event) {
             ...props.function,
             nodejs: {
               format: "esm" as const,
+              install: args.server?.install,
               ...props.function.nodejs,
             },
             environment: output(args.environment).apply((environment) => ({
