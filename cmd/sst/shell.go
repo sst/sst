@@ -81,13 +81,17 @@ func CmdShell(c *cli.Cli) error {
 			// newer versions of aws-sdk do not like it when you specify both profile and credentials
 			delete(env, "AWS_PROFILE")
 			provider := aws.(*provider.AwsProvider)
-			creds, err := provider.Config().Credentials.Retrieve(c.Context)
+			cfg := provider.Config()
+			creds, err := cfg.Credentials.Retrieve(c.Context)
 			if err != nil {
 				return err
 			}
 			cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", creds.AccessKeyID))
 			cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", creds.SecretAccessKey))
 			cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_SESSION_TOKEN=%s", creds.SessionToken))
+			if cfg.Region != "" {
+				cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_REGION=%s", cfg.Region))
+			}
 		}
 
 		for key, val := range env {
