@@ -99,6 +99,9 @@ func (c *Cli) InitProject() (*project.Project, error) {
 
 func (c *Cli) configureLog() {
 	writers := []io.Writer{logFile}
+	if c.Bool("print-logs") {
+		writers = append(writers, os.Stderr)
+	}
 	writer := io.MultiWriter(writers...)
 	slog.SetDefault(
 		slog.New(slog.NewTextHandler(writer, &slog.HandlerOptions{

@@ -234,6 +234,22 @@ var root = &cli.Command{
 			},
 		},
 		{
+			Name: "print-logs",
+			Type: "bool",
+			Description: cli.Description{
+				Short: "Print logs to stderr",
+				Long: strings.Join([]string{
+					"",
+					"Print logs to stderr - useful if running in CI.",
+					"",
+					"```bash",
+					"sst [command] --print-logs",
+					"```",
+					"",
+				}, "\n"),
+			},
+		},
+		{
 			Name: "help",
 			Type: "bool",
 			Description: cli.Description{
