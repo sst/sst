@@ -169,6 +169,10 @@ func PushState(backend Home, updateID string, app, stage string, from string) er
 	if err != nil {
 		return err
 	}
+	err = json.Unmarshal(fileBytes, &map[string]interface{}{})
+	if err != nil {
+		return fmt.Errorf("somoething has corrupted the state file - refusing to upload: %w", err)
+	}
 	group.Go(func() error {
 		return backend.putData("app", app, stage, bytes.NewReader(fileBytes))
 	})
