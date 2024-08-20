@@ -183,6 +183,7 @@ export function buildApp(
           cwd: sitePath,
           env: linkEnvs.apply((linkEnvs) => ({
             SST: "1",
+            ...process.env,
             ...environment,
             ...linkEnvs,
           })),
