@@ -1102,7 +1102,6 @@ export class Service extends Construct implements SSTConstruct {
       minCapacity: minContainers ?? 1,
       maxCapacity: maxContainers ?? 1,
     });
-
     scaling.scaleOnCpuUtilization("CpuScaling", {
       targetUtilizationPercent: cpuUtilization ?? 70,
       scaleOutCooldown: CdkDuration.seconds(300),
