@@ -120,6 +120,9 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    * @default false
    */
   edge?: boolean;
+  revalidationTable?: Table;
+  revalidationQueue?: Queue;
+  revalidationFunction?: CdkFunction;
   imageOptimization?: {
     /**
      * The amount of memory in MB allocated for image optimization function.
@@ -214,6 +217,9 @@ export class NextjsSite extends SsrSite {
     routes: Record<string, unknown>;
   };
   private openNextOutput?: OpenNextOutput;
+  public revalidationTable?: Table;
+  public revalidationQueue?: Queue;
+  public revalidationFunction?: Function;
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps = {}) {
     super(scope, id, {
@@ -451,11 +457,11 @@ export class NextjsSite extends SsrSite {
 
     const { cdk } = this.props;
 
-    const queue = new Queue(this, "RevalidationQueue", {
+    this.revalidationQueue = new Queue(this, "RevalidationQueue", {
       fifo: true,
       receiveMessageWaitTime: CdkDuration.seconds(20),
     });
-    const consumer = new CdkFunction(this, "RevalidationFunction", {
+    this.revalidationFunction = new CdkFunction(this, "RevalidationFunction", {
       description: "Next.js revalidator",
       handler: "index.handler",
       code: Code.fromAsset(
@@ -465,13 +471,13 @@ export class NextjsSite extends SsrSite {
       timeout: CdkDuration.seconds(30),
       ...cdk?.revalidation,
     });
-    consumer.addEventSource(new SqsEventSource(queue, { batchSize: 5 }));
+    this.revalidationFunction.addEventSource(new SqsEventSource(this.revalidationQueue, { batchSize: 5 }));
 
     this.serverFunctions.forEach((server) => {
       // Allow server to send messages to the queue
-      server.addEnvironment("REVALIDATION_QUEUE_URL", queue.queueUrl);
+      server.addEnvironment("REVALIDATION_QUEUE_URL", this.revalidationQueue.queueUrl);
       server.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
-      queue.grantSendMessages(server.role!);
+      this.revalidationQueue.grantSendMessages(server.role!);
     });
   }
 
@@ -480,7 +486,7 @@ export class NextjsSite extends SsrSite {
 
     const { path: sitePath } = this.props;
 
-    const table = new Table(this, "RevalidationTable", {
+    this.revalidationTable = new Table(this, "RevalidationTable", {
       partitionKey: { name: "tag", type: AttributeType.STRING },
       sortKey: { name: "path", type: AttributeType.STRING },
       pointInTimeRecovery: true,
@@ -496,8 +502,8 @@ export class NextjsSite extends SsrSite {
     });
 
     this.serverFunctions.forEach((server) => {
-      server?.addEnvironment("CACHE_DYNAMO_TABLE", table.tableName);
-      table.grantReadWriteData(server.role!);
+      server?.addEnvironment("CACHE_DYNAMO_TABLE", this.revalidationTable.tableName);
+      this.revalidationTable.grantReadWriteData(server.role!);
     });
 
     const dynamodbProviderPath = path.join(
@@ -531,11 +537,11 @@ export class NextjsSite extends SsrSite {
               "dynamodb:PutItem",
               "dynamodb:DescribeTable",
             ],
-            resources: [table.tableArn],
+            resources: [this.revalidationTable.tableArn],
           }),
         ],
         environment: {
-          CACHE_DYNAMO_TABLE: table.tableName,
+          CACHE_DYNAMO_TABLE: this.revalidationTable.tableName,
         },
       });
 
