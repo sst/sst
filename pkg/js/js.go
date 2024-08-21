@@ -99,6 +99,11 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 	}
 	slog.Info("esbuild built", "outfile", outfile)
 
+	analysis := esbuild.AnalyzeMetafile(result.Metafile, esbuild.AnalyzeMetafileOptions{
+		Verbose: true,
+	})
+	os.WriteFile(filepath.Join(input.Dir, ".sst", "esbuild.json"), []byte(analysis), 0644)
+
 	return result, nil
 }
 
