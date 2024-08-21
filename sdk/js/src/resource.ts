@@ -11,7 +11,13 @@ const raw: Record<string, any> = {
   // @ts-expect-error,
   ...globalThis.$SST_LINKS,
 };
-for (const [key, value] of Object.entries(env)) {
+
+const environment = {
+  ...env,
+  ...globalThis.process?.env,
+};
+
+for (const [key, value] of Object.entries(environment)) {
   if (key.startsWith("SST_RESOURCE_") && value) {
     raw[key.slice("SST_RESOURCE_".length)] = JSON.parse(value);
   }

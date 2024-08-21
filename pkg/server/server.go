@@ -43,6 +43,7 @@ func New() (*Server, error) {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
+		slog.Info("rpc request", "method", r.Method, "url", r.URL.String())
 		result.Rpc.ServeCodec(jsonrpc.NewServerCodec(&HttpConn{Reader: r.Body, Writer: w}))
 	})
 	return result, nil
