@@ -146,6 +146,14 @@ To manually set up a domain on an unsupported provider, you'll need to:
 
 1. [Validate that you own the domain](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) by creating an ACM certificate. You can either validate it by setting a DNS record or by verifying an email sent to the domain owner.
 
+   :::note
+   For CloudFront distributions, the certificate needs to be created in `us-east-1`.
+   :::
+
+   If you are configuring a custom domain for a CloudFront distribution, the ACM certificate that's used to prove that you own the domain needs be created in the `us-east-1` region.
+
+   For all the other components, like ApiGatewayV2 or Cluster, can be created in any region.
+
 2. Once validated, set the certificate ARN as the `cert` and set `dns` to `false`.
 
    ```js
@@ -159,11 +167,3 @@ To manually set up a domain on an unsupported provider, you'll need to:
    ```
 
 3. Add the DNS records in your provider to point to the CloudFront distribution, API Gateway, or load balancer URL.
-
----
-
-#### Certificate region
-
-If you are configuring a custom domain for a CloudFront distribution, the ACM certificate that's used to prove that you own the domain needs be created in the `us-east-1` region.
-
-For all the other components, like ApiGatewayV2 or Cluster, can be created in any region.
