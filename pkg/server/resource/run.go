@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 
@@ -30,7 +31,7 @@ type RunOutputs struct {
 
 func NewRun() *Run {
 	return &Run{
-		lock: semaphore.NewWeighted(4),
+		lock: semaphore.NewWeighted(8),
 	}
 }
 
@@ -87,6 +88,7 @@ func (r *Run) executeCommand(input *RunInputs) error {
 	for scanner.Scan() {
 		bus.Publish(&common.StdoutEvent{Line: scanner.Text()})
 	}
+	slog.Info("waiting for command to finish", "cmd", cmd.String())
 	cmd.Wait()
 	if cmd.ProcessState.ExitCode() > 0 {
 		return fmt.Errorf("command exited with code %d", cmd.ProcessState.ExitCode())
