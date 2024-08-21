@@ -169,7 +169,7 @@ This takes either:
   ```ts
   {
     transform: {
-      role: (args) => {
+      role: (args, opts) => {
         args.name = `${args.name}-MyRole`;
         opts.retainOnDelete = true;
       }
