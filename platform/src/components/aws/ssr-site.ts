@@ -173,6 +173,19 @@ export interface SsrSiteArgs extends BaseSsrSiteArgs {
      * ```
      */
     install?: Input<string[]>;
+    /**
+     * A list of Lambda layer ARNs to add to the server function.
+     *
+     * @example
+     * ```js
+     * {
+     *   server: {
+     *     layers: ["arn:aws:lambda:us-east-1:123456789012:layer:my-layer:1"]
+     *   }
+     * }
+     * ```
+     */
+    layers?: Input<Input<string>[]>;
   };
   vpc?: FunctionArgs["vpc"];
   /**
@@ -665,6 +678,10 @@ function handler(event) {
             link: output(args.link).apply((link) => [
               ...(props.function.link ?? []),
               ...(link ?? []),
+            ]),
+            layers: output(args.server?.layers).apply((layers) => [
+              ...(props.function.layers ?? []),
+              ...(layers ?? []),
             ]),
             url: true,
             live: false,
