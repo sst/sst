@@ -485,7 +485,10 @@ export function AuthHandler<
               }
             );
 
-          const { client_id, state } = useCookies();
+          const { client_id, state } = {
+            ...useCookies(),
+            ...useQueryParams(),
+          } as Record<string, string>;
 
           if (response_type === "token") {
             const location = new URL(redirect_uri);
