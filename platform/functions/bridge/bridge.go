@@ -32,6 +32,7 @@ var LAMBDA_RUNTIME_API = os.Getenv("AWS_LAMBDA_RUNTIME_API")
 var SST_APP = os.Getenv("SST_APP")
 var SST_STAGE = os.Getenv("SST_STAGE")
 var SST_FUNCTION_ID = os.Getenv("SST_FUNCTION_ID")
+var SST_FUNCTION_TIMEOUT = os.Getenv("SST_FUNCTION_TIMEOUT")
 
 var ENV_BLACKLIST = map[string]bool{
 	"SST_DEBUG_ENDPOINT":              true,
@@ -219,6 +220,14 @@ func run() error {
 		mqttClient.Publish(prefix+"/shutdown", 1, false, initPayload).Wait()
 	}()
 
+	timeout := time.Second * 3
+	if SST_FUNCTION_TIMEOUT != "" {
+		// parse to int not int64
+		parsed, err := strconv.ParseInt(SST_FUNCTION_TIMEOUT, 10, 64)
+		if err != nil {
+			timeout = time.Millisecond * time.Duration(parsed)
+		}
+	}
 	for {
 		// aws will sleep lambda until next invocation
 		req, err := http.Get("http://" + LAMBDA_RUNTIME_API + "/2018-06-01/runtime/invocation/next")
@@ -230,7 +239,7 @@ func run() error {
 		slog.Info("dialing lambda runtime api")
 		go func() {
 			select {
-			case <-time.After(time.Second * 3):
+			case <-time.After(timeout):
 				slog.Info("sst dev is not running")
 				reportError(requestID, "it does not seem like sst dev is running")
 				cancel()

@@ -1056,7 +1056,8 @@ export class Function extends Component implements Link.Linkable {
             result.SST_FUNCTION_ID = name;
             result.SST_APP = $app.name;
             result.SST_STAGE = $app.stage;
-            // result.SST_LINK = (link || []).map((l) => l.urn).join(",");
+            if (process.env.SST_FUNCTION_TIMEOUT)
+              result.SST_FUNCTION_TIMEOUT = process.env.SST_FUNCTION_TIMEOUT;
           }
           return result;
         },
