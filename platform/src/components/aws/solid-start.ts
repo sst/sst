@@ -1,6 +1,12 @@
 import fs from "fs";
 import path from "path";
-import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
+import {
+  ComponentResourceOptions,
+  Input,
+  Output,
+  all,
+  output,
+} from "@pulumi/pulumi";
 import { Function } from "./function.js";
 import {
   SsrSiteArgs,
@@ -398,19 +404,13 @@ export class SolidStart extends Component implements Link.Linkable {
     }
 
     const { access, bucket } = createBucket(parent, name, partition, args);
-    const outputPath = buildApp(parent, name, args, sitePath).apply(
-      (output) => {
-        const nitro = JSON.parse(
-          fs.readFileSync(path.join(output, ".output/nitro.json")).toString(),
-        );
-        if (nitro.preset !== "aws-lambda-streaming") {
-          throw new VisibleError(
-            'SolidStart app does not seem to be configured with the right preset. Be sure to specify `preset: "aws-lambda-streaming"` in your `app.config.ts`.',
-          );
-        }
-        return output;
-      },
-    );
+    const outputPath = buildApp(parent, name, args, sitePath);
+    const preset = outputPath.apply((output) => {
+      const nitro = JSON.parse(
+        fs.readFileSync(path.join(output, ".output/nitro.json")).toString(),
+      );
+      return nitro.preset;
+    });
     const buildMeta = loadBuildMetadata();
     const plan = buildPlan();
     const { distribution, ssrFunctions, edgeFunctions } =
@@ -457,62 +457,64 @@ export class SolidStart extends Component implements Link.Linkable {
     }
 
     function buildPlan() {
-      return all([outputPath, buildMeta]).apply(([outputPath, buildMeta]) => {
-        const serverConfig = {
-          description: "Server handler for Solid",
-          handler: "index.handler",
-          bundle: path.join(outputPath, ".output", "server"),
-          streaming: true,
-        };
+      return all([outputPath, buildMeta, preset]).apply(
+        ([outputPath, buildMeta, preset]) => {
+          const serverConfig = {
+            description: "Server handler for Solid",
+            handler: "index.handler",
+            bundle: path.join(outputPath, ".output", "server"),
+            streaming: preset === "aws-lambda-streaming",
+          };
 
-        return validatePlan({
-          edge: false,
-          cloudFrontFunctions: {
-            serverCfFunction: {
-              injections: [useCloudFrontFunctionHostHeaderInjection()],
+          return validatePlan({
+            edge: false,
+            cloudFrontFunctions: {
+              serverCfFunction: {
+                injections: [useCloudFrontFunctionHostHeaderInjection()],
+              },
             },
-          },
-          origins: {
-            server: {
+            origins: {
               server: {
-                function: serverConfig,
+                server: {
+                  function: serverConfig,
+                },
               },
-            },
-            s3: {
               s3: {
-                copy: [
-                  {
-                    from: buildMeta.assetsPath,
-                    to: "",
-                    cached: true,
-                  },
-                ],
+                s3: {
+                  copy: [
+                    {
+                      from: buildMeta.assetsPath,
+                      to: "",
+                      cached: true,
+                    },
+                  ],
+                },
               },
             },
-          },
-          behaviors: [
-            {
-              cacheType: "server",
-              cfFunction: "serverCfFunction",
-              origin: "server",
-            },
-            {
-              pattern: "_server/",
-              cacheType: "server",
-              cfFunction: "serverCfFunction",
-              origin: "server",
-            },
-            ...buildMeta.staticRoutes.map(
-              (route) =>
-                ({
-                  cacheType: "static",
-                  pattern: route,
-                  origin: "s3",
-                }) as const,
-            ),
-          ],
-        });
-      });
+            behaviors: [
+              {
+                cacheType: "server",
+                cfFunction: "serverCfFunction",
+                origin: "server",
+              },
+              {
+                pattern: "_server/",
+                cacheType: "server",
+                cfFunction: "serverCfFunction",
+                origin: "server",
+              },
+              ...buildMeta.staticRoutes.map(
+                (route) =>
+                  ({
+                    cacheType: "static",
+                    pattern: route,
+                    origin: "s3",
+                  }) as const,
+              ),
+            ],
+          });
+        },
+      );
     }
   }
 
