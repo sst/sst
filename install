@@ -75,6 +75,7 @@ check_version() {
         fi
 
         installed_version=$(sst version)
+        installed_version=$(echo $installed_version | awk '{print $2}')
 
         if [[ "$installed_version" != "$specific_version" ]]; then
             print_message info "Installed version: ${YELLOW}$installed_version."
