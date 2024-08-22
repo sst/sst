@@ -22,7 +22,7 @@ func CmdShell(c *cli.Cli) error {
 
 	var args []string
 	for _, arg := range c.Arguments() {
-		args = append(args, strings.Fields(arg)...)
+		args = append(args, arg)
 	}
 	cwd, _ := os.Getwd()
 	currentDir := cwd
