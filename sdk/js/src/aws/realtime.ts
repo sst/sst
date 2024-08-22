@@ -11,17 +11,32 @@ import { IoTCustomAuthorizerHandler, PolicyDocument } from "aws-lambda";
 export module realtime {
   export interface AuthResult {
     /**
-     * The principal ID of the authorized client. This could be (but is not limited to) a user ID, an email address, or a phone number.
+     * The principal ID of the authorized client. This could be a user ID, username, or
+     * phone number.
+     *
+     * The value must be an alphanumeric string with at least one, and no more than 128,
+     * characters and match the regex pattern, `([a-zA-Z0-9]){1,128}`.
      */
     principalId?: string;
 
     /**
-     * How long the client should be disconnected after the token expires.
+     * The maximum duration in seconds of the connection to IoT Core.
+     *
+     * :::note
+     * This is set when the connection is established and cannot be modified during subsequent
+     * policy refresh authorization handler invocations.
+     * :::
+     *
+     * The minimum value is 300 seconds, and the maximum is 86400 seconds.
+     * @default `86400`
      */
     disconnectAfterInSeconds?: number;
 
     /**
-     * How long the client should be refreshed after the token expires.
+     * The duration in seconds between policy refreshes. After the given duration, IoT Core
+     * will invoke the authorization handler function.
+     *
+     * The minimum value is 300 seconds, and the maximum value is 86400 seconds.
      */
     refreshAfterInSeconds?: number;
 
@@ -63,7 +78,10 @@ export module realtime {
     publish?: string[];
 
     /**
-     * Any additional policy documents to attach to the client.
+     * Any additional [IoT Core policy documents](https://docs.aws.amazon.com/iot/latest/developerguide/iot-policies.html) to attach to the client.
+     *
+     * There's a maximum of 10 policy documents. Where each document can contain a maximum of
+     * 2048 characters.
      * @example
      * ```js
      * {
@@ -72,14 +90,14 @@ export module realtime {
      *       Version: "2012-10-17",
      *       Statement: [
      *         {
-     *           Action: "iot:GetThingShadow",
+     *           Action: "iot:Publish",
      *           Effect: "Allow",
-     *           Resource: "*",
-     *         },
-     *       ],
-     *     },
-     *   ],
-     * };
+     *           Resource: "*"
+     *         }
+     *       ]
+     *     }
+     *   ]
+     * }
      * ```
      */
     policyDocuments?: PolicyDocument[];
@@ -136,37 +154,37 @@ export module realtime {
               },
               ...(subscribe
                 ? [
-                    {
-                      Action: "iot:Receive",
-                      Effect: "Allow",
-                      Resource: subscribe.map(
-                        (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`
-                      ),
-                    },
-                  ]
+                  {
+                    Action: "iot:Receive",
+                    Effect: "Allow",
+                    Resource: subscribe.map(
+                      (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`
+                    ),
+                  },
+                ]
                 : []),
               ...(subscribe
                 ? [
-                    {
-                      Action: "iot:Subscribe",
-                      Effect: "Allow",
-                      Resource: subscribe.map(
-                        (t) =>
-                          `arn:aws:iot:${region}:${accountId}:topicfilter/${t}`
-                      ),
-                    },
-                  ]
+                  {
+                    Action: "iot:Subscribe",
+                    Effect: "Allow",
+                    Resource: subscribe.map(
+                      (t) =>
+                        `arn:aws:iot:${region}:${accountId}:topicfilter/${t}`
+                    ),
+                  },
+                ]
                 : []),
               ...(publish
                 ? [
-                    {
-                      Action: "iot:Publish",
-                      Effect: "Allow",
-                      Resource: publish.map(
-                        (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`
-                      ),
-                    },
-                  ]
+                  {
+                    Action: "iot:Publish",
+                    Effect: "Allow",
+                    Resource: publish.map(
+                      (t) => `arn:aws:iot:${region}:${accountId}:topic/${t}`
+                    ),
+                  },
+                ]
                 : []),
             ],
           },

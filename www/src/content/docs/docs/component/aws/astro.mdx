@@ -871,6 +871,8 @@ The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p>[<code class="key">architecture?</code>](#server-architecture)</p>
+- <p>[<code class="key">install?</code>](#server-install)</p>
+- <p>[<code class="key">layers?</code>](#server-layers)</p>
 - <p>[<code class="key">memory?</code>](#server-memory)</p>
 </Section>
 
@@ -898,6 +900,59 @@ of the server function.
 {
   server: {
     architecture: "arm64"
+  }
+}
+```
+</Segment>
+<NestedTitle id="server-install" Tag="h4" parent="server.">install?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+Dependencies that need to be excluded from the server function package.
+
+Certain npm packages cannot be bundled using esbuild. This allows you to exclude them
+from the bundle. Instead they'll be moved into a `node_modules/` directory in the
+function package.
+
+:::tip
+If esbuild is giving you an error about a package, try adding it to the `install` list.
+:::
+
+This will allow your functions to be able to use these dependencies when deployed. They
+just won't be tree shaken. You however still need to have them in your `package.json`.
+
+:::caution
+Packages listed here still need to be in your `package.json`.
+:::
+
+Esbuild will ignore them while traversing the imports in your code. So these are the
+**package names as seen in the imports**. It also works on packages that are not directly
+imported by your code.
+
+```js
+{
+  server: {
+    install: ["sharp"]
+  }
+}
+```
+</Segment>
+<NestedTitle id="server-layers" Tag="h4" parent="server.">layers?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">[]</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+A list of Lambda layer ARNs to add to the server function.
+
+```js
+{
+  server: {
+    layers: ["arn:aws:lambda:us-east-1:123456789012:layer:my-layer:1"]
   }
 }
 ```
