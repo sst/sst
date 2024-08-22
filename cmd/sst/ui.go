@@ -8,8 +8,10 @@ import (
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/aws"
 	"github.com/sst/ion/cmd/sst/mosaic/cloudflare"
+	"github.com/sst/ion/cmd/sst/mosaic/deployer"
 	"github.com/sst/ion/cmd/sst/mosaic/dev"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
+	"github.com/sst/ion/cmd/sst/mosaic/ui/common"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server"
 )
@@ -41,6 +43,8 @@ func CmdUI(c *cli.Cli) error {
 	}
 	if filter == "sst" || filter == "" {
 		types = append(types,
+			common.StdoutEvent{},
+			deployer.DeployFailedEvent{},
 			project.StackCommandEvent{},
 			project.ConcurrentUpdateEvent{},
 			project.StackCommandEvent{},

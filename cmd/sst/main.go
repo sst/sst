@@ -19,6 +19,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/dev"
+	"github.com/sst/ion/cmd/sst/mosaic/errors"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/global"
@@ -55,7 +56,7 @@ func main() {
 	})
 	err := run()
 	if err != nil {
-		err := TransformError(err)
+		err := errors.Transform(err)
 		errorMessage := err.Error()
 		if len(errorMessage) > 255 {
 			errorMessage = errorMessage[:255]

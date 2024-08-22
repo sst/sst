@@ -14,6 +14,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+	"github.com/sst/ion/cmd/sst/mosaic/deployer"
 	"github.com/sst/ion/pkg/project"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -173,6 +174,9 @@ func (m *footer) Update(msg any) {
 		}
 		m.complete = msg
 	case *project.ConcurrentUpdateEvent:
+		m.Reset()
+		break
+	case *deployer.DeployFailedEvent:
 		m.Reset()
 		break
 	case *apitype.ResourcePreEvent:

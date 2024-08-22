@@ -5,13 +5,18 @@ import (
 	"log/slog"
 	"reflect"
 
+	"github.com/sst/ion/cmd/sst/mosaic/errors"
 	"github.com/sst/ion/cmd/sst/mosaic/watcher"
+	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/bus"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server"
 )
 
 type DeployRequestedEvent struct{}
+type DeployFailedEvent struct {
+	Error string
+}
 
 func Start(ctx context.Context, p *project.Project, server *server.Server) error {
 	defer slog.Info("deployer done")
@@ -31,11 +36,17 @@ func Start(ctx context.Context, p *project.Project, server *server.Server) error
 			case *watcher.FileChangedEvent, *DeployRequestedEvent:
 				if evt, ok := evt.(*watcher.FileChangedEvent); !ok || watchedFiles[evt.Path] {
 					slog.Info("deployer deploying")
-					p.Run(ctx, &project.StackInput{
+					err := p.Run(ctx, &project.StackInput{
 						Command:    "deploy",
 						Dev:        true,
 						ServerPort: server.Port,
 					})
+					if err != nil {
+						transformed := errors.Transform(err)
+						if _, ok := transformed.(*util.ReadableError); ok {
+							bus.Publish(&DeployFailedEvent{Error: transformed.Error()})
+						}
+					}
 				}
 			}
 			continue

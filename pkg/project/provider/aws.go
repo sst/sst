@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/smithy-go"
 	"github.com/sst/ion/internal/util"
 
 	ecrTypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
@@ -31,6 +32,8 @@ type AwsProvider struct {
 	profile     string
 	credentials sync.Once
 }
+
+var ErrBucketMissing = errors.New("sst state bucket missing")
 
 func (a *AwsProvider) Env() (map[string]string, error) {
 	creds, err := a.config.Credentials.Retrieve(context.Background())
@@ -142,6 +145,12 @@ func (a *AwsHome) getData(key, app, stage string) (io.Reader, error) {
 		Key:    aws.String(a.pathForData(key, app, stage)),
 	})
 	if err != nil {
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) {
+			if apiErr.ErrorCode() == "NoSuchBucket" {
+				return nil, ErrBucketMissing
+			}
+		}
 		var nsk *s3types.NoSuchKey
 		if errors.As(err, &nsk) {
 			return nil, nil
@@ -274,11 +283,11 @@ func AwsBootstrap(cfg aws.Config) (*AwsBootstrapData, error) {
 }
 
 type AwsBootstrapData struct {
-	Version 					 int    `json:"version"`
-	Asset   					 string `json:"asset"`
+	Version            int    `json:"version"`
+	Asset              string `json:"asset"`
 	AssetEcrRegistryId string `json:"assetEcrRegistryId"`
-	AssetEcrUrl 			 string `json:"assetEcrUrl"`
-	State   					 string `json:"state"`
+	AssetEcrUrl        string `json:"assetEcrUrl"`
+	State              string `json:"state"`
 }
 
 type bootstrapStep = func(ctx context.Context, cfg aws.Config, data *AwsBootstrapData) error
@@ -349,31 +358,31 @@ var steps = []bootstrapStep{
 			RepositoryName: aws.String(repoName),
 		})
 		if err != nil {
-				var repositoryAlreadyExists *ecrTypes.RepositoryAlreadyExistsException
-				if !errors.As(err, &repositoryAlreadyExists) {
-						return err
+			var repositoryAlreadyExists *ecrTypes.RepositoryAlreadyExistsException
+			if !errors.As(err, &repositoryAlreadyExists) {
+				return err
+			}
+			// Repository already exists, get the existing one
+			describeRepoOutput, err := ecrClient.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{
+				RepositoryNames: []string{repoName},
+			})
+			if err != nil {
+				return err
+			}
+			if len(describeRepoOutput.Repositories) > 0 {
+				createRepoOutput = &ecr.CreateRepositoryOutput{
+					Repository: &describeRepoOutput.Repositories[0],
 				}
-				// Repository already exists, get the existing one
-				describeRepoOutput, err := ecrClient.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{
-						RepositoryNames: []string{repoName},
-				})
-				if err != nil {
-						return err
-				}
-				if len(describeRepoOutput.Repositories) > 0 {
-						createRepoOutput = &ecr.CreateRepositoryOutput{
-								Repository: &describeRepoOutput.Repositories[0],
-						}
-				} else {
-						return fmt.Errorf("failed to find existing ECR repository: %s", repoName)
-				}
+			} else {
+				return fmt.Errorf("failed to find existing ECR repository: %s", repoName)
+			}
 		}
 
 		if createRepoOutput.Repository != nil {
-				data.AssetEcrRegistryId = aws.ToString(createRepoOutput.Repository.RegistryId)
-				data.AssetEcrUrl = aws.ToString(createRepoOutput.Repository.RepositoryUri)
+			data.AssetEcrRegistryId = aws.ToString(createRepoOutput.Repository.RegistryId)
+			data.AssetEcrUrl = aws.ToString(createRepoOutput.Repository.RepositoryUri)
 		} else {
-				return fmt.Errorf("failed to create or find ECR repository: %s", repoName)
+			return fmt.Errorf("failed to create or find ECR repository: %s", repoName)
 		}
 
 		return nil
@@ -389,87 +398,87 @@ var steps = []bootstrapStep{
 		// Attempt to get the SSM parameter
 		ssmKey := "/sst/bootstrap/asset"
 		getParamOutput, err := ssmClient.GetParameter(ctx, &ssm.GetParameterInput{
-				Name: aws.String(ssmKey),
+			Name: aws.String(ssmKey),
 		})
 		if err != nil {
-				var paramNotFound *ssmTypes.ParameterNotFound
-				if errors.As(err, &paramNotFound) {
-						// Parameter doesn't exist, nothing to do
-						return nil
-				}
-				return err
+			var paramNotFound *ssmTypes.ParameterNotFound
+			if errors.As(err, &paramNotFound) {
+				// Parameter doesn't exist, nothing to do
+				return nil
+			}
+			return err
 		}
 
 		// Parameter exists, decode the value
 		var value struct {
-				Bucket string `json:"bucket"`
+			Bucket string `json:"bucket"`
 		}
 		if err := json.Unmarshal([]byte(*getParamOutput.Parameter.Value), &value); err != nil {
-				return fmt.Errorf("failed to decode SSM parameter value: %w", err)
+			return fmt.Errorf("failed to decode SSM parameter value: %w", err)
 		}
 
 		if value.Bucket != "" && value.Bucket != data.Asset {
-				// Empty the current asset bucket
-				var continuationToken *string
-				for {
-						listObjectsInput := &s3.ListObjectsV2Input{
-								Bucket: aws.String(data.Asset),
-						}
-						if continuationToken != nil {
-								listObjectsInput.ContinuationToken = continuationToken
-						}
-
-						listObjectsOutput, err := s3Client.ListObjectsV2(ctx, listObjectsInput)
-						if err != nil {
-								if strings.Contains(err.Error(), "NoSuchBucket") {
-									break
-								}
-								return err
-						}
-
-						if len(listObjectsOutput.Contents) == 0 {
-								break
-						}
-
-						objectIdentifiers := make([]s3types.ObjectIdentifier, len(listObjectsOutput.Contents))
-						for i, object := range listObjectsOutput.Contents {
-								objectIdentifiers[i] = s3types.ObjectIdentifier{Key: object.Key}
-						}
-
-						_, err = s3Client.DeleteObjects(ctx, &s3.DeleteObjectsInput{
-								Bucket: aws.String(data.Asset),
-								Delete: &s3types.Delete{Objects: objectIdentifiers},
-						})
-						if err != nil {
-								return err
-						}
-
-						if listObjectsOutput.IsTruncated == nil || !*listObjectsOutput.IsTruncated {
-								break
-						}
-						continuationToken = listObjectsOutput.NextContinuationToken
+			// Empty the current asset bucket
+			var continuationToken *string
+			for {
+				listObjectsInput := &s3.ListObjectsV2Input{
+					Bucket: aws.String(data.Asset),
+				}
+				if continuationToken != nil {
+					listObjectsInput.ContinuationToken = continuationToken
 				}
 
-				// Remove the previously created S3 bucket
-				_, err := s3Client.DeleteBucket(ctx, &s3.DeleteBucketInput{
-						Bucket: aws.String(data.Asset),
+				listObjectsOutput, err := s3Client.ListObjectsV2(ctx, listObjectsInput)
+				if err != nil {
+					if strings.Contains(err.Error(), "NoSuchBucket") {
+						break
+					}
+					return err
+				}
+
+				if len(listObjectsOutput.Contents) == 0 {
+					break
+				}
+
+				objectIdentifiers := make([]s3types.ObjectIdentifier, len(listObjectsOutput.Contents))
+				for i, object := range listObjectsOutput.Contents {
+					objectIdentifiers[i] = s3types.ObjectIdentifier{Key: object.Key}
+				}
+
+				_, err = s3Client.DeleteObjects(ctx, &s3.DeleteObjectsInput{
+					Bucket: aws.String(data.Asset),
+					Delete: &s3types.Delete{Objects: objectIdentifiers},
 				})
 				if err != nil {
-						if !strings.Contains(err.Error(), "NoSuchBucket") {
-								return fmt.Errorf("failed to delete S3 bucket %s: %w", data.Asset, err)
-						}
+					return err
 				}
 
-				// Assign the new bucket name
-				data.Asset = value.Bucket
+				if listObjectsOutput.IsTruncated == nil || !*listObjectsOutput.IsTruncated {
+					break
+				}
+				continuationToken = listObjectsOutput.NextContinuationToken
+			}
+
+			// Remove the previously created S3 bucket
+			_, err := s3Client.DeleteBucket(ctx, &s3.DeleteBucketInput{
+				Bucket: aws.String(data.Asset),
+			})
+			if err != nil {
+				if !strings.Contains(err.Error(), "NoSuchBucket") {
+					return fmt.Errorf("failed to delete S3 bucket %s: %w", data.Asset, err)
+				}
+			}
+
+			// Assign the new bucket name
+			data.Asset = value.Bucket
 		}
 
 		// Remove the SSM parameter
 		_, err = ssmClient.DeleteParameter(ctx, &ssm.DeleteParameterInput{
-				Name: aws.String(ssmKey),
+			Name: aws.String(ssmKey),
 		})
 		if err != nil {
-				return fmt.Errorf("failed to delete SSM parameter %s: %w", ssmKey, err)
+			return fmt.Errorf("failed to delete SSM parameter %s: %w", ssmKey, err)
 		}
 
 		return nil
@@ -477,46 +486,46 @@ var steps = []bootstrapStep{
 
 	// Step: enforce bucket requests to use SSL
 	func(ctx context.Context, cfg aws.Config, data *AwsBootstrapData) error {
-    s3Client := s3.NewFromConfig(cfg)
+		s3Client := s3.NewFromConfig(cfg)
 
-    buckets := []string{data.Asset, data.State}
-    for _, bucket := range buckets {
-        slog.Info("enforcing SSL for bucket", "name", bucket)
-        policy := map[string]interface{}{
-            "Version": "2012-10-17",
-            "Statement": []map[string]interface{}{
-                {
-                    "Sid":       "EnforceSSLRequests",
-                    "Effect":    "Deny",
-                    "Principal": "*",
-                    "Action":    "s3:*",
-                    "Resource": []string{
-                        fmt.Sprintf("arn:aws:s3:::%s", bucket),
-                        fmt.Sprintf("arn:aws:s3:::%s/*", bucket),
-                    },
-                    "Condition": map[string]interface{}{
-                        "Bool": map[string]interface{}{
-                            "aws:SecureTransport": "false",
-                        },
-                    },
-                },
-            },
-        }
+		buckets := []string{data.Asset, data.State}
+		for _, bucket := range buckets {
+			slog.Info("enforcing SSL for bucket", "name", bucket)
+			policy := map[string]interface{}{
+				"Version": "2012-10-17",
+				"Statement": []map[string]interface{}{
+					{
+						"Sid":       "EnforceSSLRequests",
+						"Effect":    "Deny",
+						"Principal": "*",
+						"Action":    "s3:*",
+						"Resource": []string{
+							fmt.Sprintf("arn:aws:s3:::%s", bucket),
+							fmt.Sprintf("arn:aws:s3:::%s/*", bucket),
+						},
+						"Condition": map[string]interface{}{
+							"Bool": map[string]interface{}{
+								"aws:SecureTransport": "false",
+							},
+						},
+					},
+				},
+			}
 
-        policyJSON, err := json.Marshal(policy)
-        if err != nil {
-            return fmt.Errorf("failed to marshal policy for bucket %s: %w", bucket, err)
-        }
+			policyJSON, err := json.Marshal(policy)
+			if err != nil {
+				return fmt.Errorf("failed to marshal policy for bucket %s: %w", bucket, err)
+			}
 
-        _, err = s3Client.PutBucketPolicy(ctx, &s3.PutBucketPolicyInput{
-            Bucket: aws.String(bucket),
-            Policy: aws.String(string(policyJSON)),
-        })
-        if err != nil {
-            return fmt.Errorf("failed to put bucket policy for %s: %w", bucket, err)
-        }
-    }
+			_, err = s3Client.PutBucketPolicy(ctx, &s3.PutBucketPolicyInput{
+				Bucket: aws.String(bucket),
+				Policy: aws.String(string(policyJSON)),
+			})
+			if err != nil {
+				return fmt.Errorf("failed to put bucket policy for %s: %w", bucket, err)
+			}
+		}
 
-    return nil
+		return nil
 	},
 }
