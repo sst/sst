@@ -65,6 +65,7 @@ func CmdMosaic(c *cli.Cli) error {
 		var cmd *exec.Cmd
 		env := map[string]string{}
 		processExited := make(chan bool)
+		timeout := time.Hour * 24
 		for {
 			select {
 			case <-c.Context.Done():
@@ -72,7 +73,7 @@ func CmdMosaic(c *cli.Cli) error {
 			case <-processExited:
 				c.Cancel()
 				continue
-			case <-time.After(45 * time.Minute):
+			case <-time.After(timeout):
 				env = map[string]string{}
 				go func() {
 					evts <- true
@@ -90,6 +91,9 @@ func CmdMosaic(c *cli.Cli) error {
 				nextEnv, err := dev.Env(c.Context, query, url)
 				if err != nil {
 					return err
+				}
+				if _, ok := nextEnv["AWS_ACCESS_KEY_ID"]; ok {
+					timeout = time.Minute * 45
 				}
 				if diff(env, nextEnv) {
 					if cmd != nil {
