@@ -1,6 +1,6 @@
 # SST v3
 
-SST v3 uses a new engine for deploying SST apps. It uses Pulumi and Terraform, as opposed to CDK and CloudFormation. [Read the full announcement here](https://sst.dev/blog/moving-away-from-cdk.html).
+SST v3 uses a new engine for deploying SST apps. It uses Pulumi and Terraform, as opposed to CDK and CloudFormation. [Read the full announcement here](https://sst.dev/blog/moving-away-from-cdk).
 
 - **10x faster** deploys
 - Native **multi-region** support
