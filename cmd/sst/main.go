@@ -1252,5 +1252,6 @@ var root = &cli.Command{
 			},
 		},
 		CmdCert,
+		CmdDiagnostic,
 	},
 }

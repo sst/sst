@@ -329,5 +329,8 @@ func (p *Project) Cleanup() error {
 }
 
 func (p *Project) PathLog(name string) string {
+	if name == "" {
+		return filepath.Join(p.PathWorkingDir(), "log")
+	}
 	return filepath.Join(p.PathWorkingDir(), "log", name+".log")
 }
