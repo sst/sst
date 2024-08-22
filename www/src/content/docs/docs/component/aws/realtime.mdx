@@ -46,9 +46,11 @@ import { realtime } from "sst/aws/realtime";
 
 export const handler = realtime.authorizer(async (token) => {
   // Validate the token
+  const { userId } = validateToken(token);
 
   // Return the topics to subscribe and publish
   return {
+    principalId: `${Resource.App.name}/${Resource.App.stage}/${userId}`,
     subscribe: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
     publish: [`${Resource.App.name}/${Resource.App.stage}/chat/room1`],
   };
