@@ -313,7 +313,7 @@ func (u *UI) Event(unknown interface{}) {
 
 		if evt.Severity == "info" {
 			for _, line := range strings.Split(strings.TrimRightFunc(ansi.Strip(evt.Message), unicode.IsSpace), "\n") {
-				u.println(line)
+				u.println(TEXT_DIM.Render(line))
 			}
 		}
 

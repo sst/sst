@@ -8,9 +8,11 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"strconv"
 
 	"github.com/sst/ion/cmd/sst/mosaic/ui/common"
 	"github.com/sst/ion/pkg/bus"
+	"github.com/sst/ion/pkg/flag"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -30,8 +32,12 @@ type RunOutputs struct {
 }
 
 func NewRun() *Run {
+	weight := int64(4)
+	if flag.SST_BUILD_CONCURRENCY != "" {
+		weight, _ = strconv.ParseInt(flag.SST_BUILD_CONCURRENCY, 10, 64)
+	}
 	return &Run{
-		lock: semaphore.NewWeighted(8),
+		lock: semaphore.NewWeighted(weight),
 	}
 }
 
