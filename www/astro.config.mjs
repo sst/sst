@@ -173,7 +173,7 @@ if (import.meta.env.DEV) {
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://ion.sst.dev",
+  site: "https://sst.dev",
   adapter: sst(),
   server: {
     host: "0.0.0.0",
