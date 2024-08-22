@@ -272,12 +272,13 @@ export interface CognitoUserPoolClientArgs {
  * ```
  */
 export class CognitoUserPool extends Component implements Link.Linkable {
+  private constructorOpts: ComponentResourceOptions;
   private userPool: cognito.UserPool;
 
   constructor(
     name: string,
     args: CognitoUserPoolArgs = {},
-    opts?: ComponentResourceOptions,
+    opts: ComponentResourceOptions = {},
   ) {
     super(__pulumiType, name, args, opts);
 
@@ -288,6 +289,7 @@ export class CognitoUserPool extends Component implements Link.Linkable {
     const userPool = createUserPool();
     createPermissions();
 
+    this.constructorOpts = opts;
     this.userPool = userPool;
 
     function normalizeAliasesAndUsernames() {
@@ -480,10 +482,14 @@ export class CognitoUserPool extends Component implements Link.Linkable {
    * ```
    */
   public addClient(name: string, args?: CognitoUserPoolClientArgs) {
-    return new CognitoUserPoolClient(name, {
-      userPool: this.id,
-      ...args,
-    });
+    return new CognitoUserPoolClient(
+      name,
+      {
+        userPool: this.id,
+        ...args,
+      },
+      { provider: this.constructorOpts.provider },
+    );
   }
 
   /**
@@ -537,10 +543,14 @@ export class CognitoUserPool extends Component implements Link.Linkable {
    * ```
    */
   public addIdentityProvider(name: string, args: CognitoIdentityProviderArgs) {
-    return new CognitoIdentityProvider(name, {
-      userPool: this.id,
-      ...args,
-    });
+    return new CognitoIdentityProvider(
+      name,
+      {
+        userPool: this.id,
+        ...args,
+      },
+      { provider: this.constructorOpts.provider },
+    );
   }
 
   /** @internal */

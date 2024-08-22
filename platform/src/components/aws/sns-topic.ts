@@ -152,6 +152,7 @@ export interface SnsTopicSubscriberArgs {
  */
 export class SnsTopic extends Component implements Link.Linkable {
   private constructorName: string;
+  private constructorOpts: ComponentResourceOptions;
   private topic: sns.Topic;
 
   constructor(
@@ -167,6 +168,7 @@ export class SnsTopic extends Component implements Link.Linkable {
     const topic = createTopic();
 
     this.constructorName = name;
+    this.constructorOpts = opts;
     this.topic = topic;
 
     function normalizeFifo() {
@@ -253,6 +255,7 @@ export class SnsTopic extends Component implements Link.Linkable {
       this.arn,
       subscriber,
       args,
+      { provider: this.constructorOpts.provider },
     );
   }
 
@@ -312,6 +315,7 @@ export class SnsTopic extends Component implements Link.Linkable {
     topicArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: SnsTopicSubscriberArgs = {},
+    opts: $util.ComponentResourceOptions = {},
   ) {
     return all([name, subscriber, args]).apply(([name, subscriber, args]) => {
       const prefix = logicalName(name);
@@ -326,11 +330,15 @@ export class SnsTopic extends Component implements Link.Linkable {
         ),
       );
 
-      return new SnsTopicLambdaSubscriber(`${prefix}Subscriber${suffix}`, {
-        topic: { arn: topicArn },
-        subscriber,
-        ...args,
-      });
+      return new SnsTopicLambdaSubscriber(
+        `${prefix}Subscriber${suffix}`,
+        {
+          topic: { arn: topicArn },
+          subscriber,
+          ...args,
+        },
+        opts,
+      );
     });
   }
 

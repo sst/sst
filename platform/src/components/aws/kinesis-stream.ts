@@ -119,12 +119,13 @@ export interface KinesisStreamLambdaSubscriberArgs {
  */
 export class KinesisStream extends Component implements Link.Linkable {
   private constructorName: string;
+  private constructorOpts: ComponentResourceOptions;
   private stream: aws.kinesis.Stream;
 
   constructor(
     name: string,
-    args?: KinesisStreamArgs,
-    opts?: $util.ComponentResourceOptions,
+    args: KinesisStreamArgs = {},
+    opts: $util.ComponentResourceOptions = {},
   ) {
     super(__pulumiType, name, args, opts);
 
@@ -132,6 +133,7 @@ export class KinesisStream extends Component implements Link.Linkable {
     const stream = createStream();
     this.stream = stream;
     this.constructorName = name;
+    this.constructorOpts = opts;
 
     function createStream() {
       return new aws.kinesis.Stream(
@@ -195,6 +197,7 @@ export class KinesisStream extends Component implements Link.Linkable {
       this.nodes.stream.arn,
       subscriber,
       args,
+      { provider: this.constructorOpts.provider },
     );
   }
 
@@ -260,7 +263,7 @@ export class KinesisStream extends Component implements Link.Linkable {
     streamArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: KinesisStreamLambdaSubscriberArgs = {},
-    opts?: ComponentResourceOptions,
+    opts: ComponentResourceOptions = {},
   ) {
     return all([name, streamArn, args]).apply(([name, streamArn, args]) => {
       const prefix = logicalName(name);

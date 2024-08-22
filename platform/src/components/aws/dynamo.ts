@@ -350,6 +350,7 @@ export interface DynamoSubscriberArgs {
  */
 export class Dynamo extends Component implements Link.Linkable {
   private constructorName: string;
+  private constructorOpts: ComponentResourceOptions;
   private table: Output<dynamodb.Table>;
   private isStreamEnabled: boolean = false;
 
@@ -365,6 +366,7 @@ export class Dynamo extends Component implements Link.Linkable {
     const table = createTable();
 
     this.constructorName = name;
+    this.constructorOpts = opts;
     this.table = table;
     this.isStreamEnabled = Boolean(args.stream);
 
@@ -512,6 +514,7 @@ export class Dynamo extends Component implements Link.Linkable {
       this.nodes.table.streamArn,
       subscriber,
       args,
+      { provider: this.constructorOpts.provider },
     );
   }
 
@@ -579,6 +582,7 @@ export class Dynamo extends Component implements Link.Linkable {
     streamArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: DynamoSubscriberArgs = {},
+    opts: ComponentResourceOptions = {},
   ) {
     return all([name, subscriber, args]).apply(([name, subscriber, args]) => {
       const prefix = logicalName(name);
@@ -593,11 +597,15 @@ export class Dynamo extends Component implements Link.Linkable {
         ),
       );
 
-      return new DynamoLambdaSubscriber(`${prefix}Subscriber${suffix}`, {
-        dynamo: { streamArn },
-        subscriber,
-        ...args,
-      });
+      return new DynamoLambdaSubscriber(
+        `${prefix}Subscriber${suffix}`,
+        {
+          dynamo: { streamArn },
+          subscriber,
+          ...args,
+        },
+        opts,
+      );
     });
   }
 

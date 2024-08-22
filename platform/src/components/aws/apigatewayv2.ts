@@ -519,6 +519,7 @@ export interface ApiGatewayV2RouteArgs {
 export class ApiGatewayV2 extends Component implements Link.Linkable {
   private constructorName: string;
   private constructorArgs: ApiGatewayV2Args;
+  private constructorOpts: ComponentResourceOptions;
   private api: apigatewayv2.Api;
   private apigDomain?: apigatewayv2.DomainName;
   private apiMapping?: Output<apigatewayv2.ApiMapping>;
@@ -550,6 +551,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
 
     this.constructorName = name;
     this.constructorArgs = args;
+    this.constructorOpts = opts;
     this.api = api;
     this.apigDomain = apigDomain;
     this.apiMapping = apiMapping;
@@ -912,7 +914,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       this.constructorArgs.transform?.route?.args,
       this.buildRouteId(route),
       args,
-      {},
+      { provider: this.constructorOpts.provider },
     );
     return new ApiGatewayV2LambdaRoute(
       transformed[0],
@@ -965,7 +967,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       this.constructorArgs.transform?.route?.args,
       this.buildRouteId(route),
       args,
-      {},
+      { provider: this.constructorOpts.provider },
     );
     return new ApiGatewayV2UrlRoute(
       transformed[0],
@@ -1037,7 +1039,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
       this.constructorArgs.transform?.route?.args,
       this.buildRouteId(route),
       args,
-      {},
+      { provider: this.constructorOpts.provider },
     );
     return new ApiGatewayV2PrivateRoute(
       transformed[0],
@@ -1122,13 +1124,17 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     const selfName = this.constructorName;
     const nameSuffix = logicalName(args.name);
 
-    return new ApiGatewayV2Authorizer(`${selfName}Authorizer${nameSuffix}`, {
-      api: {
-        id: self.api.id,
-        name: selfName,
+    return new ApiGatewayV2Authorizer(
+      `${selfName}Authorizer${nameSuffix}`,
+      {
+        api: {
+          id: self.api.id,
+          name: selfName,
+        },
+        ...args,
       },
-      ...args,
-    });
+      { provider: this.constructorOpts.provider },
+    );
   }
 
   /** @internal */

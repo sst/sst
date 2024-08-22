@@ -482,6 +482,7 @@ export interface AppSyncFunctionArgs {
  */
 export class AppSync extends Component implements Link.Linkable {
   private constructorName: string;
+  private constructorOpts: ComponentResourceOptions;
   private api: appsync.GraphQLApi;
   private domainName?: appsync.DomainName;
 
@@ -503,6 +504,7 @@ export class AppSync extends Component implements Link.Linkable {
     createDnsRecords();
 
     this.constructorName = name;
+    this.constructorOpts = opts;
     this.api = api;
     this.domainName = domainName;
 
@@ -684,11 +686,15 @@ export class AppSync extends Component implements Link.Linkable {
     const selfName = this.constructorName;
     const nameSuffix = logicalName(args.name);
 
-    return new AppSyncDataSource(`${selfName}DataSource${nameSuffix}`, {
-      apiId: self.api.id,
-      apiComponentName: selfName,
-      ...args,
-    });
+    return new AppSyncDataSource(
+      `${selfName}DataSource${nameSuffix}`,
+      {
+        apiId: self.api.id,
+        apiComponentName: selfName,
+        ...args,
+      },
+      { provider: this.constructorOpts.provider },
+    );
   }
 
   /**
@@ -728,10 +734,14 @@ export class AppSync extends Component implements Link.Linkable {
     const selfName = this.constructorName;
     const nameSuffix = logicalName(args.name);
 
-    return new AppSyncFunction(`${selfName}Function${nameSuffix}`, {
-      apiId: self.api.id,
-      ...args,
-    });
+    return new AppSyncFunction(
+      `${selfName}Function${nameSuffix}`,
+      {
+        apiId: self.api.id,
+        ...args,
+      },
+      { provider: this.constructorOpts.provider },
+    );
   }
 
   /**
@@ -795,12 +805,16 @@ export class AppSync extends Component implements Link.Linkable {
     const [type, field] = parts;
 
     const nameSuffix = `${logicalName(type)}` + `${logicalName(field)}`;
-    return new AppSyncResolver(`${selfName}Resolver${nameSuffix}`, {
-      apiId: self.api.id,
-      type,
-      field,
-      ...args,
-    });
+    return new AppSyncResolver(
+      `${selfName}Resolver${nameSuffix}`,
+      {
+        apiId: self.api.id,
+        type,
+        field,
+        ...args,
+      },
+      { provider: this.constructorOpts.provider },
+    );
   }
 
   /** @internal */

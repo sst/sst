@@ -308,10 +308,15 @@ export interface QueueSubscriberArgs {
  */
 export class Queue extends Component implements Link.Linkable {
   private constructorName: string;
+  private constructorOpts: ComponentResourceOptions;
   private queue: sqs.Queue;
   private isSubscribed: boolean = false;
 
-  constructor(name: string, args?: QueueArgs, opts?: ComponentResourceOptions) {
+  constructor(
+    name: string,
+    args: QueueArgs = {},
+    opts: ComponentResourceOptions = {},
+  ) {
     super(__pulumiType, name, args, opts);
 
     const parent = this;
@@ -322,6 +327,7 @@ export class Queue extends Component implements Link.Linkable {
     const queue = createQueue();
 
     this.constructorName = name;
+    this.constructorOpts = opts;
     this.queue = queue;
 
     function normalizeFifo() {
@@ -440,7 +446,7 @@ export class Queue extends Component implements Link.Linkable {
       this.arn,
       subscriber,
       args,
-      opts,
+      { ...opts, provider: this.constructorOpts.provider },
     );
   }
 

@@ -156,6 +156,7 @@ export interface RealtimeSubscriberArgs {
  */
 export class Realtime extends Component implements Link.Linkable {
   private readonly constructorName: string;
+  private constructorOpts: ComponentResourceOptions;
   private readonly authHadler: Output<Function>;
   private readonly iotAuthorizer: iot.Authorizer;
   private readonly iotEndpoint: Output<string>;
@@ -173,6 +174,7 @@ export class Realtime extends Component implements Link.Linkable {
     const iotAuthorizer = createAuthorizer();
     createPermission();
 
+    this.constructorOpts = opts;
     this.iotEndpoint = iot.getEndpointOutput({
       endpointType: "iot:Data-ATS",
     }).endpointAddress;
@@ -300,11 +302,15 @@ export class Realtime extends Component implements Link.Linkable {
         ),
       );
 
-      return new RealtimeLambdaSubscriber(`${prefix}Subscriber${suffix}`, {
-        iot: { name: this.constructorName },
-        subscriber,
-        ...args,
-      });
+      return new RealtimeLambdaSubscriber(
+        `${prefix}Subscriber${suffix}`,
+        {
+          iot: { name: this.constructorName },
+          subscriber,
+          ...args,
+        },
+        { provider: this.constructorOpts.provider },
+      );
     });
   }
 

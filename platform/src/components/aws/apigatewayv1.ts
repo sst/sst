@@ -416,6 +416,7 @@ export interface ApiGatewayV1RouteArgs {
 export class ApiGatewayV1 extends Component implements Link.Linkable {
   private constructorName: string;
   private constructorArgs: ApiGatewayV1Args;
+  private constructorOpts: ComponentResourceOptions;
   private api: apigateway.RestApi;
   private region: Output<string>;
   private triggers: Record<string, Output<string>> = {};
@@ -441,6 +442,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     this.resources["/"] = api.rootResourceId;
     this.constructorName = name;
     this.constructorArgs = args;
+    this.constructorOpts = opts;
     this.api = api;
     this.region = region;
 
@@ -631,7 +633,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
       this.constructorArgs.transform?.route?.args,
       `${prefix}Route${suffix}`,
       args,
-      {},
+      { provider: this.constructorOpts.provider },
     );
 
     const apigRoute = new ApiGatewayV1LambdaRoute(
@@ -736,14 +738,18 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     const selfName = this.constructorName;
     const nameSuffix = logicalName(args.name);
 
-    return new ApiGatewayV1Authorizer(`${selfName}Authorizer${nameSuffix}`, {
-      api: {
-        id: self.api.id,
-        name: selfName,
-        executionArn: self.api.executionArn,
+    return new ApiGatewayV1Authorizer(
+      `${selfName}Authorizer${nameSuffix}`,
+      {
+        api: {
+          id: self.api.id,
+          name: selfName,
+          executionArn: self.api.executionArn,
+        },
+        ...args,
       },
-      ...args,
-    });
+      { provider: this.constructorOpts.provider },
+    );
   }
 
   /**

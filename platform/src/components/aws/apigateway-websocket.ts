@@ -197,6 +197,7 @@ export interface ApiGatewayWebSocketRouteArgs {
 export class ApiGatewayWebSocket extends Component implements Link.Linkable {
   private constructorName: string;
   private constructorArgs: ApiGatewayWebSocketArgs;
+  private constructorOpts: ComponentResourceOptions;
   private api: apigatewayv2.Api;
   private stage: apigatewayv2.Stage;
   private apigDomain?: apigatewayv2.DomainName;
@@ -227,6 +228,7 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
 
     this.constructorName = name;
     this.constructorArgs = args;
+    this.constructorOpts = opts;
     this.api = api;
     this.stage = stage;
     this.apigDomain = apigDomain;
@@ -531,7 +533,7 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
       this.constructorArgs.transform?.route?.args,
       `${prefix}Route${suffix}`,
       args,
-      {},
+      { provider: this.constructorOpts.provider },
     );
 
     return new ApiGatewayWebSocketRoute(

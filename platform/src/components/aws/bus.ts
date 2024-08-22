@@ -164,6 +164,7 @@ export interface BusSubscriberArgs {
  */
 export class Bus extends Component implements Link.Linkable {
   private constructorName: string;
+  private constructorOpts: ComponentResourceOptions;
   private bus: cloudwatch.EventBus;
 
   constructor(
@@ -178,6 +179,7 @@ export class Bus extends Component implements Link.Linkable {
     const bus = createBus();
 
     this.constructorName = name;
+    this.constructorOpts = opts;
     this.bus = bus;
 
     function createBus() {
@@ -254,6 +256,7 @@ export class Bus extends Component implements Link.Linkable {
       this.nodes.bus.arn,
       subscriber,
       args,
+      { provider: this.constructorOpts.provider },
     );
   }
 
@@ -313,6 +316,7 @@ export class Bus extends Component implements Link.Linkable {
     busArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: BusSubscriberArgs = {},
+    opts: ComponentResourceOptions = {},
   ) {
     return all([name, subscriber, args]).apply(([name, subscriber, args]) => {
       const prefix = logicalName(name);
@@ -327,11 +331,15 @@ export class Bus extends Component implements Link.Linkable {
         ),
       );
 
-      return new BusLambdaSubscriber(`${prefix}Subscriber${suffix}`, {
-        bus: { name, arn: busArn },
-        subscriber,
-        ...args,
-      });
+      return new BusLambdaSubscriber(
+        `${prefix}Subscriber${suffix}`,
+        {
+          bus: { name, arn: busArn },
+          subscriber,
+          ...args,
+        },
+        opts,
+      );
     });
   }
 

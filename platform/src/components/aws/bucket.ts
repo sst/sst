@@ -297,16 +297,18 @@ interface BucketRef {
  */
 export class Bucket extends Component implements Link.Linkable {
   private constructorName: string;
+  private constructorOpts: ComponentResourceOptions;
   private isSubscribed: boolean = false;
   private bucket: Output<s3.BucketV2>;
 
   constructor(
     name: string,
-    args?: BucketArgs,
-    opts?: ComponentResourceOptions,
+    args: BucketArgs = {},
+    opts: ComponentResourceOptions = {},
   ) {
     super(__pulumiType, name, args, opts);
     this.constructorName = name;
+    this.constructorOpts = opts;
 
     if (args && "ref" in args) {
       const ref = args as BucketRef;
@@ -576,6 +578,7 @@ export class Bucket extends Component implements Link.Linkable {
       this.bucket.arn,
       subscriber,
       args,
+      { provider: this.constructorOpts.provider },
     );
   }
 
@@ -649,6 +652,7 @@ export class Bucket extends Component implements Link.Linkable {
     bucketArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: BucketSubscriberArgs = {},
+    opts: ComponentResourceOptions = {},
   ) {
     return all([name, bucketArn, subscriber, args]).apply(
       ([name, bucketArn, subscriber, args]) => {
@@ -665,6 +669,7 @@ export class Bucket extends Component implements Link.Linkable {
             subscriberId,
             ...args,
           },
+          opts,
         );
       },
     );
@@ -718,6 +723,7 @@ export class Bucket extends Component implements Link.Linkable {
       this.arn,
       queueArn,
       args,
+      { provider: this.constructorOpts.provider },
     );
   }
 
@@ -783,6 +789,7 @@ export class Bucket extends Component implements Link.Linkable {
     bucketArn: Input<string>,
     queueArn: Input<string>,
     args: BucketSubscriberArgs = {},
+    opts: ComponentResourceOptions = {},
   ) {
     return all([name, bucketArn, queueArn, args]).apply(
       ([name, bucketArn, queueArn, args]) => {
@@ -796,6 +803,7 @@ export class Bucket extends Component implements Link.Linkable {
             subscriberId,
             ...args,
           },
+          opts,
         );
       },
     );
@@ -849,6 +857,7 @@ export class Bucket extends Component implements Link.Linkable {
       this.arn,
       topicArn,
       args,
+      { provider: this.constructorOpts.provider },
     );
   }
 
@@ -914,6 +923,7 @@ export class Bucket extends Component implements Link.Linkable {
     bucketArn: Input<string>,
     topicArn: Input<string>,
     args: BucketSubscriberArgs = {},
+    opts: ComponentResourceOptions = {},
   ) {
     return all([name, bucketArn, topicArn, args]).apply(
       ([name, bucketArn, topicArn, args]) => {
@@ -927,6 +937,7 @@ export class Bucket extends Component implements Link.Linkable {
             subscriberId,
             ...args,
           },
+          opts,
         );
       },
     );
