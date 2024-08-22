@@ -467,17 +467,26 @@ And might end up being more [cost effective](https://docs.aws.amazon.com/lambda/
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-The name for the function. This is the name that's displayed in the AWS Console.
+The name for the function.
+
+By default, the name is generated from the app name, stage name, and component name. This
+is displayed in the AWS Console for this function.
 
 :::caution
-Changing the name will create a new function and delete the old one.
+To avoid the name from thrashing, you want to make sure that it includes the app and stage
+name.
 :::
 
-By default, the name is generated from the app name, stage name, and component name.
+If you are going to set the name, you need to make sure:
+1. It's unique across your app.
+2. Uses the app and stage name, so it doesn't thrash when you deploy to different stages.
+
+Also, changing the name after your've deployed it once will create a new function and delete
+the old one.
 
 ```js
 {
-  name: "my-function"
+  name: `${$app.name}-${$app.stage}-my-function`
 }
 ```
 </Segment>

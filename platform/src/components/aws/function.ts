@@ -191,18 +191,27 @@ export interface FunctionArgs {
    */
   live?: Input<false>;
   /**
-   * The name for the function. This is the name that's displayed in the AWS Console.
+   * The name for the function.
+   *
+   * By default, the name is generated from the app name, stage name, and component name. This
+   * is displayed in the AWS Console for this function.
    *
    * :::caution
-   * Changing the name will create a new function and delete the old one.
+   * To avoid the name from thrashing, you want to make sure that it includes the app and stage
+   * name.
    * :::
    *
-   * By default, the name is generated from the app name, stage name, and component name.
+   * If you are going to set the name, you need to make sure:
+   * 1. It's unique across your app.
+   * 2. Uses the app and stage name, so it doesn't thrash when you deploy to different stages.
+   *
+   * Also, changing the name after your've deployed it once will create a new function and delete
+   * the old one.
    *
    * @example
    * ```js
    * {
-   *   name: "my-function"
+   *   name: `${$app.name}-${$app.stage}-my-function`
    * }
    * ```
    */
@@ -445,34 +454,34 @@ export interface FunctionArgs {
   logging?: Input<
     | false
     | {
-        /**
-         * The duration the function logs are kept in CloudWatch.
-         * @default `forever`
-         * @example
-         * ```js
-         * {
-         *   logging: {
-         *     retention: "1 week"
-         *   }
-         * }
-         * ```
-         */
-        retention?: Input<keyof typeof RETENTION>;
-        /**
-         * The [log format](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs-advanced.html)
-         * of the Lambda function.
-         * @default `"text"`
-         * @example
-         * ```js
-         * {
-         *   logging: {
-         *     format: "json"
-         *   }
-         * }
-         * ```
-         */
-        format?: Input<"text" | "json">;
-      }
+      /**
+       * The duration the function logs are kept in CloudWatch.
+       * @default `forever`
+       * @example
+       * ```js
+       * {
+       *   logging: {
+       *     retention: "1 week"
+       *   }
+       * }
+       * ```
+       */
+      retention?: Input<keyof typeof RETENTION>;
+      /**
+       * The [log format](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs-advanced.html)
+       * of the Lambda function.
+       * @default `"text"`
+       * @example
+       * ```js
+       * {
+       *   logging: {
+       *     format: "json"
+       *   }
+       * }
+       * ```
+       */
+      format?: Input<"text" | "json">;
+    }
   >;
   /**
    * The [architecture](https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html)
@@ -534,45 +543,45 @@ export interface FunctionArgs {
   url?: Input<
     | boolean
     | {
-        /**
-         * The authorization used for the function URL. Supports [IAM authorization](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
-         * @default `"none"`
-         * @example
-         * ```js
-         * {
-         *   url: {
-         *     authorization: "iam"
-         *   }
-         * }
-         * ```
-         */
-        authorization?: Input<"none" | "iam">;
-        /**
-         * Customize the CORS (Cross-origin resource sharing) settings for the function URL.
-         * @default `true`
-         * @example
-         * Disable CORS.
-         * ```js
-         * {
-         *   url: {
-         *     cors: false
-         *   }
-         * }
-         * ```
-         * Only enable the `GET` and `POST` methods for `https://example.com`.
-         * ```js
-         * {
-         *   url: {
-         *     cors: {
-         *       allowMethods: ["GET", "POST"],
-         *       allowOrigins: ["https://example.com"]
-         *     }
-         *   }
-         * }
-         * ```
-         */
-        cors?: Input<boolean | Prettify<FunctionUrlCorsArgs>>;
-      }
+      /**
+       * The authorization used for the function URL. Supports [IAM authorization](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html).
+       * @default `"none"`
+       * @example
+       * ```js
+       * {
+       *   url: {
+       *     authorization: "iam"
+       *   }
+       * }
+       * ```
+       */
+      authorization?: Input<"none" | "iam">;
+      /**
+       * Customize the CORS (Cross-origin resource sharing) settings for the function URL.
+       * @default `true`
+       * @example
+       * Disable CORS.
+       * ```js
+       * {
+       *   url: {
+       *     cors: false
+       *   }
+       * }
+       * ```
+       * Only enable the `GET` and `POST` methods for `https://example.com`.
+       * ```js
+       * {
+       *   url: {
+       *     cors: {
+       *       allowMethods: ["GET", "POST"],
+       *       allowOrigins: ["https://example.com"]
+       *     }
+       *   }
+       * }
+       * ```
+       */
+      cors?: Input<boolean | Prettify<FunctionUrlCorsArgs>>;
+    }
   >;
   /**
    * Configure how your function is bundled.
@@ -1103,10 +1112,10 @@ export class Function extends Component implements Link.Linkable {
             : url.cors === true || url.cors === undefined
               ? defaultCors
               : {
-                  ...defaultCors,
-                  ...url.cors,
-                  maxAge: url.cors.maxAge && toSeconds(url.cors.maxAge),
-                };
+                ...defaultCors,
+                ...url.cors,
+                maxAge: url.cors.maxAge && toSeconds(url.cors.maxAge),
+              };
 
         return { authorization, cors };
       });
@@ -1202,7 +1211,7 @@ export class Function extends Component implements Link.Linkable {
             if (result.type === "error") {
               throw new Error(
                 `Failed to build function "${args.handler}": ` +
-                  result.errors.join("\n").trim(),
+                result.errors.join("\n").trim(),
               );
             }
             return result;
@@ -1235,12 +1244,12 @@ export class Function extends Component implements Link.Linkable {
 
           const linkInjection = hasLinkInjections
             ? linkData
-                .map((item) => [
-                  `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
-                    JSON.stringify(item.properties),
-                  )};\n`,
-                ])
-                .join("")
+              .map((item) => [
+                `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
+                  JSON.stringify(item.properties),
+                )};\n`,
+              ])
+              .join("")
             : "";
 
           const parsed = path.posix.parse(handler);
@@ -1270,21 +1279,21 @@ export class Function extends Component implements Link.Linkable {
               name: path.posix.join(handlerDir, `${newHandlerFileName}.mjs`),
               content: streaming
                 ? [
-                    linkInjection,
-                    `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, responseStream, context) => {`,
-                    ...injections,
-                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
-                    `  return rawHandler(event, responseStream, context);`,
-                    `});`,
-                  ].join("\n")
+                  linkInjection,
+                  `export const ${newHandlerFunction} = awslambda.streamifyResponse(async (event, responseStream, context) => {`,
+                  ...injections,
+                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                  `  return rawHandler(event, responseStream, context);`,
+                  `});`,
+                ].join("\n")
                 : [
-                    linkInjection,
-                    `export const ${newHandlerFunction} = async (event, context) => {`,
-                    ...injections,
-                    `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
-                    `  return rawHandler(event, context);`,
-                    `};`,
-                  ].join("\n"),
+                  linkInjection,
+                  `export const ${newHandlerFunction} = async (event, context) => {`,
+                  ...injections,
+                  `  const { ${oldHandlerFunction}: rawHandler} = await import("./${oldHandlerFileName}${newHandlerFileExt}");`,
+                  `  return rawHandler(event, context);`,
+                  `};`,
+                ].join("\n"),
             },
           };
         },
@@ -1309,11 +1318,11 @@ export class Function extends Component implements Link.Linkable {
               })),
               ...(dev
                 ? [
-                    {
-                      actions: ["iot:*"],
-                      resources: ["*"],
-                    },
-                  ]
+                  {
+                    actions: ["iot:*"],
+                    resources: ["*"],
+                  },
+                ]
                 : []),
             ],
           }),
@@ -1326,29 +1335,28 @@ export class Function extends Component implements Link.Linkable {
           {
             assumeRolePolicy: !$dev
               ? iam.assumeRolePolicyForPrincipal({
-                  Service: "lambda.amazonaws.com",
-                })
+                Service: "lambda.amazonaws.com",
+              })
               : iam.getPolicyDocumentOutput({
-                  statements: [
-                    {
-                      actions: ["sts:AssumeRole"],
-                      principals: [
-                        {
-                          type: "Service",
-                          identifiers: ["lambda.amazonaws.com"],
-                        },
-                        {
-                          type: "AWS",
-                          identifiers: [
-                            interpolate`arn:aws:iam::${
-                              getCallerIdentityOutput().accountId
+                statements: [
+                  {
+                    actions: ["sts:AssumeRole"],
+                    principals: [
+                      {
+                        type: "Service",
+                        identifiers: ["lambda.amazonaws.com"],
+                      },
+                      {
+                        type: "AWS",
+                        identifiers: [
+                          interpolate`arn:aws:iam::${getCallerIdentityOutput().accountId
                             }:root`,
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                }).json,
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              }).json,
             // if there are no statements, do not add an inline policy.
             // adding an inline policy with no statements will cause an error.
             inlinePolicies: policy.apply(({ statements }) =>
@@ -1357,13 +1365,13 @@ export class Function extends Component implements Link.Linkable {
             managedPolicyArns: logging.apply((logging) => [
               ...(logging
                 ? [
-                    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-                  ]
+                  "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+                ]
                 : []),
               ...(args.vpc
                 ? [
-                    "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
-                  ]
+                  "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+                ]
                 : []),
             ]),
           },
@@ -1428,9 +1436,9 @@ export class Function extends Component implements Link.Linkable {
               entry.isDir
                 ? archive.directory(entry.from, entry.to, { date: new Date(0) })
                 : archive.file(entry.from, {
-                    name: entry.to,
-                    date: new Date(0),
-                  });
+                  name: entry.to,
+                  date: new Date(0),
+                });
               //if (mode === "start") {
               //  try {
               //    const dir = path.dirname(toPath);
@@ -1475,9 +1483,8 @@ export class Function extends Component implements Link.Linkable {
             args.transform?.logGroup,
             `${name}LogGroup`,
             {
-              name: interpolate`/aws/lambda/${
-                args.name ?? physicalName(64, `${name}Function`)
-              }`,
+              name: interpolate`/aws/lambda/${args.name ?? physicalName(64, `${name}Function`)
+                }`,
               retentionInDays: RETENTION[logging.retention],
             },
             { parent },
