@@ -157,8 +157,10 @@ export interface BucketArgs {
     policy?: Transform<s3.BucketPolicyArgs>;
     /**
      * Transform the public access block resource that's attached to the Bucket.
+     *
+     * Returns `false` if the public access block resource should not be created.
      */
-    publicAccessBlock?: Transform<s3.BucketPublicAccessBlockArgs>;
+    publicAccessBlock?: Transform<s3.BucketPublicAccessBlockArgs> | false;
   };
 }
 
@@ -331,12 +333,12 @@ export class Bucket extends Component implements Link.Linkable {
     this.bucket = policy.apply(() => bucket);
 
     function normalizePublicAccess() {
-      return output(args?.public).apply((v) => v ?? false);
+      return output(args.public).apply((v) => v ?? false);
     }
 
     function createBucket() {
       const transformed = transform(
-        args?.transform?.bucket,
+        args.transform?.bucket,
         `${name}Bucket`,
         {
           forceDestroy: true,
@@ -363,22 +365,22 @@ export class Bucket extends Component implements Link.Linkable {
     }
 
     function createPublicAccess() {
-      return publicAccess.apply((publicAccess) => {
-        return new s3.BucketPublicAccessBlock(
-          ...transform(
-            args?.transform?.publicAccessBlock,
-            `${name}PublicAccessBlock`,
-            {
-              bucket: bucket.bucket,
-              blockPublicAcls: true,
-              blockPublicPolicy: !publicAccess,
-              ignorePublicAcls: true,
-              restrictPublicBuckets: !publicAccess,
-            },
-            { parent },
-          ),
-        );
-      });
+      if (args.transform?.publicAccessBlock === false) return;
+
+      return new s3.BucketPublicAccessBlock(
+        ...transform(
+          args.transform?.publicAccessBlock,
+          `${name}PublicAccessBlock`,
+          {
+            bucket: bucket.bucket,
+            blockPublicAcls: true,
+            blockPublicPolicy: publicAccess.apply((v) => !v),
+            ignorePublicAcls: true,
+            restrictPublicBuckets: publicAccess.apply((v) => !v),
+          },
+          { parent },
+        ),
+      );
     }
 
     function createBucketPolicy() {
@@ -407,7 +409,7 @@ export class Bucket extends Component implements Link.Linkable {
 
         return new s3.BucketPolicy(
           ...transform(
-            args?.transform?.policy,
+            args.transform?.policy,
             `${name}Policy`,
             {
               bucket: bucket.bucket,
@@ -423,12 +425,12 @@ export class Bucket extends Component implements Link.Linkable {
     }
 
     function createCorsRule() {
-      return output(args?.cors).apply((cors) => {
+      return output(args.cors).apply((cors) => {
         if (cors === false) return;
 
         return new s3.BucketCorsConfigurationV2(
           ...transform(
-            args?.transform?.cors,
+            args.transform?.cors,
             `${name}Cors`,
             {
               bucket: bucket.bucket,
