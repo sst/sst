@@ -211,6 +211,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	env["PULUMI_SKIP_UPDATE_CHECK"] = "true"
 	// env["PULUMI_DISABLE_AUTOMATIC_PLUGIN_ACQUISITION"] = "true"
 	env["NODE_OPTIONS"] = "--enable-source-maps --no-deprecation"
+	env["TMPDIR"] = p.PathLog("")
 	if input.ServerPort != 0 {
 		env["SST_SERVER"] = fmt.Sprintf("http://localhost:%v", input.ServerPort)
 	}
@@ -623,14 +624,16 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		}
 	}()
 
-	debugLogging := debug.LoggingOptions{}
+	logLevel := uint(3)
+	debugLogging := debug.LoggingOptions{
+		LogLevel: &logLevel,
+	}
 	if input.Verbose {
 		slog.Info("enabling verbose logging")
-		logLevel := uint(11)
+		logLevel = uint(11)
 		debugLogging = debug.LoggingOptions{
 			LogLevel:      &logLevel,
 			FlowToPlugins: true,
-			Debug:         true,
 			Tracing:       "file://" + filepath.Join(p.PathWorkingDir(), "log", "trace.json"),
 		}
 	}

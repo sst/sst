@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 
 	"github.com/sst/ion/cmd/sst/cli"
+	"github.com/sst/ion/cmd/sst/mosaic/ui"
+	"github.com/sst/ion/pkg/project"
 )
 
 var CmdDiagnostic = &cli.Command{
@@ -17,44 +19,29 @@ var CmdDiagnostic = &cli.Command{
 		Long:  "Generates a zip of diagnostic information useful for debugging issues",
 	},
 	Run: func(c *cli.Cli) error {
-		p, err := c.InitProject()
+		cfg, err := project.Discover()
 		if err != nil {
 			return err
 		}
-		fmt.Println("Generating diagnostic report from last run...")
-		statePath, err := p.PullState()
-		if err != nil {
-			return err
+		workingDir := project.ResolveWorkingDir(cfg)
+		logDir := project.ResolveLogDir(cfg)
+		logFiles, err := os.ReadDir(logDir)
+		if len(logFiles) < 3 {
+			ui.Error("No logs found, run your command first before generating a diagnostic report")
+			return nil
 		}
-		filesToZip := []struct {
-			Path string
-			Name string
-		}{
-			{statePath, "state.json"},
-		}
-		logPath := p.PathLog("")
-		logFiles, err := os.ReadDir(logPath)
-		if err != nil {
-			return err
-		}
-		for _, file := range logFiles {
-			if !file.IsDir() {
-				filePath := filepath.Join(logPath, file.Name())
-				filesToZip = append(filesToZip, struct {
-					Path string
-					Name string
-				}{filePath, file.Name()})
-			}
-		}
-		zipFile, err := os.Create(filepath.Join(p.PathWorkingDir(), "report.zip"))
+		fmt.Println(ui.TEXT_DIM.Render("Generating diagnostic report from last run..."))
+		zipFile, err := os.Create(filepath.Join(workingDir, "report.zip"))
 		if err != nil {
 			return err
 		}
 		defer zipFile.Close()
 		archive := zip.NewWriter(zipFile)
 		defer archive.Close()
-		for _, file := range filesToZip {
-			fileToZip, err := os.Open(file.Path)
+
+		addFile := func(path string, name string) error {
+			fmt.Println(ui.TEXT_DIM.Render("-  " + name))
+			fileToZip, err := os.Open(path)
 			if err != nil {
 				return err
 			}
@@ -67,7 +54,7 @@ var CmdDiagnostic = &cli.Command{
 			if err != nil {
 				return err
 			}
-			header.Name = file.Name
+			header.Name = name
 			header.Method = zip.Deflate
 			writer, err := archive.CreateHeader(header)
 			if err != nil {
@@ -77,8 +64,35 @@ var CmdDiagnostic = &cli.Command{
 			if err != nil {
 				return err
 			}
+			return nil
 		}
-		fmt.Println("Diagnostic report generated successfully: " + zipFile.Name())
+
+		if err != nil {
+			return err
+		}
+		for _, file := range logFiles {
+			if !file.IsDir() {
+				filePath := filepath.Join(logDir, file.Name())
+				err := addFile(filePath, file.Name())
+				if err != nil {
+					return err
+				}
+			}
+		}
+		p, err := c.InitProject()
+		if err != nil {
+			return err
+		}
+		statePath, err := p.PullState()
+		if err != nil {
+			return err
+		}
+		err = addFile(statePath, "state.json")
+		if err != nil {
+			return err
+		}
+		fmt.Println()
+		ui.Success("Diagnostic report generated successfully: " + zipFile.Name())
 		return nil
 	},
 }
