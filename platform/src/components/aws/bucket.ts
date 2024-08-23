@@ -111,7 +111,6 @@ export interface BucketArgs {
    * :::
    *
    * Should only be turned on if you want to host public files directly from the bucket.
-   * @default `false`
    * @example
    * ```js
    * {
@@ -317,7 +316,6 @@ export class Bucket extends Component implements Link.Linkable {
     }
 
     const parent = this;
-    const publicAccess = normalizePublicAccess();
 
     const bucket = createBucket();
     const publicAccessBlock = createPublicAccess();
@@ -329,10 +327,6 @@ export class Bucket extends Component implements Link.Linkable {
     // the policy created here is created first. And SST will throw an error if
     // another policy is created after this one.
     this.bucket = policy.apply(() => bucket);
-
-    function normalizePublicAccess() {
-      return output(args?.public).apply((v) => v ?? false);
-    }
 
     function createBucket() {
       const transformed = transform(
@@ -363,7 +357,9 @@ export class Bucket extends Component implements Link.Linkable {
     }
 
     function createPublicAccess() {
-      return publicAccess.apply((publicAccess) => {
+      if (!args.public) return;
+
+      return output(args.public).apply((publicAccess) => {
         return new s3.BucketPublicAccessBlock(
           ...transform(
             args?.transform?.publicAccessBlock,
@@ -382,7 +378,7 @@ export class Bucket extends Component implements Link.Linkable {
     }
 
     function createBucketPolicy() {
-      return publicAccess.apply((publicAccess) => {
+      return output(args.public).apply((publicAccess) => {
         const statements = [];
         if (publicAccess) {
           statements.push({
