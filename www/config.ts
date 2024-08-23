@@ -31,5 +31,6 @@ export default {
   youtube: "https://www.youtube.com/c/sst-dev",
   linkedin: "https://www.linkedin.com/company/sst-dev",
   socialCard: "https://social-cards.sst.dev",
+  console: "https://console.sst.dev",
   tagline: "For whatever you build.",
 };

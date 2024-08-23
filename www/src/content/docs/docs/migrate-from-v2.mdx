@@ -493,6 +493,30 @@ Finally, when you run `sst remove` for your v2 app, it'll remove the CloudFormat
 
 ---
 
+### CI/CD
+
+You probably have _git push to deploy_ or CI/CD set up for your apps. If you are using Github Actions; there shouldn't be much of a difference between v2 and v3.
+
+If you are using [**_Seed_**](https://seed.run) to deploy your v2 app; then you'll want to migrate to using [Autodeploy](/docs/console/#autodeploy) on the [SST Console](/docs/console/). We are currently [not planning to support v3 on Seed](https://seed.run/blog/seed-and-sst-v3).
+
+There are a couple of key reasons to Autodeploy through the Console:
+
+- The builds are run in your AWS account.
+- You can configure your workflow through your `sst.config.ts`.
+- And you can see which resources were updated as a part of the deploy.
+
+To enable Autodeploy on the Console, you'll need to:
+
+1. Create a new account on the Console — <a href={config.console}>console.sst.dev</a>
+2. Link your AWS account
+3. Connect your repo
+4. Configure your environments
+5. And _git push_
+
+Learn more about [Console](/docs/console/) and [Autodeploy](/docs/console/#autodeploy).
+
+---
+
 ## sst.config.ts
 
 Listed below are some of the changes to your [`sst.config.ts`](/docs/reference/config/) in general.
