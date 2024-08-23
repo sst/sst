@@ -16,16 +16,13 @@ import InlineSection from '../../../../../src/components/tsdoc/InlineSection.ast
 The CLI helps you manage your SST apps.
 
 If you are using SST as a part of your Node project, we recommend installing it locally.
-```bash "sst@ion"
-npm install sst@ion
+```bash
+npm install sst
 ```
-:::caution
-You need the `@ion` tag to install the Ion version of SST.
-:::
 ---
 If you are not using Node, you can install the CLI globally.
 ```bash
-curl -fsSL https://ion.sst.dev/install | bash
+curl -fsSL https://sst.dev/install | bash
 ```
 
 :::note
@@ -35,7 +32,7 @@ The CLI currently supports macOS, Linux, and WSL. Windows support is coming soon
 To install a specific version.
 
 ```bash "VERSION=0.0.403"
-curl -fsSL https://ion.sst.dev/install | VERSION=0.0.403 bash
+curl -fsSL https://sst.dev/install | VERSION=0.0.403 bash
 ```
 ---
 #### With a package manager
@@ -126,10 +123,26 @@ This stored stage is called your **personal stage**.
 </InlineSection>
 </Section>
 
-Enables verbose logging for the CLI output.
+Enables verbose logging that includes extra information in logs.
 
 ```bash
 sst [command] --verbose
+```
+
+</Segment>
+
+### print-logs
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">boolean</code>
+</InlineSection>
+</Section>
+
+Print logs to stderr - useful if running in CI.
+
+```bash
+sst [command] --print-logs
 ```
 
 </Segment>
@@ -759,5 +772,31 @@ sst refresh --target urn:pulumi:prod::www::sst:aws:Astro::Astro,urn:pulumi:prod:
 ```
 
 This is useful for cases where you want to ensure that your local state is in sync with your cloud provider. [Learn more about how state works](/docs/providers/#how-state-works).
+</Segment>
+
+### cert
+<Segment>
+<Section type="signature">
+```sh frame="none"
+sst cert
+```
+</Section>
+Generate a locally-trusted certificate to connect to the Console.
+
+The Console can show you local logs from `sst dev` by connecting to your  CLI. Certain browsers like Safari and Brave require the local connection  to be running on HTTPS.
+
+This command uses [mkcert](https://github.com/FiloSottile/mkcert) internally to generate a locally-trusted certificate for `localhost` and `127.0.0.1`.
+
+You'll only need to do this once on your machine.
+</Segment>
+
+### diagnostic
+<Segment>
+<Section type="signature">
+```sh frame="none"
+sst diagnostic
+```
+</Section>
+Generates a zip of diagnostic information useful for debugging issues
 </Segment>
 </div>

@@ -333,7 +333,13 @@ The local logs works in all browsers and environments. But for certain browsers 
 
 Certain browsers like Safari and Brave require the local connection between the browser and the `sst dev` CLI to be running on HTTPS.
 
-SST can integrate with mkcert to automatically generate a self-signed certificate. If you need support for this, feel free to open an issue on GitHub.
+SST can automatically generate a locally-trusted certificate using the [`sst cert`](/docs/reference/cli#cert) command.
+
+```bash
+sst cert
+```
+
+You'll only need to **run this once** on your machine.
 
 ---
 

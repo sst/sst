@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/pkg/global"
@@ -12,8 +13,16 @@ import (
 var CmdCert = &cli.Command{
 	Name: "cert",
 	Description: cli.Description{
-		Short: "Manage certificates.",
-		Long:  "",
+		Short: "Generate certificate for the Console",
+		Long: strings.Join([]string{
+			"Generate a locally-trusted certificate to connect to the Console.",
+			"",
+			"The Console can show you local logs from `sst dev` by connecting to your  CLI. Certain browsers like Safari and Brave require the local connection  to be running on HTTPS.",
+			"",
+			"This command uses [mkcert](https://github.com/FiloSottile/mkcert) internally to generate a locally-trusted certificate for `localhost` and `127.0.0.1`.",
+			"",
+			"You'll only need to do this once on your machine.",
+		}, "\n"),
 	},
 	Run: func(c *cli.Cli) error {
 		err := global.EnsureMkcert()
@@ -38,7 +47,7 @@ var CmdCert = &cli.Command{
 			"127.0.0.1",
 			"localhost",
 		)
-    cmd.Env = env
+		cmd.Env = env
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin

@@ -296,7 +296,7 @@ func (c CommandPath) PrintHelp() error {
 	}
 
 	fmt.Println()
-	fmt.Printf("Learn more at %s\n", color.MagentaString("https://ion.sst.dev"))
+	fmt.Printf("Learn more at %s\n", color.MagentaString("https://sst.dev"))
 
 	return ErrHelp
 }
