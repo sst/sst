@@ -82,6 +82,19 @@ When you remove an SST app, it does not remove the _state_ or _bootstrap_ resour
 
 ---
 
+### Reset
+
+If you accidentally remove the bootstrap resources the SST CLI will not be able to start up.
+
+To fix this you'll need to reset your bootstrap resources.
+
+1. Remove the resources that are listed in the paramter. For example, the `asset` or `state` bucket. Or the ECR repository.
+2. Remove the SSM paramter.
+
+Now when you run the SST CLI, it'll bootstrap your account again.
+
+---
+
 ## How it works
 
 The state file is a JSON representation of all the low level resources created by your app. It is a cached version of the state of resources in the cloud provider.
