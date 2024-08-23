@@ -123,11 +123,13 @@ This stored stage is called your **personal stage**.
 </InlineSection>
 </Section>
 
-Enables verbose logging that includes extra information in logs.
+Prints extra information to the log files in the `.sst/` directory.
 
 ```bash
 sst [command] --verbose
 ```
+
+To also view this on the screen, use the `--print-logs` flag.
 
 </Segment>
 
@@ -139,11 +141,17 @@ sst [command] --verbose
 </InlineSection>
 </Section>
 
-Print logs to stderr - useful if running in CI.
+Print the logs to the screen. These are logs that are written to the `.sst/` directory.
 
 ```bash
 sst [command] --print-logs
 ```
+It can also be set using the `SST_PRINT_LOGS` environment variable.
+
+```bash
+SST_PRINT_LOGS=1 sst [command]
+```
+This is useful when running in a CI environment.
 
 </Segment>
 
