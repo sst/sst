@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
@@ -15,8 +16,12 @@ import (
 var CmdDiagnostic = &cli.Command{
 	Name: "diagnostic",
 	Description: cli.Description{
-		Short: "Generates a zip of diagnostics",
-		Long:  "Generates a zip of diagnostic information useful for debugging issues",
+		Short: "Generates a diagnostic report",
+		Long: strings.Join([]string{
+			"Generates a diagnostic report based on the last command that was run.",
+			"",
+			"This takes the state of your app, its log files, and generates a zip file in the `.sst/` directory. This is for debugging purposes.",
+		}, "\n"),
 	},
 	Run: func(c *cli.Cli) error {
 		cfg, err := project.Discover()
@@ -27,7 +32,7 @@ var CmdDiagnostic = &cli.Command{
 		logDir := project.ResolveLogDir(cfg)
 		logFiles, err := os.ReadDir(logDir)
 		if len(logFiles) < 3 {
-			ui.Error("No logs found, run your command first before generating a diagnostic report")
+			ui.Error("No logs found, run a command before generating a diagnostic report")
 			return nil
 		}
 		fmt.Println(ui.TEXT_DIM.Render("Generating diagnostic report from last run..."))
@@ -92,7 +97,7 @@ var CmdDiagnostic = &cli.Command{
 			return err
 		}
 		fmt.Println()
-		ui.Success("Diagnostic report generated successfully: " + zipFile.Name())
+		ui.Success("Report generated: " + zipFile.Name())
 		return nil
 	},
 }
