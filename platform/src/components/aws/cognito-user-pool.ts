@@ -175,15 +175,30 @@ export interface CognitoUserPoolArgs {
 
 export interface CognitoIdentityProviderArgs {
   /**
-   * Type of the identity provider.
+   * The type of identity provider.
    */
   type: Input<"oidc" | "saml" | "google" | "facebook" | "apple" | "amazon">;
   /**
    * Configure the identity provider details, including the scopes, URLs, and identifiers.
+   *
+   * ```ts
+   * {
+   *   authorize_scopes: "email profile",
+   *   client_id: "your-client-id",
+   *   client_secret: "your-client-secret"
+   * }
+   * ```
    */
   details: Input<Record<string, Input<string>>>;
   /**
-   * Defines mappings between identity provider attributes and user pool attributes.
+   * Define a mapping between identity provider attributes and user pool attributes.
+   *
+   * ```ts
+   * {
+   *   email: "email",
+   *   username: "sub"
+   * }
+   * ```
    */
   attributes?: Input<Record<string, Input<string>>>;
   /**
@@ -200,7 +215,7 @@ export interface CognitoIdentityProviderArgs {
 
 export interface CognitoUserPoolClientArgs {
   /**
-   * A list of provider names for the identity providers that are supported on this client.
+   * A list of identity providers that are supported for this client.
    * @default `["COGNITO"]`
    */
   providers?: Input<Input<string>[]>;
@@ -470,7 +485,7 @@ export class CognitoUserPool extends Component implements Link.Linkable {
   }
 
   /**
-   * Add a client to the user pool.
+   * Add a client to the User Pool.
    *
    * @param name Name of the client.
    * @param args Configure the client.
@@ -493,16 +508,16 @@ export class CognitoUserPool extends Component implements Link.Linkable {
   }
 
   /**
-   * Add a federated identity provider to the user pool.
+   * Add a federated identity provider to the User Pool.
    *
    * @param name Name of the identity provider.
    * @param args Configure the identity provider.
    *
    * @example
    *
-   * Add a GitHub (OIDC) identity provider.
+   * For example, add a GitHub (OIDC) identity provider.
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * const GithubClientId = new sst.Secret("GITHUB_CLIENT_ID");
    * const GithubClientSecret = new sst.Secret("GITHUB_CLIENT_SECRET");
    *
@@ -521,9 +536,9 @@ export class CognitoUserPool extends Component implements Link.Linkable {
    * });
    * ```
    *
-   * Add a Google identity provider.
+   * Or add a Google identity provider.
    *
-   * ```ts
+   * ```ts title="sst.config.ts"
    * const GoogleClientId = new sst.Secret("GOOGLE_CLIENT_ID");
    * const GoogleClientSecret = new sst.Secret("GOOGLE_CLIENT_SECRET");
    *

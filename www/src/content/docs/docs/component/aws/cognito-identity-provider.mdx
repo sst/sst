@@ -82,7 +82,14 @@ The Cognito identity provider name.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Defines mappings between identity provider attributes and user pool attributes.
+Define a mapping between identity provider attributes and user pool attributes.
+
+```ts
+{
+  email: "email",
+  username: "sub"
+}
+```
 
 </Segment>
 ### details
@@ -93,6 +100,14 @@ Defines mappings between identity provider attributes and user pool attributes.
 </InlineSection>
 </Section>
 Configure the identity provider details, including the scopes, URLs, and identifiers.
+
+```ts
+{
+  authorize_scopes: "email profile",
+  client_id: "your-client-id",
+  client_secret: "your-client-secret"
+}
+```
 
 </Segment>
 ### transform?
@@ -124,7 +139,7 @@ Transform the Cognito identity provider resource.
 **Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="symbol">&ldquo;</code><code class="primitive">oidc</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">saml</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">google</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">facebook</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">apple</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">amazon</code><code class="symbol">&rdquo;</code><code class="symbol">&gt;</code>
 </InlineSection>
 </Section>
-Type of the identity provider.
+The type of identity provider.
 
 </Segment>
 ### userPool
