@@ -291,7 +291,6 @@ export class Realtime extends Component implements Link.Linkable {
     args: RealtimeSubscriberArgs,
   ) {
     return all([subscriber, args.filter]).apply(([subscriber, filter]) => {
-      const prefix = logicalName(this.constructorName);
       const suffix = logicalName(
         hashStringToPrettyString(
           [
@@ -303,7 +302,7 @@ export class Realtime extends Component implements Link.Linkable {
       );
 
       return new RealtimeLambdaSubscriber(
-        `${prefix}Subscriber${suffix}`,
+        `${this.constructorName}Subscriber${suffix}`,
         {
           iot: { name: this.constructorName },
           subscriber,

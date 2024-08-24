@@ -636,35 +636,35 @@ export class Bucket extends Component implements Link.Linkable {
     subscriber: string | FunctionArgs,
     args?: BucketSubscriberArgs,
   ) {
-    const bucketName = output(bucketArn).apply(
-      (bucketArn) => parseBucketArn(bucketArn).bucketName,
-    );
-    return this._subscribeFunction(
-      bucketName,
-      bucketName,
-      bucketArn,
-      subscriber,
-      args,
-    );
+    return output(bucketArn).apply((bucketArn) => {
+      const bucketName = parseBucketArn(bucketArn).bucketName;
+      return this._subscribeFunction(
+        bucketName,
+        bucketName,
+        bucketArn,
+        subscriber,
+        args,
+      );
+    });
   }
 
   private static _subscribeFunction(
-    name: Input<string>,
+    name: string,
     bucketName: Input<string>,
     bucketArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: BucketSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
-    return all([name, bucketArn, subscriber, args]).apply(
-      ([name, bucketArn, subscriber, args]) => {
+    return all([bucketArn, subscriber, args]).apply(
+      ([bucketArn, subscriber, args]) => {
         const subscriberId = this.buildSubscriberId(
           bucketArn,
           typeof subscriber === "string" ? subscriber : subscriber.handler,
         );
 
         return new BucketLambdaSubscriber(
-          `${logicalName(name)}Subscriber${subscriberId}`,
+          `${name}Subscriber${subscriberId}`,
           {
             bucket: { name: bucketName, arn: bucketArn },
             subscriber,
@@ -773,32 +773,32 @@ export class Bucket extends Component implements Link.Linkable {
     queueArn: Input<string>,
     args?: BucketSubscriberArgs,
   ) {
-    const bucketName = output(bucketArn).apply(
-      (bucketArn) => parseBucketArn(bucketArn).bucketName,
-    );
-    return this._subscribeQueue(
-      bucketName,
-      bucketName,
-      bucketArn,
-      queueArn,
-      args,
-    );
+    return output(bucketArn).apply((bucketArn) => {
+      const bucketName = parseBucketArn(bucketArn).bucketName;
+      return this._subscribeQueue(
+        bucketName,
+        bucketName,
+        bucketArn,
+        queueArn,
+        args,
+      );
+    });
   }
 
   private static _subscribeQueue(
-    name: Input<string>,
+    name: string,
     bucketName: Input<string>,
     bucketArn: Input<string>,
     queueArn: Input<string>,
     args: BucketSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
-    return all([name, bucketArn, queueArn, args]).apply(
-      ([name, bucketArn, queueArn, args]) => {
+    return all([bucketArn, queueArn, args]).apply(
+      ([bucketArn, queueArn, args]) => {
         const subscriberId = this.buildSubscriberId(bucketArn, queueArn);
 
         return new BucketQueueSubscriber(
-          `${logicalName(name)}Subscriber${subscriberId}`,
+          `${name}Subscriber${subscriberId}`,
           {
             bucket: { name: bucketName, arn: bucketArn },
             queue: queueArn,
@@ -907,32 +907,32 @@ export class Bucket extends Component implements Link.Linkable {
     topicArn: Input<string>,
     args?: BucketSubscriberArgs,
   ) {
-    const bucketName = output(bucketArn).apply(
-      (bucketArn) => parseBucketArn(bucketArn).bucketName,
-    );
-    return this._subscribeTopic(
-      bucketName,
-      bucketName,
-      bucketArn,
-      topicArn,
-      args,
-    );
+    return output(bucketArn).apply((bucketArn) => {
+      const bucketName = parseBucketArn(bucketArn).bucketName;
+      return this._subscribeTopic(
+        bucketName,
+        bucketName,
+        bucketArn,
+        topicArn,
+        args,
+      );
+    });
   }
 
   private static _subscribeTopic(
-    name: Input<string>,
+    name: string,
     bucketName: Input<string>,
     bucketArn: Input<string>,
     topicArn: Input<string>,
     args: BucketSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
-    return all([name, bucketArn, topicArn, args]).apply(
-      ([name, bucketArn, topicArn, args]) => {
+    return all([bucketArn, topicArn, args]).apply(
+      ([bucketArn, topicArn, args]) => {
         const subscriberId = this.buildSubscriberId(bucketArn, topicArn);
 
         return new BucketTopicSubscriber(
-          `${logicalName(name)}Subscriber${subscriberId}`,
+          `${name}Subscriber${subscriberId}`,
           {
             bucket: { name: bucketName, arn: bucketArn },
             topic: topicArn,

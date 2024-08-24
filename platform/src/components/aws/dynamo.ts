@@ -571,21 +571,24 @@ export class Dynamo extends Component implements Link.Linkable {
     subscriber: string | FunctionArgs,
     args?: DynamoSubscriberArgs,
   ) {
-    const tableName = output(streamArn).apply(
-      (streamArn) => parseDynamoStreamArn(streamArn).tableName,
+    return output(streamArn).apply((streamArn) =>
+      this._subscribe(
+        logicalName(parseDynamoStreamArn(streamArn).tableName),
+        streamArn,
+        subscriber,
+        args,
+      ),
     );
-    return this._subscribe(tableName, streamArn, subscriber, args);
   }
 
   private static _subscribe(
-    name: Input<string>,
+    name: string,
     streamArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: DynamoSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
     return all([name, subscriber, args]).apply(([name, subscriber, args]) => {
-      const prefix = logicalName(name);
       const suffix = logicalName(
         hashStringToPrettyString(
           [
@@ -598,7 +601,7 @@ export class Dynamo extends Component implements Link.Linkable {
       );
 
       return new DynamoLambdaSubscriber(
-        `${prefix}Subscriber${suffix}`,
+        `${name}Subscriber${suffix}`,
         {
           dynamo: { streamArn },
           subscriber,

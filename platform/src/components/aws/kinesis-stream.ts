@@ -252,21 +252,24 @@ export class KinesisStream extends Component implements Link.Linkable {
     subscriber: string | FunctionArgs,
     args?: KinesisStreamLambdaSubscriberArgs,
   ) {
-    const streamName = output(streamArn).apply(
-      (streamArn) => parseKinesisStreamArn(streamArn).streamName,
+    return output(streamArn).apply((streamArn) =>
+      this._subscribe(
+        logicalName(parseKinesisStreamArn(streamArn).streamName),
+        streamArn,
+        subscriber,
+        args,
+      ),
     );
-    return this._subscribe(streamName, streamArn, subscriber, args);
   }
 
   private static _subscribe(
-    name: Input<string>,
+    name: string,
     streamArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: KinesisStreamLambdaSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
-    return all([name, streamArn, args]).apply(([name, streamArn, args]) => {
-      const prefix = logicalName(name);
+    return all([streamArn, args]).apply(([streamArn, args]) => {
       const suffix = logicalName(
         hashStringToPrettyString(
           [
@@ -278,7 +281,7 @@ export class KinesisStream extends Component implements Link.Linkable {
         ),
       );
       return new KinesisStreamLambdaSubscriber(
-        `${prefix}Subscriber${suffix}`,
+        `${name}Subscriber${suffix}`,
         {
           stream: { arn: streamArn },
           subscriber,

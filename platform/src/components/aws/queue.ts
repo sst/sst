@@ -500,25 +500,29 @@ export class Queue extends Component implements Link.Linkable {
     args?: QueueSubscriberArgs,
     opts?: ComponentResourceOptions,
   ) {
-    const queueName = output(queueArn).apply(
-      (queueArn) => parseQueueArn(queueArn).queueName,
+    return output(queueArn).apply((queueArn) =>
+      this._subscribeFunction(
+        logicalName(parseQueueArn(queueArn).queueName),
+        queueArn,
+        subscriber,
+        args,
+        opts,
+      ),
     );
-    return this._subscribeFunction(queueName, queueArn, subscriber, args, opts);
   }
 
   private static _subscribeFunction(
-    name: Input<string>,
+    name: string,
     queueArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: QueueSubscriberArgs = {},
     opts?: ComponentResourceOptions,
   ) {
-    return all([name, queueArn]).apply(([name, queueArn]) => {
-      const prefix = logicalName(name);
+    return output(queueArn).apply((queueArn) => {
       const suffix = logicalName(hashStringToPrettyString(queueArn, 6));
 
       return new QueueLambdaSubscriber(
-        `${prefix}Subscriber${suffix}`,
+        `${name}Subscriber${suffix}`,
         {
           queue: { arn: queueArn },
           subscriber,

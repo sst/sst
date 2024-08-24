@@ -1094,11 +1094,10 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
   }
 
   private buildRouteId(route: string) {
-    const prefix = this.constructorName;
     const suffix = logicalName(
       hashStringToPrettyString([this.api.id, route].join(""), 6),
     );
-    return `${prefix}Route${suffix}`;
+    return `${this.constructorName}Route${suffix}`;
   }
 
   /**
