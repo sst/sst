@@ -25,13 +25,7 @@ npm install sst
 
 ---
 
-## Usage
-
-The SDK allows you to access links from your components and some components come with a client that you can use.
-
----
-
-### Links
+## Links
 
 Import `Resource` to access the linked resources.
 
@@ -58,6 +52,21 @@ new sst.aws.Function("MyFunction", {
 
 ---
 
+### Defaults
+
+By default, the `Resource` object contains `Resource.App`. This gives you some info about the current app including:
+
+- `App.name`: The name of your SST app.
+- `App.stage`: The current stage of your SST app.
+
+```ts title="src/lambda.ts"
+import { Resource } from "sst";
+
+console.log(Resource.App.name, Resource.App.stage);
+```
+
+---
+
 #### How it works
 
 In the above example, `Resource.MyBucket.name` works because it's been injected into the function package on `sst dev` and `sst deploy`.
@@ -68,7 +77,7 @@ The JS SDK first checks the `process.env` and then the `globalThis` for the link
 
 ---
 
-### Client
+## Client
 
 Components like the [`Realtime`](/docs/component/aws/realtime/) component come with a client that you can use.
 
