@@ -263,7 +263,8 @@ body > .page > nav starlight-menu-button button {
     margin-right: 1px;
     pointer-events: none;
     height: 2rem;
-    width: calc(var(--sl-sidebar-width) - 1px);
+    /* Account for scrollbar */
+    width: calc(var(--sl-sidebar-width) - 12px);
     background: var(--fade-gradient);
   }
 }
