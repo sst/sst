@@ -274,7 +274,7 @@ nav.sidebar .sidebar-pane {
 }
 nav.sidebar .sidebar-pane > .sidebar-content {
   -ms-overflow-style: none;
-  scrollbar-width: none;
+  scrollbar-width: thin;
   overflow-y: auto;
 }
 nav.sidebar .sidebar-pane > .sidebar-content::-webkit-scrollbar {

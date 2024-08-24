@@ -109,7 +109,7 @@ There are two guidelines to follow when naming your components:
 
 2. Optionally, use PascalCase for the component name.
 
-   For example, you can might name your bucket, `MyBucket` and use Resource Linking to look it up with `Resource.MyBucket`.
+   For example, you might name your bucket, `MyBucket` and use Resource Linking to look it up with `Resource.MyBucket`.
 
    However this is purely cosmetic. You can use kebab case. So `my-bucket`, and look it up using `Resource['my-bucket']`.
 
@@ -263,7 +263,7 @@ These are values that are not available yet and will be resolved as the deploy p
 
 This makes it so that parts of your app are not blocked and all your resources are deployed as concurrently as possible.
 
-For example, let's create a function with a url.
+For example, let's create a function with an url.
 
 ```ts title="sst.config.ts"
 const myFunction = new sst.aws.Function("MyFunction", {

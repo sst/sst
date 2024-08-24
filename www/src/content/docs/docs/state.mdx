@@ -88,8 +88,8 @@ If you accidentally remove the bootstrap resources the SST CLI will not be able 
 
 To fix this you'll need to reset your bootstrap resources.
 
-1. Remove the resources that are listed in the paramter. For example, the `asset` or `state` bucket. Or the ECR repository.
-2. Remove the SSM paramter.
+1. Remove the resources that are listed in the parameter. For example, the `asset` or `state` bucket. Or the ECR repository.
+2. Remove the SSM parameter.
 
 Now when you run the SST CLI, it'll bootstrap your account again.
 
@@ -110,13 +110,13 @@ So when you do a deploy the following happens.
    - If there's a new resource, it gets created.
    - If a resource has been removed, it gets removed.
    - If there's a change in config of the resource, it gets applied.
-3. The state file is updated to reflected the new state of these resources. Now the `sst.config.ts`, the state file, and the resources in the cloud provider are all in sync.
+3. The state file is updated to reflect the new state of these resources. Now the `sst.config.ts`, the state file, and the resources in the cloud provider are all in sync.
 
 ---
 
 ### Out of sync
 
-This process works fine till you manually go change these resources through the cloud provider's console. This will cause the **state and the resources to not be in sync** anymore. This can cause an issue in some cases.
+This process works fine until you manually go change these resources through the cloud provider's console. This will cause the **state and the resources to not be in sync** anymore. This can cause an issue in some cases.
 
 :::caution
 If you manually change the resources in your cloud provider, they will go out of sync with your app's state. 
@@ -159,7 +159,7 @@ The config, state, and resource are back being in sync.
 - SST will make a call to update the timeout of the resource to 60 seconds.
   - But this call to AWS will fail because the function doesn't exist.
 
-Your deploys will fail moving forward because the your state shows that a resource exists but it doesn't anymore. To fix this, you'll need to _refresh_ your state file.
+Your deploys will fail moving forward because your state shows that a resource exists but it doesn't anymore. To fix this, you'll need to _refresh_ your state file.
 
 ---
 

@@ -22,6 +22,7 @@
     "@fontsource-variable/rubik": "^5.0.20",
     "@fontsource/ibm-plex-mono": "^5.0.8",
     "astro": "^4.13.3",
+    "astro-expressive-code": "^0.36.0",
     "astro-sst": "^2.41.5",
     "js-base64": "^3.7.6",
     "sharp": "^0.33.3"

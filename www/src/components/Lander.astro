@@ -452,10 +452,10 @@ p.description {
 </style>
 
 <script>
-  const button = document.querySelector("button.command");
+  const button = document.querySelector("button.command") as HTMLButtonElement;
 
   button?.addEventListener("click", () => {
-    navigator.clipboard.writeText(button.dataset.command);
+    navigator.clipboard.writeText(button.dataset.command!);
     button.classList.toggle("success");
     setTimeout(() => {
       button.classList.toggle("success");
