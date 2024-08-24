@@ -63,12 +63,6 @@ process.on("uncaughtException", (err) => {
       console.log();
       console.trace(err.stack);
     }
-    console.log();
-    console.log(
-      `Need help with this error? Post it in #help on the SST Discord ${blue(
-        `https://sst.dev/discord`
-      )}`
-    );
   }
 
   process.exit(1);
