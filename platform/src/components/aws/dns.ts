@@ -38,6 +38,7 @@ import { ComponentResourceOptions, output } from "@pulumi/pulumi";
 import { Transform, transform } from "../component";
 import { Input } from "../input";
 import { route53 } from "@pulumi/aws";
+import { VisibleError } from "../error";
 
 export interface DnsArgs {
   /**
@@ -164,7 +165,17 @@ export function dns(args: DnsArgs = {}) {
       return dnsRecord;
 
       function lookupZone() {
-        if (args.zone) return args.zone;
+        if (args.zone) {
+          return output(args.zone).apply(async (zoneId) => {
+            const zone = await route53.getZone({ zoneId });
+            if (!partial.name.replace(/\.$/, "").endsWith(zone.name)) {
+              throw new VisibleError(
+                `The DNS record "${partial.name}" cannot be created because the domain name does not match the hosted zone "${zone.name}" (${zoneId}).`,
+              );
+            }
+            return zoneId;
+          });
+        }
 
         return new HostedZoneLookup(
           `${namePrefix}${partial.type}ZoneLookup${nameSuffix}`,
