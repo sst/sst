@@ -302,10 +302,12 @@ Transform the S3 Bucket Policy resource.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** [<code class="type">BucketPublicAccessBlockArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpublicaccessblock/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">BucketPublicAccessBlockArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpublicaccessblock/#inputs)<code class="symbol">, </code><code class="primitive">opts</code><code class="symbol">: </code>[<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)<code class="symbol">, </code><code class="primitive">name</code><code class="symbol">: </code><code class="primitive">string</code><code class="symbol">)</code><code class="symbol"> => </code><code class="primitive">void</code>
+**Type** <code class="primitive">false</code><code class="symbol"> | </code>[<code class="type">BucketPublicAccessBlockArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpublicaccessblock/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">BucketPublicAccessBlockArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/s3/bucketpublicaccessblock/#inputs)<code class="symbol">, </code><code class="primitive">opts</code><code class="symbol">: </code>[<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)<code class="symbol">, </code><code class="primitive">name</code><code class="symbol">: </code><code class="primitive">string</code><code class="symbol">)</code><code class="symbol"> => </code><code class="primitive">void</code>
 </InlineSection>
 </Section>
 Transform the public access block resource that's attached to the Bucket.
+
+Returns `false` if the public access block resource should not be created.
 
 </Segment>
 

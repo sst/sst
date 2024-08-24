@@ -43,10 +43,6 @@
  * You can add Pulumi code in the `run` function not the `app` function. While the `run`
  * function is where you define your resources using SST or Pulumi's components.
  *
- * :::tip
- * The [Global](/docs/reference/global/) library can help you with your app config and resources.
- * :::
- *
  * The run function also has access to a list of [Global](/docs/reference/global/) `$` variables and functions. These serve as the context for your app config.
  *
  * :::caution
@@ -55,6 +51,32 @@
  *
  * Since SST manages importing your provider packages, it's recommended not to add any imports
  * in your `sst.config.ts`.
+ *
+ * ---
+ *
+ * #### .env
+ *
+ * Your `.env` and `.env.<stage>` files are loaded as environment variables in your config.
+ * They need to be in the same directory as your `sst.config.ts`.
+ *
+ * ```bash title=".env"
+ * MY_ENV_VAR=hello
+ * ```
+ *
+ * And are available as `process.env` in both your `app` and `run` functions.
+ *
+ * ```ts title="sst.config.ts"
+ * process.env.MY_ENV_VAR
+ * ```
+ *
+ * The `.env` file takes precedence over `.env.<stage>`. So if you have a `.env` and a
+ * `.env.dev` file, the values in the `.env` file will be used.
+ *
+ * :::note
+ * You need to restart `sst dev` for changes in your `.env` files to take effect.
+ * :::
+ *
+ * Make sure the stage name in your `.env.<stage>` matches the stage your app is running on.
  *
  * @packageDocumentation
  */
