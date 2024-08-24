@@ -412,9 +412,9 @@ Read more about [working with VPC](https://docs.sst.dev/live-lambda-development#
 By default, a `Function`` creates its own IAM role. To use an existing IAM role, import it into your app.
 
 ```js
-import { Role } as iam from "aws-cdk-lib/aws-iam";
+import * as iam from "aws-cdk-lib/aws-iam";
 
-const role = Role.fromRoleName(stack, "ImportedRole", "my-existing-role");
+const role = iam.Role.fromRoleName(stack, "ImportedRole", "my-existing-role");
 
 new Function(stack, "MyFunction", {
   handler: "src/lambda.handler",
@@ -426,12 +426,12 @@ If sharing an imported IAM role across multiple stacks, import it only once. Thi
 
 ```js
 // Shared stack
-import { Role } as iam from "aws-cdk-lib/aws-iam";
+import * as iam from "aws-cdk-lib/aws-iam";
 import { StackContext } from "sst/constructs";
 
 export function Shared({ app, stack }: StackContext) {
   return {
-    role: Role.fromRoleName(stack, "ImportedRole", "my-existing-role"),
+    role: iam.Role.fromRoleName(stack, "ImportedRole", "my-existing-role"),
   }
 }
 
