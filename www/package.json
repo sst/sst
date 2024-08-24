@@ -18,6 +18,7 @@
     "@astrojs/check": "^0.9.2",
     "@astrojs/sitemap": "^3.1.6",
     "@astrojs/starlight": "^0.25.4",
+    "@astro-community/astro-embed-youtube": "^0.5.3",
     "@fontsource-variable/roboto-mono": "^5.0.17",
     "@fontsource-variable/rubik": "^5.0.20",
     "@fontsource/ibm-plex-mono": "^5.0.8",
