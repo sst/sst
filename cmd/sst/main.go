@@ -74,6 +74,7 @@ func main() {
 			slog.Error("exited with error", "err", err)
 			ui.Error("Unexpected error occurred. Please check the logs in .sst/log/sst.log")
 		}
+		telemetry.Close()
 		os.Exit(1)
 		return
 	}
