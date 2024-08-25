@@ -253,6 +253,7 @@ export class Bus extends Component implements Link.Linkable {
   ) {
     return Bus._subscribeFunction(
       this.constructorName,
+      this.nodes.bus.name,
       this.nodes.bus.arn,
       subscriber,
       args,
@@ -305,18 +306,21 @@ export class Bus extends Component implements Link.Linkable {
     subscriber: string | FunctionArgs,
     args?: BusSubscriberArgs,
   ) {
-    return output(busArn).apply((busArn) =>
-      this._subscribeFunction(
-        logicalName(parseEventBusArn(busArn).busName),
+    return output(busArn).apply((busArn) => {
+      const busName = parseEventBusArn(busArn).busName;
+      return this._subscribeFunction(
+        logicalName(busName),
+        busName,
         busArn,
         subscriber,
         args,
-      ),
-    );
+      );
+    });
   }
 
   private static _subscribeFunction(
     name: string,
+    busName: Input<string>,
     busArn: Input<string>,
     subscriber: string | FunctionArgs,
     args: BusSubscriberArgs = {},
@@ -337,7 +341,7 @@ export class Bus extends Component implements Link.Linkable {
       return new BusLambdaSubscriber(
         `${name}Subscriber${suffix}`,
         {
-          bus: { name, arn: busArn },
+          bus: { name: busName, arn: busArn },
           subscriber,
           ...args,
         },
