@@ -52,6 +52,7 @@ const sidebar = [
   {
     label: "How to",
     items: [
+      { label: "AWS Accounts", slug: "docs/aws-accounts" },
       { label: "IAM Credentials", slug: "docs/iam-credentials" },
       { label: "Migrate From v2", slug: "docs/migrate-from-v2" },
       { label: "Custom Domains", slug: "docs/custom-domains" },
