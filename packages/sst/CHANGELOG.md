@@ -1,5 +1,11 @@
 # @serverless-stack/cli2
 
+## 2.43.7
+
+### Patch Changes
+
+- [#3816](https://github.com/sst/sst/pull/3816) [`7de5b1bcc`](https://github.com/sst/sst/commit/7de5b1bcc454afe9a36343cfba291ad6b3e038b5) Thanks [@arkadiuszbartnik](https://github.com/arkadiuszbartnik)! - Bootstrap: cdk bootstrap s3 bucket objects with extra tags
+
 ## 2.43.6
 
 ### Patch Changes
