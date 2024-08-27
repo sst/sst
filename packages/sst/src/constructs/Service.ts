@@ -1086,6 +1086,10 @@ export class Service extends Construct implements SSTConstruct {
     service: FargateService,
     target?: ApplicationTargetGroup
   ) {
+    if (this.props.scaling === null) {
+      return
+    }
+
     const {
       minContainers,
       maxContainers,
