@@ -386,9 +386,9 @@ export interface ApiGatewayV1RouteArgs {
  * });
  * ```
  *
- * #### Set defaults for all routes
+ * #### Common props for all routes
  *
- * You can use the `transform` to set some defaults for all your routes. For example,
+ * You can use the `transform` to set some common props for all your routes. For example,
  * instead of setting the `memory` for each route.
  *
  * ```ts title="sst.config.ts"
@@ -412,6 +412,8 @@ export interface ApiGatewayV1RouteArgs {
  * api.route("GET /", "src/get.handler");
  * api.route("POST /", "src/post.handler");
  * ```
+ *
+ * With this however you cannot override the `memory` in the route.
  */
 export class ApiGatewayV1 extends Component implements Link.Linkable {
   private constructorName: string;
@@ -467,9 +469,9 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
           ? { types: "REGIONAL" }
           : endpoint.type === "private"
             ? {
-                types: "PRIVATE",
-                vpcEndpointIds: endpoint.vpcEndpointIds,
-              }
+              types: "PRIVATE",
+              vpcEndpointIds: endpoint.vpcEndpointIds,
+            }
             : { types: "EDGE" };
       });
     }

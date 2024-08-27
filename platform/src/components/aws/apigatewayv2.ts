@@ -489,9 +489,9 @@ export interface ApiGatewayV2RouteArgs {
  * });
  * ```
  *
- * #### Set defaults for all routes
+ * #### Common props for all routes
  *
- * You can use the `transform` to set some defaults for all your routes. For example,
+ * You can use the `transform` to set some common props for all your routes. For example,
  * instead of setting the `memory` for each route.
  *
  * ```ts title="sst.config.ts"
@@ -515,6 +515,8 @@ export interface ApiGatewayV2RouteArgs {
  * api.route("GET /", "src/get.handler");
  * api.route("POST /", "src/post.handler");
  * ```
+ *
+ * With this however you cannot override the `memory` in the route.
  */
 export class ApiGatewayV2 extends Component implements Link.Linkable {
   private constructorName: string;
@@ -606,10 +608,10 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
         return cors === true || cors === undefined
           ? defaultCors
           : {
-              ...defaultCors,
-              ...cors,
-              maxAge: cors.maxAge && toSeconds(cors.maxAge),
-            };
+            ...defaultCors,
+            ...cors,
+            maxAge: cors.maxAge && toSeconds(cors.maxAge),
+          };
       });
     }
 
@@ -783,9 +785,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-          ([domain, key]) =>
-            key ? `https://${domain}/${key}/` : `https://${domain}`,
-        )
+        ([domain, key]) =>
+          key ? `https://${domain}/${key}/` : `https://${domain}`,
+      )
       : this.api.apiEndpoint;
   }
 

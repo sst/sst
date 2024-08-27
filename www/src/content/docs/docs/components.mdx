@@ -189,7 +189,7 @@ This takes either:
 Similar to the component transform, we have the global `$transform`. This allows you to transform how a component of a given type is created.
 
 :::tip
-Set global defaults for your components with `$transform`.
+Set common props across all your components with `$transform`.
 :::
 
 For example, to set the runtime for all function components.
@@ -200,7 +200,7 @@ $transform(sst.aws.Function, (args, opts) => {
 })
 ```
 
-This sets the runtime for any `Function` component that'll be created after this call. And it cannot be overridden by the component.
+This sets the runtime for any `Function` component that'll be created after this call. But it cannot be overridden by the component.
 
 :::note
 The `$transform` props cannot be overridden by the component when it's created.

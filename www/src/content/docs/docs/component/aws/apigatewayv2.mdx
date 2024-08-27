@@ -57,9 +57,9 @@ api.route("POST /", {
 });
 ```
 
-#### Set defaults for all routes
+#### Common props for all routes
 
-You can use the `transform` to set some defaults for all your routes. For example,
+You can use the `transform` to set some common props for all your routes. For example,
 instead of setting the `memory` for each route.
 
 ```ts title="sst.config.ts"
@@ -83,6 +83,8 @@ new sst.aws.ApiGatewayV2("MyApi", {
 api.route("GET /", "src/get.handler");
 api.route("POST /", "src/post.handler");
 ```
+
+With this however you cannot override the `memory` in the route.
 </Section>
 
 ---

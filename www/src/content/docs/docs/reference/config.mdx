@@ -77,7 +77,7 @@ They need to be in the same directory as your `sst.config.ts`.
 MY_ENV_VAR=hello
 ```
 
-They are available as `process.env` in both your `app` and `run` functions.
+And are available as `process.env` in both your `app` and `run` functions.
 
 ```ts title="sst.config.ts"
 process.env.MY_ENV_VAR
@@ -90,7 +90,7 @@ The `.env` file takes precedence over `.env.<stage>`. So if you have a `.env` an
 You need to restart `sst dev` for changes in your `.env` files to take effect.
 :::
 
-Make sure the stage name in your `.env.<stage>` file matches the stage your app is running on.
+Make sure the stage name in your `.env.<stage>` matches the stage your app is running on.
 </Section>
 
 ---
