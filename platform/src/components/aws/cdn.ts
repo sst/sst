@@ -528,6 +528,7 @@ export class Cdn extends Component {
           {
             sourceDomains: domain.redirects,
             targetDomain: domain.name,
+            cert: domain.cert,
             dns: domain.dns!,
           },
           { parent },

@@ -24,6 +24,11 @@ export interface HttpsRedirectArgs {
    */
   sourceDomains: Input<string[]>;
   /**
+   * The ARN of an ACM (AWS Certificate Manager) certificate that proves ownership of the
+   * domain. By default, a certificate is created and validated automatically.
+   */
+  cert?: Input<string>;
+  /**
    * The DNS adapter you want to use for managing DNS records.
    */
   dns: Input<Dns & {}>;
@@ -43,17 +48,7 @@ export class HttpsRedirect extends Component {
 
     const parent = this;
 
-    const certificate = new DnsValidatedCertificate(
-      `${name}Ssl`,
-      {
-        domainName: output(args.sourceDomains).apply((domains) => domains[0]),
-        alternativeNames: output(args.sourceDomains).apply((domains) =>
-          domains.slice(1),
-        ),
-        dns: args.dns,
-      },
-      { parent, provider: useProvider("us-east-1") },
-    );
+    const certificateArn = createSsl();
 
     const bucket = new Bucket(`${name}Bucket`, {}, { parent });
 
@@ -86,7 +81,7 @@ export class HttpsRedirect extends Component {
         ),
         priceClass: "PriceClass_All",
         viewerCertificate: {
-          acmCertificateArn: certificate.arn,
+          acmCertificateArn: certificateArn,
           sslSupportMethod: "sni-only",
         },
         defaultCacheBehavior: {
@@ -128,6 +123,22 @@ export class HttpsRedirect extends Component {
         );
       }
     });
+
+    function createSsl() {
+      if (args.cert) return args.cert;
+
+      return new DnsValidatedCertificate(
+        `${name}Ssl`,
+        {
+          domainName: output(args.sourceDomains).apply((domains) => domains[0]),
+          alternativeNames: output(args.sourceDomains).apply((domains) =>
+            domains.slice(1),
+          ),
+          dns: args.dns,
+        },
+        { parent, provider: useProvider("us-east-1") },
+      ).arn;
+    }
   }
 }
 
