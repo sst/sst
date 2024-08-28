@@ -120,8 +120,56 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
    * @default false
    */
   edge?: boolean;
+  /**
+   * DynamoDB table used for revalidation cache.
+   * If not provided, a new table will be created with the following configuration:
+   * - Partition key: "tag" (STRING)
+   * - Sort key: "path" (STRING)
+   * - Point-in-time recovery enabled
+   * - On-demand billing
+   * - Global secondary index: "revalidate"
+   * - Removal policy: DESTROY
+   * @example
+   * ```js
+   * revalidationTable: new Table(this, "CustomRevalidationTable", {
+   *   partitionKey: { name: "tag", type: AttributeType.STRING },
+   *   sortKey: { name: "path", type: AttributeType.STRING },
+   *   // ... other custom configurations
+   * })
+   * ```
+   */
   revalidationTable?: Table;
+
+  /**
+   * SQS queue used for handling revalidation requests.
+   * If not provided, a new FIFO queue will be created with a 20-second receive message wait time.
+   * @example
+   * ```js
+   * revalidationQueue: new Queue(this, "CustomRevalidationQueue", {
+   *   fifo: true,
+   *   receiveMessageWaitTime: Duration.seconds(30) // Custom wait time
+   * })
+   * ```
+   */
   revalidationQueue?: Queue;
+
+  /**
+   * Lambda function used for processing revalidation requests.
+   * If not provided, a new function will be created with the following configuration:
+   * - Handler: "index.handler"
+   * - Runtime: Node.js 18.x
+   * - Timeout: 30 seconds
+   * - Code: From ".open-next/revalidation-function" in the project directory
+   * @example
+   * ```js
+   * revalidationFunction: new Function(this, "CustomRevalidationFunction", {
+   *   handler: "index.handler",
+   *   runtime: Runtime.NODEJS_18_X,
+   *   timeout: Duration.seconds(60), // Custom timeout
+   *   // ... other custom configurations
+   * })
+   * ```
+   */
   revalidationFunction?: CdkFunction;
   imageOptimization?: {
     /**
@@ -455,13 +503,13 @@ export class NextjsSite extends SsrSite {
   private createRevalidationQueue() {
     if (!this.serverFunction) return;
 
-    const { cdk } = this.props;
+    const { cdk, revalidationQueue, revalidationFunction } = this.props;
 
-    this.revalidationQueue = new Queue(this, "RevalidationQueue", {
+    this.revalidationQueue = revalidationQueue ?? new Queue(this, "RevalidationQueue", {
       fifo: true,
       receiveMessageWaitTime: CdkDuration.seconds(20),
     });
-    this.revalidationFunction = new CdkFunction(this, "RevalidationFunction", {
+    this.revalidationFunction = revalidationFunction ?? new CdkFunction(this, "RevalidationFunction", {
       description: "Next.js revalidator",
       handler: "index.handler",
       code: Code.fromAsset(
@@ -484,9 +532,9 @@ export class NextjsSite extends SsrSite {
   private createRevalidationTable() {
     if (!this.serverFunction) return;
 
-    const { path: sitePath } = this.props;
+    const { path: sitePath, revalidationTable } = this.props;
 
-    this.revalidationTable = new Table(this, "RevalidationTable", {
+    this.revalidationTable = revalidationTable ?? new Table(this, "RevalidationTable", {
       partitionKey: { name: "tag", type: AttributeType.STRING },
       sortKey: { name: "path", type: AttributeType.STRING },
       pointInTimeRecovery: true,
