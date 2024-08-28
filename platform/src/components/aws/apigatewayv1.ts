@@ -1,11 +1,12 @@
 import {
   ComponentResourceOptions,
   Output,
+  all,
   interpolate,
   jsonStringify,
   output,
 } from "@pulumi/pulumi";
-import { Component, Transform, transform } from "../component";
+import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs } from "./function";
@@ -15,14 +16,172 @@ import { RETENTION } from "./logging";
 import { ApiGatewayV1LambdaRoute } from "./apigatewayv1-lambda-route";
 import { ApiGatewayV1Authorizer } from "./apigatewayv1-authorizer";
 import { setupApiGatewayAccount } from "./helpers/apigateway-account";
-import {
-  apigateway,
-  cloudwatch,
-  apigatewayv2,
-  getRegionOutput,
-} from "@pulumi/aws";
+import { apigateway, cloudwatch, getRegionOutput } from "@pulumi/aws";
+import { Dns } from "../dns";
+import { dns as awsDns } from "./dns";
+import { DnsValidatedCertificate } from "./dns-validated-certificate";
+
+export interface ApiGatewayV1DomainArgs {
+  /**
+   * The custom domain you want to use.
+   *
+   * @example
+   * ```js
+   * {
+   *   domain: {
+   *     name: "example.com"
+   *   }
+   * }
+   * ```
+   *
+   * Can also include subdomains based on the current stage.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     name: `${$app.stage}.example.com`
+   *   }
+   * }
+   * ```
+   */
+  name: Input<string>;
+  /**
+   * The base mapping for the custom domain. This adds a suffix to the URL of the API.
+   *
+   * @example
+   *
+   * Given the following base path and domain name.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     name: "api.example.com",
+   *     path: "v1"
+   *   }
+   * }
+   * ```
+   *
+   * The full URL of the API will be `https://api.example.com/v1/`.
+   *
+   * :::note
+   * There's an extra trailing slash when a base path is set.
+   * :::
+   *
+   * By default there is no base path, so if the `name` is `api.example.com`, the full URL will be `https://api.example.com`.
+   */
+  path?: Input<string>;
+  /**
+   * The ARN of an ACM (AWS Certificate Manager) certificate that proves ownership of the
+   * domain. By default, a certificate is created and validated automatically.
+   *
+   * :::tip
+   * You need to pass in a `cert` for domains that are not hosted on supported `dns` providers.
+   * :::
+   *
+   * To manually set up a domain on an unsupported provider, you'll need to:
+   *
+   * 1. [Validate that you own the domain](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) by creating an ACM certificate. You can either validate it by setting a DNS record or by verifying an email sent to the domain owner.
+   * 2. Once validated, set the certificate ARN as the `cert` and set `dns` to `false`.
+   * 3. Add the DNS records in your provider to point to the API Gateway URL.
+   *
+   * @example
+   * ```js
+   * {
+   *   domain: {
+   *     name: "example.com",
+   *     dns: false,
+   *     cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
+   *   }
+   * }
+   * ```
+   */
+  cert?: Input<string>;
+  /**
+   * The DNS provider to use for the domain. Defaults to the AWS.
+   *
+   * Takes an adapter that can create the DNS records on the provider. This can automate
+   * validating the domain and setting up the DNS routing.
+   *
+   * Supports Route 53, Cloudflare, and Vercel adapters. For other providers, you'll need
+   * to set `dns` to `false` and pass in a certificate validating ownership via `cert`.
+   *
+   * @default `sst.aws.dns`
+   *
+   * @example
+   *
+   * Specify the hosted zone ID for the Route 53 domain.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     name: "example.com",
+   *     dns: sst.aws.dns({
+   *       zone: "Z2FDTNDATAQYW2"
+   *     })
+   *   }
+   * }
+   * ```
+   *
+   * Use a domain hosted on Cloudflare, needs the Cloudflare provider.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     name: "example.com",
+   *     dns: sst.cloudflare.dns()
+   *   }
+   * }
+   * ```
+   *
+   * Use a domain hosted on Vercel, needs the Vercel provider.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     name: "example.com",
+   *     dns: sst.vercel.dns()
+   *   }
+   * }
+   * ```
+   */
+  dns?: Input<false | (Dns & {})>;
+}
 
 export interface ApiGatewayV1Args {
+  /**
+   * Set a custom domain for your REST API.
+   *
+   * Automatically manages domains hosted on AWS Route 53, Cloudflare, and Vercel. For other
+   * providers, you'll need to pass in a `cert` that validates domain ownership and add the
+   * DNS records.
+   *
+   * :::tip
+   * Built-in support for AWS Route 53, Cloudflare, and Vercel. And manual setup for other
+   * providers.
+   * :::
+   *
+   * @example
+   *
+   * By default this assumes the domain is hosted on Route 53.
+   *
+   * ```js
+   * {
+   *   domain: "example.com"
+   * }
+   * ```
+   *
+   * For domains hosted on Cloudflare.
+   *
+   * ```js
+   * {
+   *   domain: {
+   *     name: "example.com",
+   *     dns: sst.cloudflare.dns()
+   *   }
+   * }
+   * ```
+   */
+  domain?: Input<string | Prettify<ApiGatewayV1DomainArgs>>;
   /**
    * Configure the [API Gateway REST API endpoint](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-endpoint-types.html).
    *
@@ -108,6 +267,10 @@ export interface ApiGatewayV1Args {
      * Transform the CloudWatch LogGroup resource used for access logs.
      */
     accessLog?: Transform<cloudwatch.LogGroupArgs>;
+    /**
+     * Transform the API Gateway REST API domain name resource.
+     */
+    domainName?: Transform<apigateway.DomainNameArgs>;
     /**
      * Transform the routes. This is called for every route that is added.
      *
@@ -331,13 +494,9 @@ export interface ApiGatewayV1RouteArgs {
    */
   transform?: {
     /**
-     * Transform the API Gateway HTTP API integration resource.
+     * Transform the API Gateway REST API integration resource.
      */
     integration?: Transform<apigateway.IntegrationArgs>;
-    /**
-     * Transform the API Gateway HTTP API route resource.
-     */
-    route?: Transform<apigatewayv2.RouteArgs>;
   };
 }
 
@@ -420,12 +579,15 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
   private constructorArgs: ApiGatewayV1Args;
   private constructorOpts: ComponentResourceOptions;
   private api: apigateway.RestApi;
+  private apigDomain?: apigateway.DomainName;
+  private apiMapping?: Output<apigateway.BasePathMapping>;
   private region: Output<string>;
   private triggers: Record<string, Output<string>> = {};
   private resources: Record<string, Output<string>> = {};
   private routes: ApiGatewayV1LambdaRoute[] = [];
   private stage?: apigateway.Stage;
   private logGroup?: cloudwatch.LogGroup;
+  private endpointType: Output<"EDGE" | "REGIONAL" | "PRIVATE">;
 
   constructor(
     name: string,
@@ -447,32 +609,29 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     this.constructorOpts = opts;
     this.api = api;
     this.region = region;
-
-    this.registerOutputs({
-      _hint: this.url,
-    });
+    this.endpointType = endpoint.types;
 
     function normalizeRegion() {
       return getRegionOutput(undefined, { provider: opts?.provider }).name;
     }
 
     function normalizeEndpoint() {
-      if (!args.endpoint) return;
-
       return output(args.endpoint).apply((endpoint) => {
+        if (!endpoint) return { types: "EDGE" as const };
+
         if (endpoint.type === "private" && !endpoint.vpcEndpointIds)
           throw new VisibleError(
             "Please provide the VPC endpoint IDs for the private endpoint.",
           );
 
         return endpoint.type === "regional"
-          ? { types: "REGIONAL" }
+          ? { types: "REGIONAL" as const }
           : endpoint.type === "private"
             ? {
-              types: "PRIVATE",
-              vpcEndpointIds: endpoint.vpcEndpointIds,
-            }
-            : { types: "EDGE" };
+                types: "PRIVATE" as const,
+                vpcEndpointIds: endpoint.vpcEndpointIds,
+              }
+            : { types: "EDGE" as const };
       });
     }
 
@@ -494,7 +653,12 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
    * The URL of the API.
    */
   public get url() {
-    return interpolate`https://${this.api.id}.execute-api.${this.region}.amazonaws.com/${$app.stage}/`;
+    return this.apigDomain && this.apiMapping
+      ? all([this.apigDomain.domainName, this.apiMapping.basePath]).apply(
+          ([domain, key]) =>
+            key ? `https://${domain}/${key}/` : `https://${domain}`,
+        )
+      : interpolate`https://${this.api.id}.execute-api.${this.region}.amazonaws.com/${$app.stage}/`;
   }
 
   /**
@@ -771,18 +935,57 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     const api = this.api;
     const triggers = this.triggers;
     const routes = this.routes;
+    const endpointType = this.endpointType;
     const accessLog = normalizeAccessLog();
+    const domain = normalizeDomain();
     const deployment = createDeployment();
     const logGroup = createLogGroup();
     const stage = createStage();
+
+    const certificateArn = createSsl();
+    const apigDomain = createDomainName();
+    createDnsRecords();
+    const apiMapping = createDomainMapping();
+
     this.logGroup = logGroup;
     this.stage = stage;
+    this.apigDomain = apigDomain;
+    this.apiMapping = apiMapping;
+
+    this.registerOutputs({
+      _hint: this.url,
+    });
 
     function normalizeAccessLog() {
       return output(args.accessLog).apply((accessLog) => ({
         ...accessLog,
         retention: accessLog?.retention ?? "forever",
       }));
+    }
+
+    function normalizeDomain() {
+      if (!args.domain) return;
+
+      // validate
+      output(args.domain).apply((domain) => {
+        if (typeof domain === "string") return;
+
+        if (!domain.name) throw new Error(`Missing "name" for domain.`);
+        if (domain.dns === false && !domain.cert)
+          throw new Error(`No "cert" provided for domain with disabled DNS.`);
+      });
+
+      // normalize
+      return output(args.domain).apply((domain) => {
+        const norm = typeof domain === "string" ? { name: domain } : domain;
+
+        return {
+          name: norm.name,
+          path: norm.path,
+          dns: norm.dns === false ? undefined : norm.dns ?? awsDns(),
+          cert: norm.cert,
+        };
+      });
     }
 
     function createDeployment() {
@@ -850,6 +1053,86 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
           },
           { parent },
         ),
+      );
+    }
+
+    function createSsl() {
+      if (!domain) return;
+
+      return domain.apply((domain) => {
+        if (domain.cert) return output(domain.cert);
+
+        return new DnsValidatedCertificate(
+          `${name}Ssl`,
+          {
+            domainName: domain.name,
+            dns: domain.dns!,
+          },
+          { parent },
+        ).arn;
+      });
+    }
+
+    function createDomainName() {
+      if (!domain || !certificateArn) return;
+
+      return new apigateway.DomainName(
+        ...transform(
+          args.transform?.domainName,
+          `${name}DomainName`,
+          {
+            domainName: domain?.name,
+            certificateArn,
+            endpointConfiguration: { types: endpointType },
+          },
+          { parent },
+        ),
+      );
+    }
+
+    function createDnsRecords(): void {
+      if (!domain || !apigDomain) {
+        return;
+      }
+
+      domain.dns.apply((dns) => {
+        if (!dns) return;
+
+        dns.createAlias(
+          name,
+          {
+            name: domain.name,
+            aliasName: endpointType.apply((v) =>
+              v === "EDGE"
+                ? apigDomain.cloudfrontDomainName
+                : apigDomain.regionalDomainName,
+            ),
+            aliasZone: endpointType.apply((v) =>
+              v === "EDGE"
+                ? apigDomain.cloudfrontZoneId
+                : apigDomain.regionalZoneId,
+            ),
+          },
+          { parent },
+        );
+      });
+    }
+
+    function createDomainMapping() {
+      if (!domain || !apigDomain) return;
+
+      return domain.path?.apply(
+        (path) =>
+          new apigateway.BasePathMapping(
+            `${name}DomainMapping`,
+            {
+              restApi: api.id,
+              domainName: apigDomain.id,
+              stageName: stage.stageName,
+              basePath: path,
+            },
+            { parent },
+          ),
       );
     }
   }

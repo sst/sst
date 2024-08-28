@@ -7,7 +7,7 @@ import { hashStringToPrettyString, physicalName, logicalName } from "../naming";
 import { VisibleError } from "../error";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { RETENTION } from "./logging";
-import { dns as awsDns } from "./dns.js";
+import { dns as awsDns } from "./dns";
 import { ApiGatewayV2DomainArgs } from "./helpers/apigatewayv2-domain";
 import { ApiGatewayV2LambdaRoute } from "./apigatewayv2-lambda-route";
 import { ApiGatewayV2Authorizer } from "./apigatewayv2-authorizer";
@@ -608,10 +608,10 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
         return cors === true || cors === undefined
           ? defaultCors
           : {
-            ...defaultCors,
-            ...cors,
-            maxAge: cors.maxAge && toSeconds(cors.maxAge),
-          };
+              ...defaultCors,
+              ...cors,
+              maxAge: cors.maxAge && toSeconds(cors.maxAge),
+            };
       });
     }
 
@@ -785,9 +785,9 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-        ([domain, key]) =>
-          key ? `https://${domain}/${key}/` : `https://${domain}`,
-      )
+          ([domain, key]) =>
+            key ? `https://${domain}/${key}/` : `https://${domain}`,
+        )
       : this.api.apiEndpoint;
   }
 

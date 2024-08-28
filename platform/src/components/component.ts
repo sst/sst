@@ -87,7 +87,9 @@ export class Component extends ComponentResource {
             [
               "aws:acm/certificate:Certificate",
               "aws:acm/certificateValidation:CertificateValidation",
+              "aws:apigateway/basePathMapping:BasePathMapping",
               "aws:apigateway/deployment:Deployment",
+              "aws:apigateway/domainName:DomainName",
               "aws:apigateway/integration:Integration",
               "aws:apigateway/method:Method",
               "aws:apigateway/resource:Resource",
