@@ -251,7 +251,11 @@ export default $config({
   app(input) {
     return {
       name: "my-sst-app",
-      profile: input.stage === "production" ? "acme-production" : "acme-dev"
+      providers: {
+        aws: {
+          profile: input.stage === "production" ? "acme-production" : "acme-dev"
+        }
+      }
     };
   }
 });
