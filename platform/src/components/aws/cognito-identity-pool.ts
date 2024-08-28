@@ -6,6 +6,7 @@ import { Link } from "../link";
 import { physicalName } from "../naming";
 import { cognito, getRegionOutput, iam } from "@pulumi/aws";
 import { permission } from "./permission";
+import { parseIamRoleArn } from "./helpers/arn";
 
 export interface CognitoIdentityPoolArgs {
   /**
@@ -88,6 +89,13 @@ export interface CognitoIdentityPoolArgs {
   };
 }
 
+interface CognitoUserPoolRef {
+  ref: boolean;
+  identityPool: cognito.IdentityPool;
+  authRole: iam.Role;
+  unauthRole: iam.Role;
+}
+
 /**
  * The `CognitoIdentityPool` component lets you add a [Amazon Cognito identity pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html) to your app.
  *
@@ -136,6 +144,14 @@ export class CognitoIdentityPool extends Component implements Link.Linkable {
     opts?: ComponentResourceOptions,
   ) {
     super(__pulumiType, name, args, opts);
+
+    if (args && "ref" in args) {
+      const ref = args as unknown as CognitoUserPoolRef;
+      this.identityPool = ref.identityPool;
+      this.authRole = ref.authRole;
+      this.unauthRole = ref.unauthRole;
+      return;
+    }
 
     const parent = this;
 
@@ -339,6 +355,66 @@ export class CognitoIdentityPool extends Component implements Link.Linkable {
         }),
       ],
     };
+  }
+
+  /**
+   * Reference an existing Identity Pool with the given name. This is useful when you
+   * create a Identity Pool in one stage and want to share it in another. It avoids having to
+   * create a new Identity Pool in the other stage.
+   *
+   * :::tip
+   * You can use the `static get` method to share Identity Pools across stages.
+   * :::
+   *
+   * @param name The name of the component.
+   * @param identityPoolID The id of the existing Identity Pool.
+   *
+   * @example
+   * Imagine you create a Identity Pool in the `dev` stage. And in your personal stage `frank`,
+   * instead of creating a new pool, you want to share the same pool from `dev`.
+   *
+   * ```ts title="sst.config.ts"
+   * const identityPool = $app.stage === "frank"
+   *   ? sst.aws.CognitoIdentityPool.get("MyIdentityPool", "us-east-1:02facf30-e2f3-49ec-9e79-c55187415cf8")
+   *   : new sst.aws.CognitoIdentityPool("MyIdentityPool");
+   * ```
+   *
+   * Here `us-east-1:02facf30-e2f3-49ec-9e79-c55187415cf8` is the ID of the Identity Pool created in the `dev` stage.
+   * You can find this by outputting the Identity Pool ID in the `dev` stage.
+   *
+   * ```ts title="sst.config.ts"
+   * return {
+   *   identityPool: identityPool.id
+   * };
+   * ```
+   */
+  public static get(name: string, identityPoolID: Input<string>) {
+    const identityPool = cognito.IdentityPool.get(
+      `${name}IdentityPool`,
+      identityPoolID,
+    );
+    const attachment = cognito.IdentityPoolRoleAttachment.get(
+      `${name}RoleAttachment`,
+      identityPoolID,
+    );
+    const authRole = iam.Role.get(
+      `${name}AuthRole`,
+      attachment.roles.authenticated.apply(
+        (arn) => parseIamRoleArn(arn).roleName,
+      ),
+    );
+    const unauthRole = iam.Role.get(
+      `${name}UnauthRole`,
+      attachment.roles.unauthenticated.apply(
+        (arn) => parseIamRoleArn(arn).roleName,
+      ),
+    );
+    return new CognitoIdentityPool(name, {
+      ref: true,
+      identityPool,
+      authRole,
+      unauthRole,
+    } as unknown as CognitoIdentityPoolArgs);
   }
 }
 

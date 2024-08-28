@@ -74,6 +74,14 @@ export function parseEventBusArn(arn: string) {
   return { busName };
 }
 
+export function parseIamRoleArn(arn: string) {
+  // arn:aws:iam::123456789012:role/MyRole
+  const roleName = arn.split("/")[1];
+  if (!arn.startsWith("arn:") || !roleName)
+    throw new VisibleError(`The provided ARN "${arn}" is not an IAM role ARN.`);
+  return { roleName };
+}
+
 export function parseElasticSearch(arn: string) {
   // arn:aws:es:region:account-id:domain/domain-name
   const tableName = arn.split("/")[1];

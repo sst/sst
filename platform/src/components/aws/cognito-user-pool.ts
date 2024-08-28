@@ -231,6 +231,11 @@ export interface CognitoUserPoolClientArgs {
   };
 }
 
+interface CognitoUserPoolRef {
+  ref: boolean;
+  userPool: cognito.UserPool;
+}
+
 /**
  * The `CognitoUserPool` component lets you add a [Amazon Cognito User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) to your app.
  *
@@ -296,6 +301,13 @@ export class CognitoUserPool extends Component implements Link.Linkable {
     opts: ComponentResourceOptions = {},
   ) {
     super(__pulumiType, name, args, opts);
+
+    if (args && "ref" in args) {
+      const ref = args as unknown as CognitoUserPoolRef;
+      this.constructorOpts = opts;
+      this.userPool = ref.userPool;
+      return;
+    }
 
     const parent = this;
 
@@ -581,6 +593,45 @@ export class CognitoUserPool extends Component implements Link.Linkable {
         }),
       ],
     };
+  }
+
+  /**
+   * Reference an existing User Pool with the given name. This is useful when you
+   * create a User Pool in one stage and want to share it in another. It avoids having to
+   * create a new User Pool in the other stage.
+   *
+   * :::tip
+   * You can use the `static get` method to share User Pools across stages.
+   * :::
+   *
+   * @param name The name of the component.
+   * @param userPoolID The id of the existing User Pool.
+   *
+   * @example
+   * Imagine you create a User Pool in the `dev` stage. And in your personal stage `frank`,
+   * instead of creating a new pool, you want to share the same pool from `dev`.
+   *
+   * ```ts title="sst.config.ts"
+   * const userPool = $app.stage === "frank"
+   *   ? sst.aws.CognitoUserPool.get("MyUserPool", "us-east-1_gcF5PjhQK")
+   *   : new sst.aws.CognitoUserPool("MyUserPool");
+   * ```
+   *
+   * Here `us-east-1_gcF5PjhQK` is the ID of the User Pool created in the `dev` stage.
+   * You can find this by outputting the User Pool ID in the `dev` stage.
+   *
+   * ```ts title="sst.config.ts"
+   * return {
+   *   userPool: userPool.id
+   * };
+   * ```
+   */
+  public static get(name: string, userPoolID: Input<string>) {
+    const userPool = cognito.UserPool.get(`${name}UserPool`, userPoolID);
+    return new CognitoUserPool(name, {
+      ref: true,
+      userPool,
+    } as unknown as CognitoUserPoolArgs);
   }
 }
 
