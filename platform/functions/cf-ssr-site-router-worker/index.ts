@@ -62,7 +62,9 @@ export default {
         headers,
       });
 
-      await saveCache(response);
+      if (request.method === "GET") {
+        await saveCache(response);
+      }
 
       return response;
     }
