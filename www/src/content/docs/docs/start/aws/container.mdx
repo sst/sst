@@ -64,7 +64,7 @@ This'll create a `sst.config.ts` file in your project root.
 
 To deploy our Express app, let's add an [AWS Fargate](https://aws.amazon.com/fargate/) container with [Amazon ECS](https://aws.amazon.com/ecs/). Update your `sst.config.ts`.
 
-```js title="sst.config.ts" {11-13}
+```js title="sst.config.ts" {10-12}
 async run() {
   const vpc = new sst.aws.Vpc("MyVpc");
 
@@ -256,3 +256,5 @@ As a next step, you can setup the [SST Console](/docs/console/) to _**git push t
 ![SST Console Autodeploy](../../../../../assets/docs/start/sst-console-autodeploy.png)
 
 You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
+
+
