@@ -19,7 +19,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 console.log(process.env);
 console.log(await client());
 app.get("/", async (req, res) => {
-  console.log(c);
   res.send("Hello World!");
 });
 

@@ -13,7 +13,7 @@ export default $config({
       public: true,
     });
 
-    const vpc = new sst.aws.Vpc("MyVpc");
+    const vpc = new sst.aws.Vpc("MyVpc", { nat: "managed" });
 
     const cluster = new sst.aws.Cluster("MyCluster", { vpc });
 
