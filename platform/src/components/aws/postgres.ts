@@ -446,7 +446,7 @@ export class Postgres extends Component implements Link.Linkable {
   }
 
   /**
-   * Reference an existing Postgrest cluster with the given cluster name. This is useful when you
+   * Reference an existing Postgres cluster with the given cluster name. This is useful when you
    * create a Postgres cluster in one stage and want to share it in another. It avoids having to
    * create a new Postgres cluster in the other stage.
    *
