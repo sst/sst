@@ -145,7 +145,7 @@ export async function build(
 
     if (installPackages.length) {
       const src = await findAbove(parsed.dir, "package.json");
-      if (!src) {
+      if (src === undefined) {
         return {
           type: "error" as const,
           errors: [
