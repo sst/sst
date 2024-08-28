@@ -318,7 +318,7 @@ export class Router extends Component implements Link.Linkable {
         if (!routes["/*"]) {
           origins.push({
             originId: "/*",
-            domainName: "do-not-exist",
+            domainName: "do-not-exist.sst.dev",
             ...defaultConfig,
           });
         }
