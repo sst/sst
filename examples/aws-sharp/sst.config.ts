@@ -12,7 +12,7 @@
  * }
  * ```
  *
- * The sharp package is handled by `nodejs.install`. In dev, this uses the sharp npm package locally.
+ * The sharp package is handled by [`nodejs.install`](/docs/component/aws/function#nodejs-install). In dev, this uses the sharp npm package locally.
  *
  * ```json title="package.json"
  * {
