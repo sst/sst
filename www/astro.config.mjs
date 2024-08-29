@@ -26,6 +26,7 @@ const sidebar = [
       { label: "Svelte", slug: "docs/start/aws/svelte" },
       { label: "Drizzle", slug: "docs/start/aws/drizzle" },
       { label: "Next.js", slug: "docs/start/aws/nextjs" },
+      { label: "Angular", slug: "docs/start/aws/angular" },
       { label: "Realtime", slug: "docs/start/aws/realtime" },
       { label: "Container", slug: "docs/start/aws/container" },
       {
