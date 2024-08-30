@@ -32,43 +32,10 @@ We are picking **CSS** for styles, and **not using SSR**.
 Now let's initialize SST in our app.
 
 ```bash
-npm istall --save-dev sst
+npx sst@latest init
 ```
 
-Create a `sst.config.ts` file in your project root with the following.
-
-```ts title="sst.config.ts"
-/// <reference path="./.sst/platform/config.d.ts" />
-
-export default $config({
-  app(input) {
-    return {
-      name: "aws-angular",
-      removal: input?.stage === "production" ? "retain" : "remove",
-      home: "aws"
-    };
-  },
-  async run() {
-    new sst.aws.StaticSite("MyWeb", {
-      dev: {
-        command: "npm run start"
-      },
-      build: {
-        output: "dist/browser",
-        command: "ng build --output-path dist"
-      },
-    });
-  }
-});
-```
-
-This is defining our Angular app as a static site. We are also sepcifying how it's started in `dev` and how to `build` it.
-
-The Angular CLI initializes Git for us. So let's also add to our `.gitignore` file.
-
-```bash title=".gitignore"
-.sst
-```
+This'll create a `sst.config.ts` file in your project root.
 
 ---
 
