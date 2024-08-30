@@ -550,6 +550,9 @@ export class CognitoUserPool extends Component implements Link.Linkable {
    * ```
    */
   public addClient(name: string, args?: CognitoUserPoolClientArgs) {
+    // Note: Referencing an existing client will be implemented in the future:
+    // sst.aws.UserPool.getClient("pool", { userPooldID, clientID });
+
     return new CognitoUserPoolClient(
       name,
       {
