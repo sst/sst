@@ -132,7 +132,7 @@ The name of the API Gateway.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 - <p>[<code class="key">cognito?</code>](#auth-cognito) <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
   - <p>[<code class="key">authorizer</code>](#auth-cognito-authorizer)</p>
@@ -140,7 +140,11 @@ The name of the API Gateway.
 - <p>[<code class="key">custom?</code>](#auth-custom)</p>
 - <p>[<code class="key">iam?</code>](#auth-iam)</p>
 </Section>
-Enable auth for your REST API.
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+Enable auth for your REST API. By default, auth is disabled.
 
 ```js
 {

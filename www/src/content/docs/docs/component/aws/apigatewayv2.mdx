@@ -70,7 +70,7 @@ api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
 You can set it through the `transform`.
 
 ```ts title="sst.config.ts"
-new sst.aws.ApiGatewayV1("MyApi", {
+const api = new sst.aws.ApiGatewayV2("MyApi", {
   transform: {
     route: {
       handler: (args, opts) => {
@@ -1124,14 +1124,18 @@ Transform the API Gateway authorizer resource.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 - <p>[<code class="key">iam?</code>](#auth-iam)</p>
 - <p>[<code class="key">jwt?</code>](#auth-jwt) <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
   - <p>[<code class="key">authorizer</code>](#auth-jwt-authorizer)</p>
   - <p>[<code class="key">scopes?</code>](#auth-jwt-scopes)</p>
 </Section>
-Enable auth for your HTTP API.
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+Enable auth for your HTTP API. By default, auth is disabled.
 
 :::note
 Currently IAM and JWT auth are supported.

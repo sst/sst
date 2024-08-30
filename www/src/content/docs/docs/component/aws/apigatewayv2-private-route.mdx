@@ -137,14 +137,18 @@ The ARN of the AWS Load Balander or Cloud Map service.
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 - <p>[<code class="key">iam?</code>](#auth-iam)</p>
 - <p>[<code class="key">jwt?</code>](#auth-jwt) <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
   - <p>[<code class="key">authorizer</code>](#auth-jwt-authorizer)</p>
   - <p>[<code class="key">scopes?</code>](#auth-jwt-scopes)</p>
 </Section>
-Enable auth for your HTTP API.
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+Enable auth for your HTTP API. By default, auth is disabled.
 
 :::note
 Currently IAM and JWT auth are supported.

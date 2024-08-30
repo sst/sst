@@ -850,6 +850,23 @@ You'll need to [wrap your handler](https://docs.aws.amazon.com/lambda/latest/dg/
 }
 ```
 </Segment>
+### tags?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Record</code><code class="symbol">&lt;</code><code class="primitive">string</code>, <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+A list of tags to add to the function.
+
+```js
+{
+  tags: {
+    "my-tag": "my-value"
+  }
+}
+```
+</Segment>
 ### timeout?
 <Segment>
 <Section type="parameters">

@@ -68,7 +68,7 @@ api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
 You can set it through the `transform`.
 
 ```ts title="sst.config.ts"
-new sst.aws.ApiGatewayV1("MyApi", {
+const api = new sst.aws.ApiGatewayV1("MyApi", {
   transform: {
     route: {
       handler: (args, opts) => {
@@ -1036,7 +1036,7 @@ By default there is no base path, so if the `name` is `api.example.com`, the ful
 <Segment>
 <Section type="parameters">
 <InlineSection>
-**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
 </InlineSection>
 - <p>[<code class="key">cognito?</code>](#auth-cognito) <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">Object</code><code class="symbol">&gt;</code></p>
   - <p>[<code class="key">authorizer</code>](#auth-cognito-authorizer)</p>
@@ -1044,7 +1044,11 @@ By default there is no base path, so if the `name` is `api.example.com`, the ful
 - <p>[<code class="key">custom?</code>](#auth-custom)</p>
 - <p>[<code class="key">iam?</code>](#auth-iam)</p>
 </Section>
-Enable auth for your REST API.
+
+<InlineSection>
+**Default** <code class="primitive">false</code>
+</InlineSection>
+Enable auth for your REST API. By default, auth is disabled.
 
 ```js
 {
