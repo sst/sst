@@ -55,9 +55,9 @@ api.route("POST /", {
 });
 ```
 
-#### Common props for all routes
+#### Default props for all routes
 
-You can use the `transform` to set some common props for all your routes. For example,
+You can use the `transform` to set some default props for all your routes. For example,
 instead of setting the `memory` for each route.
 
 ```ts title="sst.config.ts"
@@ -67,12 +67,15 @@ api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
 
 You can set it through the `transform`.
 
-```ts {5} title="sst.config.ts"
+```ts title="sst.config.ts"
 new sst.aws.ApiGatewayV1("MyApi", {
   transform: {
     route: {
-      handler: {
-        memory: "2048 MB"
+      handler: (args, opts) => {
+        // Set the default if it's not set by the route
+        if (args.memory === undefined) {
+          args.memory = "2048 MB";
+        }
       }
     }
   }
@@ -82,7 +85,7 @@ api.route("GET /", "src/get.handler");
 api.route("POST /", "src/post.handler");
 ```
 
-With this however you cannot override the `memory` in the route.
+With this we set the `memory` if it's not overridden by the route.
 </Section>
 
 ---
@@ -140,6 +143,186 @@ Configure the [API Gateway logs](https://docs.aws.amazon.com/apigateway/latest/d
 </InlineSection>
 The duration the API Gateway logs are kept in CloudWatch.
 
+</Segment>
+### domain?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol"> | </code><code class="primitive">Object</code><code class="symbol">&gt;</code>
+</InlineSection>
+- <p>[<code class="key">cert?</code>](#domain-cert)</p>
+- <p>[<code class="key">dns?</code>](#domain-dns)</p>
+- <p>[<code class="key">name</code>](#domain-name)</p>
+- <p>[<code class="key">path?</code>](#domain-path)</p>
+</Section>
+Set a custom domain for your REST API.
+
+Automatically manages domains hosted on AWS Route 53, Cloudflare, and Vercel. For other
+providers, you'll need to pass in a `cert` that validates domain ownership and add the
+DNS records.
+
+:::tip
+Built-in support for AWS Route 53, Cloudflare, and Vercel. And manual setup for other
+providers.
+:::
+
+By default this assumes the domain is hosted on Route 53.
+
+```js
+{
+  domain: "example.com"
+}
+```
+
+For domains hosted on Cloudflare.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.cloudflare.dns()
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-cert" Tag="h4" parent="domain.">cert?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of an ACM (AWS Certificate Manager) certificate that proves ownership of the
+domain. By default, a certificate is created and validated automatically.
+
+:::tip
+You need to pass in a `cert` for domains that are not hosted on supported `dns` providers.
+:::
+
+To manually set up a domain on an unsupported provider, you'll need to:
+
+1. [Validate that you own the domain](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) by creating an ACM certificate. You can either validate it by setting a DNS record or by verifying an email sent to the domain owner.
+2. Once validated, set the certificate ARN as the `cert` and set `dns` to `false`.
+3. Add the DNS records in your provider to point to the API Gateway URL.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: false,
+    cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-dns" Tag="h4" parent="domain.">dns?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code>[<code class="type">sst.aws.dns</code>](/docs/component/aws/dns/)<code class="symbol"> | </code>[<code class="type">sst.cloudflare.dns</code>](/docs/component/cloudflare/dns/)<code class="symbol"> | </code>[<code class="type">sst.vercel.dns</code>](/docs/component/vercel/dns/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">sst.aws.dns</code>
+</InlineSection>
+The DNS provider to use for the domain. Defaults to the AWS.
+
+Takes an adapter that can create the DNS records on the provider. This can automate
+validating the domain and setting up the DNS routing.
+
+Supports Route 53, Cloudflare, and Vercel adapters. For other providers, you'll need
+to set `dns` to `false` and pass in a certificate validating ownership via `cert`.
+
+Specify the hosted zone ID for the Route 53 domain.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.aws.dns({
+      zone: "Z2FDTNDATAQYW2"
+    })
+  }
+}
+```
+
+Use a domain hosted on Cloudflare, needs the Cloudflare provider.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.cloudflare.dns()
+  }
+}
+```
+
+Use a domain hosted on Vercel, needs the Vercel provider.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.vercel.dns()
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-name" Tag="h4" parent="domain.">name</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The custom domain you want to use.
+
+```js
+{
+  domain: {
+    name: "example.com"
+  }
+}
+```
+
+Can also include subdomains based on the current stage.
+
+```js
+{
+  domain: {
+    name: `${$app.stage}.example.com`
+  }
+}
+```
+</Segment>
+<NestedTitle id="domain-path" Tag="h4" parent="domain.">path?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The base mapping for the custom domain. This adds a suffix to the URL of the API.
+
+Given the following base path and domain name.
+
+```js
+{
+  domain: {
+    name: "api.example.com",
+    path: "v1"
+  }
+}
+```
+
+The full URL of the API will be `https://api.example.com/v1/`.
+
+:::note
+There's an extra trailing slash when a base path is set.
+:::
+
+By default there is no base path, so if the `name` is `api.example.com`, the full URL will be `https://api.example.com`.
 </Segment>
 ### endpoint?
 <Segment>
@@ -214,6 +397,7 @@ The VPC endpoint IDs for the `private` endpoint.
 - <p>[<code class="key">accessLog?</code>](#transform-accesslog)</p>
 - <p>[<code class="key">api?</code>](#transform-api)</p>
 - <p>[<code class="key">deployment?</code>](#transform-deployment)</p>
+- <p>[<code class="key">domainName?</code>](#transform-domainname)</p>
 - <p>[<code class="key">route?</code>](#transform-route) <code class="primitive">Object</code></p>
   - <p>[<code class="key">args?</code>](#transform-route-args)</p>
   - <p>[<code class="key">handler?</code>](#transform-route-handler)</p>
@@ -253,6 +437,16 @@ Transform the API Gateway REST API resource.
 Transform the API Gateway REST API deployment resource.
 
 </Segment>
+<NestedTitle id="transform-domainname" Tag="h4" parent="transform.">domainName?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** [<code class="type">DomainNameArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/domainname/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">DomainNameArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/domainname/#inputs)<code class="symbol">, </code><code class="primitive">opts</code><code class="symbol">: </code>[<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)<code class="symbol">, </code><code class="primitive">name</code><code class="symbol">: </code><code class="primitive">string</code><code class="symbol">)</code><code class="symbol"> => </code><code class="primitive">void</code>
+</InlineSection>
+</Section>
+Transform the API Gateway REST API domain name resource.
+
+</Segment>
 <NestedTitle id="transform-route" Tag="h4" parent="transform.">route?</NestedTitle>
 <Segment>
 <Section type="parameters">
@@ -263,35 +457,40 @@ Transform the API Gateway REST API deployment resource.
 Transform the routes. This is called for every route that is added.
 
 :::note
-This is applied right before the resource is created. So it overrides the
-props set by the route.
+This is applied right before the resource is created.
 :::
 
-You can use this to set any common props for all the routes and their handler function.
+You can use this to set any default props for all the routes and their handler function.
 Like the other transforms, you can either pass in an object or a callback.
 
-Here we are ensuring that all handler functions of our routes have a memory of `2048 MB`.
+Here we are setting a default memory of `2048 MB` for our routes.
 
 ```js
 {
   transform: {
     route: {
-      handler: {
-        memory: "2048 MB"
+      handler: (args, opts) => {
+        // Set the default if it's not set by the route
+        if (args.memory === undefined) {
+          args.memory = "2048 MB";
+        }
       }
     }
   }
 }
 ```
 
-Enable IAM auth for all our routes.
+Defaulting to IAM auth for all our routes.
 
 ```js
 {
   transform: {
     route: {
       args: (props) => {
-        props.auth = { iam: true };
+        // Set the default if it's not set by the route
+        if (props.auth === undefined) {
+          props.auth = { iam: true };
+        }
       }
     }
   }
@@ -691,6 +890,147 @@ const userPool = new aws.cognito.UserPool();
 ```
 </Segment>
 
+## ApiGatewayV1DomainArgs
+### cert?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The ARN of an ACM (AWS Certificate Manager) certificate that proves ownership of the
+domain. By default, a certificate is created and validated automatically.
+
+:::tip
+You need to pass in a `cert` for domains that are not hosted on supported `dns` providers.
+:::
+
+To manually set up a domain on an unsupported provider, you'll need to:
+
+1. [Validate that you own the domain](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) by creating an ACM certificate. You can either validate it by setting a DNS record or by verifying an email sent to the domain owner.
+2. Once validated, set the certificate ARN as the `cert` and set `dns` to `false`.
+3. Add the DNS records in your provider to point to the API Gateway URL.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: false,
+    cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
+  }
+}
+```
+</Segment>
+### dns?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">false</code><code class="symbol"> | </code>[<code class="type">sst.aws.dns</code>](/docs/component/aws/dns/)<code class="symbol"> | </code>[<code class="type">sst.cloudflare.dns</code>](/docs/component/cloudflare/dns/)<code class="symbol"> | </code>[<code class="type">sst.vercel.dns</code>](/docs/component/vercel/dns/)<code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">sst.aws.dns</code>
+</InlineSection>
+The DNS provider to use for the domain. Defaults to the AWS.
+
+Takes an adapter that can create the DNS records on the provider. This can automate
+validating the domain and setting up the DNS routing.
+
+Supports Route 53, Cloudflare, and Vercel adapters. For other providers, you'll need
+to set `dns` to `false` and pass in a certificate validating ownership via `cert`.
+
+Specify the hosted zone ID for the Route 53 domain.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.aws.dns({
+      zone: "Z2FDTNDATAQYW2"
+    })
+  }
+}
+```
+
+Use a domain hosted on Cloudflare, needs the Cloudflare provider.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.cloudflare.dns()
+  }
+}
+```
+
+Use a domain hosted on Vercel, needs the Vercel provider.
+
+```js
+{
+  domain: {
+    name: "example.com",
+    dns: sst.vercel.dns()
+  }
+}
+```
+</Segment>
+### name
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The custom domain you want to use.
+
+```js
+{
+  domain: {
+    name: "example.com"
+  }
+}
+```
+
+Can also include subdomains based on the current stage.
+
+```js
+{
+  domain: {
+    name: `${$app.stage}.example.com`
+  }
+}
+```
+</Segment>
+### path?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code>
+</InlineSection>
+</Section>
+The base mapping for the custom domain. This adds a suffix to the URL of the API.
+
+Given the following base path and domain name.
+
+```js
+{
+  domain: {
+    name: "api.example.com",
+    path: "v1"
+  }
+}
+```
+
+The full URL of the API will be `https://api.example.com/v1/`.
+
+:::note
+There's an extra trailing slash when a base path is set.
+:::
+
+By default there is no base path, so if the `name` is `api.example.com`, the full URL will be `https://api.example.com`.
+</Segment>
+
 ## ApiGatewayV1RouteArgs
 ### auth?
 <Segment>
@@ -813,7 +1153,6 @@ When IAM auth is enabled, clients need to use Signature Version 4 to sign their 
 **Type** <code class="primitive">Object</code>
 </InlineSection>
 - <p>[<code class="key">integration?</code>](#transform-integration)</p>
-- <p>[<code class="key">route?</code>](#transform-route-1)</p>
 </Section>
 [Transform](/docs/components#transform) how this component creates its underlying
 resources.
@@ -826,17 +1165,7 @@ resources.
 **Type** [<code class="type">IntegrationArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/integration/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">IntegrationArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigateway/integration/#inputs)<code class="symbol">, </code><code class="primitive">opts</code><code class="symbol">: </code>[<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)<code class="symbol">, </code><code class="primitive">name</code><code class="symbol">: </code><code class="primitive">string</code><code class="symbol">)</code><code class="symbol"> => </code><code class="primitive">void</code>
 </InlineSection>
 </Section>
-Transform the API Gateway HTTP API integration resource.
-
-</Segment>
-<NestedTitle id="transform-route-1" Tag="h4" parent="transform.">route?</NestedTitle>
-<Segment>
-<Section type="parameters">
-<InlineSection>
-**Type** [<code class="type">RouteArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/route/#inputs)<code class="symbol"> | </code><code class="symbol">(</code><code class="primitive">args</code><code class="symbol">: </code>[<code class="type">RouteArgs</code>](https://www.pulumi.com/registry/packages/aws/api-docs/apigatewayv2/route/#inputs)<code class="symbol">, </code><code class="primitive">opts</code><code class="symbol">: </code>[<code class="type">ComponentResourceOptions</code>](https://www.pulumi.com/docs/concepts/options/)<code class="symbol">, </code><code class="primitive">name</code><code class="symbol">: </code><code class="primitive">string</code><code class="symbol">)</code><code class="symbol"> => </code><code class="primitive">void</code>
-</InlineSection>
-</Section>
-Transform the API Gateway HTTP API route resource.
+Transform the API Gateway REST API integration resource.
 
 </Segment>
 </div>

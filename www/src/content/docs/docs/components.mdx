@@ -189,25 +189,41 @@ This takes either:
 Similar to the component transform, we have the global `$transform`. This allows you to transform how a component of a given type is created.
 
 :::tip
-Set common props across all your components with `$transform`.
+Set default props across all your components with `$transform`.
 :::
 
-For example, to set the runtime for all function components.
+For example, set a default `runtime` for your functions.
 
-```ts title="sst.config.ts"
+```ts title="sst.config.ts" {2-4}
 $transform(sst.aws.Function, (args, opts) => {
-  args.runtime = "nodejs18.x";
-})
+  if (args.runtime === undefined) {
+    args.runtime = "nodejs18.x";
+  }
+});
 ```
 
-This sets the runtime for any `Function` component that'll be created after this call. But it cannot be overridden by the component.
+This sets the runtime for any `Function` component that'll be **created after this call**.
+
+The reason we do the check for `args.runtime` is to allow components to override the default. We do this by only setting the default if the component isn't specifying its own `runtime`.
+
+```ts title="sst.config.ts"
+new sst.aws.Function("MyFunctionA", {
+  handler: "src/lambdaA.handler"
+});
+
+new sst.aws.Function("MyFunctionB", {
+  handler: "src/lambdaB.handler",
+  runtime: "nodejs20.x"
+});
+```
+
+So given the above transform, `MyFunctionA` will have a runtime of `nodejs18.x` and `MyFunctionB` will have a runtime of `nodejs20.x`.
 
 :::note
-The `$transform` props cannot be overridden by the component when it's created.
+The `$transform` is only applied to components that are defined after it.
 :::
 
-Above, the `args` and `opts` are what you'd pass to the `Function` component. Recall the 
-signature of the `Function` component:
+The `args` and `opts` in the `$transform` callback are what you'd pass to the `Function` component. Recall the signature of the `Function` component:
 
 ```ts title="sst.config.ts"
 new sst.aws.Function(name: string, args: FunctionArgs, opts?: pulumi.ComponentResourceOptions)

@@ -564,11 +564,14 @@ async run() {
 
 #### Defaults
 
-The set of functions that applied defaults to all the functions in your app like; `addDefaultFunctionBinding`, `addDefaultFunctionEnv`, `addDefaultFunctionPermissions`, and `setDefaultFunctionProps` can be replaced with the global `$transform`.
+The set of methods that applied defaults to all the functions in your app like; `addDefaultFunctionBinding`, `addDefaultFunctionEnv`, `addDefaultFunctionPermissions`, and `setDefaultFunctionProps` can be replaced with the global `$transform`.
 
 ```ts title="sst.config.ts"
 $transform(sst.aws.Function, (args, opts) => {
-  args.runtime = "nodejs18.x";
+  // Set the default if it's not set by the component
+  if (args.runtime === undefined) {
+    args.runtime = "nodejs18.x";
+  }
 })
 ```
 

@@ -88,6 +88,27 @@ new CognitoUserPool(name, args?, opts?)
 </Segment>
 
 ## CognitoUserPoolArgs
+### advancedSecurity?
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">audit</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">enforced</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** Advanced security is disabled.
+</InlineSection>
+Enable advanced security features.
+
+Learn more about [advanced security](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-settings-advanced-security.html).
+
+```ts
+{
+  advancedSecurity: "enforced"
+}
+```
+</Segment>
 ### aliases?
 <Segment>
 <Section type="parameters">
@@ -151,6 +172,7 @@ Transform the Cognito User Pool resource.
 - <p>[<code class="key">preAuthentication?</code>](#triggers-preauthentication)</p>
 - <p>[<code class="key">preSignUp?</code>](#triggers-presignup)</p>
 - <p>[<code class="key">preTokenGeneration?</code>](#triggers-pretokengeneration)</p>
+- <p>[<code class="key">preTokenGenerationVersion?</code>](#triggers-pretokengenerationversion)</p>
 - <p>[<code class="key">userMigration?</code>](#triggers-usermigration)</p>
 - <p>[<code class="key">verifyAuthChallengeResponse?</code>](#triggers-verifyauthchallengeresponse)</p>
 </Section>
@@ -315,6 +337,21 @@ Triggered before tokens are generated in the authentication process. Use this to
 customize or add claims to the tokens that will be generated and returned to the user.
 
 Takes the handler path or the function args.
+
+</Segment>
+<NestedTitle id="triggers-pretokengenerationversion" Tag="h4" parent="triggers.">preTokenGenerationVersion?</NestedTitle>
+<Segment>
+<Section type="parameters">
+<InlineSection>
+**Type** <code class="symbol">&ldquo;</code><code class="primitive">v1</code><code class="symbol">&rdquo;</code><code class="symbol"> | </code><code class="symbol">&ldquo;</code><code class="primitive">v2</code><code class="symbol">&rdquo;</code>
+</InlineSection>
+</Section>
+
+<InlineSection>
+**Default** <code class="primitive">"v1"</code>
+</InlineSection>
+The version of the preTokenGeneration trigger to use. Higher versions have access to
+more information that support new features.
 
 </Segment>
 <NestedTitle id="triggers-usermigration" Tag="h4" parent="triggers.">userMigration?</NestedTitle>
@@ -518,6 +555,52 @@ userPool.addIdentityProvider("Google", {
     username: "sub",
   },
 });
+```
+</Segment>
+
+### static get
+<Segment>
+<Section type="signature">
+```ts
+CognitoUserPool.get(name, userPoolID)
+```
+</Section>
+
+<Section type="parameters">
+#### Parameters
+- <p><code class="key">name</code> <code class="primitive">string</code></p>
+The name of the component.
+- <p><code class="key">userPoolID</code> <code class="primitive">Input</code><code class="symbol">&lt;</code><code class="primitive">string</code><code class="symbol">&gt;</code></p>
+The id of the existing User Pool.
+</Section>
+
+<InlineSection>
+**Returns** [<code class="type">CognitoUserPool</code>](.)
+</InlineSection>
+Reference an existing User Pool with the given name. This is useful when you
+create a User Pool in one stage and want to share it in another. It avoids having to
+create a new User Pool in the other stage.
+
+:::tip
+You can use the `static get` method to share User Pools across stages.
+:::
+
+Imagine you create a User Pool in the `dev` stage. And in your personal stage `frank`,
+instead of creating a new pool, you want to share the same pool from `dev`.
+
+```ts title="sst.config.ts"
+const userPool = $app.stage === "frank"
+  ? sst.aws.CognitoUserPool.get("MyUserPool", "us-east-1_gcF5PjhQK")
+  : new sst.aws.CognitoUserPool("MyUserPool");
+```
+
+Here `us-east-1_gcF5PjhQK` is the ID of the User Pool created in the `dev` stage.
+You can find this by outputting the User Pool ID in the `dev` stage.
+
+```ts title="sst.config.ts"
+return {
+  userPool: userPool.id
+};
 ```
 </Segment>
 

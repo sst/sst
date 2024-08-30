@@ -275,37 +275,42 @@ export interface ApiGatewayV1Args {
      * Transform the routes. This is called for every route that is added.
      *
      * :::note
-     * This is applied right before the resource is created. So it overrides the
-     * props set by the route.
+     * This is applied right before the resource is created.
      * :::
      *
-     * You can use this to set any common props for all the routes and their handler function.
+     * You can use this to set any default props for all the routes and their handler function.
      * Like the other transforms, you can either pass in an object or a callback.
      *
      * @example
      *
-     * Here we are ensuring that all handler functions of our routes have a memory of `2048 MB`.
+     * Here we are setting a default memory of `2048 MB` for our routes.
      *
      * ```js
      * {
      *   transform: {
      *     route: {
-     *       handler: {
-     *         memory: "2048 MB"
+     *       handler: (args, opts) => {
+     *         // Set the default if it's not set by the route
+     *         if (args.memory === undefined) {
+     *           args.memory = "2048 MB";
+     *         }
      *       }
      *     }
      *   }
      * }
      * ```
      *
-     * Enable IAM auth for all our routes.
+     * Defaulting to IAM auth for all our routes.
      *
      * ```js
      * {
      *   transform: {
      *     route: {
      *       args: (props) => {
-     *         props.auth = { iam: true };
+     *         // Set the default if it's not set by the route
+     *         if (props.auth === undefined) {
+     *           props.auth = { iam: true };
+     *         }
      *       }
      *     }
      *   }
@@ -548,9 +553,9 @@ export interface ApiGatewayV1RouteArgs {
  * });
  * ```
  *
- * #### Common props for all routes
+ * #### Default props for all routes
  *
- * You can use the `transform` to set some common props for all your routes. For example,
+ * You can use the `transform` to set some default props for all your routes. For example,
  * instead of setting the `memory` for each route.
  *
  * ```ts title="sst.config.ts"
@@ -560,12 +565,15 @@ export interface ApiGatewayV1RouteArgs {
  *
  * You can set it through the `transform`.
  *
- * ```ts {5} title="sst.config.ts"
+ * ```ts title="sst.config.ts"
  * new sst.aws.ApiGatewayV1("MyApi", {
  *   transform: {
  *     route: {
- *       handler: {
- *         memory: "2048 MB"
+ *       handler: (args, opts) => {
+ *         // Set the default if it's not set by the route
+ *         if (args.memory === undefined) {
+ *           args.memory = "2048 MB";
+ *         }
  *       }
  *     }
  *   }
@@ -575,7 +583,7 @@ export interface ApiGatewayV1RouteArgs {
  * api.route("POST /", "src/post.handler");
  * ```
  *
- * With this however you cannot override the `memory` in the route.
+ * With this we set the `memory` if it's not overridden by the route.
  */
 export class ApiGatewayV1 extends Component implements Link.Linkable {
   private constructorName: string;
@@ -631,9 +639,9 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
           ? { types: "REGIONAL" as const }
           : endpoint.type === "private"
             ? {
-                types: "PRIVATE" as const,
-                vpcEndpointIds: endpoint.vpcEndpointIds,
-              }
+              types: "PRIVATE" as const,
+              vpcEndpointIds: endpoint.vpcEndpointIds,
+            }
             : { types: "EDGE" as const };
       });
     }
@@ -658,9 +666,9 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
   public get url() {
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.basePath]).apply(
-          ([domain, key]) =>
-            key ? `https://${domain}/${key}/` : `https://${domain}`,
-        )
+        ([domain, key]) =>
+          key ? `https://${domain}/${key}/` : `https://${domain}`,
+      )
       : interpolate`https://${this.api.id}.execute-api.${this.region}.amazonaws.com/${$app.stage}/`;
   }
 
