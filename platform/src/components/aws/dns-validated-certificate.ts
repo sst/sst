@@ -55,8 +55,18 @@ export class DnsValidatedCertificate extends Component {
 
     function createDnsRecords() {
       return all([dns, certificate.domainValidationOptions]).apply(
-        ([dns, options]) =>
-          options.map((option) =>
+        ([dns, options]) => {
+          // filter unique records
+          const records: string[] = [];
+          options = options.filter((option) => {
+            const key = option.resourceRecordType + option.resourceRecordName;
+            if (records.includes(key)) return false;
+            records.push(key);
+            return true;
+          });
+
+          // create records
+          return options.map((option) =>
             dns.createRecord(
               name,
               {
@@ -66,7 +76,8 @@ export class DnsValidatedCertificate extends Component {
               },
               { parent },
             ),
-          ),
+          );
+        },
       );
     }
 

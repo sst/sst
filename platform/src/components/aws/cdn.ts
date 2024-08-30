@@ -15,6 +15,7 @@ import { Dns } from "../dns.js";
 import { dns as awsDns } from "./dns.js";
 import { cloudfront } from "@pulumi/aws";
 import { DistributionInvalidation } from "./providers/distribution-invalidation.js";
+import { logicalName } from "../naming.js";
 
 export interface CdnDomainArgs {
   /**
@@ -503,9 +504,32 @@ export class Cdn extends Component {
       domain.apply((domain) => {
         if (!domain.dns) return;
 
-        for (const recordName of [domain.name, ...domain.aliases]) {
+        const existing: string[] = [];
+        for (const [i, recordName] of [
+          domain.name,
+          ...domain.aliases,
+        ].entries()) {
+          // Note: The way `dns` is implemented, the logical name for the DNS record is
+          // based on the sanitized version of the record name (ie. logicalName()). This
+          // means the logical name for `*.sst.sh` and `sst.sh` will trash b/c `*.` is
+          // stripped out.
+          // ```
+          // domain: {
+          //   name: "*.sst.sh",
+          //   aliases: ['sst.sh'],
+          // },
+          // ```
+          //
+          // Ideally, we don't santize the logical name. But that's a breaking change.
+          //
+          // As a workaround, starting v3.0.79, we prefix the logical name with a unique
+          // index for records with logical names that will trash.
+          const key = logicalName(recordName);
+          const namePrefix = existing.includes(key) ? `${name}${i}` : name;
+          existing.push(key);
+
           domain.dns.createAlias(
-            name,
+            namePrefix,
             {
               name: recordName,
               aliasName: distribution.domainName,
