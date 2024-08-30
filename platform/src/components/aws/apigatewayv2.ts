@@ -376,12 +376,13 @@ export interface ApiGatewayV2AuthorizerArgs {
 
 export interface ApiGatewayV2RouteArgs {
   /**
-   * Enable auth for your HTTP API.
+   * Enable auth for your HTTP API. By default, auth is disabled.
    *
    * :::note
    * Currently IAM and JWT auth are supported.
    * :::
    *
+   * @default `false`
    * @example
    * ```js
    * {
@@ -391,41 +392,44 @@ export interface ApiGatewayV2RouteArgs {
    * }
    * ```
    */
-  auth?: Input<{
-    /**
-     * Enable IAM authorization for a given API route. When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
-     */
-    iam?: Input<true>;
-    /**
-     * Enable JWT or JSON Web Token authorization for a given API route. When JWT auth is enabled, clients need to include a valid JWT in their requests.
-     *
-     * @example
-     * You can configure JWT auth.
-     *
-     * ```js
-     * {
-     *   auth: {
-     *     jwt: {
-     *       authorizer: myAuthorizer.id,
-     *       scopes: ["read:profile", "write:profile"]
-     *     }
-     *   }
-     * }
-     * ```
-     *
-     * Where `myAuthorizer` is created by calling the `addAuthorizer` method.
-     */
-    jwt?: Input<{
-      /**
-       * Authorizer ID of the JWT authorizer.
-       */
-      authorizer: Input<string>;
-      /**
-       * Defines the permissions or access levels that the JWT grants. If the JWT does not have the required scope, the request is rejected. By default it does not require any scopes.
-       */
-      scopes?: Input<Input<string>[]>;
-    }>;
-  }>;
+  auth?: Input<
+    | false
+    | {
+        /**
+         * Enable IAM authorization for a given API route. When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
+         */
+        iam?: Input<true>;
+        /**
+         * Enable JWT or JSON Web Token authorization for a given API route. When JWT auth is enabled, clients need to include a valid JWT in their requests.
+         *
+         * @example
+         * You can configure JWT auth.
+         *
+         * ```js
+         * {
+         *   auth: {
+         *     jwt: {
+         *       authorizer: myAuthorizer.id,
+         *       scopes: ["read:profile", "write:profile"]
+         *     }
+         *   }
+         * }
+         * ```
+         *
+         * Where `myAuthorizer` is created by calling the `addAuthorizer` method.
+         */
+        jwt?: Input<{
+          /**
+           * Authorizer ID of the JWT authorizer.
+           */
+          authorizer: Input<string>;
+          /**
+           * Defines the permissions or access levels that the JWT grants. If the JWT does not have the required scope, the request is rejected. By default it does not require any scopes.
+           */
+          scopes?: Input<Input<string>[]>;
+        }>;
+      }
+  >;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.

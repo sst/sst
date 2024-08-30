@@ -84,10 +84,11 @@ export class ApiGatewayV1LambdaRoute extends Component {
       const { method, resourceId, auth } = args;
 
       const authArgs = output(auth).apply((auth) => {
-        if (auth?.iam) return { authorization: "AWS_IAM" };
-        else if (auth?.custom)
+        if (!auth) return { authorization: "NONE" };
+        if (auth.iam) return { authorization: "AWS_IAM" };
+        if (auth.custom)
           return { authorization: "CUSTOM", authorizerId: auth.custom };
-        else if (auth?.cognito)
+        if (auth.cognito)
           return {
             authorization: "COGNITO_USER_POOLS",
             authorizerId: auth.cognito.authorizer,

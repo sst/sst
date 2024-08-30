@@ -409,8 +409,8 @@ export interface ApiGatewayV1AuthorizerArgs {
 
 export interface ApiGatewayV1RouteArgs {
   /**
-   * Enable auth for your REST API.
-   *
+   * Enable auth for your REST API. By default, auth is disabled.
+   * @default `false`
    * @example
    * ```js
    * {
@@ -420,74 +420,77 @@ export interface ApiGatewayV1RouteArgs {
    * }
    * ```
    */
-  auth?: Input<{
-    /**
-     * Enable IAM authorization for a given API route.
-     *
-     * When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
-     */
-    iam?: Input<true>;
-    /**
-     * Enable custom Lambda authorization for a given API route. Pass in the authorizer ID.
-     * @example
-     * ```js
-     * {
-     *   auth: {
-     *     custom: myAuthorizer.id
-     *   }
-     * }
-     * ```
-     *
-     * Where `myAuthorizer` is:
-     *
-     * ```js
-     * const userPool = new aws.cognito.UserPool();
-     * const myAuthorizer = api.addAuthorizer({
-     *   name: "MyAuthorizer",
-     *   userPools: [userPool.arn]
-     * });
-     * ```
-     */
-    custom?: Input<string>;
-    /**
-     * Enable Cognito User Pool authorization for a given API route.
-     *
-     * @example
-     * You can configure JWT auth.
-     *
-     * ```js
-     * {
-     *   auth: {
-     *     cognito: {
-     *       authorizer: myAuthorizer.id,
-     *       scopes: ["read:profile", "write:profile"]
-     *     }
-     *   }
-     * }
-     * ```
-     *
-     * Where `myAuthorizer` is:
-     *
-     * ```js
-     * const userPool = new aws.cognito.UserPool();
-     *
-     * const myAuthorizer = api.addAuthorizer({
-     *   name: "MyAuthorizer",
-     *   userPools: [userPool.arn]
-     * });
-     * ```
-     */
-    cognito?: Input<{
-      /**
-       * Authorizer ID of the Cognito User Pool authorizer.
-       */
-      authorizer: Input<string>;
-      /**
-       * Defines the permissions or access levels that the authorization token grants.
-       */
-      scopes?: Input<Input<string>[]>;
-    }>;
-  }>;
+  auth?: Input<
+    | false
+    | {
+        /**
+         * Enable IAM authorization for a given API route.
+         *
+         * When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
+         */
+        iam?: Input<true>;
+        /**
+         * Enable custom Lambda authorization for a given API route. Pass in the authorizer ID.
+         * @example
+         * ```js
+         * {
+         *   auth: {
+         *     custom: myAuthorizer.id
+         *   }
+         * }
+         * ```
+         *
+         * Where `myAuthorizer` is:
+         *
+         * ```js
+         * const userPool = new aws.cognito.UserPool();
+         * const myAuthorizer = api.addAuthorizer({
+         *   name: "MyAuthorizer",
+         *   userPools: [userPool.arn]
+         * });
+         * ```
+         */
+        custom?: Input<string>;
+        /**
+         * Enable Cognito User Pool authorization for a given API route.
+         *
+         * @example
+         * You can configure JWT auth.
+         *
+         * ```js
+         * {
+         *   auth: {
+         *     cognito: {
+         *       authorizer: myAuthorizer.id,
+         *       scopes: ["read:profile", "write:profile"]
+         *     }
+         *   }
+         * }
+         * ```
+         *
+         * Where `myAuthorizer` is:
+         *
+         * ```js
+         * const userPool = new aws.cognito.UserPool();
+         *
+         * const myAuthorizer = api.addAuthorizer({
+         *   name: "MyAuthorizer",
+         *   userPools: [userPool.arn]
+         * });
+         * ```
+         */
+        cognito?: Input<{
+          /**
+           * Authorizer ID of the Cognito User Pool authorizer.
+           */
+          authorizer: Input<string>;
+          /**
+           * Defines the permissions or access levels that the authorization token grants.
+           */
+          scopes?: Input<Input<string>[]>;
+        }>;
+      }
+  >;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
