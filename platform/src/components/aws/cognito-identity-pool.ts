@@ -358,7 +358,7 @@ export class CognitoIdentityPool extends Component implements Link.Linkable {
   }
 
   /**
-   * Reference an existing Identity Pool with the given name. This is useful when you
+   * Reference an existing Identity Pool with the given ID. This is useful when you
    * create a Identity Pool in one stage and want to share it in another. It avoids having to
    * create a new Identity Pool in the other stage.
    *
@@ -367,7 +367,7 @@ export class CognitoIdentityPool extends Component implements Link.Linkable {
    * :::
    *
    * @param name The name of the component.
-   * @param identityPoolID The id of the existing Identity Pool.
+   * @param identityPoolID The ID of the existing Identity Pool.
    *
    * @example
    * Imagine you create a Identity Pool in the `dev` stage. And in your personal stage `frank`,

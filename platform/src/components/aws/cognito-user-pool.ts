@@ -449,17 +449,17 @@ export class CognitoUserPool extends Component implements Link.Linkable {
                     triggers.customEmailSender === undefined
                       ? undefined
                       : {
-                          lambdaArn: createTrigger("customEmailSender")!,
-                          lambdaVersion: "V1_0",
-                        },
+                        lambdaArn: createTrigger("customEmailSender")!,
+                        lambdaVersion: "V1_0",
+                      },
                   customMessage: createTrigger("customMessage"),
                   customSmsSender:
                     triggers.customSmsSender === undefined
                       ? undefined
                       : {
-                          lambdaArn: createTrigger("customSmsSender")!,
-                          lambdaVersion: "V1_0",
-                        },
+                        lambdaArn: createTrigger("customSmsSender")!,
+                        lambdaVersion: "V1_0",
+                      },
                   defineAuthChallenge: createTrigger("defineAuthChallenge"),
                   postAuthentication: createTrigger("postAuthentication"),
                   postConfirmation: createTrigger("postConfirmation"),
@@ -469,9 +469,9 @@ export class CognitoUserPool extends Component implements Link.Linkable {
                     triggers.preTokenGeneration === undefined
                       ? undefined
                       : {
-                          lambdaArn: createTrigger("preTokenGeneration")!,
-                          lambdaVersion: triggers.preTokenGenerationVersion,
-                        },
+                        lambdaArn: createTrigger("preTokenGeneration")!,
+                        lambdaVersion: triggers.preTokenGenerationVersion,
+                      },
                   userMigration: createTrigger("userMigration"),
                   verifyAuthChallengeResponse: createTrigger(
                     "verifyAuthChallengeResponse",
@@ -640,7 +640,7 @@ export class CognitoUserPool extends Component implements Link.Linkable {
   }
 
   /**
-   * Reference an existing User Pool with the given name. This is useful when you
+   * Reference an existing User Pool with the given ID. This is useful when you
    * create a User Pool in one stage and want to share it in another. It avoids having to
    * create a new User Pool in the other stage.
    *
@@ -649,7 +649,7 @@ export class CognitoUserPool extends Component implements Link.Linkable {
    * :::
    *
    * @param name The name of the component.
-   * @param userPoolID The id of the existing User Pool.
+   * @param userPoolID The ID of the existing User Pool.
    *
    * @example
    * Imagine you create a User Pool in the `dev` stage. And in your personal stage `frank`,
