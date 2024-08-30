@@ -145,7 +145,7 @@ export function dns(args: DnsArgs = {}) {
             {
               zoneId,
               name: record.name,
-              value: record.value,
+              content: record.value,
               type: record.type,
               ttl: 60,
               allowOverwrite: args.override,
