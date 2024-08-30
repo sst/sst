@@ -110,6 +110,13 @@ func CmdInit(cli *cli.Cli) error {
 		template = "remix"
 		break
 
+	case slices.ContainsFunc(hints, func(s string) bool { return strings.HasPrefix(s, "angular.json") }):
+		fmt.Println("  Angular detected. This will...")
+		fmt.Println("   - create an sst.config.ts")
+		fmt.Println("   - add sst to package.json")
+		template = "angular"
+		break
+
 	case slices.Contains(hints, "package.json"):
 		fmt.Println("  JS project detected. This will...")
 		fmt.Println("   - use the JS template")
@@ -144,7 +151,7 @@ func CmdInit(cli *cli.Cli) error {
 	}
 
 	color.New(color.FgGreen, color.Bold).Print("✓")
-	color.New(color.FgWhite).Println("  Template: ", template)
+	color.New(color.FgWhite).Println("  Template:", template)
 	fmt.Println()
 
 	home := "aws"
