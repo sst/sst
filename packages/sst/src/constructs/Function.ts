@@ -918,7 +918,7 @@ export class Function extends CDKFunction implements SSTConstruct {
         code: Code.fromInline("export function placeholder() {}"),
         handler: "index.placeholder",
         functionName,
-        runtime: CDKRuntime.NODEJS_18_X,
+        runtime: supportedRuntimes[props.runtime as keyof typeof supportedRuntimes],
         memorySize,
         ephemeralStorageSize: diskSize,
         timeout,
@@ -1026,7 +1026,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           : {
               code: Code.fromInline("export function placeholder() {}"),
               handler: "index.placeholder",
-              runtime: CDKRuntime.NODEJS_18_X,
+              runtime: supportedRuntimes[props.runtime as keyof typeof supportedRuntimes],
               layers: Function.buildLayers(scope, id, props),
             }),
         architecture,
