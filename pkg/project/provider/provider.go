@@ -142,6 +142,9 @@ func PutSummary(backend Home, app, stage, updateID string, summary Summary) erro
 }
 
 func GetSecrets(backend Home, app, stage string) (map[string]string, error) {
+	if stage == "" {
+		stage = "_fallback"
+	}
 	data := map[string]string{}
 	err := getData(backend, "secret", app, stage, true, &data)
 	if err != nil {
@@ -151,6 +154,9 @@ func GetSecrets(backend Home, app, stage string) (map[string]string, error) {
 }
 
 func PutSecrets(backend Home, app, stage string, data map[string]string) error {
+	if stage == "" {
+		stage = "_fallback"
+	}
 	slog.Info("putting secrets", "app", app, "stage", stage)
 	if data == nil {
 		return nil

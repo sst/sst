@@ -33,6 +33,7 @@ import (
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/js"
 	"github.com/sst/ion/pkg/project/provider"
+	"golang.org/x/sync/errgroup"
 )
 
 type BuildFailedEvent struct {
@@ -187,9 +188,30 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	if err != nil {
 		return err
 	}
-	secrets, err := provider.GetSecrets(p.home, p.app.Name, p.app.Stage)
-	if err != nil {
-		return ErrPassphraseInvalid
+
+	secrets := map[string]string{}
+	fallback := map[string]string{}
+
+	wg := errgroup.Group{}
+
+	wg.Go(func() error {
+		secrets, err = provider.GetSecrets(p.home, p.app.Name, p.app.Stage)
+		if err != nil {
+			return ErrPassphraseInvalid
+		}
+		return nil
+	})
+
+	wg.Go(func() error {
+		fallback, err = provider.GetSecrets(p.home, p.app.Name, "")
+		if err != nil {
+			return ErrPassphraseInvalid
+		}
+		return nil
+	})
+
+	if err := wg.Wait(); err != nil {
+		return err
 	}
 
 	outfile := filepath.Join(p.PathPlatformDir(), fmt.Sprintf("sst.config.%v.mjs", time.Now().UnixMilli()))
@@ -203,6 +225,9 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		if len(pair) == 2 {
 			env[pair[0]] = pair[1]
 		}
+	}
+	for key, value := range fallback {
+		env["SST_SECRET_"+key] = value
 	}
 	for key, value := range secrets {
 		env["SST_SECRET_"+key] = value

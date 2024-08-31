@@ -18,14 +18,12 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/sst/ion/cmd/sst/cli"
-	"github.com/sst/ion/cmd/sst/mosaic/dev"
 	"github.com/sst/ion/cmd/sst/mosaic/errors"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
-	"github.com/sst/ion/pkg/server"
 	"github.com/sst/ion/pkg/telemetry"
 )
 
@@ -723,244 +721,21 @@ var root = &cli.Command{
 				Short: "Manage secrets",
 				Long:  "Manage the secrets in your app defined with `sst.Secret`.",
 			},
+			Flags: []cli.Flag{
+				{
+					Name: "fallback",
+					Type: "bool",
+					Description: cli.Description{
+						Short: "Set the secret as a fallback secret",
+						Long:  "Set the secret as a fallback secret. This means that if the secret is not set, it will use the fallback secret.",
+					},
+				},
+			},
 			Children: []*cli.Command{
-				{
-					Name: "set",
-					Description: cli.Description{
-						Short: "Set a secret",
-						Long: strings.Join([]string{
-							"Set the value of the secret.",
-							"",
-							"The secrets are encrypted and stored in an S3 Bucket in your AWS account. They are also stored in the package of the functions using the secret.",
-							"",
-							":::tip",
-							"If you are not running `sst dev`, you'll need to `sst deploy` to apply the secret.",
-							":::",
-							"",
-							"For example, set the `sst.Secret` called `StripeSecret` to `123456789`.",
-							"",
-							"```bash frame=\"none\"",
-							"sst secret set StripeSecret dev_123456789",
-							"```",
-							"",
-							"Optionally, set the secret in a specific stage.",
-							"",
-							"```bash frame=\"none\"",
-							"sst secret set StripeSecret prod_123456789 --stage production",
-							"```",
-							"",
-							"To set something like an RSA key, you can first save it to a file.",
-							"",
-							"```bash frame=\"none\"",
-							"cat > tmp.txt <<EOF",
-							"-----BEGIN RSA PRIVATE KEY-----",
-							"MEgCQQCo9+BpMRYQ/dL3DS2CyJxRF+j6ctbT3/Qp84+KeFhnii7NT7fELilKUSnx",
-							"S30WAvQCCo2yU1orfgqr41mM70MBAgMBAAE=",
-							"-----END RSA PRIVATE KEY-----",
-							"EOF",
-							"```",
-							"",
-							"Then set the secret from the file.",
-							"",
-							"```bash frame=\"none\"",
-							"sst secret set Key -- \"$(cat tmp.txt)\"",
-							"```",
-							"",
-							"And make sure to delete the temp file.",
-						}, "\n"),
-					},
-					Args: []cli.Argument{
-						{
-							Name:     "name",
-							Required: true,
-							Description: cli.Description{
-								Short: "The name of the secret",
-								Long:  "The name of the secret.",
-							},
-						},
-						{
-							Name:     "value",
-							Required: false,
-							Description: cli.Description{
-								Short: "The value of the secret",
-								Long:  "The value of the secret.",
-							},
-						},
-					},
-					Examples: []cli.Example{
-						{
-							Content: "sst secret set StripeSecret 123456789",
-							Description: cli.Description{
-								Short: "Set the StripeSecret to 123456789",
-							},
-						},
-						{
-							Content: "sst secret set StripeSecret < tmp.txt",
-							Description: cli.Description{
-								Short: "Set the StripeSecret to contents of tmp.txt",
-							},
-						},
-						{
-							Content: "sst secret set StripeSecret productionsecret --stage production",
-							Description: cli.Description{
-								Short: "Set the StripeSecret in production",
-							},
-						},
-					},
-					Run: CmdSecretSet,
-				},
-				{
-					Name: "load",
-					Description: cli.Description{
-						Short: "Set multiple secrets from file",
-						Long: strings.Join([]string{
-							"Load all the secrets from a file and set them.",
-							"",
-							"```bash frame=\"none\"",
-							"sst secret load ./secrets.env",
-							"```",
-							"",
-							"The file needs to be in the _dotenv_ or bash format of key-value pairs.",
-							"",
-							"```sh title=\"secrets.env\"",
-							"KEY_1=VALUE1",
-							"KEY_2=VALUE2",
-							"```",
-							"",
-							"Optionally, set the secrets in a specific stage.",
-							"",
-							"```bash frame=\"none\"",
-							"sst secret load ./prod.env --stage production",
-							"```",
-							"",
-							"",
-						}, "\n"),
-					},
-					Args: []cli.Argument{
-						{
-							Name:     "file",
-							Required: true,
-							Description: cli.Description{
-								Short: "The file to load secrets from",
-								Long:  "The file to load the secrets from.",
-							},
-						},
-					},
-					Examples: []cli.Example{
-						{
-							Content: "sst secret load ./secrets.env",
-							Description: cli.Description{
-								Short: "Loads all secrets from the file",
-							},
-						},
-						{
-							Content: "sst secret load ./prod.env --stage production",
-							Description: cli.Description{
-								Short: "Set secrets for production",
-							},
-						},
-					},
-					Run: CmdSecretLoad,
-				},
-				{
-					Name: "remove",
-					Description: cli.Description{
-						Short: "Remove a secret",
-						Long: strings.Join([]string{
-							"Remove a secret.",
-							"",
-							"For example, remove the `sst.Secret` called `StripeSecret`.",
-							"",
-							"```bash frame=\"none\" frame=\"none\"",
-							"sst secret remove StripeSecret",
-							"```",
-							"",
-							"Optionally, remove a secret in a specific stage.",
-							"",
-							"```bash frame=\"none\" frame=\"none\"",
-							"sst secret remove StripeSecret --stage production",
-							"```",
-						}, "\n"),
-					},
-					Args: []cli.Argument{
-						{
-							Name:     "name",
-							Required: true,
-							Description: cli.Description{
-								Short: "The name of the secret",
-								Long:  "The name of the secret.",
-							},
-						},
-					},
-					Examples: []cli.Example{
-						{
-							Content: "sst secret remove StripeSecret",
-							Description: cli.Description{
-								Short: "Remove the StripeSecret",
-							},
-						},
-						{
-							Content: "sst secret remove StripeSecret --stage production",
-							Description: cli.Description{
-								Short: "Remove the StripeSecret in production",
-							},
-						},
-					},
-					Run: func(c *cli.Cli) error {
-						key := c.Positional(0)
-						p, err := c.InitProject()
-						if err != nil {
-							return err
-						}
-						defer p.Cleanup()
-						backend := p.Backend()
-						secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
-						if err != nil {
-							return util.NewReadableError(err, "Could not get secrets")
-						}
-
-						// check if the secret exists
-						if _, ok := secrets[key]; !ok {
-							return util.NewReadableError(nil, fmt.Sprintf("Secret \"%s\" does not exist for stage \"%s\"", key, p.App().Stage))
-						}
-
-						delete(secrets, key)
-						err = provider.PutSecrets(backend, p.App().Name, p.App().Stage, secrets)
-						if err != nil {
-							return util.NewReadableError(err, "Could not set secret")
-						}
-						url, _ := server.Discover(p.PathConfig(), p.App().Stage)
-						if url != "" {
-							dev.Deploy(c.Context, url)
-						}
-						ui.Success(fmt.Sprintf("Removed \"%s\" for stage \"%s\"", key, p.App().Stage))
-						return nil
-					},
-				},
-				{
-					Name: "list",
-					Description: cli.Description{
-						Short: "List all secrets",
-						Long: strings.Join([]string{
-							"Lists all the secrets.",
-							"",
-							"Optionally, list the secrets in a specific stage.",
-							"",
-							"```bash frame=\"none\" frame=\"none\"",
-							"sst secret list --stage production",
-							"```",
-						}, "\n"),
-					},
-					Examples: []cli.Example{
-						{
-							Content: "sst secret list --stage production",
-							Description: cli.Description{
-								Short: "List the secrets in production",
-							},
-						},
-					},
-					Run: CmdSecretList,
-				},
+				CmdSecretSet,
+				CmdSecretRemove,
+				CmdSecretLoad,
+				CmdSecretList,
 			},
 		},
 		{
