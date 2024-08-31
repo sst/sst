@@ -409,6 +409,10 @@ var CmdSecretRemove = &cli.Command{
 		if url != "" {
 			dev.Deploy(c.Context, url)
 		}
+		if c.Bool("fallback") {
+			ui.Success(fmt.Sprintf("Removed fallback value for \"%s\"", key))
+			return nil
+		}
 		ui.Success(fmt.Sprintf("Removed \"%s\" for stage \"%s\"", key, p.App().Stage))
 		return nil
 	},
