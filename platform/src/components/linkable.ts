@@ -58,7 +58,7 @@ export interface Definition<
 
 /**
  * The `Linkable` component and the `Linkable.wrap` method lets you link any resources in your
- * app; not just the built-in SST components.
+ * app; not just the built-in SST components. It also lets you modify the links SST creates.
  *
  * @example
  *
@@ -73,7 +73,8 @@ export interface Definition<
  * });
  * ```
  *
- * You can also use this to combine multiple resources into a single linkable resource.
+ * You can also use this to combine multiple resources into a single linkable resource. And
+ * optionally include permissions or bindings for the linked resource.
  *
  * ```ts title="sst.config.ts"
  * const bucketA = new sst.aws.Bucket("MyBucketA");
@@ -81,17 +82,7 @@ export interface Definition<
  *
  * const storage = new sst.Linkable("MyStorage", {
  *   properties: {
- *     bucketA: bucketA.name,
- *     bucketB: bucketB.name
- *   }
- * });
- * ```
- *
- * You can optionally include permissions or bindings for the linked resource.
- *
- * ```ts title="sst.config.ts"
- * const storage = new sst.Linkable("MyStorage", {
- *   properties: {
+ *     foo: "bar",
  *     bucketA: bucketA.name,
  *     bucketB: bucketB.name
  *   },
@@ -104,8 +95,6 @@ export interface Definition<
  * });
  * ```
  *
- * #### Link to a resource
- *
  * You can now link this resource to your frontend or a function.
  *
  * ```ts title="sst.config.ts" {3}
@@ -115,7 +104,7 @@ export interface Definition<
  * });
  * ```
  *
- * Then use the [SDK](/docs/reference/sdk/) to access them at runtime.
+ * Then use the [SDK](/docs/reference/sdk/) to access it at runtime.
  *
  * ```js title="src/lambda.ts"
  * import { Resource } from "sst";
@@ -160,6 +149,27 @@ export interface Definition<
  *
  * console.log(Resource.MyTable.tableName);
  * ```
+ *
+ * Your function will also have the permissions defined above.
+ *
+ * #### Modify built-in links
+ *
+ * You can also modify how SST creates links. For example, you might want to change the
+ * permissions of a linkable resource.
+ *
+ * ```ts title="sst.config.ts" "sst.aws.Bucket"
+ *  sst.Linkable.wrap(sst.aws.Bucket, (bucket) => ({
+ *    properties: { name: bucket.name },
+ *    include: [
+ *      sst.aws.permission({
+ *        actions: ["s3:GetObject"],
+ *        resources: [bucket.arn]
+ *      })
+ *    ]
+ *  }));
+ * ```
+ *
+ * This overrides the built-in link and lets you create your own.
  */
 export class Linkable<T extends Record<string, any>>
   extends Component
@@ -189,10 +199,14 @@ export class Linkable<T extends Record<string, any>>
   }
 
   /**
-   * Wrap any Pulumi Resource class to make it linkable. Behind the scenes this modifies the
+   * Wrap any resource class to make it linkable. Behind the scenes this modifies the
    * prototype of the given class.
    *
-   * @param cls The Pulumi Resource class to wrap.
+   * :::tip
+   * Use `Linkable.wrap` to make any resource linkable.
+   * :::
+   *
+   * @param cls The resource class to wrap.
    * @param cb A callback that returns the definition for the linkable resource.
    *
    * @example
@@ -228,6 +242,30 @@ export class Linkable<T extends Record<string, any>>
    *   link: [table]
    * });
    * ```
+   *
+   * Since this applies to any resource, you can also use it to wrap SST components and modify
+   * how they are linked.
+   *
+   * ```ts title="sst.config.ts" "sst.aws.Bucket"
+   * sst.Linkable.wrap(sst.aws.Bucket, (bucket) => ({
+   *   properties: { name: bucket.name },
+   *   include: [
+   *     sst.aws.permission({
+   *       actions: ["s3:GetObject"],
+   *       resources: [bucket.arn]
+   *     })
+   *   ]
+   * }));
+   * ```
+   *
+   * This overrides the built-in link and lets you create your own.
+   *
+   * :::tip
+   * You can modfiy the permissions granted by a linked resource.
+   * :::
+   *
+   * In the above example, we're modifying the permissions to access a linked `sst.aws.Bucket`
+   * in our app.
    */
   public static wrap<Resource>(
     cls: { new(...args: any[]): Resource },

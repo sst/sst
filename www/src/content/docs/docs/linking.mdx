@@ -168,7 +168,9 @@ You can check the generated `sst-env.d.ts` types into source control. This will 
 
 ## Extending linking
 
-The examples above are for the built-in SST components. However, you might be using other resources from the Pulumi/Terraform ecosystem. Or you might want to link a different set of outputs than what SST exposes.
+The examples above are built into SST's components. You might want to modify the permissions that are granted as a part of these links.
+
+Or, you might want to link other resources from the Pulumi/Terraform ecosystem. Or want to link a different set of outputs than what SST exposes.
 
 You can do this using the [`sst.Linkable`](/docs/component/linkable/) component.
 
@@ -210,7 +212,7 @@ Read more about [`sst.Linkable`](/docs/component/linkable/).
 
 ### Link any resource
 
-You can also wrap any Pulumi Resource class to make it linkable with the `Linkable.wrap` static method.
+You can also wrap any resource class to make it linkable with the `Linkable.wrap` static method.
 
 ```ts title="sst.config.ts"
 Linkable.wrap(aws.dynamodb.Table, (table) => ({
@@ -239,5 +241,25 @@ import { Resource } from "sst";
 
 console.log(Resource.MyTable.tableName);
 ```
+
+---
+
+### Modify built-in links
+
+You can also modify the links SST creates. For example, you might want to change the permissions of a linkable resource.
+
+```ts title="sst.config.ts" "sst.aws.Bucket"
+ sst.Linkable.wrap(sst.aws.Bucket, (bucket) => ({
+   properties: { name: bucket.name },
+   include: [
+     sst.aws.permission({
+       actions: ["s3:GetObject"],
+       resources: [bucket.arn]
+     })
+   ]
+ }));
+ ```
+
+ This overrides the existing link and let's you create your own.
 
 Read more about [`sst.Linkable.wrap`](/docs/component/linkable/#static-wrap).

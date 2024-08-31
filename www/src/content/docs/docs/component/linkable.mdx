@@ -14,7 +14,7 @@ import InlineSection from '../../../../../src/components/tsdoc/InlineSection.ast
 
 <Section type="about">
 The `Linkable` component and the `Linkable.wrap` method lets you link any resources in your
-app; not just the built-in SST components.
+app; not just the built-in SST components. It also lets you modify the links SST creates.
 
 #### Linking any value
 
@@ -27,7 +27,8 @@ new sst.Linkable("MyLinkable", {
 });
 ```
 
-You can also use this to combine multiple resources into a single linkable resource.
+You can also use this to combine multiple resources into a single linkable resource. And
+optionally include permissions or bindings for the linked resource.
 
 ```ts title="sst.config.ts"
 const bucketA = new sst.aws.Bucket("MyBucketA");
@@ -35,17 +36,7 @@ const bucketB = new sst.aws.Bucket("MyBucketB");
 
 const storage = new sst.Linkable("MyStorage", {
   properties: {
-    bucketA: bucketA.name,
-    bucketB: bucketB.name
-  }
-});
-```
-
-You can optionally include permissions or bindings for the linked resource.
-
-```ts title="sst.config.ts"
-const storage = new sst.Linkable("MyStorage", {
-  properties: {
+    foo: "bar",
     bucketA: bucketA.name,
     bucketB: bucketB.name
   },
@@ -58,8 +49,6 @@ const storage = new sst.Linkable("MyStorage", {
 });
 ```
 
-#### Link to a resource
-
 You can now link this resource to your frontend or a function.
 
 ```ts title="sst.config.ts" {3}
@@ -69,7 +58,7 @@ new sst.aws.Function("MyApi", {
 });
 ```
 
-Then use the [SDK](/docs/reference/sdk/) to access them at runtime.
+Then use the [SDK](/docs/reference/sdk/) to access it at runtime.
 
 ```js title="src/lambda.ts"
 import { Resource } from "sst";
@@ -114,6 +103,27 @@ import { Resource } from "sst";
 
 console.log(Resource.MyTable.tableName);
 ```
+
+Your function will also have the permissions defined above.
+
+#### Modify built-in links
+
+You can also modify how SST creates links. For example, you might want to change the
+permissions of a linkable resource.
+
+```ts title="sst.config.ts" "sst.aws.Bucket"
+ sst.Linkable.wrap(sst.aws.Bucket, (bucket) => ({
+   properties: { name: bucket.name },
+   include: [
+     sst.aws.permission({
+       actions: ["s3:GetObject"],
+       resources: [bucket.arn]
+     })
+   ]
+ }));
+```
+
+This overrides the built-in link and lets you create your own.
 </Section>
 
 ---
@@ -167,7 +177,7 @@ Linkable.wrap(cls, cb)
 <Section type="parameters">
 #### Parameters
 - <p><code class="key">cls</code> <code class="primitive">(args: <code class="primitive">any</code><code class="symbol">[]</code>) => <code class="type">Resource</code></code></p>
-The Pulumi Resource class to wrap.
+The resource class to wrap.
 - <p><code class="key">cb</code> <code class="primitive">(resource: <code class="type">Resource</code>) => [<code class="type">Definition</code>](#definition)</code></p>
 A callback that returns the definition for the linkable resource.
 </Section>
@@ -175,8 +185,12 @@ A callback that returns the definition for the linkable resource.
 <InlineSection>
 **Returns** <code class="primitive">void</code>
 </InlineSection>
-Wrap any Pulumi Resource class to make it linkable. Behind the scenes this modifies the
+Wrap any resource class to make it linkable. Behind the scenes this modifies the
 prototype of the given class.
+
+:::tip
+Use `Linkable.wrap` to make any resource linkable.
+:::
 
 Here we are wrapping the [`aws.dynamodb.Table`](https://www.pulumi.com/registry/packages/aws/api-docs/dynamodb/table/)
 class to make it linkable.
@@ -209,6 +223,30 @@ new sst.aws.Nextjs("MyWeb", {
   link: [table]
 });
 ```
+
+Since this applies to any resource, you can also use it to wrap SST components and modify
+how they are linked.
+
+```ts title="sst.config.ts" "sst.aws.Bucket"
+sst.Linkable.wrap(sst.aws.Bucket, (bucket) => ({
+  properties: { name: bucket.name },
+  include: [
+    sst.aws.permission({
+      actions: ["s3:GetObject"],
+      resources: [bucket.arn]
+    })
+  ]
+}));
+```
+
+This overrides the built-in link and lets you create your own.
+
+:::tip
+You can modfiy the permissions granted by a linked resource.
+:::
+
+In the above example, we're modifying the permissions to access a linked `sst.aws.Bucket`
+in our app.
 </Segment>
 
 ## Definition
