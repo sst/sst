@@ -262,9 +262,7 @@ export interface ApiGatewayV2Args {
      *     route: {
      *       handler: (args, opts) => {
      *         // Set the default if it's not set by the route
-     *         if (args.memory === undefined) {
-     *           args.memory = "2048 MB";
-     *         }
+     *         args.memory ??= "2048 MB";
      *       }
      *     }
      *   }
@@ -279,9 +277,7 @@ export interface ApiGatewayV2Args {
      *     route: {
      *       args: (props) => {
      *         // Set the default if it's not set by the route
-     *         if (props.auth === undefined) {
-     *           props.auth = { iam: true };
-     *         }
+     *         props.auth ??= { iam: true };
      *       }
      *     }
      *   }
@@ -510,15 +506,13 @@ export interface ApiGatewayV2RouteArgs {
  *
  * You can set it through the `transform`.
  *
- * ```ts title="sst.config.ts"
+ * ```ts title="sst.config.ts" {6}
  * const api = new sst.aws.ApiGatewayV2("MyApi", {
  *   transform: {
  *     route: {
  *       handler: (args, opts) => {
  *         // Set the default if it's not set by the route
- *         if (args.memory === undefined) {
- *           args.memory = "2048 MB";
- *         }
+ *         args.memory ??= "2048 MB";
  *       }
  *     }
  *   }

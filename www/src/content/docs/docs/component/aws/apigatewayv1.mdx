@@ -67,15 +67,13 @@ api.route("POST /", { handler: "src/post.handler", memory: "2048 MB" });
 
 You can set it through the `transform`.
 
-```ts title="sst.config.ts"
+```ts title="sst.config.ts" {6}
 const api = new sst.aws.ApiGatewayV1("MyApi", {
   transform: {
     route: {
       handler: (args, opts) => {
         // Set the default if it's not set by the route
-        if (args.memory === undefined) {
-          args.memory = "2048 MB";
-        }
+        args.memory ??= "2048 MB";
       }
     }
   }
@@ -471,9 +469,7 @@ Here we are setting a default memory of `2048 MB` for our routes.
     route: {
       handler: (args, opts) => {
         // Set the default if it's not set by the route
-        if (args.memory === undefined) {
-          args.memory = "2048 MB";
-        }
+        args.memory ??= "2048 MB";
       }
     }
   }
@@ -488,9 +484,7 @@ Defaulting to IAM auth for all our routes.
     route: {
       args: (props) => {
         // Set the default if it's not set by the route
-        if (props.auth === undefined) {
-          props.auth = { iam: true };
-        }
+        props.auth ??= { iam: true };
       }
     }
   }

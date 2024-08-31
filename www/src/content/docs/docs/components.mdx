@@ -194,11 +194,10 @@ Set default props across all your components with `$transform`.
 
 For example, set a default `runtime` for your functions.
 
-```ts title="sst.config.ts" {2-4}
+```ts title="sst.config.ts"
 $transform(sst.aws.Function, (args, opts) => {
-  if (args.runtime === undefined) {
-    args.runtime = "nodejs18.x";
-  }
+  // Set the default if it's not set by the component
+  args.runtime ??= "nodejs18.x";
 });
 ```
 
