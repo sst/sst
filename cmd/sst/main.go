@@ -719,15 +719,20 @@ var root = &cli.Command{
 			Name: "secret",
 			Description: cli.Description{
 				Short: "Manage secrets",
-				Long:  "Manage the secrets in your app defined with `sst.Secret`.",
+				Long: strings.Join([]string{
+					"Manage the secrets in your app defined with `sst.Secret`.",
+					"",
+					"The `--fallback` flag can be used to manage the fallback values of a secret.",
+					"Applies to all the sub-commands in `sst secret`.",
+				}, "\n"),
 			},
 			Flags: []cli.Flag{
 				{
 					Name: "fallback",
 					Type: "bool",
 					Description: cli.Description{
-						Short: "Set the secret as a fallback secret",
-						Long:  "Set the secret as a fallback secret. This means that if the secret is not set, it will use the fallback secret.",
+						Short: "Manage the fallback values of secrets",
+						Long:  "Manage the fallback values of secrets.",
 					},
 				},
 			},

@@ -310,7 +310,7 @@ SST_BUILD_CONCURRENCY=8 sst deploy
 You can change this based on how much memory your CI environment has.
 
 :::tip
-You can turn down the build concurrency if you are running out of memory in your CI environment.
+You can turn down the build concurrency if you are running out of memory in CI.
 :::
 
 Optionally, deploy your app to a specific stage.
@@ -451,13 +451,22 @@ If you don't have a version specified for your providers in your `sst.config.ts`
 <Segment>
 
 <Section type="parameters">
+#### Flags
+- <p><code class="key">fallback</code> <code class="primitive">boolean</code></p>
+<p>Manage the fallback values of secrets.</p>
+</Section>
+
+<Section type="parameters">
 #### Subcommands
 - <p>[<code class="key">set</code>](#secret-set)</p>
-- <p>[<code class="key">load</code>](#secret-load)</p>
 - <p>[<code class="key">remove</code>](#secret-remove)</p>
+- <p>[<code class="key">load</code>](#secret-load)</p>
 - <p>[<code class="key">list</code>](#secret-list)</p>
 </Section>
 Manage the secrets in your app defined with `sst.Secret`.
+
+The `--fallback` flag can be used to manage the fallback values of a secret.
+Applies to all the sub-commands in `sst secret`.
 </Segment>
 <NestedTitle id="secret-set" Tag="h4" parent="secret ">set</NestedTitle>
 <Segment>
@@ -493,6 +502,22 @@ Optionally, set the secret in a specific stage.
 sst secret set StripeSecret prod_123456789 --stage production
 ```
 
+You can also set a _fallback_ value for a secret with `--fallback`.
+
+```bash frame="none"
+sst secret set StripeSecret dev_123456789 --fallback
+```
+
+So if the secret is not set for a specific stage, it'll use the fallback instead.
+This only works for stages that are in the same AWS account.
+
+:::tip
+Set fallback values for your PR stages.
+:::
+
+This is useful for preview environments that are automatically deployed.
+You won't have to set the secret for the stage after it's deployed.
+
 To set something like an RSA key, you can first save it to a file.
 
 ```bash frame="none"
@@ -511,6 +536,38 @@ sst secret set Key -- "$(cat tmp.txt)"
 ```
 
 And make sure to delete the temp file.
+</Segment>
+<NestedTitle id="secret-remove" Tag="h4" parent="secret ">remove</NestedTitle>
+<Segment>
+<Section type="signature">
+```sh frame="none"
+sst secret remove <name>
+```
+</Section>
+<Section type="parameters">
+#### Args
+- <p><code class="key">name</code></p>
+<p>The name of the secret.</p>
+</Section>
+Remove a secret.
+
+For example, remove the `sst.Secret` called `StripeSecret`.
+
+```bash frame="none" frame="none"
+sst secret remove StripeSecret
+```
+
+Optionally, remove a secret in a specific stage.
+
+```bash frame="none" frame="none"
+sst secret remove StripeSecret --stage production
+```
+
+Remove the fallback value of the secret.
+
+```bash frame="none" frame="none"
+sst secret remove StripeSecret --fallback
+```
 </Segment>
 <NestedTitle id="secret-load" Tag="h4" parent="secret ">load</NestedTitle>
 <Segment>
@@ -543,32 +600,10 @@ Optionally, set the secrets in a specific stage.
 sst secret load ./prod.env --stage production
 ```
 
-
-</Segment>
-<NestedTitle id="secret-remove" Tag="h4" parent="secret ">remove</NestedTitle>
-<Segment>
-<Section type="signature">
-```sh frame="none"
-sst secret remove <name>
-```
-</Section>
-<Section type="parameters">
-#### Args
-- <p><code class="key">name</code></p>
-<p>The name of the secret.</p>
-</Section>
-Remove a secret.
-
-For example, remove the `sst.Secret` called `StripeSecret`.
+Set these secrets as _fallback_ values.
 
 ```bash frame="none" frame="none"
-sst secret remove StripeSecret
-```
-
-Optionally, remove a secret in a specific stage.
-
-```bash frame="none" frame="none"
-sst secret remove StripeSecret --stage production
+sst secret load ./secrets.env --fallback
 ```
 </Segment>
 <NestedTitle id="secret-list" Tag="h4" parent="secret ">list</NestedTitle>
@@ -584,6 +619,12 @@ Optionally, list the secrets in a specific stage.
 
 ```bash frame="none" frame="none"
 sst secret list --stage production
+```
+
+List only the fallback secrets.
+
+```bash frame="none" frame="none"
+sst secret list --fallback
 ```
 </Segment>
 
