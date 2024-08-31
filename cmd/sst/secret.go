@@ -308,16 +308,16 @@ var CmdSecretSet = &cli.Command{
 			return err
 		}
 		defer p.Cleanup()
-		backend := p.Backend()
-		secrets, err := provider.GetSecrets(backend, p.App().Name, p.App().Stage)
-		if err != nil {
-			return util.NewReadableError(err, "Could not get secrets")
-		}
-		secrets[key] = value
 		stage := p.App().Stage
 		if c.Bool("fallback") {
 			stage = ""
 		}
+		backend := p.Backend()
+		secrets, err := provider.GetSecrets(backend, p.App().Name, stage)
+		if err != nil {
+			return util.NewReadableError(err, "Could not get secrets")
+		}
+		secrets[key] = value
 		err = provider.PutSecrets(backend, p.App().Name, stage, secrets)
 		if err != nil {
 			return util.NewReadableError(err, "Could not set secret")
