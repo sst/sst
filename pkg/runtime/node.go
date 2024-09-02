@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/evanw/esbuild/pkg/api"
 	esbuild "github.com/evanw/esbuild/pkg/api"
@@ -21,46 +20,41 @@ import (
 type NodeRuntime struct {
 	contexts map[string]esbuild.BuildContext
 	results  map[string]esbuild.BuildResult
+	workers  map[string]*NodeWorker
+	loop     *NodeLoop
+}
+
+type NodeLoop struct {
+	stdout io.ReadCloser
+	stderr io.ReadCloser
+	stdin  io.WriteCloser
+	cmd    *exec.Cmd
 }
 
 func newNodeRuntime() *NodeRuntime {
 	return &NodeRuntime{
 		contexts: map[string]esbuild.BuildContext{},
 		results:  map[string]esbuild.BuildResult{},
+		workers:  map[string]*NodeWorker{},
 	}
 }
 
 type NodeWorker struct {
-	stdout io.ReadCloser
-	stderr io.ReadCloser
-	cmd    *exec.Cmd
+	workerID string
+	out      io.ReadCloser
+	in       io.WriteCloser
+	loop     *NodeLoop
 }
 
 func (w *NodeWorker) Stop() {
-	// Terminate the whole process group
-	util.TerminateProcess(w.cmd.Process.Pid)
+	json.NewEncoder(w.loop.stdin).Encode(map[string]interface{}{
+		"type":     "worker.stop",
+		"workerID": w.workerID,
+	})
 }
 
 func (w *NodeWorker) Logs() io.ReadCloser {
-	reader, writer := io.Pipe()
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		_, _ = io.Copy(writer, w.stdout)
-	}()
-	go func() {
-		defer wg.Done()
-		_, _ = io.Copy(writer, w.stderr)
-	}()
-
-	go func() {
-		wg.Wait()
-		defer writer.Close()
-	}()
-
-	return reader
+	return w.out
 }
 
 type NodeProperties struct {
@@ -201,34 +195,85 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 }
 
 func (r *NodeRuntime) Run(ctx context.Context, input *RunInput) (Worker, error) {
-	cmd := exec.CommandContext(
-		ctx,
-		"node",
-		"--enable-source-maps",
-		filepath.Join(
-			input.Project.PathPlatformDir(),
-			"/dist/nodejs-runtime/index.js",
-		),
-		filepath.Join(input.Build.Out, input.Build.Handler),
-		input.WorkerID,
-	)
+	if r.loop == nil {
+		cmd := exec.CommandContext(
+			ctx,
+			"node",
+			"--inspect",
+			"--enable-source-maps",
+			filepath.Join(
+				input.Project.PathPlatformDir(),
+				"/dist/nodejs-runtime/loop.js",
+			),
+		)
+		util.SetProcessGroupID(cmd)
+		cmd.Cancel = func() error {
+			return util.TerminateProcess(cmd.Process.Pid)
+		}
+		stdin, _ := cmd.StdinPipe()
+		stdout, _ := cmd.StdoutPipe()
+		stderr, _ := cmd.StderrPipe()
+		r.loop = &NodeLoop{
+			stdout: stdout,
+			stderr: stderr,
+			stdin:  stdin,
+			cmd:    cmd,
+		}
+		err := cmd.Start()
+		if err != nil {
+			return nil, err
+		}
+		go func() {
+			decoder := json.NewDecoder(r.loop.stdout)
+			for {
+				var msg map[string]interface{}
+				err := decoder.Decode(&msg)
+				if err != nil {
+					if err == io.EOF {
+						return
+					}
+					slog.Error("node loop error", "err", err)
+					continue
+				}
 
-	util.SetProcessGroupID(cmd)
-	cmd.Cancel = func() error {
-		return util.TerminateProcess(cmd.Process.Pid)
+				switch msg["type"] {
+				case "worker.out":
+					w := r.workers[msg["workerID"].(string)]
+					if w != nil {
+						w.in.Write([]byte(msg["data"].(string)))
+					}
+				case "worker.exit":
+					w := r.workers[msg["workerID"].(string)]
+					if w != nil {
+						w.in.Close()
+					}
+				}
+			}
+		}()
 	}
-
-	cmd.Env = append(input.Env, "AWS_LAMBDA_RUNTIME_API="+input.Server)
-	slog.Info("starting worker", "env", cmd.Env, "args", cmd.Args)
-	cmd.Dir = input.Build.Out
-	stdout, _ := cmd.StdoutPipe()
-	stderr, _ := cmd.StderrPipe()
-	cmd.Start()
-	return &NodeWorker{
-		stdout,
-		stderr,
-		cmd,
-	}, nil
+	env := map[string]string{}
+	for _, value := range input.Env {
+		pair := strings.SplitN(value, "=", 2)
+		if len(pair) == 2 {
+			env[pair[0]] = pair[1]
+		}
+	}
+	env["AWS_LAMBDA_RUNTIME_API"] = input.Server
+	json.NewEncoder(r.loop.stdin).Encode(map[string]interface{}{
+		"type":     "worker.start",
+		"workerID": input.WorkerID,
+		"env":      env,
+		"args":     []string{filepath.Join(input.Build.Out, input.Build.Handler), input.WorkerID},
+	})
+	out, in := io.Pipe()
+	w := &NodeWorker{
+		loop:     r.loop,
+		workerID: input.WorkerID,
+		out:      out,
+		in:       in,
+	}
+	r.workers[input.WorkerID] = w
+	return w, nil
 }
 
 func (r *NodeRuntime) Match(runtime string) bool {

@@ -253,7 +253,7 @@ func Start(
 				return false
 			}
 			warp := complete.Warps[functionID]
-			worker, _ := runtime.Run(ctx, &runtime.RunInput{
+			worker, err := runtime.Run(ctx, &runtime.RunInput{
 				Warp:       warp,
 				Links:      complete.Links,
 				Server:     server + workerID,
@@ -264,6 +264,10 @@ func Start(
 				Build:      build,
 				Env:        workerEnv[workerID],
 			})
+			if err != nil {
+				slog.Error("failed to run worker", "error", err)
+				return false
+			}
 			info := &WorkerInfo{
 				FunctionID: functionID,
 				Worker:     worker,
