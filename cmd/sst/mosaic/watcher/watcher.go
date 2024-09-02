@@ -54,11 +54,16 @@ func Start(ctx context.Context, root string) error {
 		return err
 	}
 
+	headFile := filepath.Join(root, ".git/HEAD")
+	watcher.Add(headFile)
 	limiter := map[string]time.Time{}
 	for {
 		select {
 		case event, ok := <-watcher.Events:
 			if !ok {
+				return nil
+			}
+			if event.Name == headFile {
 				return nil
 			}
 			if event.Op&(fsnotify.Write|fsnotify.Create) == 0 {
