@@ -47,4 +47,4 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: build --snapshot --rm-dist
+          args: build --snapshot --clean
