@@ -13,7 +13,7 @@ permissions:
   packages: write
 
 jobs:
-  goreleaser:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
