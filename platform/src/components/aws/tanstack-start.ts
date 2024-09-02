@@ -20,15 +20,15 @@ import { buildApp } from "../base/base-ssr-site.js";
 import { URL_UNAVAILABLE } from "./linkable.js";
 import { VisibleError } from "../error.js";
 
-export interface SolidStartArgs extends SsrSiteArgs {
+export interface TanstackStartArgs extends SsrSiteArgs {
   /**
    * Configure how this component works in `sst dev`.
    *
    * :::note
-   * In `sst dev` your SolidStart app is run in dev mode; it's not deployed.
+   * In `sst dev` your TanstackStart app is run in dev mode; it's not deployed.
    * :::
    *
-   * Instead of deploying your SolidStart app, this starts it in dev mode. It's run
+   * Instead of deploying your TanstackStart app, this starts it in dev mode. It's run
    * as a separate process in the `sst dev` multiplexer. Read more about
    * [`sst dev`](/docs/reference/cli/#dev).
    */
@@ -42,7 +42,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
    */
   warm?: SsrSiteArgs["warm"];
   /**
-   * Permissions and the resources that the [server function](#nodes-server) in your SolidStart app needs to access. These permissions are used to create the function's IAM role.
+   * Permissions and the resources that the [server function](#nodes-server) in your TanstackStart app needs to access. These permissions are used to create the function's IAM role.
    *
    * :::tip
    * If you `link` the function to a resource, the permissions to access it are
@@ -90,14 +90,14 @@ export interface SolidStartArgs extends SsrSiteArgs {
    */
   permissions?: SsrSiteArgs["permissions"];
   /**
-   * Path to the directory where your SolidStart app is located.  This path is relative to your `sst.config.ts`.
+   * Path to the directory where your TanstackStart app is located.  This path is relative to your `sst.config.ts`.
    *
-   * By default it assumes your SolidStart app is in the root of your SST app.
+   * By default it assumes your TanstackStart app is in the root of your SST app.
    * @default `"."`
    *
    * @example
    *
-   * If your SolidStart app is in a package in your monorepo.
+   * If your TanstackStart app is in a package in your monorepo.
    *
    * ```js
    * {
@@ -107,7 +107,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
    */
   path?: SsrSiteArgs["path"];
   /**
-   * [Link resources](/docs/linking/) to your SolidStart app. This will:
+   * [Link resources](/docs/linking/) to your TanstackStart app. This will:
    *
    * 1. Grant the permissions needed to access the resources.
    * 2. Allow you to access it in your site using the [SDK](/docs/reference/sdk/).
@@ -124,7 +124,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
    */
   link?: SsrSiteArgs["link"];
   /**
-   * Configure how the CloudFront cache invalidations are handled. This is run after your SolidStart app has been deployed.
+   * Configure how the CloudFront cache invalidations are handled. This is run after your TanstackStart app has been deployed.
    * :::tip
    * You get 1000 free invalidations per month. After that you pay $0.005 per invalidation path. [Read more here](https://aws.amazon.com/cloudfront/pricing/).
    * :::
@@ -142,13 +142,13 @@ export interface SolidStartArgs extends SsrSiteArgs {
    */
   invalidation?: SsrSiteArgs["invalidation"];
   /**
-   * Set in your SolidStart app. These are made available:
+   * Set in your TanstackStart app. These are made available:
    *
    * 1. In `vinxi build`, they are loaded into `process.env`.
    * 2. Locally while running `sst dev vinxi dev`.
    *
    * :::tip
-   * You can also `link` resources to your SolidStart app and access them in a type-safe way with the [SDK](/docs/reference/sdk/). We recommend linking since it's more secure.
+   * You can also `link` resources to your TanstackStart app and access them in a type-safe way with the [SDK](/docs/reference/sdk/). We recommend linking since it's more secure.
    * :::
    *
    * @example
@@ -163,7 +163,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
    */
   environment?: SsrSiteArgs["environment"];
   /**
-   * Set a custom domain for your SolidStart app.
+   * Set a custom domain for your TanstackStart app.
    *
    * Automatically manages domains hosted on AWS Route 53, Cloudflare, and Vercel. For other
    * providers, you'll need to pass in a `cert` that validates domain ownership and add the
@@ -208,7 +208,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
    */
   domain?: SsrSiteArgs["domain"];
   /**
-   * The command used internally to build your SolidStart app.
+   * The command used internally to build your TanstackStart app.
    *
    * @default `"npm run build"`
    *
@@ -223,7 +223,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
    */
   buildCommand?: SsrSiteArgs["buildCommand"];
   /**
-   * Configure how the SolidStart app assets are uploaded to S3.
+   * Configure how the TanstackStart app assets are uploaded to S3.
    *
    * By default, this is set to the following. Read more about these options below.
    * ```js
@@ -238,7 +238,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
    */
   assets?: SsrSiteArgs["assets"];
   /**
-   * Configure the [server function](#nodes-server) in your SolidStart app to connect
+   * Configure the [server function](#nodes-server) in your TanstackStart app to connect
    * to private subnets in a virtual private cloud or VPC. This allows your app to
    * access private resources.
    *
@@ -254,7 +254,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
    */
   vpc?: SsrSiteArgs["vpc"];
   /**
-   * Configure the SolidStart app to use an existing CloudFront cache policy.
+   * Configure the TanstackStart app to use an existing CloudFront cache policy.
    *
    * :::note
    * CloudFront has a limit of 20 cache policies per account, though you can request a limit
@@ -276,34 +276,34 @@ export interface SolidStartArgs extends SsrSiteArgs {
 }
 
 /**
- * The `SolidStart` component lets you deploy a [SolidStart](https://start.solidjs.com) app to AWS.
+ * The `TanstackStart` component lets you deploy a [TanstackStart](https://tanstack.com/start/latest) app to AWS.
  *
  * @example
  *
  * #### Minimal example
  *
- * Deploy a SolidStart app that's in the project root.
+ * Deploy a TanstackStart app that's in the project root.
  *
  * ```js title="sst.config.ts"
- * new sst.aws.SolidStart("MyWeb");
+ * new sst.aws.TanstackStart("MyWeb");
  * ```
  *
  * #### Change the path
  *
- * Deploys the SolidStart app in the `my-solid-app/` directory.
+ * Deploys the TanstackStart app in the `my-app/` directory.
  *
  * ```js {2} title="sst.config.ts"
- * new sst.aws.SolidStart("MyWeb", {
- *   path: "my-solid-app/"
+ * new sst.aws.TanstackStart("MyWeb", {
+ *   path: "my-app/"
  * });
  * ```
  *
  * #### Add a custom domain
  *
- * Set a custom domain for your SolidStart app.
+ * Set a custom domain for your TanstackStart app.
  *
  * ```js {2} title="sst.config.ts"
- * new sst.aws.SolidStart("MyWeb", {
+ * new sst.aws.TanstackStart("MyWeb", {
  *   domain: "my-app.com"
  * });
  * ```
@@ -313,7 +313,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
  * Redirect `www.my-app.com` to `my-app.com`.
  *
  * ```js {4} title="sst.config.ts"
- * new sst.aws.SolidStart("MyWeb", {
+ * new sst.aws.TanstackStart("MyWeb", {
  *   domain: {
  *     name: "my-app.com",
  *     redirects: ["www.my-app.com"]
@@ -323,19 +323,19 @@ export interface SolidStartArgs extends SsrSiteArgs {
  *
  * #### Link resources
  *
- * [Link resources](/docs/linking/) to your SolidStart app. This will grant permissions
+ * [Link resources](/docs/linking/) to your TanstackStart app. This will grant permissions
  * to the resources and allow you to access it in your app.
  *
  * ```ts {4} title="sst.config.ts"
  * const bucket = new sst.aws.Bucket("MyBucket");
  *
- * new sst.aws.SolidStart("MyWeb", {
+ * new sst.aws.TanstackStart("MyWeb", {
  *   link: [bucket]
  * });
  * ```
  *
  * You can use the [SDK](/docs/reference/sdk/) to access the linked resources
- * in your SolidStart app.
+ * in your TanstackStart app.
  *
  * ```ts title="src/app.tsx"
  * import { Resource } from "sst";
@@ -343,7 +343,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
  * console.log(Resource.MyBucket.name);
  * ```
  */
-export class SolidStart extends Component implements Link.Linkable {
+export class TanstackStart extends Component implements Link.Linkable {
   private cdn?: Output<Cdn>;
   private assets?: Bucket;
   private server?: Output<Function>;
@@ -351,7 +351,7 @@ export class SolidStart extends Component implements Link.Linkable {
 
   constructor(
     name: string,
-    args: SolidStartArgs = {},
+    args: TanstackStartArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
     super(__pulumiType, name, args, opts);
@@ -405,7 +405,7 @@ export class SolidStart extends Component implements Link.Linkable {
       );
       if (!["aws-lambda-streaming", "aws-lambda"].includes(nitro.preset)) {
         throw new VisibleError(
-          `SolidStart's app.config.ts must be configured to use the "aws-lambda-streaming" or "aws-lambda" preset. It is currently set to "${nitro.preset}".`,
+          `TanstackStart's app.config.ts must be configured to use the "aws-lambda-streaming" or "aws-lambda" preset. It is currently set to "${nitro.preset}".`,
         );
       }
       return nitro.preset;
@@ -459,7 +459,7 @@ export class SolidStart extends Component implements Link.Linkable {
       return all([outputPath, buildMeta, preset]).apply(
         ([outputPath, buildMeta, preset]) => {
           const serverConfig = {
-            description: "Server handler for Solid",
+            description: "Server handler for Tanstack",
             handler: "index.handler",
             bundle: path.join(outputPath, ".output", "server"),
             streaming: preset === "aws-lambda-streaming",
@@ -518,7 +518,7 @@ export class SolidStart extends Component implements Link.Linkable {
   }
 
   /**
-   * The URL of the SolidStart app.
+   * The URL of the TanstackStart app.
    *
    * If the `domain` is set, this is the URL with the custom domain.
    * Otherwise, it's the autogenerated CloudFront URL.
@@ -559,6 +559,6 @@ export class SolidStart extends Component implements Link.Linkable {
   }
 }
 
-const __pulumiType = "sst:aws:SolidStart";
+const __pulumiType = "sst:aws:TanstackStart";
 // @ts-expect-error
-SolidStart.__pulumiType = __pulumiType;
+TanstackStart.__pulumiType = __pulumiType;
