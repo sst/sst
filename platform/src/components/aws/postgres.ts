@@ -429,7 +429,11 @@ export class Postgres extends Component implements Link.Linkable {
       include: [
         permission({
           actions: ["secretsmanager:GetSecretValue"],
-          resources: [this.cluster.masterUserSecrets[0].secretArn],
+          resources: [
+            this.cluster.masterUserSecrets[0].secretArn.apply(
+              (v) => v ?? "arn:aws:iam::rdsdoesnotusesecretmanager",
+            ),
+          ],
         }),
         permission({
           actions: [
