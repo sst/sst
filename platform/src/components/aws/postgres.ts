@@ -376,7 +376,7 @@ export class Postgres extends Component implements Link.Linkable {
   /** The password of the master user. */
   public get password() {
     return this.cluster.masterPassword.apply((val) => {
-      if (val) return output(undefined);
+      if (val) return output(val);
       const parsed = jsonParse(
         this.secret.apply((secret) =>
           secret ? secret.secretString : output("{}"),
