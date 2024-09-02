@@ -10,6 +10,10 @@ import (
 type Package struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
+	Pulumi  struct {
+		Name    string `json:"name"`
+		Version string `json:"version"`
+	}
 }
 
 func Get(name string, version string) (*Package, error) {

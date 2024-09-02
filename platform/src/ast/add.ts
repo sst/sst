@@ -6,6 +6,7 @@ import prettier from "prettier";
 
 const config = process.argv[2];
 const pkg = process.argv[3];
+const version = process.argv[4];
 
 const code = fs.readFileSync(config);
 
@@ -61,7 +62,7 @@ if (
 // Create a new property node for "foo: {}"
 const newProperty = ts.factory.createPropertyAssignment(
   ts.factory.createStringLiteral(pkg),
-  ts.factory.createTrue(),
+  ts.factory.createStringLiteral(version),
 );
 
 providersProperty.initializer.properties.push(newProperty);

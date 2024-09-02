@@ -633,8 +633,11 @@ var root = &cli.Command{
 						return err
 					}
 				}
-
-				err = p.Add(pkg)
+				entry, err := project.FindProvider(pkg, "latest")
+				if err != nil {
+					return util.NewReadableError(err, "Could not find provider "+pkg)
+				}
+				err = p.Add(entry.Name, entry.Version)
 				if err != nil {
 					return err
 				}
@@ -652,7 +655,7 @@ var root = &cli.Command{
 					return err
 				}
 				spin.Stop()
-				ui.Success(fmt.Sprintf("Added provider \"%s\"", pkg))
+				ui.Success(fmt.Sprintf("Added provider \"%s\". You can create resources with `new %s.SomeResource()`", entry.Alias, entry.Alias))
 				return nil
 			},
 		},

@@ -171,6 +171,12 @@ console.log("~j" + JSON.stringify(mod.app({
 				if argsBool, ok := args.(bool); ok && argsBool {
 					proj.app.Providers[name] = make(map[string]interface{})
 				}
+
+				if argsString, ok := args.(string); ok {
+					proj.app.Providers[name] = map[string]interface{}{
+						"version": argsString,
+					}
+				}
 			}
 
 			if proj.app.Name == "" {
