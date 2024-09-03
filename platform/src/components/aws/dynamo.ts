@@ -83,6 +83,29 @@ export interface DynamoArgs {
          * The range key field of the index. This field needs to be defined in the `fields`.
          */
         rangeKey?: Input<string>;
+        /**
+         * The fields to project into the index.
+         * @default `"all"`
+         * @example
+         * Project only the key fields: `userId` and `createdAt`.
+         * ```js
+         * {
+         *   hashKey: "userId",
+         *   rangeKey: "createdAt",
+         *   projection: "keys_only"
+         * }
+         * ```
+         *
+         * Project the `noteId` field in addition to the key fields.
+         * ```js
+         * {
+         *   hashKey: "userId",
+         *   rangeKey: "createdAt",
+         *   projection: ["noteId"]
+         * }
+         * ```
+         */
+        projection?: Input<"all" | "keys_only" | Input<string>[]>;
       }>
     >
   >;
@@ -110,6 +133,27 @@ export interface DynamoArgs {
          * The range key field of the index. This field needs to be defined in the `fields`.
          */
         rangeKey: Input<string>;
+        /**
+         * The fields to project into the index.
+         * @default `"all"`
+         * @example
+         * Project only the key field: `createdAt`.
+         * ```js
+         * {
+         *   rangeKey: "createdAt",
+         *   projection: "keys_only"
+         * }
+         * ```
+         *
+         * Project the `noteId` field in addition to the key field.
+         * ```js
+         * {
+         *   rangeKey: "createdAt",
+         *   projection: ["noteId"]
+         * }
+         * ```
+         */
+        projection?: Input<"all" | "keys_only" | Input<string>[]>;
       }>
     >
   >;
@@ -410,14 +454,28 @@ export class Dynamo extends Component implements Link.Linkable {
                     name,
                     hashKey: index.hashKey,
                     rangeKey: index.rangeKey,
-                    projectionType: "ALL",
+                    ...(index.projection === "keys_only"
+                      ? { projectionType: "KEYS_ONLY" }
+                      : Array.isArray(index.projection)
+                        ? {
+                            projectionType: "INCLUDE",
+                            nonKeyAttributes: index.projection,
+                          }
+                        : { projectionType: "ALL" }),
                   }),
                 ),
                 localSecondaryIndexes: Object.entries(localIndexes ?? {}).map(
                   ([name, index]) => ({
                     name,
                     rangeKey: index.rangeKey,
-                    projectionType: "ALL",
+                    ...(index.projection === "keys_only"
+                      ? { projectionType: "KEYS_ONLY" }
+                      : Array.isArray(index.projection)
+                        ? {
+                            projectionType: "INCLUDE",
+                            nonKeyAttributes: index.projection,
+                          }
+                        : { projectionType: "ALL" }),
                   }),
                 ),
               },
