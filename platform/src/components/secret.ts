@@ -51,6 +51,17 @@ export class SecretMissingError extends VisibleError {
  * If you are not running `sst dev`, you'll need to `sst deploy` to apply the secret.
  * :::
  *
+ * #### Set a fallback for the secret
+ *
+ * You can set a _fallback_ value for the secret with the `--fallback` flag. If the secret is
+ * not set for a stage, it'll use the fallback value instead.
+ *
+ * ```sh title="Terminal"
+ * sst secret set MySecret my-fallback-value --fallback
+ * ```
+ *
+ * This is useful for PR environments that are auto-deployed.
+ *
  * #### Use the secret in your app config
  *
  * You can now use the secret in your app config.
