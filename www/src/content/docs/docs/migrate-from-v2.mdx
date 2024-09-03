@@ -685,6 +685,32 @@ And in your function you access it in the same way.
 
 ---
 
+### Handlers
+
+In v2, some modules in the Node client had [handlers and hooks](https://v2.sst.dev/clients#handlers).
+
+```ts title="v2"
+import { ApiHandler } from "sst/node/api";
+
+export const handler = ApiHandler((event) => { });
+```
+
+These were experimental and are not currently supported in v3. To continue using them you can import them by first ading it to your `package.json`.
+
+```js title="package.json"
+"sstv2": "npm:sst@2.x.x"
+```
+
+And then importing it via the `sstv2` alias.
+
+```ts title="v3"
+import { ApiHandler } from "sstv2/node/api";
+
+export const handler = ApiHandler((event) => { });
+```
+
+---
+
 ## Constructs
 
 Below shows the v3 component version of a v2 construct.
