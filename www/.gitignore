@@ -28,3 +28,5 @@ sdk-doc.json
 
 # generated docs
 src/content/docs/docs/component/
+src/content/docs/docs/reference/
+!src/content/docs/docs/reference/sdk.mdx
