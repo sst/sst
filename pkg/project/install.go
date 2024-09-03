@@ -230,10 +230,17 @@ func FindProvider(name string, version string) (*ProviderLockEntry, error) {
 		if err != nil {
 			continue
 		}
-		if pkg.Pulumi.Name == "" {
+		if pkg.Pulumi == nil {
 			continue
 		}
-		alias := strings.ReplaceAll(pkg.Pulumi.Name, "-", "")
+		alias := pkg.Pulumi.Name
+		if alias == "" {
+			alias = pkg.Name
+			alias = strings.ReplaceAll(alias, "/", "")
+			alias = strings.ReplaceAll(alias, "@", "")
+			alias = strings.ReplaceAll(alias, "pulumi", "")
+		}
+		alias = strings.ReplaceAll(alias, "-", "")
 		return &ProviderLockEntry{
 			Name:    name,
 			Package: pkg.Name,

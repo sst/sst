@@ -10,7 +10,7 @@ import (
 type Package struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
-	Pulumi  struct {
+	Pulumi  *struct {
 		Name    string `json:"name"`
 		Version string `json:"version"`
 	}
