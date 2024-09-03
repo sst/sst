@@ -151,11 +151,22 @@ export interface App {
    */
   removal?: "remove" | "retain" | "retain-all";
   /**
-   * The providers that are being used in this app. This allows you to use the components from these providers in your app.
+   * The providers that are being used in this app. This allows you to use the resources from
+   * these providers in your app.
+   *
+   * ```ts
+   * {
+   *   providers: {
+   *     aws: "6.27.0",
+   *     cloudflare: "5.37.1"
+   *   }
+   * }
+   * ```
+   *
    * Check out the full list in the [Directory](/docs/providers#directory).
    *
-   * :::note
-   * By default, your `home` provider is included in the `providers` list.
+   * :::tip
+   * You'll need to run `sst install` after you update the `providers` in your config.
    * :::
    *
    * If you don't set a `provider` it uses your `home` provider with the default config. So if you set `home` to `aws`, it's the same as doing:
@@ -164,18 +175,16 @@ export interface App {
    * {
    *   home: "aws",
    *   providers: {
-   *     aws: true
+   *     aws: "6.27.0"
    *   }
    * }
    * ```
    *
-   * @default The `home` provider.
-   *
-   * @example
-   *
    * You can also configure the provider props. Here's the config for some common providers:
    * - [AWS](https://www.pulumi.com/registry/packages/aws/api-docs/provider/#inputs)
    * - [Cloudflare](https://www.pulumi.com/registry/packages/cloudflare/api-docs/provider/#inputs)
+   *
+   * @example
    *
    * For example, to change the region for AWS.
    *
@@ -189,28 +198,7 @@ export interface App {
    * }
    * ```
    *
-   * You also add multiple providers.
-   *
-   * ```ts
-   * {
-   *   providers: {
-   *     aws: true,
-   *     cloudflare: true
-   *   }
-   * }
-   * ```
-   *
-   * By default, we use the latest version of a provider. But you can optionally specify a version.
-   *
-   * ```ts
-   * {
-   *   providers: {
-   *     aws: {
-   *       version: "6.27.0"
-   *     }
-   *   }
-   * }
-   * ```
+   * @default The `home` provider.
    */
   providers?: Record<string, any>;
 

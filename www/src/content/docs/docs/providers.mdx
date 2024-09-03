@@ -36,7 +36,7 @@ The name of a provider comes from the **name of the package** in the [Directory]
 ```ts title="sst.config.ts"
 {
   providers: {
-    planetscale: true
+    planetscale: "0.0.7"
   }
 }
 ```
@@ -46,8 +46,8 @@ You can add multiple providers to your app.
 ```ts title="sst.config.ts"
 {
   providers: {
-    aws: true,
-    cloudflare: true
+    aws: "6.27.0",
+    cloudflare: "5.37.1"
   }
 }
 ```
@@ -76,7 +76,7 @@ You can check out the available list of options that you can configure for a pro
 
 ### Versions
 
-In addition to these options, you can also pass in the version of the provider you want to use. By default, SST uses the latest version.
+By default, SST installs the latest version. If you want to use a specific version, you can change it in your config.
 
 ```ts title="sst.config.ts"
 {
@@ -87,6 +87,14 @@ In addition to these options, you can also pass in the version of the provider y
   }
 }
 ```
+
+If you make any changes to the `providers` in your config, you'll need to run `sst install`.
+
+:::tip
+You'll need to run `sst install` if you update the `providers` in your config.
+:::
+
+The version of the provider is always pinned to what's in the `sst.config.ts` and does not auto-update. So if you want to update it, you'll need to change it manually and run `sst install`.
 
 ---
 
