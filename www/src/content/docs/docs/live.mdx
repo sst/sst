@@ -149,25 +149,8 @@ Note that, the AWS Client VPC service is billed on an hourly basis but it's fair
 
 Since Live runs your functions locally, you can set breakpoints and debug your functions in your favorite IDE.
 
-:::note
-We are still working on adding support for [breakpoints](https://github.com/sst/ion/issues/73).
-:::
+![VS Code Enable Auto Attach](../../../assets/docs/live/vs-code-enable-auto-attach.png)
 
-For VS Code, add the following Launch Configuration to `.vscode/launch.json`.
+For VS Code, you'll need to enable Auto Attach from the Command Palette. Hit `Ctrl+Shift+P` or `Cmd+Shift+P`, type in **Debug: Toggle Auto Attach** and select **Always**.
 
-```json title=".vscode/launch.json"
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Debug SST Live",
-      "type": "node",
-      "request": "launch",
-      "runtimeArgs": ["dev"],
-      "console": "integratedTerminal",
-      "skipFiles": ["<node_internals>/**"],
-      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/sst"
-    }
-  ]
-}
-```
+Now open a new terminal VS Code, run `sst dev`, set a breakpoint in a function, and invoke the function.
