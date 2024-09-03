@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/npm"
@@ -232,11 +233,12 @@ func FindProvider(name string, version string) (*ProviderLockEntry, error) {
 		if pkg.Pulumi.Name == "" {
 			continue
 		}
+		alias := strings.ReplaceAll(pkg.Pulumi.Name, "-", "")
 		return &ProviderLockEntry{
 			Name:    name,
 			Package: pkg.Name,
 			Version: pkg.Version,
-			Alias:   pkg.Pulumi.Name,
+			Alias:   alias,
 		}, nil
 	}
 	return nil, fmt.Errorf("provider %s not found", name)
