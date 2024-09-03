@@ -1,7 +1,15 @@
-import { ComponentResourceOptions, Input, output } from "@pulumi/pulumi";
+import {
+  ComponentResourceOptions,
+  Input,
+  interpolate,
+  output,
+} from "@pulumi/pulumi";
 import { Component, transform } from "../component";
 import { ApiGatewayV2AuthorizerArgs } from "./apigatewayv2";
-import { apigatewayv2 } from "@pulumi/aws";
+import { apigatewayv2, lambda } from "@pulumi/aws";
+import { VisibleError } from "../error";
+import { toSeconds } from "../duration";
+import { Function } from "./function";
 
 export interface AuthorizerArgs extends ApiGatewayV2AuthorizerArgs {
   /**
@@ -16,6 +24,10 @@ export interface AuthorizerArgs extends ApiGatewayV2AuthorizerArgs {
      * The ID of the API Gateway.
      */
     id: Input<string>;
+    /**
+     * The execution ARN of the API Gateway.
+     */
+    executionArn: Input<string>;
   }>;
 }
 
@@ -42,11 +54,37 @@ export class ApiGatewayV2Authorizer extends Component {
     const self = this;
 
     const api = output(args.api);
-    const jwt = output(args.jwt);
+    const lamb = args.lambda && output(args.lambda);
+    const jwt = args.jwt && output(args.jwt);
 
+    validateSingleAuthorizer();
+    const fn = createFunction();
     const authorizer = createAuthorizer();
+    const permission = createPermission();
 
     this.authorizer = authorizer;
+
+    function validateSingleAuthorizer() {
+      const authorizers = [lamb, jwt].filter((e) => e);
+
+      if (authorizers.length === 0)
+        throw new VisibleError(
+          `Please provide one of "lambda" or "jwt" for the ${args.name} authorizer.`,
+        );
+
+      if (authorizers.length > 1)
+        throw new VisibleError(
+          `Please provide only one of "lambda" or "jwt" for the ${args.name} authorizer.`,
+        );
+    }
+
+    function createFunction() {
+      if (!lamb) return;
+
+      return Function.fromDefinition(`${name}Function`, lamb.function, {
+        description: interpolate`${api.name} authorizer`,
+      });
+    }
 
     function createAuthorizer() {
       return new apigatewayv2.Authorizer(
@@ -55,19 +93,55 @@ export class ApiGatewayV2Authorizer extends Component {
           `${name}Authorizer`,
           {
             apiId: api.id,
-            authorizerType: "JWT",
-            identitySources: [
-              jwt.apply(
-                (jwt) => jwt.identitySource ?? "$request.header.Authorization",
-              ),
-            ],
-            jwtConfiguration: jwt.apply((jwt) => ({
-              audiences: jwt.audiences,
-              issuer: jwt.issuer,
-            })),
+            ...(lamb
+              ? {
+                  authorizerType: "REQUEST",
+                  identitySources: lamb.apply(
+                    (lamb) =>
+                      lamb.identitySources ?? ["$request.header.Authorization"],
+                  ),
+                  authorizerUri: fn!.nodes.function.invokeArn,
+                  authorizerResultTtlInSeconds: lamb.apply((lamb) =>
+                    toSeconds(lamb.ttl ?? "0 seconds"),
+                  ),
+                  enableSimpleResponses: lamb.apply(
+                    (lamb) => (lamb.response ?? "simple") === "simple",
+                  ),
+                  authorizerPayloadFormatVersion: lamb.apply(
+                    (lamb) => lamb.payload ?? "2.0",
+                  ),
+                }
+              : {
+                  authorizerType: "JWT",
+                  identitySources: [
+                    jwt!.apply(
+                      (jwt) =>
+                        jwt.identitySource ?? "$request.header.Authorization",
+                    ),
+                  ],
+                  jwtConfiguration: jwt!.apply((jwt) => ({
+                    audiences: jwt.audiences,
+                    issuer: jwt.issuer,
+                  })),
+                }),
           },
           { parent: self },
         ),
+      );
+    }
+
+    function createPermission() {
+      if (!fn) return;
+
+      return new lambda.Permission(
+        `${name}Permission`,
+        {
+          action: "lambda:InvokeFunction",
+          function: fn.arn,
+          principal: "apigateway.amazonaws.com",
+          sourceArn: interpolate`${api.executionArn}/authorizers/${authorizer.id}`,
+        },
+        { parent: self },
       );
     }
   }

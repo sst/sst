@@ -127,7 +127,7 @@ export class ApiGatewayV1Authorizer extends Component {
             type,
             name: args.name,
             providerArns: args.userPools,
-            authorizerUri: fn?.nodes.function.invokeArn,
+            authorizerUri: fn!.nodes.function.invokeArn,
             authorizerResultTtlInSeconds: args.ttl,
             identitySource: args.identitySource,
           },

@@ -36,6 +36,11 @@ export function createApiRoute(
   const authArgs = output(args.auth).apply((auth) => {
     if (!auth) return { authorizationType: "NONE" };
     if (auth.iam) return { authorizationType: "AWS_IAM" };
+    if (auth.lambda)
+      return {
+        authorizationType: "CUSTOM",
+        authorizerId: auth.lambda,
+      };
     if (auth.jwt)
       return {
         authorizationType: "JWT",
