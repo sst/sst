@@ -14,7 +14,6 @@ export class Semaphore {
     }
 
     return new Promise<void>((resolve) => {
-      console.log("queueing " + name);
       this.queue.push(resolve);
     });
   }
