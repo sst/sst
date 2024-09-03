@@ -24,7 +24,7 @@ func (p *Project) NeedsInstall() bool {
 		config := p.app.Providers[entry.Name].(map[string]interface{})
 		version := config["version"]
 		if version == nil || version == "" {
-			version = "latest"
+			continue
 		}
 		slog.Info("checking provider", "name", entry.Name, "version", version, "compare", entry.Version)
 		if version != entry.Version {
