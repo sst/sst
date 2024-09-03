@@ -25,3 +25,6 @@ components-doc.json
 examples-doc.json
 cli-doc.json
 sdk-doc.json
+
+# generated docs
+src/content/docs/docs/component/
