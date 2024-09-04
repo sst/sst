@@ -20,6 +20,7 @@ import { apigateway, cloudwatch, getRegionOutput } from "@pulumi/aws";
 import { Dns } from "../dns";
 import { dns as awsDns } from "./dns";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
+import { ApiGatewayV1IntegrationRoute } from "./apigatewayv1-integration-route";
 
 export interface ApiGatewayV1DomainArgs {
   /**
@@ -504,6 +505,41 @@ export interface ApiGatewayV1RouteArgs {
   };
 }
 
+export interface ApiGatewayV1IntegrationArgs {
+  /**
+   * The type of the API Gateway REST API integration.
+   */
+  type: Input<"aws" | "aws-proxy" | "mock" | "http" | "http-proxy">;
+  /**
+   * The URI of the API Gateway REST API integration.
+   */
+  uri?: Input<string>;
+  /**
+   * The credentials to use to call the AWS service.
+   */
+  credentials?: Input<string>;
+  /**
+   * The HTTP method to use to call the integration.
+   */
+  integrationHttpMethod?: Input<
+    "GET" | "POST" | "PUT" | "DELETE" | "HEAD" | "OPTIONS" | "ANY" | "PATCH"
+  >;
+  /**
+   * Map of request query string parameters and headers that should be passed to the backend responder.
+   */
+  requestParameters?: Input<Record<string, Input<string>>>;
+  /**
+   * Map of the integration's request templates.
+   */
+  requestTemplates?: Input<Record<string, Input<string>>>;
+  /**
+   * The passthrough behavior to use to call the integration.
+   *
+   * Required if `requestTemplates` is set.
+   */
+  passthroughBehavior?: Input<"when-no-match" | "never" | "when-no-templates">;
+}
+
 /**
  * The `ApiGatewayV1` component lets you add an [Amazon API Gateway REST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-rest-api.html) to your app.
  *
@@ -589,7 +625,8 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
   private region: Output<string>;
   private triggers: Record<string, Output<string>> = {};
   private resources: Record<string, Output<string>> = {};
-  private routes: ApiGatewayV1LambdaRoute[] = [];
+  private routes: (ApiGatewayV1LambdaRoute | ApiGatewayV1IntegrationRoute)[] =
+    [];
   private stage?: apigateway.Stage;
   private logGroup?: cloudwatch.LogGroup;
   private endpointType: Output<"EDGE" | "REGIONAL" | "PRIVATE">;
@@ -763,46 +800,16 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     handler: string | FunctionArgs,
     args: ApiGatewayV1RouteArgs = {},
   ) {
-    const { method, path } = parseRoute();
-    const prefix = this.constructorName;
+    const { method, path } = this.parseRoute(route);
+    this.createResource(path);
     this.triggers[`${method}${path}`] = jsonStringify({
       handler: typeof handler === "string" ? handler : handler.handler,
       args,
     });
 
-    // Create resource
-    const pathParts = path.replace(/^\//, "").split("/");
-    for (let i = 0, l = pathParts.length; i < l; i++) {
-      const parentPath = "/" + pathParts.slice(0, i).join("/");
-      const subPath = "/" + pathParts.slice(0, i + 1).join("/");
-      if (!this.resources[subPath]) {
-        const suffix = logicalName(
-          hashStringToPrettyString([this.api.id, subPath].join(""), 6),
-        );
-        const resource = new apigateway.Resource(
-          `${prefix}Resource${suffix}`,
-          {
-            restApi: this.api.id,
-            parentId:
-              parentPath === "/"
-                ? this.api.rootResourceId
-                : this.resources[parentPath],
-            pathPart: pathParts[i],
-          },
-          { parent: this },
-        );
-        this.resources[subPath] = resource.id;
-      }
-    }
-
-    // Create route
-    const suffix = logicalName(
-      hashStringToPrettyString([this.api.id, method, path].join(""), 6),
-    );
-
     const transformed = transform(
       this.constructorArgs.transform?.route?.args,
-      `${prefix}Route${suffix}`,
+      this.buildRouteId(method, path),
       args,
       { provider: this.constructorOpts.provider },
     );
@@ -811,7 +818,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
       transformed[0],
       {
         api: {
-          name: prefix,
+          name: this.constructorName,
           id: this.api.id,
           executionArn: this.api.executionArn,
         },
@@ -826,37 +833,137 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     );
 
     this.routes.push(apigRoute);
+
     return apigRoute;
+  }
 
-    function parseRoute() {
-      const parts = route.split(" ");
-      if (parts.length !== 2) {
-        throw new VisibleError(
-          `Invalid route ${route}. A route must be in the format "METHOD /path".`,
+  /**
+   * Add a custom integration to the API Gateway REST API.
+   *
+   * Learn more about [integrations for REST APIs](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-integration-settings.html).
+   *
+   * @param route The path for the route.
+   * @param integration The integration configuration.
+   * @param args Configure the route.
+   *
+   * @example
+   * Add a route to trigger a Step Functions state machine execution.
+   *
+   * ```js title="sst.config.ts"
+   * api.routeIntegration("POST /run-my-state-machine", {
+   *   type: "aws",
+   *   uri: "arn:aws:apigateway:us-east-1:states:startExecution",
+   *   credentials: "arn:aws:iam::123456789012:role/apigateway-execution-role",
+   *   integrationHttpMethod: "POST",
+   *   requestTemplates: {
+   *     "application/json": JSON.stringify({
+   *       input: "$input.json('$')",
+   *       stateMachineArn: "arn:aws:states:us-east-1:123456789012:stateMachine:MyStateMachine",
+   *     }),
+   *   },
+   *   passthroughBehavior: "when-no-match",
+   * });
+   * ```
+   */
+  public routeIntegration(
+    route: string,
+    integration: ApiGatewayV1IntegrationArgs,
+    args: ApiGatewayV1RouteArgs = {},
+  ) {
+    const { method, path } = this.parseRoute(route);
+    this.createResource(path);
+    this.triggers[`${method}${path}`] = jsonStringify({ integration, args });
+
+    const transformed = transform(
+      this.constructorArgs.transform?.route?.args,
+      this.buildRouteId(method, path),
+      args,
+      { provider: this.constructorOpts.provider },
+    );
+
+    const apigRoute = new ApiGatewayV1IntegrationRoute(
+      transformed[0],
+      {
+        api: {
+          name: this.constructorName,
+          id: this.api.id,
+          executionArn: this.api.executionArn,
+        },
+        method,
+        path,
+        resourceId: this.resources[path],
+        integration,
+        ...transformed[1],
+      },
+      transformed[2],
+    );
+
+    this.routes.push(apigRoute);
+
+    return apigRoute;
+  }
+
+  private parseRoute(route: string) {
+    const parts = route.split(" ");
+    if (parts.length !== 2) {
+      throw new VisibleError(
+        `Invalid route ${route}. A route must be in the format "METHOD /path".`,
+      );
+    }
+    const [methodRaw, path] = route.split(" ");
+    const method = methodRaw.toUpperCase();
+    if (
+      ![
+        "ANY",
+        "DELETE",
+        "GET",
+        "HEAD",
+        "OPTIONS",
+        "PATCH",
+        "POST",
+        "PUT",
+      ].includes(method)
+    )
+      throw new VisibleError(`Invalid method ${methodRaw} in route ${route}`);
+
+    if (!path.startsWith("/"))
+      throw new VisibleError(
+        `Invalid path ${path} in route ${route}. Path must start with "/".`,
+      );
+
+    return { method, path };
+  }
+
+  private buildRouteId(method: string, path: string) {
+    const suffix = logicalName(
+      hashStringToPrettyString([this.api.id, method, path].join(""), 6),
+    );
+    return `${this.constructorName}Route${suffix}`;
+  }
+
+  private createResource(path: string) {
+    const pathParts = path.replace(/^\//, "").split("/");
+    for (let i = 0, l = pathParts.length; i < l; i++) {
+      const parentPath = "/" + pathParts.slice(0, i).join("/");
+      const subPath = "/" + pathParts.slice(0, i + 1).join("/");
+      if (!this.resources[subPath]) {
+        const suffix = logicalName(
+          hashStringToPrettyString([this.api.id, subPath].join(""), 6),
         );
+        const resource = new apigateway.Resource(
+          `${this.constructorName}Resource${suffix}`,
+          {
+            restApi: this.api.id,
+            parentId:
+              parentPath === "/"
+                ? this.api.rootResourceId
+                : this.resources[parentPath],
+            pathPart: pathParts[i],
+          },
+          { parent: this },
+        );
+        this.resources[subPath] = resource.id;
       }
-      const [methodRaw, path] = route.split(" ");
-      const method = methodRaw.toUpperCase();
-      if (
-        ![
-          "ANY",
-          "DELETE",
-          "GET",
-          "HEAD",
-          "OPTIONS",
-          "PATCH",
-          "POST",
-          "PUT",
-        ].includes(method)
-      )
-        throw new VisibleError(`Invalid method ${methodRaw} in route ${route}`);
-
-      if (!path.startsWith("/"))
-        throw new VisibleError(
-          `Invalid path ${path} in route ${route}. Path must start with "/".`,
-        );
-
-      return { method, path };
     }
   }
 
