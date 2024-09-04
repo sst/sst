@@ -168,7 +168,82 @@ export interface CognitoUserPoolArgs {
    * }
    * ```
    */
-  advancedSecurity?: "audit" | "enforced";
+  advancedSecurity?: Input<"audit" | "enforced">;
+  /**
+   * Configure the multi-factor authentication (MFA) settings for the User Pool.
+   *
+   * @default MFA is disabled.
+   * @example
+   *
+   * ```ts
+   * {
+   *   mfa: "on"
+   * }
+   * ```
+   */
+  mfa?: Input<"on" | "optional">;
+  /**
+   * Configure the SMS settings for the User Pool.
+   *
+   * @default No SMS settings.
+   * @example
+   *
+   * ```ts
+   * {
+   *   sms: {
+   *     externalId: "1234567890",
+   *     snsCallerArn: "arn:aws:iam::1234567890:role/CognitoSnsCaller",
+   *     snsRegion: "us-east-1",
+   *   }
+   * }
+   * ```
+   */
+  sms?: Input<{
+    /**
+     * The external ID used in IAM role trust relationships.
+     *
+     * Learn more about [external IDs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_common-scenarios_third-party.html).
+     */
+    externalId: Input<string>;
+    /**
+     * The ARN of the IAM role that Amazon Cognito can assume to access the Amazon SNS
+     *
+     */
+    snsCallerArn: Input<string>;
+    /**
+     * The AWS Region that Amazon Cognito uses to send SMS messages.
+     */
+    snsRegion?: Input<string>;
+  }>;
+  /**
+   * The message template for SMS messages sent to users who are being authenticated.
+   *
+   * The template must include the `{####}` placeholder, which will be replaced with the
+   * verification code.
+   *
+   * @default The default message template.
+   * @example
+   *
+   * ```ts
+   * {
+   *   smsAuthenticationMessage: "Your authentication code is {####}"
+   * }
+   * ```
+   */
+  smsAuthenticationMessage?: Input<string>;
+  /**
+   * Enable software token MFA for the User Pool.
+   *
+   * @default Software token MFA is disabled.
+   * @example
+   *
+   * ```ts
+   * {
+   *   softwareToken: true
+   * }
+   * ```
+   */
+  softwareToken?: Input<true>;
   /**
    * Configure triggers for this User Pool
    * @default No triggers
@@ -335,18 +410,11 @@ export class CognitoUserPool extends Component implements Link.Linkable {
     const parent = this;
 
     normalizeAliasesAndUsernames();
-    const advancedSecurity = normalizeAdvancedSecurity();
     const triggers = normalizeTriggers();
     const userPool = createUserPool();
 
     this.constructorOpts = opts;
     this.userPool = userPool;
-
-    function normalizeAdvancedSecurity() {
-      return output(args.advancedSecurity).apply((advancedSecurity) =>
-        advancedSecurity ? advancedSecurity.toUpperCase() : "OFF",
-      );
-    }
 
     function normalizeAliasesAndUsernames() {
       all([args.aliases, args.usernames]).apply(([aliases, usernames]) => {
@@ -437,7 +505,17 @@ export class CognitoUserPool extends Component implements Link.Linkable {
               smsMessage: "The verification code to your new account is {####}",
             },
             userPoolAddOns: {
-              advancedSecurityMode: advancedSecurity,
+              advancedSecurityMode: output(args.advancedSecurity).apply((v) =>
+                (v ?? "off").toUpperCase(),
+              ),
+            },
+            mfaConfiguration: output(args.mfa).apply((v) =>
+              (v ?? "off").toUpperCase(),
+            ),
+            smsAuthenticationMessage: args.smsAuthenticationMessage,
+            smsConfiguration: args.sms,
+            softwareTokenMfaConfiguration: args.softwareToken && {
+              enabled: true,
             },
             lambdaConfig:
               triggers &&
@@ -449,17 +527,17 @@ export class CognitoUserPool extends Component implements Link.Linkable {
                     triggers.customEmailSender === undefined
                       ? undefined
                       : {
-                        lambdaArn: createTrigger("customEmailSender")!,
-                        lambdaVersion: "V1_0",
-                      },
+                          lambdaArn: createTrigger("customEmailSender")!,
+                          lambdaVersion: "V1_0",
+                        },
                   customMessage: createTrigger("customMessage"),
                   customSmsSender:
                     triggers.customSmsSender === undefined
                       ? undefined
                       : {
-                        lambdaArn: createTrigger("customSmsSender")!,
-                        lambdaVersion: "V1_0",
-                      },
+                          lambdaArn: createTrigger("customSmsSender")!,
+                          lambdaVersion: "V1_0",
+                        },
                   defineAuthChallenge: createTrigger("defineAuthChallenge"),
                   postAuthentication: createTrigger("postAuthentication"),
                   postConfirmation: createTrigger("postConfirmation"),
@@ -469,9 +547,9 @@ export class CognitoUserPool extends Component implements Link.Linkable {
                     triggers.preTokenGeneration === undefined
                       ? undefined
                       : {
-                        lambdaArn: createTrigger("preTokenGeneration")!,
-                        lambdaVersion: triggers.preTokenGenerationVersion,
-                      },
+                          lambdaArn: createTrigger("preTokenGeneration")!,
+                          lambdaVersion: triggers.preTokenGenerationVersion,
+                        },
                   userMigration: createTrigger("userMigration"),
                   verifyAuthChallengeResponse: createTrigger(
                     "verifyAuthChallengeResponse",
