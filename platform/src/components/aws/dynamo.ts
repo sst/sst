@@ -92,7 +92,7 @@ export interface DynamoArgs {
          * {
          *   hashKey: "userId",
          *   rangeKey: "createdAt",
-         *   projection: "keys_only"
+         *   projection: "keys-only"
          * }
          * ```
          *
@@ -105,7 +105,7 @@ export interface DynamoArgs {
          * }
          * ```
          */
-        projection?: Input<"all" | "keys_only" | Input<string>[]>;
+        projection?: Input<"all" | "keys-only" | Input<string>[]>;
       }>
     >
   >;
@@ -141,7 +141,7 @@ export interface DynamoArgs {
          * ```js
          * {
          *   rangeKey: "createdAt",
-         *   projection: "keys_only"
+         *   projection: "keys-only"
          * }
          * ```
          *
@@ -153,7 +153,7 @@ export interface DynamoArgs {
          * }
          * ```
          */
-        projection?: Input<"all" | "keys_only" | Input<string>[]>;
+        projection?: Input<"all" | "keys-only" | Input<string>[]>;
       }>
     >
   >;
@@ -454,7 +454,7 @@ export class Dynamo extends Component implements Link.Linkable {
                     name,
                     hashKey: index.hashKey,
                     rangeKey: index.rangeKey,
-                    ...(index.projection === "keys_only"
+                    ...(index.projection === "keys-only"
                       ? { projectionType: "KEYS_ONLY" }
                       : Array.isArray(index.projection)
                         ? {
@@ -468,7 +468,7 @@ export class Dynamo extends Component implements Link.Linkable {
                   ([name, index]) => ({
                     name,
                     rangeKey: index.rangeKey,
-                    ...(index.projection === "keys_only"
+                    ...(index.projection === "keys-only"
                       ? { projectionType: "KEYS_ONLY" }
                       : Array.isArray(index.projection)
                         ? {
