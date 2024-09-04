@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	flag "github.com/spf13/pflag"
+	"golang.org/x/term"
 
 	"github.com/charmbracelet/huh"
 	"github.com/fatih/color"
@@ -310,6 +311,9 @@ func (c *Cli) Stage(cfgPath string) (string, error) {
 			if stage == "" {
 				stage = guessStage()
 				if stage == "" {
+					if !term.IsTerminal(int(os.Stdout.Fd())) {
+						return "", util.NewReadableError(nil, "No stage specified. Pass it in with --stage or set the SST_STAGE environment variable. If this is a personal stage it can be set in `.sst/stage`.")
+					}
 					err := huh.NewForm(
 						huh.NewGroup(
 							huh.NewInput().Title(" Enter name for your personal stage").Prompt(" > ").Value(&stage).Validate(func(v string) error {
