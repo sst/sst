@@ -32,13 +32,9 @@
  * npx @puppeteer/browsers install chromium@latest --path /tmp/localChromium
  * ```
  *
- * Once installed you'll see the location of the Chromium binary.
+ * Once installed you'll see the location of the Chromium binary, `/tmp/localChromium/chromium/mac_arm-1350406/chrome-mac/Chromium.app/Contents/MacOS/Chromium`.
  *
- * ```bash
- * chromium@1350406 /tmp/localChromium/chromium/mac_arm-1350406/chrome-mac/Chromium.app/Contents/MacOS/Chromium
- * ```
- *
- * Next, update this in your Lambda function.
+ * Update this in your Lambda function.
  *
  * ```ts title="index.ts"
  * // This is the path to the local Chromium binary
@@ -78,6 +74,10 @@
  * ```
  *
  * And on deploy, SST will use the right binary.
+ *
+ * :::tip
+ * You don't need to use a Lambda layer to use Puppeteer.
+ * :::
  *
  * We are giving our function more memory and a longer timeout since running Puppeteer can
  * take a while.

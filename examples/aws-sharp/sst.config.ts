@@ -15,6 +15,10 @@
  * We don't need a layer to deploy this because `sharp` comes with a pre-built binary for Lambda.
  * This is handled by [`nodejs.install`](/docs/component/aws/function#nodejs-install).
  *
+ * :::tip
+ * You don't need to use a Lambda layer to use Sharp.
+ * :::
+ *
  * In dev, this uses the sharp npm package locally.
  *
  * ```json title="package.json"
