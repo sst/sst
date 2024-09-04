@@ -17,6 +17,13 @@ import { useLoader } from "../util/loader.js";
 import { Config } from "../config/index.js";
 
 /**
+ * @link https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/Package/-aws-sdk-client-eventbridge/Interface/PutEventsCommandInput/
+ */
+type PublishOptions = {
+  traceHeader?: string;
+};
+
+/**
  * PutEventsCommandOutput is used in return type of createEvent, in case the consumer of SST builds
  * their project with declaration files, this is not portable. In order to allow TS to generate a
  * declaration file without reference to @aws-sdk/client-eventbridge, we must re-export the type.
@@ -45,14 +52,22 @@ export function createEventBuilder<
   >(type: Type, schema: Schema) {
     type Parsed = inferParser<Schema>;
     type Publish = undefined extends MetadataSchema
-      ? (properties: Parsed["in"]) => Promise<PutEventsCommandOutput>
+      ? (
+          properties: Parsed["in"],
+          options?: PublishOptions
+        ) => Promise<PutEventsCommandOutput>
       : (
           properties: Parsed["in"],
           // @ts-expect-error
-          metadata: inferParser<MetadataSchema>["in"]
+          metadata: inferParser<MetadataSchema>["in"],
+          options?: PublishOptions
         ) => Promise<void>;
     const validate = validator(schema);
-    async function publish(properties: any, metadata: any) {
+    async function publish(
+      properties: any,
+      metadata: any,
+      options?: PublishOptions
+    ) {
       const result = await useLoader(
         "sst.bus.publish",
         async (input: PutEventsRequestEntry[]) => {
@@ -65,6 +80,9 @@ export function createEventBuilder<
               client.send(
                 new PutEventsCommand({
                   Entries: chunk,
+                  ...(options?.traceHeader && {
+                    TraceHeader: options.traceHeader,
+                  }),
                 })
               )
             );
