@@ -45,6 +45,8 @@ export default $config({
   async run() {
     const func = new sst.aws.Function("MyFunction", {
       url: true,
+      memory: "2 GB",
+      timeout: "15 minutes",
       handler: "index.handler",
       copyFiles: [{ from: "clip.mp4" }],
       nodejs: { install: ["ffmpeg-static"] },
