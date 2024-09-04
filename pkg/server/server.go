@@ -30,6 +30,7 @@ type Server struct {
 
 func New() (*Server, error) {
 	port, err := port()
+	slog.Info("server port assigned", "port", port)
 	if err != nil {
 		return nil, err
 	}
