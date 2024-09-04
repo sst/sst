@@ -695,13 +695,22 @@ import { ApiHandler } from "sst/node/api";
 export const handler = ApiHandler((event) => { });
 ```
 
-These were experimental and are not currently supported in v3. To continue using them you can import them by first ading it to your `package.json`.
+These were experimental and are not currently supported in v3. To continue using them you can import them by first adding it to your `package.json`.
 
-```js title="package.json"
-"sstv2": "npm:sst@2.x.x"
+```diff lang="json" title="package.json"
+{
++  "sstv2": "npm:sst@^2",
+  "sst": "^3"
+}
 ```
 
-And then importing it via the `sstv2` alias.
+This means that you have both v2 and v3 installed in your project. Since, they both have an `sst` binary, you want to make sure v3 takes precedence. So v3 should be listed **after** v2.
+
+:::caution
+Make sure v3 is listed after v2 in your `package.json`.
+:::
+
+And then import them via the `sstv2` alias.
 
 ```ts title="v3"
 import { ApiHandler } from "sstv2/node/api";
