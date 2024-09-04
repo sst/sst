@@ -3,7 +3,8 @@
 
 const CLOUDFLARE_API_BASE_URL =
   process.env.CLOUDFLARE_API_BASE_URL ?? "https://api.cloudflare.com/client/v4";
-const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
+const CLOUDFLARE_API_TOKEN =
+  $app.providers?.cloudflare?.apiToken || process.env.CLOUDFLARE_API_TOKEN;
 
 export interface FetchError {
   code: number;
