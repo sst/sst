@@ -1,7 +1,7 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
 /**
- * ## Sharp image resizer
+ * ## Sharp in Lambda
  *
  * Uses the [Sharp](https://sharp.pixelplumbing.com/) library to resize images. In this example,
  * it resizes a `logo.png` local file to 100x100 pixels.
@@ -12,7 +12,10 @@
  * }
  * ```
  *
- * The sharp package is handled by [`nodejs.install`](/docs/component/aws/function#nodejs-install). In dev, this uses the sharp npm package locally.
+ * We don't need a layer to deploy this because `sharp` comes with a pre-built binary for Lambda.
+ * This is handled by [`nodejs.install`](/docs/component/aws/function#nodejs-install).
+ *
+ * In dev, this uses the sharp npm package locally.
  *
  * ```json title="package.json"
  * {
@@ -22,7 +25,8 @@
  * }
  * ```
  *
- * On deploy, the sharp package for the right target Lambda architecture is used.
+ * On deploy, SST will use the right binary from the sharp package for the target Lambda
+ * architecture.
  */
 export default $config({
   app(input) {
