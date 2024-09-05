@@ -20,15 +20,11 @@ export interface VpcArgs {
   az?: Input<number>;
   /**
    * Configures NAT. Enabling NAT allows resources in private subnets to connect to the internet.
-   * The following options are available:
-   * - `false` Disables NAT.
-   * - `gateway` Enables AWS NAT Gateway.
-   *
-   * @default `false`
+   * @default NAT is disabled
    * @example
    * ```ts
    * {
-   *   nat: "gateway"
+   *   nat: "managed"
    * }
    * ```
    */
