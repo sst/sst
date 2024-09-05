@@ -186,8 +186,11 @@ body > .page > header {
   -webkit-backdrop-filter: blur(8px);
   border-color: var(--sl-color-hairline);
 }
-body > .page > header {
-  padding-inline-end: var(--sl-nav-pad-y);
+@media (min-width: 50rem) {
+  body > .page > header,
+  :root[data-has-sidebar] body > .page > header {
+    padding-inline-end: var(--sl-nav-pad-y);
+  }
 }
 body > .page > header a.site-title {
   cursor: pointer;
@@ -493,21 +496,3 @@ dialog[aria-label='Search']::backdrop {
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
 }
-
-/**
- * Hero
- */
-/* .hero { */
-/*   padding-block-start: clamp(2rem, calc(1rem + 10vh), 10rem); */
-/* } */
-/* @media (min-width: 50rem) { */
-/*   .hero { */
-/*     padding-block: clamp(2.5rem, calc(1rem + 10vmin), 10rem); */
-/*   } */
-/* } */
-/* .hero h1 { */
-/*   color: var(--color-text); */
-/* } */
-/* .hero .tagline { */
-/*   color: var(--color-text-secondary); */
-/* } */
