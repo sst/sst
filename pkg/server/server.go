@@ -94,17 +94,12 @@ func (s *Server) Start(ctx context.Context, p *project.Project) error {
 func port() (int, error) {
 	port := 13557
 	for {
+		if port == 65535 {
+			return 0, fmt.Errorf("no port available")
+		}
 		listener, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 		if err != nil {
-			if opError, ok := err.(*net.OpError); ok && opError.Op == "listen" {
-				if syscallErr, ok := opError.Err.(*os.SyscallError); ok && syscallErr.Syscall == "bind" {
-					if errno, ok := syscallErr.Err.(syscall.Errno); ok && errno == syscall.EADDRINUSE {
-						port++
-						continue
-					}
-				}
-			}
-			return 0, err
+			continue
 		}
 		defer listener.Close()
 		addr := listener.Addr().(*net.TCPAddr)
