@@ -212,7 +212,7 @@ export interface SsrSiteArgs extends BaseSsrSiteArgs {
   };
 }
 
-export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
+export function prepare(parent: ComponentResource, args: SsrSiteArgs) {
   const sitePath = normalizeSitePath();
   const partition = normalizePartition();
   const region = normalizeRegion();
@@ -236,12 +236,11 @@ export function prepare(args: SsrSiteArgs, opts: ComponentResourceOptions) {
   }
 
   function normalizePartition() {
-    return getPartitionOutput(undefined, { provider: opts?.provider })
-      .partition;
+    return getPartitionOutput(undefined, { parent }).partition;
   }
 
   function normalizeRegion() {
-    return getRegionOutput(undefined, { provider: opts?.provider }).name;
+    return getRegionOutput(undefined, { parent }).name;
   }
 
   function checkSupportedRegion() {

@@ -161,9 +161,7 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function normalizeRegion() {
-      return getRegionOutput(undefined, {
-        provider: opts?.provider,
-      }).name;
+      return getRegionOutput(undefined, { parent: self }).name;
     }
 
     function normalizeArchitecture() {

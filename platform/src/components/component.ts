@@ -179,6 +179,7 @@ export class Component extends ComponentResource {
               field: "name",
               cb: () =>
                 getRegionOutput(undefined, {
+                  parent: args.opts.parent,
                   provider: args.opts.provider,
                 }).name.apply((region) =>
                   physicalName(

@@ -654,7 +654,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     this.endpointType = endpoint.types;
 
     function normalizeRegion() {
-      return getRegionOutput(undefined, { provider: opts?.provider }).name;
+      return getRegionOutput(undefined, { parent }).name;
     }
 
     function normalizeEndpoint() {

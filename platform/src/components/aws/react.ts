@@ -366,7 +366,7 @@ export class React extends Component implements Link.Linkable {
 
     const parent = this;
     const edge = normalizeEdge();
-    const { sitePath, partition } = prepare(args, opts);
+    const { sitePath, partition } = prepare(parent, args);
     if ($dev) {
       const server = createDevServer(parent, name, args);
       this.devUrl = output(args.dev?.url ?? URL_UNAVAILABLE);

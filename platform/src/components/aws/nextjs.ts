@@ -509,7 +509,7 @@ export class Nextjs extends Component implements Link.Linkable {
 
     const parent = this;
     const buildCommand = normalizeBuildCommand();
-    const { sitePath, partition, region } = prepare(args, opts);
+    const { sitePath, partition, region } = prepare(parent, args);
     if ($dev) {
       const server = createDevServer(parent, name, args);
       this.devUrl = output(args.dev?.url ?? URL_UNAVAILABLE);

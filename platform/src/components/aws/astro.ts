@@ -365,7 +365,7 @@ export class Astro extends Component implements Link.Linkable {
     super(__pulumiType, name, args, opts);
 
     const parent = this;
-    const { sitePath, partition } = prepare(args, opts);
+    const { sitePath, partition } = prepare(parent, args);
 
     if ($dev) {
       const server = createDevServer(parent, name, args);
