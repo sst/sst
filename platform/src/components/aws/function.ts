@@ -1102,6 +1102,7 @@ export class Function extends Component implements Link.Linkable {
             stage: $app.stage,
           });
           if (dev) {
+            result.SST_REGION = process.env.SST_AWS_REGION!;
             result.SST_FUNCTION_ID = name;
             result.SST_APP = $app.name;
             result.SST_STAGE = $app.stage;

@@ -33,6 +33,7 @@ var SST_APP = os.Getenv("SST_APP")
 var SST_STAGE = os.Getenv("SST_STAGE")
 var SST_FUNCTION_ID = os.Getenv("SST_FUNCTION_ID")
 var SST_FUNCTION_TIMEOUT = os.Getenv("SST_FUNCTION_TIMEOUT")
+var SST_REGION = os.Getenv("SST_REGION")
 
 var ENV_BLACKLIST = map[string]bool{
 	"SST_DEBUG_ENDPOINT":              true,
@@ -77,7 +78,7 @@ func run() error {
 	expire := time.Hour * 24
 	from := time.Now()
 
-	config, err := config.LoadDefaultConfig(ctx)
+	config, err := config.LoadDefaultConfig(ctx, config.WithRegion(SST_REGION))
 	if err != nil {
 		return err
 	}
