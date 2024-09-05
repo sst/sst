@@ -11,6 +11,7 @@ import { KvData } from "./providers/kv-data.js";
 import { Worker } from "./worker.js";
 import {
   BaseStaticSiteArgs,
+  BaseStaticSiteAssets,
   buildApp,
   cleanup,
   prepare,
@@ -83,7 +84,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
    * ```
    * @default `Object`
    */
-  assets?: BaseStaticSiteArgs["assets"];
+  assets?: Input<BaseStaticSiteAssets & {}>;
   /**
    * Set a custom domain for your static site. Supports domains hosted on Cloudflare.
    *

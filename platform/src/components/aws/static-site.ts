@@ -10,18 +10,19 @@ import {
 } from "@pulumi/pulumi";
 import { Cdn, CdnArgs } from "./cdn.js";
 import { Bucket, BucketArgs } from "./bucket.js";
-import { Component, Transform, transform } from "../component.js";
+import { Component, Prettify, Transform, transform } from "../component.js";
 import { Link } from "../link.js";
 import { Input } from "../input.js";
 import { globSync } from "glob";
 import { BucketFile, BucketFiles } from "./providers/bucket-files.js";
 import {
   BaseStaticSiteArgs,
+  BaseStaticSiteAssets,
   buildApp,
   cleanup,
   prepare,
 } from "../base/base-static-site.js";
-import { cloudfront, iam } from "@pulumi/aws";
+import { cloudfront, iam, s3 } from "@pulumi/aws";
 import { URL_UNAVAILABLE } from "./linkable.js";
 import { DevArgs } from "../dev.js";
 import { OriginAccessControl } from "./providers/origin-access-control.js";
@@ -104,7 +105,58 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
    * ```
    * @default `Object`
    */
-  assets?: BaseStaticSiteArgs["assets"];
+  assets?: Prettify<
+    BaseStaticSiteAssets & {
+      /**
+       * The name of the S3 bucket to upload the assets to.
+       * @default Creates a new bucket
+       * @example
+       * ```js
+       * {
+       *   assets: {
+       *     bucket: "my-existing-bucket"
+       *   }
+       * }
+       * ```
+       *
+       * :::note
+       * The bucket must allow CloudFront to access the bucket.
+       * :::
+       *
+       * When using an existing bucket, ensure that the bucket has a policy that allows CloudFront to access the bucket.
+       * For example, the bucket policy might look like this:
+       * ```json
+       * {
+       *   "Version": "2012-10-17",
+       *   "Statement": [
+       *     {
+       *       "Effect": "Allow",
+       *       "Principal": {
+       *         "Service": "cloudfront.amazonaws.com"
+       *       },
+       *       "Action": "s3:GetObject",
+       *       "Resource": "arn:aws:s3:::my-existing-bucket/*"
+       *     }
+       *   ]
+       * }
+       * ```
+       */
+      bucket?: Input<string>;
+      /**
+       * The path into the S3 bucket where the assets should be uploaded.
+       * @default Root of the bucket
+       * @example
+       * ```js
+       * {
+       *   assets: {
+       *     path: "websites/my-website"
+       *   }
+       * }
+       * ```
+       */
+      path?: Input<string>;
+    }
+  >;
   /**
    * Set a custom domain for your static site. Supports domains hosted either on
    * [Route 53](https://aws.amazon.com/route53/) or outside AWS.
@@ -406,6 +458,7 @@ export class StaticSite extends Component implements Link.Linkable {
       return;
     }
 
+    const assets = normalizeAsssets();
     const outputPath = buildApp(
       parent,
       name,
@@ -414,7 +467,8 @@ export class StaticSite extends Component implements Link.Linkable {
       environment,
     );
     const access = createCloudFrontOriginAccessControl();
-    const bucket = createS3Bucket();
+    const bucket = createBucket();
+    const { bucketName, bucketDomain } = getBucketDetails();
     const bucketFile = uploadAssets();
     const cloudfrontFunction = createCloudfrontFunction();
     const invalidation = buildInvalidation();
@@ -431,6 +485,17 @@ export class StaticSite extends Component implements Link.Linkable {
         url: this.url,
       },
     });
+
+    function normalizeAsssets() {
+      return {
+        ...args.assets,
+        path: args.assets?.path
+          ? output(args.assets?.path).apply((v) =>
+              v.replace(/^\//, "").replace(/\/$/, ""),
+            )
+          : undefined,
+      };
+    }
 
     function createCloudFrontOriginAccessControl() {
       return new OriginAccessControl(
@@ -461,7 +526,9 @@ export class StaticSite extends Component implements Link.Linkable {
       );
     }
 
-    function createS3Bucket() {
+    function createBucket() {
+      if (assets.bucket) return;
+
       return new Bucket(
         ...transform(
           args.transform?.assets,
@@ -479,7 +546,7 @@ export class StaticSite extends Component implements Link.Linkable {
                         },
                       ],
                       actions: ["s3:GetObject"],
-                      resources: [interpolate`${bucket.arn}/*`],
+                      resources: [interpolate`${bucket!.arn}/*`],
                     },
                   ],
                 }).json;
@@ -500,71 +567,82 @@ export class StaticSite extends Component implements Link.Linkable {
       );
     }
 
+    function getBucketDetails() {
+      const s3Bucket = bucket
+        ? bucket.nodes.bucket
+        : s3.BucketV2.get(`${name}Assets`, assets.bucket!, undefined, {
+            parent,
+          });
+
+      return {
+        bucketName: s3Bucket.bucket,
+        bucketDomain: s3Bucket.bucketRegionalDomainName,
+      };
+    }
+
     function uploadAssets() {
-      return all([outputPath, args.assets]).apply(
-        async ([outputPath, assets]) => {
-          const bucketFiles: BucketFile[] = [];
+      return all([outputPath, assets]).apply(async ([outputPath, assets]) => {
+        const bucketFiles: BucketFile[] = [];
 
-          // Build fileOptions
-          const fileOptions = assets?.fileOptions ?? [
-            {
-              files: "**",
-              cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
-            },
-            {
-              files: ["**/*.js", "**/*.css"],
-              cacheControl: "max-age=31536000,public,immutable",
-            },
-          ];
+        // Build fileOptions
+        const fileOptions = assets?.fileOptions ?? [
+          {
+            files: "**",
+            cacheControl: "max-age=0,no-cache,no-store,must-revalidate",
+          },
+          {
+            files: ["**/*.js", "**/*.css"],
+            cacheControl: "max-age=31536000,public,immutable",
+          },
+        ];
 
-          // Upload files based on fileOptions
-          const filesProcessed: string[] = [];
-          for (const fileOption of fileOptions.reverse()) {
-            const files = globSync(fileOption.files, {
-              cwd: path.resolve(outputPath),
-              nodir: true,
-              dot: true,
-              ignore: [
-                ".sst/**",
-                ...(typeof fileOption.ignore === "string"
-                  ? [fileOption.ignore]
-                  : fileOption.ignore ?? []),
-              ],
-            }).filter((file) => !filesProcessed.includes(file));
+        // Upload files based on fileOptions
+        const filesProcessed: string[] = [];
+        for (const fileOption of fileOptions.reverse()) {
+          const files = globSync(fileOption.files, {
+            cwd: path.resolve(outputPath),
+            nodir: true,
+            dot: true,
+            ignore: [
+              ".sst/**",
+              ...(typeof fileOption.ignore === "string"
+                ? [fileOption.ignore]
+                : fileOption.ignore ?? []),
+            ],
+          }).filter((file) => !filesProcessed.includes(file));
 
-            bucketFiles.push(
-              ...(await Promise.all(
-                files.map(async (file) => {
-                  const source = path.resolve(outputPath, file);
-                  const content = await fs.promises.readFile(source);
-                  const hash = crypto
-                    .createHash("sha256")
-                    .update(content)
-                    .digest("hex");
-                  return {
-                    source,
-                    key: file,
-                    hash,
-                    cacheControl: fileOption.cacheControl,
-                    contentType: getContentType(file, "UTF-8"),
-                  };
-                }),
-              )),
-            );
-            filesProcessed.push(...files);
-          }
-
-          return new BucketFiles(
-            `${name}AssetFiles`,
-            {
-              bucketName: bucket.name,
-              files: bucketFiles,
-              purge: true,
-            },
-            { parent },
+          bucketFiles.push(
+            ...(await Promise.all(
+              files.map(async (file) => {
+                const source = path.resolve(outputPath, file);
+                const content = await fs.promises.readFile(source);
+                const hash = crypto
+                  .createHash("sha256")
+                  .update(content)
+                  .digest("hex");
+                return {
+                  source,
+                  key: path.posix.join(assets.path ?? "", file),
+                  hash,
+                  cacheControl: fileOption.cacheControl,
+                  contentType: getContentType(file, "UTF-8"),
+                };
+              }),
+            )),
           );
-        },
-      );
+          filesProcessed.push(...files);
+        }
+
+        return new BucketFiles(
+          `${name}AssetFiles`,
+          {
+            bucketName,
+            files: bucketFiles,
+            purge: true,
+          },
+          { parent },
+        );
+      });
     }
 
     function getContentType(filename: string, textEncoding: string) {
@@ -621,8 +699,8 @@ export class StaticSite extends Component implements Link.Linkable {
             origins: [
               {
                 originId: "s3",
-                domainName: bucket.nodes.bucket.bucketRegionalDomainName,
-                originPath: "",
+                domainName: bucketDomain,
+                originPath: assets.path ? $interpolate`/${assets.path}` : "",
                 originAccessControlId: access.id,
               },
             ],
