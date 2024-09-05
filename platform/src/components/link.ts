@@ -99,6 +99,13 @@ export module Link {
 
   export function build(links: any[]) {
     return links
+      .map((link) => {
+        if (!link)
+          throw new VisibleError(
+            "An undefined link was passed into a `link` array.",
+          );
+        return link;
+      })
       .filter((l) => isLinkable(l))
       .map((l: Linkable) => {
         const link = l.getSSTLink();
