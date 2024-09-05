@@ -24,7 +24,7 @@
  * ```
  *
  * We don't need a layer when we deploy this because SST will use the right binary for the
- * target Lambda architecture.
+ * target Lambda architecture; including `arm64`.
  *
  * ```json title="sst.config.ts"
  * {
@@ -32,7 +32,7 @@
  * }
  * ```
  *
- * This is handled by [`nodejs.install`](/docs/component/aws/function#nodejs-install).
+ * All this is handled by [`nodejs.install`](/docs/component/aws/function#nodejs-install).
  */
 export default $config({
   app(input) {

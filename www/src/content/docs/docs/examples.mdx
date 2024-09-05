@@ -239,14 +239,14 @@ contains pre-built binaries for all architectures.
 import ffmpeg from "ffmpeg-static";
 ```
 
-We can use this to spawn a child process to run FFmpeg.
+We can use this to spawn a child process and run FFmpeg.
 
 ```ts title="index.ts"
 spawnSync(ffmpeg, ffmpegParams, { stdio: "pipe" });
 ```
 
 We don't need a layer when we deploy this because SST will use the right binary for the
-target Lambda architecture.
+target Lambda architecture; including `arm64`.
 
 ```json title="sst.config.ts"
 {
@@ -254,10 +254,12 @@ target Lambda architecture.
 }
 ```
 
-This is handled by [`nodejs.install`](/docs/component/aws/function#nodejs-install).
+All this is handled by [`nodejs.install`](/docs/component/aws/function#nodejs-install).
 ```ts title="sst.config.ts"
 const func = new sst.aws.Function("MyFunction", {
   url: true,
+  memory: "2 GB",
+  timeout: "15 minutes",
   handler: "index.handler",
   copyFiles: [{ from: "clip.mp4" }],
   nodejs: { install: ["ffmpeg-static"] },
