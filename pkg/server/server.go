@@ -13,7 +13,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"syscall"
 
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
