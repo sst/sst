@@ -3,12 +3,12 @@
 import "sst"
 declare module "sst" {
   export interface Resource {
-    "East": {
+    "MyEastFunction": {
       "name": string
       "type": "sst.aws.Function"
       "url": string
     }
-    "West": {
+    "MyWestFunction": {
       "name": string
       "type": "sst.aws.Function"
       "url": string
