@@ -1,6 +1,6 @@
 # SST v3
 
-SST v3 uses a new engine for deploying SST apps. It uses Pulumi and Terraform, as opposed to CDK and CloudFormation. [Read the full announcement here](https://sst.dev/blog/moving-away-from-cdk).
+SST v3 uses a new engine for deploying SST apps. It uses Pulumi and Terraform, as opposed to CDK and CloudFormation. [Read the full announcement here]([https://sst.dev/blog/moving-away-from-cdk](https://sst.dev/blog/sst-v3)).
 
 - **10x faster** deploys
 - Native **multi-region** support
@@ -10,6 +10,14 @@ SST v3 uses a new engine for deploying SST apps. It uses Pulumi and Terraform, a
 - Native support for **non-AWS** providers
 
 ## Installation
+
+If you are using SST as a part of your Node project, we recommend installing it locally.
+
+```bash
+npm install sst
+```
+
+If you are not using Node, you can install the CLI globally.
 
 ```bash
 curl -fsSL https://sst.dev/install | bash
