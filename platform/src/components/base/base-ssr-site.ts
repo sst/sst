@@ -110,8 +110,6 @@ export function buildApp(
   sitePath: Output<string>,
   buildCommand?: Output<string>,
 ) {
-  if ($dev) return sitePath;
-
   return all([
     sitePath,
     buildCommand ?? args.buildCommand,

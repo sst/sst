@@ -219,7 +219,7 @@ export class Remix extends Component implements Link.Linkable {
     const { sitePath } = prepare(args);
     const isUsingVite = checkIsUsingVite();
     const storage = createKvStorage(parent, name, args);
-    const outputPath = buildApp(parent, name, args, sitePath);
+    const outputPath = $dev ? sitePath : buildApp(parent, name, args, sitePath);
     const { buildMeta } = loadBuildOutput();
     const plan = buildPlan();
     const { router, server } = createRouter(

@@ -32,8 +32,10 @@ export interface AstroArgs extends SsrSiteArgs {
    * Instead of deploying your Astro site, this starts it in dev mode. It's run
    * as a separate process in the `sst dev` multiplexer. Read more about
    * [`sst dev`](/docs/reference/cli/#dev).
+   *
+   * To disable dev mode, pass in `false`.
    */
-  dev?: DevArgs["dev"];
+  dev?: false | DevArgs["dev"];
   /**
    * The number of instances of the [server function](#nodes-server) to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
    *
@@ -366,10 +368,11 @@ export class Astro extends Component implements Link.Linkable {
 
     const parent = this;
     const { sitePath, partition } = prepare(parent, args);
+    const dev = normalizeDev();
 
-    if ($dev) {
+    if (dev) {
       const server = createDevServer(parent, name, args);
-      this.devUrl = output(args.dev?.url ?? URL_UNAVAILABLE);
+      this.devUrl = dev.url;
       this.registerOutputs({
         _metadata: {
           mode: "placeholder",
@@ -394,13 +397,9 @@ export class Astro extends Component implements Link.Linkable {
             role: server.nodes.role.arn,
           },
           environment: args.environment,
-          directory: output(args.dev?.directory).apply(
-            (dir) => dir || sitePath,
-          ),
-          autostart: output(args.dev?.autostart).apply((val) => val ?? true),
-          command: output(args.dev?.command).apply(
-            (val) => val || "npm run dev",
-          ),
+          command: dev.command,
+          directory: dev.directory,
+          autostart: dev.autostart,
         },
       });
       return;
@@ -437,6 +436,19 @@ export class Astro extends Component implements Link.Linkable {
         server: serverFunction.arn,
       },
     });
+
+    function normalizeDev() {
+      if (!$dev) return undefined;
+      if (args.dev === false) return undefined;
+
+      return {
+        ...args.dev,
+        url: output(args.dev?.url ?? URL_UNAVAILABLE),
+        command: output(args.dev?.command ?? "npm run dev"),
+        autostart: output(args.dev?.autostart ?? true),
+        directory: output(args.dev?.directory ?? sitePath),
+      };
+    }
 
     function loadBuildMetadata() {
       return outputPath.apply((outputPath) => {

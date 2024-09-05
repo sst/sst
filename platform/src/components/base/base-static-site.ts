@@ -1,11 +1,10 @@
 import fs from "fs";
 import path from "path";
-import { all, output, Output, Resource } from "@pulumi/pulumi";
+import { all, output, Resource } from "@pulumi/pulumi";
 import { VisibleError } from "../error.js";
 import { Input } from "../input.js";
 import { Prettify } from "../component.js";
 import { BaseSiteFileOptions } from "./base-site.js";
-import { DevArgs } from "../dev.js";
 import { Run } from "../providers/run.js";
 
 export type BaseStaticSiteAssets = {
@@ -277,7 +276,6 @@ export function buildApp(
   sitePath: ReturnType<typeof prepare>["sitePath"],
   environment: ReturnType<typeof prepare>["environment"],
 ) {
-  if ($dev) return path.join($cli.paths.platform, "functions", "empty-site");
   if (!build) return sitePath;
 
   const result = new Run(
@@ -305,28 +303,4 @@ export function buildApp(
 
     return outputPath;
   });
-}
-
-export function cleanup(
-  sitePath: ReturnType<typeof prepare>["sitePath"],
-  environment: ReturnType<typeof prepare>["environment"],
-  url?: Output<string>,
-  dev?: DevArgs["dev"],
-) {
-  return {
-    _hint: url,
-    _dev: {
-      environment: environment,
-      command: output(dev?.command).apply((val) => val || "npm run dev"),
-      directory: output(dev?.directory).apply((dir) => dir || sitePath),
-      autostart: output(dev?.autostart).apply((val) => val ?? true),
-    },
-    _receiver: all([sitePath, environment]).apply(
-      ([sitePath, environment]) => ({
-        directory: sitePath,
-        links: [],
-        environment,
-      }),
-    ),
-  };
 }

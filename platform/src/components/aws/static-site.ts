@@ -19,7 +19,6 @@ import {
   BaseStaticSiteArgs,
   BaseStaticSiteAssets,
   buildApp,
-  cleanup,
   prepare,
 } from "../base/base-static-site.js";
 import { cloudfront, iam, s3 } from "@pulumi/aws";
@@ -39,8 +38,10 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
    * Instead of deploying your static site, this starts it in dev mode. It's run
    * as a separate process in the `sst dev` multiplexer. Read more about
    * [`sst dev`](/docs/reference/cli/#dev).
+   *
+   * To disable dev mode, pass in `false`.
    */
-  dev?: DevArgs["dev"];
+  dev?: false | DevArgs["dev"];
   /**
    * Path to the directory where your static site is located. By default this assumes your static site is in the root of your SST app.
    *
@@ -427,9 +428,10 @@ export class StaticSite extends Component implements Link.Linkable {
 
     const parent = this;
     const { sitePath, environment, indexPage } = prepare(args);
+    const dev = normalizeDev();
 
-    if ($dev) {
-      this.devUrl = output(args.dev?.url ?? URL_UNAVAILABLE);
+    if (dev) {
+      this.devUrl = dev.url;
       this.registerOutputs({
         _metadata: {
           mode: "placeholder",
@@ -445,14 +447,10 @@ export class StaticSite extends Component implements Link.Linkable {
           }),
         ),
         _dev: {
-          environment: environment,
-          command: output(args.dev?.command).apply(
-            (val) => val || "npm run dev",
-          ),
-          directory: output(args.dev?.directory).apply(
-            (dir) => dir || sitePath,
-          ),
-          autostart: output(args.dev?.autostart).apply((val) => val ?? true),
+          environment,
+          command: dev.command,
+          directory: dev.directory,
+          autostart: dev.autostart,
         },
       });
       return;
@@ -477,7 +475,14 @@ export class StaticSite extends Component implements Link.Linkable {
     this.cdn = distribution;
 
     this.registerOutputs({
-      ...cleanup(sitePath, environment, this.url, args.dev),
+      _hint: this.url,
+      _receiver: all([sitePath, environment]).apply(
+        ([sitePath, environment]) => ({
+          directory: sitePath,
+          links: [],
+          environment,
+        }),
+      ),
       _metadata: {
         mode: "deployed",
         path: sitePath,
@@ -485,6 +490,19 @@ export class StaticSite extends Component implements Link.Linkable {
         url: this.url,
       },
     });
+
+    function normalizeDev() {
+      if (!$dev) return undefined;
+      if (args.dev === false) return undefined;
+
+      return {
+        ...args.dev,
+        url: output(args.dev?.url ?? URL_UNAVAILABLE),
+        command: output(args.dev?.command ?? "npm run dev"),
+        autostart: output(args.dev?.autostart ?? true),
+        directory: output(args.dev?.directory ?? sitePath),
+      };
+    }
 
     function normalizeAsssets() {
       return {
@@ -747,7 +765,6 @@ export class StaticSite extends Component implements Link.Linkable {
             },
             domain: args.domain,
             invalidation,
-            wait: !$dev,
           },
           // create distribution after s3 upload finishes
           { dependsOn: bucketFile, parent },
