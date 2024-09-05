@@ -86,11 +86,11 @@ There are a couple of quirks with this setup that are worth noting.
 
 ### Live mode
 
-When a function is running live it sets the `SST_LIVE` environment variable to `true`. So in your Node.js functions you can access it using `process.env.SST_LIVE`.
+When a function is running live it sets the `SST_DEV` environment variable to `true`. So in your Node.js functions you can access it using `process.env.SST_DEV`.
 
-```js title="src/lambda.js" "process.env.SST_LIVE"
+```js title="src/lambda.js" "process.env.SST_DEV"
 export async function main(event) {
-  const body = process.env.SST_LIVE ? "Hello, Live!" : "Hello, World!";
+  const body = process.env.SST_DEV ? "Hello, Live!" : "Hello, World!";
 
   return {
     body,
@@ -105,10 +105,10 @@ This is useful if you want to access some resources locally.
 
 #### Connect to a local DB
 
-For example, when running locally you might want to connect to a local database. You can do that with the `SST_LIVE` environment variable.
+For example, when running locally you might want to connect to a local database. You can do that with the `SST_DEV` environment variable.
 
 ```js
-const dbHost = process.env.SST_LIVE
+const dbHost = process.env.SST_DEV
   ? "localhost"
   : "amazon-string.rds.amazonaws.com";
 ```

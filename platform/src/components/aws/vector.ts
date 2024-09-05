@@ -149,7 +149,7 @@ export class Vector extends Component implements Link.Linkable {
           handler: "index.query",
           environment: useHandlerEnvironment(),
           permissions: useHandlerPermissions(),
-          live: false,
+          dev: false,
         },
         { parent },
       );
@@ -164,7 +164,7 @@ export class Vector extends Component implements Link.Linkable {
           handler: "index.put",
           environment: useHandlerEnvironment(),
           permissions: useHandlerPermissions(),
-          live: false,
+          dev: false,
         },
         { parent },
       );
@@ -179,7 +179,7 @@ export class Vector extends Component implements Link.Linkable {
           handler: "index.remove",
           environment: useHandlerEnvironment(),
           permissions: useHandlerPermissions(),
-          live: false,
+          dev: false,
         },
         { parent },
       );

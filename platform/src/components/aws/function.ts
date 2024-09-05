@@ -181,6 +181,7 @@ interface FunctionUrlCorsArgs {
 export interface FunctionArgs {
   /**
    * Disable running this function [Live](/docs/live/) in `sst dev`.
+   * @deprecated Use `dev` instead.
    * @default `true`
    * @example
    * ```js
@@ -190,6 +191,17 @@ export interface FunctionArgs {
    * ```
    */
   live?: Input<false>;
+  /**
+   * Disable running this function [Live](/docs/live/) in `sst dev`.
+   * @default Live mode enabled in `sst dev`
+   * @example
+   * ```js
+   * {
+   *   dev: false
+   * }
+   * ```
+   */
+  dev?: Input<false>;
   /**
    * The name for the function.
    *
@@ -999,7 +1011,7 @@ export class Function extends Component implements Link.Linkable {
     super(__pulumiType, name, args, opts);
 
     const parent = this;
-    const dev = output(args.live).apply((v) => $dev && v !== false);
+    const dev = normalizeDev();
     const region = normalizeRegion();
     const injections = normalizeInjections();
     const runtime = normalizeRuntime();
@@ -1036,7 +1048,7 @@ export class Function extends Component implements Link.Linkable {
 
     this.registerOutputs({
       _live: unsecret(
-        all([dev]).apply(([dev]) => {
+        output(dev).apply((dev) => {
           if (!dev) return undefined;
           return all([
             name,
@@ -1066,6 +1078,12 @@ export class Function extends Component implements Link.Linkable {
         internal: args._skipMetadata,
       },
     });
+
+    function normalizeDev() {
+      return all([args.dev, args.live]).apply(
+        ([d, l]) => $dev && d !== false && l !== false,
+      );
+    }
 
     function normalizeRegion() {
       return getRegionOutput(undefined, { parent }).name;

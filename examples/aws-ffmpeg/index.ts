@@ -7,7 +7,7 @@ export async function handler() {
   const videoPath = "clip.mp4";
 
   const outputFile = "thumbnail.jpg";
-  const outputPath = process.env.SST_LIVE
+  const outputPath = process.env.SST_DEV
     ? outputFile
     : path.join("/tmp", outputFile);
 
@@ -34,7 +34,7 @@ export async function handler() {
     isBase64Encoded: true,
     headers: {
       "Content-Type": "image/jpeg",
-      "Content-Disposition": "inline"
+      "Content-Disposition": "inline",
     },
   };
 }

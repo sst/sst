@@ -41,13 +41,13 @@
  * const YOUR_LOCAL_CHROMIUM_PATH = "/tmp/localChromium/chromium/mac_arm-1350406/chrome-mac/Chromium.app/Contents/MacOS/Chromium";
  * ```
  *
- * You'll notice we are using the right binary with the `SST_LIVE` environment variable.
+ * You'll notice we are using the right binary with the `SST_DEV` environment variable.
  *
  * ```ts title="index.ts" {4-6}
  * const browser = await puppeteer.launch({
  *   args: chromium.args,
  *   defaultViewport: chromium.defaultViewport,
- *   executablePath: process.env.SST_LIVE
+ *   executablePath: process.env.SST_DEV
  *     ? YOUR_LOCAL_CHROMIUM_PATH
  *     : await chromium.executablePath(),
  *   headless: chromium.headless,

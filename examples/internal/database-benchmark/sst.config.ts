@@ -52,7 +52,7 @@ export default $config({
     });
 
     const lambda = new sst.aws.Function("Lambda", {
-      live: false,
+      dev: false,
       url: true,
       link: [postgres, pscale],
       handler: "./src/lambda.handler",

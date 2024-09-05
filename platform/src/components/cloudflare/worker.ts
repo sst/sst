@@ -165,7 +165,7 @@ export interface WorkerArgs {
    * @internal
    * Placehodler for future feature.
    */
-  live?: boolean;
+  dev?: boolean;
 }
 
 /**
@@ -238,6 +238,7 @@ export class Worker extends Component implements Link.Linkable {
 
     const parent = this;
 
+    const dev = normalizeDev();
     const urlEnabled = normalizeUrl();
 
     const bindings = buildBindings();
@@ -263,26 +264,30 @@ export class Worker extends Component implements Link.Linkable {
         environment: args.environment,
         cloudflare: {},
       },
-      _live: all([name, args.handler, args.build, args.live]).apply(
-        ([name, handler, build, live]) =>
-          !$dev || live == false
-            ? undefined
-            : {
-                functionID: name,
-                links: [],
-                handler,
-                runtime: "worker",
-                properties: {
-                  accountID: DEFAULT_ACCOUNT_ID,
-                  scriptName: script.name,
-                  build,
-                },
-              },
+      _live: all([name, args.handler, args.build, dev]).apply(
+        ([name, handler, build, dev]) => {
+          if (!dev) return undefined;
+          return {
+            functionID: name,
+            links: [],
+            handler,
+            runtime: "worker",
+            properties: {
+              accountID: DEFAULT_ACCOUNT_ID,
+              scriptName: script.name,
+              build,
+            },
+          };
+        },
       ),
       _metadata: {
         handler: args.handler,
       },
     });
+
+    function normalizeDev() {
+      return output(args.dev).apply((v) => $dev && v !== false);
+    }
 
     function normalizeUrl() {
       return output(args.url).apply((v) => v ?? false);

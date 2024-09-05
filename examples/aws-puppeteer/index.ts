@@ -2,7 +2,8 @@ import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
 
 // This is the path to the local Chromium binary
-const YOUR_LOCAL_CHROMIUM_PATH = "/tmp/localChromium/chromium/mac_arm-1350406/chrome-mac/Chromium.app/Contents/MacOS/Chromium";
+const YOUR_LOCAL_CHROMIUM_PATH =
+  "/tmp/localChromium/chromium/mac_arm-1350406/chrome-mac/Chromium.app/Contents/MacOS/Chromium";
 
 export async function handler() {
   const url = "https://sst.dev";
@@ -12,7 +13,7 @@ export async function handler() {
   const browser = await puppeteer.launch({
     args: chromium.args,
     defaultViewport: chromium.defaultViewport,
-    executablePath: process.env.SST_LIVE
+    executablePath: process.env.SST_DEV
       ? YOUR_LOCAL_CHROMIUM_PATH
       : await chromium.executablePath(),
     headless: chromium.headless,
@@ -35,8 +36,7 @@ export async function handler() {
     isBase64Encoded: true,
     headers: {
       "Content-Type": "image/png",
-      "Content-Disposition": "inline"
+      "Content-Disposition": "inline",
     },
   };
 }
-

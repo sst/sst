@@ -26,6 +26,7 @@ rl.on("line", (line) => {
       env: {
         ...msg.env,
         SST_LIVE: "true",
+        SST_DEV: "true",
       },
       execArgv: ["--enable-source-maps", "--inspect"],
       argv: msg.args,

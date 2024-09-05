@@ -114,6 +114,7 @@ func Run(ctx context.Context, input *RunInput) (Worker, error) {
 	slog.Info("running function", "runtime", input.Runtime, "functionID", input.FunctionID)
 	runtime, ok := GetRuntime(input.Runtime)
 	input.Env = append(input.Env, "SST_LIVE=true")
+	input.Env = append(input.Env, "SST_DEV=true")
 	for _, name := range input.Warp.Links {
 		value := input.Links[name]
 		serialized, _ := json.Marshal(value)

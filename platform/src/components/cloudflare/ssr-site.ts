@@ -230,7 +230,7 @@ export function createRouter(
             ...(plan.server.link ?? []),
             ...(link ?? []),
           ]),
-          live: false,
+          dev: false,
         },
         { parent },
       );
@@ -246,7 +246,7 @@ export function createRouter(
             "cf-ssr-site-router-worker",
           ),
           url: true,
-          live: false,
+          dev: false,
           domain: args.domain,
           build: {
             esbuild: assetManifest.apply((assetManifest) => ({
