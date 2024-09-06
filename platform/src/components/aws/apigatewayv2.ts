@@ -386,9 +386,22 @@ export interface ApiGatewayV2AuthorizerArgs {
     /**
      * The Lambda authorizer function. Takes the handler path or the function args.
      * @example
+     * Add a simple authorizer.
+     *
      * ```js
      * {
      *   function: "src/authorizer.index"
+     * }
+     * ```
+     *
+     * Customize the authorizer handler.
+     *
+     * ```js
+     * {
+     *   function: {
+     *     handler: "src/authorizer.index",
+     *     memory: "2048 MB"
+     *   }
      * }
      * ```
      */
