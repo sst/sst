@@ -28,6 +28,7 @@ func (p *Project) EnvFor(ctx context.Context, complete *CompleteEvent, name stri
 			env["AWS_ACCESS_KEY_ID"] = *result.Credentials.AccessKeyId
 			env["AWS_SECRET_ACCESS_KEY"] = *result.Credentials.SecretAccessKey
 			env["AWS_SESSION_TOKEN"] = *result.Credentials.SessionToken
+			env["AWS_REGION"] = awsProvider.Config().Region
 		}
 	}
 	slog.Info("dev", "links", dev.Links)
