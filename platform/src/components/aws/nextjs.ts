@@ -798,8 +798,12 @@ export class Nextjs extends Component implements Link.Linkable {
             permissions: [
               // access to the cache data
               {
-                actions: ["s3:GetObject", "s3:PutObject"],
+                actions: ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
                 resources: [`${bucketArn}/*`],
+              },
+              {
+                actions: ["s3:ListBucket"],
+                resources: [bucketArn],
               },
               ...(revalidationQueueArn
                 ? [
