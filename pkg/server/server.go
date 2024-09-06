@@ -96,13 +96,13 @@ func port() (int, error) {
 		if port == 65535 {
 			return 0, fmt.Errorf("no port available")
 		}
-		listener, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+		listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", port))
 		if err != nil {
+			port++
 			continue
 		}
 		defer listener.Close()
-		addr := listener.Addr().(*net.TCPAddr)
-		return addr.Port, nil
+		return port, nil
 	}
 }
 
