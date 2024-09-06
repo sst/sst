@@ -13,7 +13,7 @@ export default $config({
     };
   },
   async run() {
-    sst.linkable(supabase.Project, function (item) {
+    sst.Linkable.wrap(supabase.Project, function (item) {
       return {
         properties: {
           user: $interpolate`postgres.${item.id}`,
