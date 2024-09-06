@@ -4,7 +4,6 @@ import { Link } from "../link";
 import type { Input } from "../input";
 import { Cdn, CdnArgs } from "./cdn";
 import { cloudfront, types } from "@pulumi/aws";
-import { normalize } from "path";
 
 export interface RouterArgs {
   /**
@@ -96,8 +95,86 @@ export interface RouterArgs {
    *   }
    * }
    * ```
+   *
+   * Customize the route behavior with CloudFront Functions.
+   *
+   * ```js
+   * {
+   *   routes: {
+   *     "/api/*": {
+   *       url: "https://example.com",
+   *       edge: {
+   *         viewerRequest: "arn:aws:cloudfront::1234567890:function/MyViewRequestFunction"
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
    */
-  routes: Input<Record<string, Input<string>>>;
+  routes: Input<
+    Record<
+      string,
+      Input<
+        | string
+        | {
+            /**
+             * The destination URL.
+             *
+             * @example
+             *
+             * ```js
+             * {
+             *   routes: {
+             *     "/api/*": {
+             *       url: "https://example.com",
+             *     }
+             *   }
+             * }
+             * ```
+             */
+            url: Input<string>;
+            /**
+             * Configure CloudFront Functions to customize the behavior of HTTP requests and responses at the edge locations.
+             *
+             * @example
+             *
+             * ```js
+             * {
+             *   routes: {
+             *     "/api/*": {
+             *       edge: {
+             *         viewerRequest: "arn:aws:cloudfront::1234567890:function/MyViewRequestFunction"
+             *         viewerResponse: "arn:aws:cloudfront::1234567890:function/MyViewResponseFunction"
+             *       }
+             *     }
+             *   }
+             * }
+             * ```
+             */
+            edge?: {
+              /**
+               * The ARN of the CloudFront function to use for the viewer request.
+               *
+               * The viewer request function can be used to modify incoming requests before they reach your origin server. For example, you can redirect users, rewrite URLs, or add headers.
+               *
+               * By default, a view request function is created to add the `x-forwarded-host` header to the request.
+               *
+               * @default Uses the default viewer request function.
+               */
+              viewerRequest?: Input<string>;
+              /**
+               * The ARN of the CloudFront function to use for the viewer response.
+               *
+               * The viewer response function can be used to modify outgoing responses before they reach the viewer. For example, you can add headers, cache control, or rewrite URLs.
+               *
+               * @default No viewer response function is set.
+               */
+              viewerResponse?: Input<string>;
+            };
+          }
+      >
+    >
+  >;
   /**
    * Configure how the CloudFront cache invalidations are handled.
    * :::tip
@@ -197,10 +274,9 @@ export class Router extends Component implements Link.Linkable {
 
     const parent = this;
 
-    validateRoutes();
+    const routes = normalizeRoutes();
 
     const cachePolicy = createCachePolicy();
-    const cfFunction = createCloudFrontFunction();
     const cdn = createCdn();
 
     this.cachePolicy = cachePolicy;
@@ -210,15 +286,19 @@ export class Router extends Component implements Link.Linkable {
       _hint: this.url,
     });
 
-    function validateRoutes() {
-      output(args.routes).apply((routes) => {
-        Object.keys(routes).map((path) => {
-          if (!path.startsWith("/")) {
-            throw new Error(
-              `In "${name}" Router, the route path "${path}" must start with a "/"`,
-            );
-          }
-        });
+    function normalizeRoutes() {
+      return output(args.routes).apply((routes) => {
+        return Object.fromEntries(
+          Object.entries(routes).map(([path, route]) => {
+            if (!path.startsWith("/")) {
+              throw new Error(
+                `In "${name}" Router, the route path "${path}" must start with a "/"`,
+              );
+            }
+
+            return [path, typeof route === "string" ? { url: route } : route];
+          }),
+        );
       });
     }
 
@@ -308,10 +388,10 @@ export class Router extends Component implements Link.Linkable {
         },
       };
 
-      return output(args.routes).apply((routes) => {
-        const origins = Object.entries(routes).map(([path, url]) => ({
+      return output(routes).apply((routes) => {
+        const origins = Object.entries(routes).map(([path, route]) => ({
           originId: path,
-          domainName: new URL(url).host,
+          domainName: new URL(route.url).host,
           ...defaultConfig,
         }));
 
@@ -344,24 +424,34 @@ export class Router extends Component implements Link.Linkable {
         cachePolicyId: cachePolicy.id,
         // CloudFront's Managed-AllViewerExceptHostHeader policy
         originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
-        functionAssociations: [
-          {
-            eventType: "viewer-request",
-            functionArn: cfFunction.arn,
-          },
-        ],
       };
 
-      return output(args.routes).apply((routes) => {
-        const behaviors = Object.entries(routes).map(([path]) => ({
+      return output(routes).apply((routes) => {
+        const behaviors = Object.entries(routes).map(([path, route]) => ({
           ...(path === "/*" ? {} : { pathPattern: path }),
           targetOriginId: path,
+          functionAssociations: [
+            {
+              eventType: "viewer-request",
+              functionArn:
+                route.edge?.viewerRequest ?? createCloudFrontFunction().arn,
+            },
+            ...(route.edge?.viewerResponse
+              ? [
+                  {
+                    eventType: "viewer-response",
+                    functionArn: route.edge.viewerResponse,
+                  },
+                ]
+              : []),
+          ],
           ...defaultConfig,
         }));
 
         if (!routes["/*"]) {
           behaviors.push({
             targetOriginId: "/*",
+            functionAssociations: [],
             ...defaultConfig,
           });
         }
