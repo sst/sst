@@ -33,6 +33,7 @@ import (
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/js"
 	"github.com/sst/ion/pkg/project/provider"
+	"github.com/sst/ion/pkg/telemetry"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -424,6 +425,10 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 					errors = append(errors, Error{
 						Message: event.DiagnosticEvent.Message,
 						URN:     event.DiagnosticEvent.URN,
+					})
+					telemetry.Track("cli.resource.error", map[string]interface{}{
+						"error": event.DiagnosticEvent.Message,
+						"urn":   event.DiagnosticEvent.URN,
 					})
 				}
 
