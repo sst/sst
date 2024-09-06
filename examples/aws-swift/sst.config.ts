@@ -3,7 +3,7 @@
 const swiftVersion = "5.10";
 
 /**
- * ## Swift on Lambda
+ * ## Swift in Lambda
  *
  * Deploys a simple Swift application to Lambda using the `al2023` runtime.
  *
