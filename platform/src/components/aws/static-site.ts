@@ -467,6 +467,7 @@ export class StaticSite extends Component implements Link.Linkable {
   ) {
     super(__pulumiType, name, args, opts);
 
+    let defaultCfFunction: cloudfront.Function;
     const parent = this;
     const { sitePath, environment, indexPage } = prepare(args);
     const dev = normalizeDev();
@@ -779,7 +780,7 @@ export class StaticSite extends Component implements Link.Linkable {
                 {
                   eventType: "viewer-request",
                   functionArn:
-                    edge?.viewerRequest ?? useCloudfrontFunction().arn,
+                    edge?.viewerRequest ?? createCloudfrontFunction().arn,
                 },
                 ...(edge?.viewerResponse
                   ? [
@@ -800,12 +801,14 @@ export class StaticSite extends Component implements Link.Linkable {
       );
     }
 
-    function useCloudfrontFunction() {
-      return new cloudfront.Function(
-        `${name}Function`,
-        {
-          runtime: "cloudfront-js-1.0",
-          code: `
+    function createCloudfrontFunction() {
+      defaultCfFunction =
+        defaultCfFunction ??
+        new cloudfront.Function(
+          `${name}Function`,
+          {
+            runtime: "cloudfront-js-1.0",
+            code: `
     function handler(event) {
         var request = event.request;
         var uri = request.uri;
@@ -816,9 +819,11 @@ export class StaticSite extends Component implements Link.Linkable {
         }
         return request;
     }`,
-        },
-        { parent },
-      );
+          },
+          { parent },
+        );
+
+      return defaultCfFunction;
     }
 
     function buildInvalidation() {

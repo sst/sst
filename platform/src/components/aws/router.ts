@@ -272,6 +272,7 @@ export class Router extends Component implements Link.Linkable {
   ) {
     super(__pulumiType, name, args, opts);
 
+    let defaultCfFunction: cloudfront.Function;
     const parent = this;
 
     const routes = normalizeRoutes();
@@ -303,20 +304,23 @@ export class Router extends Component implements Link.Linkable {
     }
 
     function createCloudFrontFunction() {
-      return new cloudfront.Function(
-        `${name}CloudfrontFunction`,
-        {
-          runtime: "cloudfront-js-1.0",
-          code: [
-            `function handler(event) {`,
-            `  var request = event.request;`,
-            `  request.headers["x-forwarded-host"] = request.headers.host;`,
-            `  return request;`,
-            `}`,
-          ].join("\n"),
-        },
-        { parent },
-      );
+      defaultCfFunction =
+        defaultCfFunction ??
+        new cloudfront.Function(
+          `${name}CloudfrontFunction`,
+          {
+            runtime: "cloudfront-js-1.0",
+            code: [
+              `function handler(event) {`,
+              `  var request = event.request;`,
+              `  request.headers["x-forwarded-host"] = request.headers.host;`,
+              `  return request;`,
+              `}`,
+            ].join("\n"),
+          },
+          { parent },
+        );
+      return defaultCfFunction;
     }
 
     function createCachePolicy() {
