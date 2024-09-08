@@ -5,6 +5,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	tcellterm "github.com/sst/ion/cmd/sst/mosaic/multiplexer/tcell-term"
+	"github.com/sst/ion/internal/util"
 )
 
 type vterm struct {
@@ -56,6 +57,7 @@ func (p *process) start() error {
 		cmd.Dir = p.dir
 	}
 	p.vt.Clear()
+	util.SetProcessGroupID(cmd)
 	err := p.vt.Start(cmd)
 	if err != nil {
 		return err

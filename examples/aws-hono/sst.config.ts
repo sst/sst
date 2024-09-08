@@ -6,6 +6,11 @@ export default $config({
       name: "aws-hono",
       home: "aws",
       removal: input?.stage === "production" ? "retain" : "remove",
+      providers: {
+        aws: {
+          profile: input.stage === "production" ? "sst-production" : "sst-dev",
+        },
+      },
     };
   },
   async run() {

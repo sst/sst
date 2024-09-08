@@ -61,6 +61,23 @@ var ErrLockExists = fmt.Errorf("Concurrent update detected, run `sst unlock` to 
 
 var passphraseCache = map[Home]map[string]string{}
 
+func Copy(from Home, to Home, app, stage string) error {
+	reader, err := from.getData("app", app, stage)
+	if err != nil {
+		return err
+	}
+	err = to.putData("app", app, stage, reader)
+	if err != nil {
+		return err
+	}
+	reader, err = from.getData("secret", app, stage)
+	if err != nil {
+		return err
+	}
+	to.putData("secret", app, stage, reader)
+	return nil
+}
+
 func Passphrase(backend Home, app, stage string) (string, error) {
 	slog.Info("getting passphrase", "app", app, "stage", stage)
 

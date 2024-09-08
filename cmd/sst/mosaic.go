@@ -105,6 +105,7 @@ func CmdMosaic(c *cli.Cli) error {
 						args[0],
 						args[1:]...,
 					)
+					util.SetProcessGroupID(cmd)
 					cmd.Env = os.Environ()
 					for k, v := range nextEnv {
 						cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
