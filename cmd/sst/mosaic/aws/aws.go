@@ -28,6 +28,7 @@ import (
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/runtime"
+	"github.com/sst/ion/pkg/runtime/node"
 	"github.com/sst/ion/pkg/server"
 )
 
@@ -81,6 +82,10 @@ func Start(
 	s *server.Server,
 	args map[string]interface{},
 ) error {
+
+	runtimes := []runtime.Runtime{
+		node.New(),
+	}
 	expire := time.Hour * 24
 	from := time.Now()
 	server := fmt.Sprintf("localhost:%d/lambda/", s.Port)
@@ -223,7 +228,7 @@ func Start(
 				return build
 			}
 			warp := complete.Warps[functionID]
-			build, err = runtime.Build(ctx, &runtime.BuildInput{
+			build, err = runtime.Build(ctx, runtimes, &runtime.BuildInput{
 				Warp:    warp,
 				Project: p,
 				Dev:     true,
@@ -253,7 +258,7 @@ func Start(
 				return false
 			}
 			warp := complete.Warps[functionID]
-			worker, err := runtime.Run(ctx, &runtime.RunInput{
+			worker, err := runtime.Run(ctx, runtimes, &runtime.RunInput{
 				Warp:       warp,
 				Links:      complete.Links,
 				Server:     server + workerID,
@@ -369,7 +374,7 @@ func Start(
 						if !ok {
 							continue
 						}
-						if runtime.ShouldRebuild(warp.Runtime, warp.FunctionID, evt.Path) {
+						if runtime.ShouldRebuild(runtimes, warp.Runtime, warp.FunctionID, evt.Path) {
 							for _, worker := range workers {
 								if worker.FunctionID == functionID {
 									slog.Info("stopping", "workerID", worker.WorkerID, "functionID", worker.FunctionID)

@@ -16,6 +16,7 @@ import (
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/runtime"
+	"github.com/sst/ion/pkg/runtime/worker"
 )
 
 type WorkerBuildEvent struct {
@@ -33,6 +34,9 @@ type WorkerInvokedEvent struct {
 }
 
 func Start(ctx context.Context, proj *project.Project, args map[string]interface{}) error {
+	runtimes := []runtime.Runtime{
+		worker.New(),
+	}
 	prov, ok := proj.Provider("cloudflare")
 	if !ok {
 		return util.NewReadableError(nil, "Cloudflare provider not found in project configuration")
@@ -61,7 +65,7 @@ exit:
 					if warp.Runtime != "worker" {
 						continue
 					}
-					var properties runtime.WorkerProperties
+					var properties worker.Properties
 					json.Unmarshal(warp.Properties, &properties)
 					account := cloudflare.AccountIdentifier(properties.AccountID)
 					if _, ok := tails[warp.FunctionID]; !ok {
@@ -104,7 +108,7 @@ exit:
 						continue
 					}
 
-					output, err := runtime.Build(ctx, &runtime.BuildInput{
+					output, err := runtime.Build(ctx, runtimes, &runtime.BuildInput{
 						Warp:    warp,
 						Dev:     true,
 						Project: proj,
@@ -123,8 +127,8 @@ exit:
 						continue
 					}
 
-					if runtime.ShouldRebuild(warp.Runtime, workerID, evt.Path) {
-						output, err := runtime.Build(ctx, &runtime.BuildInput{
+					if runtime.ShouldRebuild(runtimes, warp.Runtime, workerID, evt.Path) {
+						output, err := runtime.Build(ctx, runtimes, &runtime.BuildInput{
 							Warp:    warp,
 							Dev:     true,
 							Project: proj,
@@ -137,7 +141,7 @@ exit:
 							Errors:   output.Errors,
 						})
 						builds[warp.FunctionID] = output
-						var properties runtime.WorkerProperties
+						var properties worker.Properties
 						json.Unmarshal(warp.Properties, &properties)
 						account := cloudflare.AccountIdentifier(properties.AccountID)
 

@@ -1,4 +1,4 @@
-package runtime
+package worker
 
 import (
 	"context"
@@ -11,28 +11,30 @@ import (
 
 	"github.com/evanw/esbuild/pkg/api"
 	esbuild "github.com/evanw/esbuild/pkg/api"
+	"github.com/sst/ion/pkg/runtime"
+	"github.com/sst/ion/pkg/runtime/node"
 )
 
-type WorkerRuntime struct {
+type Runtime struct {
 	contexts map[string]esbuild.BuildContext
 	results  map[string]esbuild.BuildResult
 }
 
-type WorkerProperties struct {
-	AccountID  string         `json:"accountID"`
-	ScriptName string         `json:"scriptName"`
-	Build      NodeProperties `json:"build"`
+type Properties struct {
+	AccountID  string              `json:"accountID"`
+	ScriptName string              `json:"scriptName"`
+	Build      node.NodeProperties `json:"build"`
 }
 
-func newWorkerRuntime() *WorkerRuntime {
-	return &WorkerRuntime{
+func New() *Runtime {
+	return &Runtime{
 		contexts: map[string]esbuild.BuildContext{},
 		results:  map[string]esbuild.BuildResult{},
 	}
 }
 
-func (w *WorkerRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutput, error) {
-	var properties WorkerProperties
+func (w *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtime.BuildOutput, error) {
+	var properties Properties
 	json.Unmarshal(input.Warp.Properties, &properties)
 	build := properties.Build
 
@@ -134,20 +136,20 @@ func (w *WorkerRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOut
 		slog.Error("esbuild error", "error", warning)
 	}
 
-	return &BuildOutput{
+	return &runtime.BuildOutput{
 		Handler: input.Warp.Handler,
 		Errors:  errors,
 	}, nil
 }
 
-func (w *WorkerRuntime) Match(runtime string) bool {
+func (w *Runtime) Match(runtime string) bool {
 	return runtime == "worker"
 }
 
-func (w *WorkerRuntime) getFile(input *BuildInput) (string, bool) {
+func (w *Runtime) getFile(input *runtime.BuildInput) (string, bool) {
 	dir := filepath.Dir(input.Warp.Handler)
 	base := strings.Split(filepath.Base(input.Warp.Handler), ".")[0]
-	for _, ext := range NODE_EXTENSIONS {
+	for _, ext := range node.NODE_EXTENSIONS {
 		file := filepath.Join(input.Project.PathRoot(), dir, base+ext)
 		if _, err := os.Stat(file); err == nil {
 			return file, true
@@ -156,7 +158,7 @@ func (w *WorkerRuntime) getFile(input *BuildInput) (string, bool) {
 	return "", false
 }
 
-func (r *WorkerRuntime) ShouldRebuild(functionID string, file string) bool {
+func (r *Runtime) ShouldRebuild(functionID string, file string) bool {
 	result, ok := r.results[functionID]
 	if !ok {
 		return false
@@ -180,7 +182,7 @@ func (r *WorkerRuntime) ShouldRebuild(functionID string, file string) bool {
 	return false
 }
 
-func (r *WorkerRuntime) Run(ctx context.Context, input *RunInput) (Worker, error) {
+func (r *Runtime) Run(ctx context.Context, input *runtime.RunInput) (runtime.Worker, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 

@@ -1,4 +1,4 @@
-package runtime
+package node
 
 import (
 	"context"
@@ -16,32 +16,47 @@ import (
 	esbuild "github.com/evanw/esbuild/pkg/api"
 	"github.com/sst/ion/internal/fs"
 	"github.com/sst/ion/internal/util"
+	"github.com/sst/ion/pkg/runtime"
 )
 
-type NodeRuntime struct {
+var loaderMap = map[string]api.Loader{
+	"js":      api.LoaderJS,
+	"jsx":     api.LoaderJSX,
+	"ts":      api.LoaderTS,
+	"tsx":     api.LoaderTSX,
+	"css":     api.LoaderCSS,
+	"json":    api.LoaderJSON,
+	"text":    api.LoaderText,
+	"base64":  api.LoaderBase64,
+	"file":    api.LoaderFile,
+	"dataurl": api.LoaderDataURL,
+	"binary":  api.LoaderBinary,
+}
+
+type Runtime struct {
 	contexts map[string]esbuild.BuildContext
 	results  map[string]esbuild.BuildResult
 }
 
-func newNodeRuntime() *NodeRuntime {
-	return &NodeRuntime{
+func New() *Runtime {
+	return &Runtime{
 		contexts: map[string]esbuild.BuildContext{},
 		results:  map[string]esbuild.BuildResult{},
 	}
 }
 
-type NodeWorker struct {
+type Worker struct {
 	stdout io.ReadCloser
 	stderr io.ReadCloser
 	cmd    *exec.Cmd
 }
 
-func (w *NodeWorker) Stop() {
+func (w *Worker) Stop() {
 	// Terminate the whole process group
 	util.TerminateProcess(w.cmd.Process.Pid)
 }
 
-func (w *NodeWorker) Logs() io.ReadCloser {
+func (w *Worker) Logs() io.ReadCloser {
 	reader, writer := io.Pipe()
 
 	var wg sync.WaitGroup
@@ -72,11 +87,12 @@ type NodeProperties struct {
 	Format    string               `json:"format"`
 	SourceMap bool                 `json:"sourceMap"`
 	Splitting bool                 `json:"splitting"`
+	Plugins   string               `json:"plugins"`
 }
 
 var NODE_EXTENSIONS = []string{".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"}
 
-func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutput, error) {
+func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtime.BuildOutput, error) {
 	var properties NodeProperties
 	json.Unmarshal(input.Warp.Properties, &properties)
 
@@ -103,19 +119,6 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 	slog.Info("loader info", "loader", properties.Loader)
 
 	loader := map[string]esbuild.Loader{}
-	loaderMap := map[string]api.Loader{
-		"js":      api.LoaderJS,
-		"jsx":     api.LoaderJSX,
-		"ts":      api.LoaderTS,
-		"tsx":     api.LoaderTSX,
-		"css":     api.LoaderCSS,
-		"json":    api.LoaderJSON,
-		"text":    api.LoaderText,
-		"base64":  api.LoaderBase64,
-		"file":    api.LoaderFile,
-		"dataurl": api.LoaderDataURL,
-		"binary":  api.LoaderBinary,
-	}
 
 	for key, value := range properties.Loader {
 		mapped, ok := loaderMap[value]
@@ -123,6 +126,11 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 			continue
 		}
 		loader[key] = mapped
+	}
+
+	plugins := []esbuild.Plugin{}
+	if properties.Plugins != "" {
+		plugins = append(plugins, plugin(properties.Plugins))
 	}
 
 	options := esbuild.BuildOptions{
@@ -134,6 +142,7 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 			},
 			properties.Install...,
 		),
+		Plugins:           plugins,
 		Sourcemap:         esbuild.SourceMapLinked,
 		Loader:            loader,
 		KeepNames:         true,
@@ -180,7 +189,11 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 	r.results[input.Warp.FunctionID] = result
 	errors := []string{}
 	for _, error := range result.Errors {
-		errors = append(errors, error.Text+" "+error.Location.File+":"+fmt.Sprint(error.Location.Line)+":"+fmt.Sprint(error.Location.Column))
+		text := error.Text
+		if error.Location != nil {
+			text = text + " " + error.Location.File + ":" + fmt.Sprint(error.Location.Line) + ":" + fmt.Sprint(error.Location.Column)
+		}
+		errors = append(errors, text)
 	}
 	for _, error := range result.Errors {
 		slog.Error("esbuild error", "error", error)
@@ -194,13 +207,13 @@ func (r *NodeRuntime) Build(ctx context.Context, input *BuildInput) (*BuildOutpu
 		os.Symlink(nodeModules, filepath.Join(input.Out(), "node_modules"))
 	}
 
-	return &BuildOutput{
+	return &runtime.BuildOutput{
 		Handler: input.Warp.Handler,
 		Errors:  errors,
 	}, nil
 }
 
-func (r *NodeRuntime) Run(ctx context.Context, input *RunInput) (Worker, error) {
+func (r *Runtime) Run(ctx context.Context, input *runtime.RunInput) (runtime.Worker, error) {
 	cmd := exec.CommandContext(
 		ctx,
 		"node",
@@ -226,18 +239,18 @@ func (r *NodeRuntime) Run(ctx context.Context, input *RunInput) (Worker, error) 
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
 	cmd.Start()
-	return &NodeWorker{
+	return &Worker{
 		stdout,
 		stderr,
 		cmd,
 	}, nil
 }
 
-func (r *NodeRuntime) Match(runtime string) bool {
+func (r *Runtime) Match(runtime string) bool {
 	return strings.HasPrefix(runtime, "node")
 }
 
-func (r *NodeRuntime) getFile(input *BuildInput) (string, bool) {
+func (r *Runtime) getFile(input *runtime.BuildInput) (string, bool) {
 	dir := filepath.Dir(input.Warp.Handler)
 	fileSplit := strings.Split(filepath.Base(input.Warp.Handler), ".")
 	base := strings.Join(fileSplit[:len(fileSplit)-1], ".")
@@ -250,7 +263,7 @@ func (r *NodeRuntime) getFile(input *BuildInput) (string, bool) {
 	return "", false
 }
 
-func (r *NodeRuntime) ShouldRebuild(functionID string, file string) bool {
+func (r *Runtime) ShouldRebuild(functionID string, file string) bool {
 	result, ok := r.results[functionID]
 	if !ok {
 		return false

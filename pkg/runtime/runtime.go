@@ -52,12 +52,7 @@ type RunInput struct {
 	Env        []string
 }
 
-var runtimes = []Runtime{
-	newNodeRuntime(),
-	newWorkerRuntime(),
-}
-
-func GetRuntime(input string) (Runtime, bool) {
+func GetRuntime(runtimes []Runtime, input string) (Runtime, bool) {
 	for _, runtime := range runtimes {
 		if runtime.Match(input) {
 			return runtime, true
@@ -66,10 +61,10 @@ func GetRuntime(input string) (Runtime, bool) {
 	return nil, false
 }
 
-func Build(ctx context.Context, input *BuildInput) (*BuildOutput, error) {
+func Build(ctx context.Context, runtimes []Runtime, input *BuildInput) (*BuildOutput, error) {
 	slog.Info("building function", "runtime", input.Warp.Runtime, "functionID", input.Warp.FunctionID)
 	defer slog.Info("function built", "runtime", input.Warp.Runtime, "functionID", input.Warp.FunctionID)
-	runtime, ok := GetRuntime(input.Warp.Runtime)
+	runtime, ok := GetRuntime(runtimes, input.Warp.Runtime)
 	if !ok {
 		return nil, fmt.Errorf("Runtime not found: %v", input.Warp.Runtime)
 	}
@@ -110,9 +105,9 @@ func Build(ctx context.Context, input *BuildInput) (*BuildOutput, error) {
 	return result, nil
 }
 
-func Run(ctx context.Context, input *RunInput) (Worker, error) {
+func Run(ctx context.Context, runtimes []Runtime, input *RunInput) (Worker, error) {
 	slog.Info("running function", "runtime", input.Runtime, "functionID", input.FunctionID)
-	runtime, ok := GetRuntime(input.Runtime)
+	runtime, ok := GetRuntime(runtimes, input.Runtime)
 	input.Env = append(input.Env, "SST_LIVE=true")
 	input.Env = append(input.Env, "SST_DEV=true")
 	for _, name := range input.Warp.Links {
@@ -126,9 +121,9 @@ func Run(ctx context.Context, input *RunInput) (Worker, error) {
 	return runtime.Run(ctx, input)
 }
 
-func ShouldRebuild(runtime string, functionID string, file string) bool {
+func ShouldRebuild(runtimes []Runtime, runtime string, functionID string, file string) bool {
 	slog.Info("checking if function should be rebuilt", "runtime", runtime, "functionID", functionID, "file", file, "runtime", runtime)
-	r, ok := GetRuntime(runtime)
+	r, ok := GetRuntime(runtimes, runtime)
 	if !ok {
 		return false
 	}
