@@ -129,9 +129,9 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 	}
 
 	plugins := []esbuild.Plugin{}
-	if properties.Plugins != "" {
-		plugins = append(plugins, plugin(properties.Plugins))
-	}
+	// if properties.Plugins != "" {
+	// 	plugins = append(plugins, plugin(properties.Plugins))
+	// }
 
 	options := esbuild.BuildOptions{
 		EntryPoints: []string{file},
