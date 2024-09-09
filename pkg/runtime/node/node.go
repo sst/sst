@@ -38,7 +38,7 @@ type Runtime struct {
 	results  map[string]esbuild.BuildResult
 }
 
-func New(cfgPath string) *Runtime {
+func New() *Runtime {
 	return &Runtime{
 		contexts: map[string]esbuild.BuildContext{},
 		results:  map[string]esbuild.BuildResult{},
