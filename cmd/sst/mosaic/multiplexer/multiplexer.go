@@ -76,7 +76,7 @@ func (s *Multiplexer) resize(width int, height int) {
 func (s *Multiplexer) Start() {
 	defer func() {
 		for _, p := range s.processes {
-			p.vt.Close()
+			p.Kill()
 		}
 		s.screen.Fini()
 	}()
@@ -233,7 +233,7 @@ func (s *Multiplexer) Start() {
 							}
 						case 'x':
 							if selected.killable && !selected.dead && !s.focused {
-								selected.vt.Close()
+								selected.Kill()
 							}
 						}
 					case tcell.KeyUp:

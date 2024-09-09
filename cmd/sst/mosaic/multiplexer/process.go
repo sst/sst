@@ -23,6 +23,7 @@ type process struct {
 	env      []string
 	vt       *tcellterm.VT
 	dead     bool
+	cmd      *exec.Cmd
 }
 
 type EventProcess struct {
@@ -51,19 +52,24 @@ func (s *Multiplexer) AddProcess(key string, args []string, icon string, title s
 }
 
 func (p *process) start() error {
-	cmd := exec.Command(p.args[0], p.args[1:]...)
-	cmd.Env = p.env
+	p.cmd = exec.Command(p.args[0], p.args[1:]...)
+	p.cmd.Env = p.env
 	if p.dir != "" {
-		cmd.Dir = p.dir
+		p.cmd.Dir = p.dir
 	}
 	p.vt.Clear()
-	util.SetProcessGroupID(cmd)
-	err := p.vt.Start(cmd)
+	util.SetProcessGroupID(p.cmd)
+	err := p.vt.Start(p.cmd)
 	if err != nil {
 		return err
 	}
 	p.dead = false
 	return nil
+}
+
+func (p *process) Kill() {
+	util.TerminateProcess(p.cmd.Process.Pid)
+	p.vt.Close()
 }
 
 func (s *process) scrollUp(offset int) {
