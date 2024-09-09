@@ -9,7 +9,7 @@ import {
   output,
   secret,
 } from "@pulumi/pulumi";
-import * as docker from "@pulumi/docker";
+import { Image, Platform } from "@pulumi/docker-build";
 import { Component, transform } from "../component";
 import { toGBs, toMBs } from "../size";
 import { toNumber } from "../cpu";
@@ -112,6 +112,7 @@ export class Service extends Component implements Link.Linkable {
       return;
     }
 
+    const bootstrapData = region.apply((region) => bootstrap.forRegion(region));
     const executionRole = createExecutionRole();
     const image = createImage();
     const logGroup = createLogGroup();
@@ -173,7 +174,10 @@ export class Service extends Component implements Link.Linkable {
         ([image, architecture]) => ({
           ...image,
           context: image.context ?? ".",
-          platform: architecture === "arm64" ? "linux/arm64" : "linux/amd64",
+          platform:
+            architecture === "arm64"
+              ? Platform.Linux_arm64
+              : Platform.Linux_amd64,
         }),
       );
     }
@@ -326,34 +330,37 @@ export class Service extends Component implements Link.Linkable {
         return imageArgs;
       });
 
-      // Get ECR repository
-      const bootstrapData = region.apply((region) =>
-        bootstrap.forRegion(region),
-      );
-      const authToken = ecr.getAuthorizationTokenOutput({
-        registryId: bootstrapData.assetEcrRegistryId,
-      });
-
       // Build image
-      return new docker.Image(
+      return new Image(
         ...transform(
           args.transform?.image,
           `${name}Image`,
           {
-            build: imageArgsNew.apply((imageArgs) => ({
-              context: path.join($cli.paths.root, imageArgs.context),
-              dockerfile: imageArgs.dockerfile
-                ? path.join($cli.paths.root, imageArgs.dockerfile)
-                : undefined,
-              args: imageArgs.args,
-              platform: imageArgs.platform,
-            })),
-            imageName: interpolate`${bootstrapData.assetEcrUrl}:${name}`,
-            registry: authToken.apply((authToken) => ({
-              password: secret(authToken.password),
-              username: authToken.userName,
-              server: authToken.proxyEndpoint,
-            })),
+            context: {
+              location: imageArgsNew.apply((v) =>
+                path.join($cli.paths.root, v.context),
+              ),
+            },
+            dockerfile: {
+              location: imageArgsNew.apply((v) =>
+                path.join($cli.paths.root, v.dockerfile ?? "Dockerfile"),
+              ),
+            },
+            buildArgs: imageArgsNew.apply((v) => v.args ?? {}),
+            platforms: [imageArgs.platform],
+            tags: [interpolate`${bootstrapData.assetEcrUrl}:${name}`],
+            registries: [
+              ecr
+                .getAuthorizationTokenOutput({
+                  registryId: bootstrapData.assetEcrRegistryId,
+                })
+                .apply((authToken) => ({
+                  address: authToken.proxyEndpoint,
+                  password: secret(authToken.password),
+                  username: authToken.userName,
+                })),
+            ],
+            push: true,
           },
           { parent: self },
         ),
@@ -587,7 +594,7 @@ export class Service extends Component implements Link.Linkable {
             containerDefinitions: $jsonStringify([
               {
                 name,
-                image: image.repoDigest,
+                image: interpolate`${bootstrapData.assetEcrUrl}@${image.digest}`,
                 pseudoTerminal: true,
                 portMappings: pub?.ports.apply((ports) =>
                   ports

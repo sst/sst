@@ -8,6 +8,7 @@ import { Service } from "./service";
 import { RETENTION } from "./logging.js";
 import { cloudwatch, ec2, ecs, iam, lb } from "@pulumi/aws";
 import { Vpc } from "./vpc";
+import { ImageArgs } from "@pulumi/docker-build";
 
 export const supportedCpus = {
   "0.25 vCPU": 256,
@@ -731,7 +732,7 @@ export interface ClusterServiceArgs {
     /**
      * Transform the Docker Image resource.
      */
-    image?: Transform<docker.ImageArgs>;
+    image?: Transform<ImageArgs>;
     /**
      * Transform the ECS Service resource.
      */
