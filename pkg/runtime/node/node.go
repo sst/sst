@@ -3,7 +3,6 @@ package node
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -14,8 +13,8 @@ import (
 
 	"github.com/evanw/esbuild/pkg/api"
 	esbuild "github.com/evanw/esbuild/pkg/api"
-	"github.com/sst/ion/internal/fs"
 	"github.com/sst/ion/internal/util"
+	"github.com/sst/ion/pkg/project/path"
 	"github.com/sst/ion/pkg/runtime"
 )
 
@@ -79,139 +78,19 @@ func (w *Worker) Logs() io.ReadCloser {
 }
 
 type NodeProperties struct {
-	Loader    map[string]string `json:"loader"`
-	Install   []string
-	Banner    string
-	ESBuild   esbuild.BuildOptions `json:"esbuild"`
-	Minify    bool                 `json:"minify"`
-	Format    string               `json:"format"`
-	SourceMap bool                 `json:"sourceMap"`
-	Splitting bool                 `json:"splitting"`
-	Plugins   string               `json:"plugins"`
+	Loader       map[string]string `json:"loader"`
+	Install      []string
+	Banner       string
+	ESBuild      esbuild.BuildOptions `json:"esbuild"`
+	Minify       bool                 `json:"minify"`
+	Format       string               `json:"format"`
+	SourceMap    bool                 `json:"sourceMap"`
+	Splitting    bool                 `json:"splitting"`
+	Plugins      string               `json:"plugins"`
+	Architecture string               `json:"architecture"`
 }
 
 var NODE_EXTENSIONS = []string{".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"}
-
-func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtime.BuildOutput, error) {
-	var properties NodeProperties
-	json.Unmarshal(input.Warp.Properties, &properties)
-
-	file, ok := r.getFile(input)
-	if !ok {
-		return nil, fmt.Errorf("Handler not found: %v", input.Warp.Handler)
-	}
-	filepath.Rel(input.Project.PathRoot(), file)
-
-	isESM := true
-	extension := ".mjs"
-
-	if properties.Format == "cjs" {
-		isESM = false
-		extension = ".cjs"
-	}
-
-	rel, err := filepath.Rel(input.Project.PathRoot(), file)
-	if err != nil {
-		return nil, err
-	}
-	target := filepath.Join(input.Out(), strings.ReplaceAll(rel, filepath.Ext(rel), extension))
-
-	slog.Info("loader info", "loader", properties.Loader)
-
-	loader := map[string]esbuild.Loader{}
-
-	for key, value := range properties.Loader {
-		mapped, ok := loaderMap[value]
-		if !ok {
-			continue
-		}
-		loader[key] = mapped
-	}
-
-	plugins := []esbuild.Plugin{}
-	// if properties.Plugins != "" {
-	// 	plugins = append(plugins, plugin(properties.Plugins))
-	// }
-
-	options := esbuild.BuildOptions{
-		EntryPoints: []string{file},
-		Platform:    esbuild.PlatformNode,
-		External: append(
-			[]string{
-				"sharp", "pg-native",
-			},
-			properties.Install...,
-		),
-		Plugins:           plugins,
-		Sourcemap:         esbuild.SourceMapLinked,
-		Loader:            loader,
-		KeepNames:         true,
-		Bundle:            true,
-		Splitting:         properties.Splitting,
-		Metafile:          true,
-		Write:             true,
-		Outfile:           target,
-		MinifyWhitespace:  properties.Minify,
-		MinifySyntax:      properties.Minify,
-		MinifyIdentifiers: properties.Minify,
-	}
-
-	if isESM {
-		options.Format = esbuild.FormatESModule
-		options.Target = esbuild.ESNext
-		options.MainFields = []string{"module", "main"}
-		options.Banner = map[string]string{
-			"js": strings.Join([]string{
-				`import { createRequire as topLevelCreateRequire } from 'module';`,
-				`const require = topLevelCreateRequire(import.meta.url);`,
-				`import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"`,
-				`const __filename = topLevelFileUrlToPath(import.meta.url)`,
-				`const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))`,
-				properties.Banner,
-			}, "\n"),
-		}
-	} else {
-		options.Format = esbuild.FormatCommonJS
-		options.Target = esbuild.ESNext
-	}
-
-	if properties.ESBuild.Target != 0 {
-		options.Target = properties.ESBuild.Target
-	}
-
-	buildContext, ok := r.contexts[input.Warp.FunctionID]
-	if !ok {
-		buildContext, _ = esbuild.Context(options)
-		r.contexts[input.Warp.FunctionID] = buildContext
-	}
-
-	result := buildContext.Rebuild()
-	r.results[input.Warp.FunctionID] = result
-	errors := []string{}
-	for _, error := range result.Errors {
-		text := error.Text
-		if error.Location != nil {
-			text = text + " " + error.Location.File + ":" + fmt.Sprint(error.Location.Line) + ":" + fmt.Sprint(error.Location.Column)
-		}
-		errors = append(errors, text)
-	}
-	for _, error := range result.Errors {
-		slog.Error("esbuild error", "error", error)
-	}
-	for _, warning := range result.Warnings {
-		slog.Error("esbuild error", "error", warning)
-	}
-
-	nodeModules, err := fs.FindUp(file, "node_modules")
-	if err == nil {
-		os.Symlink(nodeModules, filepath.Join(input.Out(), "node_modules"))
-	}
-
-	return &runtime.BuildOutput{
-		Handler: input.Warp.Handler,
-		Errors:  errors,
-	}, nil
-}
 
 func (r *Runtime) Run(ctx context.Context, input *runtime.RunInput) (runtime.Worker, error) {
 	cmd := exec.CommandContext(
@@ -219,7 +98,7 @@ func (r *Runtime) Run(ctx context.Context, input *runtime.RunInput) (runtime.Wor
 		"node",
 		"--enable-source-maps",
 		filepath.Join(
-			input.Project.PathPlatformDir(),
+			path.ResolvePlatformDir(input.CfgPath),
 			"/dist/nodejs-runtime/index.js",
 		),
 		filepath.Join(input.Build.Out, input.Build.Handler),
@@ -251,11 +130,11 @@ func (r *Runtime) Match(runtime string) bool {
 }
 
 func (r *Runtime) getFile(input *runtime.BuildInput) (string, bool) {
-	dir := filepath.Dir(input.Warp.Handler)
-	fileSplit := strings.Split(filepath.Base(input.Warp.Handler), ".")
+	dir := filepath.Dir(input.Handler)
+	fileSplit := strings.Split(filepath.Base(input.Handler), ".")
 	base := strings.Join(fileSplit[:len(fileSplit)-1], ".")
 	for _, ext := range NODE_EXTENSIONS {
-		file := filepath.Join(input.Project.PathRoot(), dir, base+ext)
+		file := filepath.Join(path.ResolveRootDir(input.CfgPath), dir, base+ext)
 		if _, err := os.Stat(file); err == nil {
 			return file, true
 		}

@@ -28,7 +28,6 @@ import (
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/runtime"
-	"github.com/sst/ion/pkg/runtime/node"
 	"github.com/sst/ion/pkg/server"
 )
 
@@ -83,9 +82,6 @@ func Start(
 	args map[string]interface{},
 ) error {
 
-	runtimes := []runtime.Runtime{
-		node.New(),
-	}
 	expire := time.Hour * 24
 	from := time.Now()
 	server := fmt.Sprintf("localhost:%d/lambda/", s.Port)
@@ -198,7 +194,7 @@ func Start(
 	workerResponseChan := make(chan workerResponse, 1000)
 	workerShutdownChan := make(chan *WorkerInfo, 1000)
 
-	evts := bus.Subscribe(&watcher.FileChangedEvent{}, &project.CompleteEvent{})
+	evts := bus.Subscribe(&watcher.FileChangedEvent{}, &project.CompleteEvent{}, &runtime.BuildInput{})
 
 	if token := mqttClient.Subscribe(prefix+"/+/init", 1, func(c MQTT.Client, m MQTT.Message) {
 		slog.Info("iot", "topic", m.Topic())
@@ -217,22 +213,18 @@ func Start(
 	slog.Info("connected to iot")
 
 	go func() {
-		var complete *project.CompleteEvent
 		workers := map[string]*WorkerInfo{}
 		workerEnv := map[string][]string{}
 		builds := map[string]*runtime.BuildOutput{}
+		targets := map[string]*runtime.BuildInput{}
 
 		getBuildOutput := func(functionID string) *runtime.BuildOutput {
 			build := builds[functionID]
 			if build != nil {
 				return build
 			}
-			warp := complete.Warps[functionID]
-			build, err = runtime.Build(ctx, runtimes, &runtime.BuildInput{
-				Warp:    warp,
-				Project: p,
-				Dev:     true,
-			})
+			target, _ := targets[functionID]
+			build, err = p.Runtime.Build(ctx, target)
 			if err == nil {
 				bus.Publish(&FunctionBuildEvent{
 					FunctionID: functionID,
@@ -257,14 +249,15 @@ func Start(
 			if build == nil {
 				return false
 			}
-			warp := complete.Warps[functionID]
-			worker, err := runtime.Run(ctx, runtimes, &runtime.RunInput{
-				Warp:       warp,
-				Links:      complete.Links,
+			target, ok := targets[functionID]
+			if !ok {
+				return false
+			}
+			worker, err := p.Runtime.Run(ctx, &runtime.RunInput{
+				CfgPath:    p.PathConfig(),
+				Runtime:    target.Runtime,
 				Server:     server + workerID,
-				Project:    p,
 				WorkerID:   workerID,
-				Runtime:    warp.Runtime,
 				FunctionID: functionID,
 				Build:      build,
 				Env:        workerEnv[workerID],
@@ -297,14 +290,7 @@ func Start(
 			return true
 		}
 
-		for unknown := range evts {
-			casted, ok := unknown.(*project.CompleteEvent)
-			if !ok {
-				continue
-			}
-			complete = casted
-			break
-		}
+		slog.Info("wheewooo")
 		for {
 			select {
 			case <-ctx.Done():
@@ -362,19 +348,18 @@ func Start(
 				break
 			case unknown := <-evts:
 				switch evt := unknown.(type) {
-				case *project.CompleteEvent:
-					complete = evt
-					break
+				case *runtime.BuildInput:
+					targets[evt.FunctionID] = evt
 				case *watcher.FileChangedEvent:
 					slog.Info("checking if code needs to be rebuilt", "file", evt.Path)
 					toBuild := map[string]bool{}
 
 					for functionID := range builds {
-						warp, ok := complete.Warps[functionID]
+						target, ok := targets[functionID]
 						if !ok {
 							continue
 						}
-						if runtime.ShouldRebuild(runtimes, warp.Runtime, warp.FunctionID, evt.Path) {
+						if p.Runtime.ShouldRebuild(target.Runtime, target.FunctionID, evt.Path) {
 							for _, worker := range workers {
 								if worker.FunctionID == functionID {
 									slog.Info("stopping", "workerID", worker.WorkerID, "functionID", worker.FunctionID)
@@ -415,6 +400,13 @@ func Start(
 				}
 				err := json.Unmarshal(bytes, &payload)
 				if err != nil {
+					continue
+				}
+				if _, ok := targets[payload.FunctionID]; !ok {
+					go func() {
+						time.Sleep(time.Second * 1)
+						initChan <- m
+					}()
 					continue
 				}
 				workerEnv[workerID] = payload.Env

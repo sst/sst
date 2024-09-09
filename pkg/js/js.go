@@ -22,6 +22,31 @@ type EvalOptions struct {
 	Define  map[string]string
 }
 
+type PackageJson struct {
+	Version         string                 `json:"version"`
+	Dependencies    map[string]string      `json:"dependencies"`
+	DevDependencies map[string]string      `json:"devDependencies"`
+	Other           map[string]interface{} `json:"-"`
+}
+
+type Metafile struct {
+	Inputs map[string]struct {
+		Bytes   int `json:"bytes"`
+		Imports []struct {
+			Path string `json:"path"`
+			Kind string `json:"kind"`
+		} `json:"imports"`
+	} `json:"inputs"`
+	Outputs map[string]struct {
+		Bytes  int `json:"bytes"`
+		Inputs map[string]struct {
+			BytesInOutput int `json:"bytesInOutput"`
+		} `json:"inputs"`
+		Exports    []string `json:"exports"`
+		Entrypoint string   `json:"entrypoint"`
+	} `json:"outputs"`
+}
+
 func Build(input EvalOptions) (esbuild.BuildResult, error) {
 	outfile := input.Outfile
 	if outfile == "" {

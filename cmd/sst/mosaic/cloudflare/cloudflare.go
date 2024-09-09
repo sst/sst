@@ -34,17 +34,14 @@ type WorkerInvokedEvent struct {
 }
 
 func Start(ctx context.Context, proj *project.Project, args map[string]interface{}) error {
-	runtimes := []runtime.Runtime{
-		worker.New(),
-	}
 	prov, ok := proj.Provider("cloudflare")
 	if !ok {
 		return util.NewReadableError(nil, "Cloudflare provider not found in project configuration")
 	}
 	api := prov.(*provider.CloudflareProvider).Api()
-	evts := bus.Subscribe(&project.CompleteEvent{}, &watcher.FileChangedEvent{})
-	var complete *project.CompleteEvent
+	evts := bus.Subscribe(&project.CompleteEvent{}, &watcher.FileChangedEvent{}, &runtime.BuildInput{})
 	builds := map[string]*runtime.BuildOutput{}
+	targets := map[string]*runtime.BuildInput{}
 	type tailRef struct {
 		ID         string
 		ScriptName string
@@ -59,90 +56,72 @@ exit:
 			break exit
 		case unknown := <-evts:
 			switch evt := unknown.(type) {
-			case *project.CompleteEvent:
-				complete = evt
-				for _, warp := range complete.Warps {
-					if warp.Runtime != "worker" {
-						continue
-					}
-					var properties worker.Properties
-					json.Unmarshal(warp.Properties, &properties)
-					account := cloudflare.AccountIdentifier(properties.AccountID)
-					if _, ok := tails[warp.FunctionID]; !ok {
-						slog.Info("cloudflare tail creating", "functionID", warp.FunctionID)
-						tail, err := api.StartWorkersTail(ctx, account, properties.ScriptName)
-						if err != nil {
-							continue
-						}
-						tails[warp.FunctionID] = tailRef{
-							ID:         tail.ID,
-							ScriptName: properties.ScriptName,
-							Account:    account,
-						}
-						conn, _, err := websocket.DefaultDialer.DialContext(ctx, tail.URL, http.Header{
-							"Sec-WebSocket-Protocol": []string{"trace-v1"},
-						})
-						if err != nil {
-							slog.Info("error dialing websocket", "error", err)
-							continue
-						}
-						go func(functionID string) {
-							defer delete(tails, functionID)
-							for {
-								msg := &TailEvent{}
-								err := conn.ReadJSON(msg)
-								if err != nil {
-									slog.Info("error reading websocket", "error", err)
-									return
-								}
-
-								bus.Publish(&WorkerInvokedEvent{
-									WorkerID:  functionID,
-									TailEvent: msg,
-								})
-							}
-						}(warp.FunctionID)
-					}
-
-					if _, ok := builds[warp.FunctionID]; ok {
-						continue
-					}
-
-					output, err := runtime.Build(ctx, runtimes, &runtime.BuildInput{
-						Warp:    warp,
-						Dev:     true,
-						Project: proj,
-					})
-					if err != nil {
-						continue
-					}
-					builds[warp.FunctionID] = output
-				}
-			case *watcher.FileChangedEvent:
-				if complete == nil {
+			case *runtime.BuildInput:
+				target := evt
+				if target.Runtime != "worker" {
 					continue
 				}
-				for workerID, warp := range complete.Warps {
-					if warp.Runtime != "worker" {
+				targets[target.FunctionID] = target
+				var properties worker.Properties
+				json.Unmarshal(target.Properties, &properties)
+				account := cloudflare.AccountIdentifier(properties.AccountID)
+				if _, ok := tails[target.FunctionID]; !ok {
+					slog.Info("cloudflare tail creating", "functionID", target.FunctionID)
+					tail, err := api.StartWorkersTail(ctx, account, properties.ScriptName)
+					if err != nil {
+						slog.Error("error creating tail", "error", err)
 						continue
 					}
-
-					if runtime.ShouldRebuild(runtimes, warp.Runtime, workerID, evt.Path) {
-						output, err := runtime.Build(ctx, runtimes, &runtime.BuildInput{
-							Warp:    warp,
-							Dev:     true,
-							Project: proj,
-						})
+					tails[target.FunctionID] = tailRef{
+						ID:         tail.ID,
+						ScriptName: properties.ScriptName,
+						Account:    account,
+					}
+					conn, _, err := websocket.DefaultDialer.DialContext(ctx, tail.URL, http.Header{
+						"Sec-WebSocket-Protocol": []string{"trace-v1"},
+					})
+					if err != nil {
+						slog.Info("error dialing websocket", "error", err)
+						continue
+					}
+					go func(functionID string) {
+						defer delete(tails, functionID)
+						for {
+							msg := &TailEvent{}
+							err := conn.ReadJSON(msg)
+							if err != nil {
+								slog.Info("error reading websocket", "error", err)
+								return
+							}
+							bus.Publish(&WorkerInvokedEvent{
+								WorkerID:  functionID,
+								TailEvent: msg,
+							})
+						}
+					}(target.FunctionID)
+				}
+				if _, ok := builds[target.FunctionID]; ok {
+					continue
+				}
+				output, err := proj.Runtime.Build(ctx, target)
+				if err != nil {
+					continue
+				}
+				builds[target.FunctionID] = output
+			case *watcher.FileChangedEvent:
+				for workerID, target := range targets {
+					if proj.Runtime.ShouldRebuild(target.Runtime, workerID, evt.Path) {
+						output, err := proj.Runtime.Build(ctx, target)
 						if err != nil {
 							continue
 						}
 						bus.Publish(&WorkerBuildEvent{
-							WorkerID: warp.FunctionID,
+							WorkerID: target.FunctionID,
 							Errors:   output.Errors,
 						})
-						builds[warp.FunctionID] = output
+						builds[target.FunctionID] = output
 						var properties worker.Properties
-						json.Unmarshal(warp.Properties, &properties)
+						json.Unmarshal(target.Properties, &properties)
 						account := cloudflare.AccountIdentifier(properties.AccountID)
 
 						content, err := os.ReadFile(filepath.Join(output.Out, output.Handler))
@@ -150,7 +129,7 @@ exit:
 							slog.Info("error reading file", "error", err, "out", filepath.Join(output.Out, output.Handler))
 							continue
 						}
-						slog.Info("updating worker script", "functionID", warp.FunctionID)
+						slog.Info("updating worker script", "functionID", target.FunctionID)
 						_, err = api.UpdateWorkersScriptContent(ctx, account, cloudflare.UpdateWorkersScriptContentParams{
 							ScriptName: properties.ScriptName,
 							Script:     string(content),
@@ -159,9 +138,9 @@ exit:
 						if err != nil {
 							slog.Info("error updating worker script", "error", err)
 						}
-						slog.Info("done worker script", "functionID", warp.FunctionID)
+						slog.Info("done worker script", "functionID", target.FunctionID)
 						bus.Publish(&WorkerUpdatedEvent{
-							WorkerID: warp.FunctionID,
+							WorkerID: target.FunctionID,
 						})
 
 					}

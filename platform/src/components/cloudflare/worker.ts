@@ -1,4 +1,5 @@
 import fs from "fs/promises";
+import path from "path";
 import {
   ComponentResourceOptions,
   output,
@@ -9,7 +10,6 @@ import {
 } from "@pulumi/pulumi";
 import * as cf from "@pulumi/cloudflare";
 import type { Loader, BuildOptions } from "esbuild";
-import { build } from "../../runtime/cloudflare.js";
 import { Component, Transform, transform } from "../component";
 import { WorkerUrl } from "./providers/worker-url.js";
 import { Link } from "../link.js";
@@ -19,6 +19,7 @@ import { iam } from "@pulumi/aws";
 import { Permission } from "../aws/permission.js";
 import { Binding, binding } from "./binding.js";
 import { DEFAULT_ACCOUNT_ID } from "./account-id.js";
+import { rpc } from "../rpc/rpc.js";
 
 export interface WorkerArgs {
   /**
@@ -243,7 +244,21 @@ export class Worker extends Component implements Link.Linkable {
 
     const bindings = buildBindings();
     const iamCredentials = createAwsCredentials();
-    const handler = buildHandler();
+    const buildInput = all([name, args.handler, args.build, dev]).apply(
+      async ([name, handler, build]) => {
+        return {
+          functionID: name,
+          links: {},
+          handler,
+          runtime: "worker",
+          properties: {
+            accountID: DEFAULT_ACCOUNT_ID,
+            build,
+          },
+        };
+      },
+    );
+    const build = buildHandler();
     const script = createScript();
     const workerUrl = createWorkersUrl();
     const workerDomain = createWorkersDomain();
@@ -252,6 +267,18 @@ export class Worker extends Component implements Link.Linkable {
     this.workerUrl = workerUrl;
     this.workerDomain = workerDomain;
 
+    all([dev, buildInput, script.name]).apply(
+      async ([dev, buildInput, scriptName]) => {
+        if (!dev) return undefined;
+        await rpc.call("Runtime.AddTarget", {
+          ...buildInput,
+          properties: {
+            ...buildInput.properties,
+            scriptName,
+          },
+        });
+      },
+    );
     this.registerOutputs({
       _receiver: {
         directory: args.handler,
@@ -370,19 +397,23 @@ export class Worker extends Component implements Link.Linkable {
     }
 
     function buildHandler() {
-      const buildResult = all([args]).apply(async ([args]) => {
-        const result = await build(name, args);
-        if (result.type === "error") {
+      const buildResult = buildInput.apply(async (input) => {
+        const result = await rpc.call<{
+          handler: string;
+          out: string;
+          errors: string[];
+        }>("Runtime.Build", input);
+        if (result.errors.length > 0) {
           throw new Error(result.errors.join("\n"));
         }
         return result;
       });
-      return buildResult.handler;
+      return buildResult;
     }
 
     function createScript() {
-      return all([handler, args.environment, iamCredentials, bindings]).apply(
-        async ([handler, environment, iamCredentials, bindings]) =>
+      return all([build, args.environment, iamCredentials, bindings]).apply(
+        async ([build, environment, iamCredentials, bindings]) =>
           new cf.WorkerScript(
             ...transform(
               args.transform?.worker,
@@ -390,7 +421,9 @@ export class Worker extends Component implements Link.Linkable {
               {
                 name: "",
                 accountId: DEFAULT_ACCOUNT_ID,
-                content: (await fs.readFile(handler)).toString(),
+                content: (
+                  await fs.readFile(path.join(build.out, build.handler))
+                ).toString(),
                 module: true,
                 compatibilityDate: "2024-04-04",
                 compatibilityFlags: ["nodejs_compat"],

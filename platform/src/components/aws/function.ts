@@ -34,6 +34,7 @@ import {
 } from "@pulumi/aws";
 import { Permission, permission } from "./permission.js";
 import { Vpc } from "./vpc.js";
+import { rpc } from "../rpc/rpc.js";
 
 export type FunctionPermissionArgs = {
   /**
@@ -1045,6 +1046,42 @@ export class Function extends Component implements Link.Linkable {
     this.role = role;
     this.logGroup = logGroup;
     this.fnUrl = fnUrl;
+
+    all([
+      dev,
+      name,
+      linkData,
+      args.handler,
+      args.bundle,
+      runtime,
+      args.nodejs,
+      copyFiles,
+    ]).apply(
+      async ([
+        dev,
+        name,
+        links,
+        handler,
+        bundle,
+        runtime,
+        nodejs,
+        copyFiles,
+      ]) => {
+        if (!dev) return;
+        await rpc.call("Runtime.AddTarget", {
+          functionID: name,
+          handler: handler,
+          bundle: bundle,
+          runtime: runtime,
+          links: Object.fromEntries(
+            links.map((link) => [link.name, link.properties]),
+          ),
+          copyFiles: copyFiles,
+          properties: nodejs,
+          dev: true,
+        });
+      },
+    );
 
     this.registerOutputs({
       _live: unsecret(

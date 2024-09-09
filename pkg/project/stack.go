@@ -94,24 +94,8 @@ type AwsReceiver struct {
 
 type Receivers map[string]Receiver
 
-type Warp struct {
-	FunctionID string          `json:"functionID"`
-	Runtime    string          `json:"runtime"`
-	Handler    string          `json:"handler"`
-	Bundle     string          `json:"bundle"`
-	Properties json.RawMessage `json:"properties"`
-	Links      []string        `json:"links"`
-	CopyFiles  []struct {
-		From string `json:"from"`
-		To   string `json:"to"`
-	} `json:"copyFiles"`
-	Environment map[string]string `json:"environment"`
-}
-type Warps map[string]Warp
-
 type CompleteEvent struct {
 	Links       Links
-	Warps       Warps
 	Receivers   Receivers
 	Devs        Devs
 	Outputs     map[string]interface{}
@@ -847,7 +831,6 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 		ImportDiffs: map[string][]ImportDiff{},
 		Receivers:   Receivers{},
 		Devs:        Devs{},
-		Warps:       Warps{},
 		Hints:       map[string]string{},
 		Outputs:     map[string]interface{}{},
 		Errors:      []Error{},
@@ -875,12 +858,6 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 					complete.Versions[name] = 1
 				}
 			}
-		}
-		if match, ok := outputs["_live"].(map[string]interface{}); ok {
-			data, _ := json.Marshal(match)
-			var entry Warp
-			json.Unmarshal(data, &entry)
-			complete.Warps[entry.FunctionID] = entry
 		}
 		if match, ok := outputs["_receiver"].(map[string]interface{}); ok {
 			data, _ := json.Marshal(match)

@@ -11,6 +11,7 @@ import (
 
 	"github.com/evanw/esbuild/pkg/api"
 	esbuild "github.com/evanw/esbuild/pkg/api"
+	"github.com/sst/ion/pkg/project/path"
 	"github.com/sst/ion/pkg/runtime"
 	"github.com/sst/ion/pkg/runtime/node"
 )
@@ -35,14 +36,14 @@ func New() *Runtime {
 
 func (w *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtime.BuildOutput, error) {
 	var properties Properties
-	json.Unmarshal(input.Warp.Properties, &properties)
+	json.Unmarshal(input.Properties, &properties)
 	build := properties.Build
 
-	abs, err := filepath.Abs(input.Warp.Handler)
+	abs, err := filepath.Abs(input.Handler)
 	if err != nil {
 		return nil, err
 	}
-	target := filepath.Join(input.Out(), input.Warp.Handler)
+	target := filepath.Join(input.Out(), input.Handler)
 
 	slog.Info("loader info", "loader", build.Loader)
 
@@ -114,15 +115,15 @@ func (w *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 		MainFields:        []string{"module", "main"},
 	}
 
-	buildContext, ok := w.contexts[input.Warp.FunctionID]
+	buildContext, ok := w.contexts[input.FunctionID]
 	if !ok {
 		buildContext, _ = esbuild.Context(options)
-		w.contexts[input.Warp.FunctionID] = buildContext
+		w.contexts[input.FunctionID] = buildContext
 	}
 
 	result := buildContext.Rebuild()
 	if len(result.Errors) == 0 {
-		w.results[input.Warp.FunctionID] = result
+		w.results[input.FunctionID] = result
 	}
 	errors := []string{}
 	for _, error := range result.Errors {
@@ -137,7 +138,7 @@ func (w *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 	}
 
 	return &runtime.BuildOutput{
-		Handler: input.Warp.Handler,
+		Handler: input.Handler,
 		Errors:  errors,
 	}, nil
 }
@@ -147,10 +148,10 @@ func (w *Runtime) Match(runtime string) bool {
 }
 
 func (w *Runtime) getFile(input *runtime.BuildInput) (string, bool) {
-	dir := filepath.Dir(input.Warp.Handler)
-	base := strings.Split(filepath.Base(input.Warp.Handler), ".")[0]
+	dir := filepath.Dir(input.Handler)
+	base := strings.Split(filepath.Base(input.Handler), ".")[0]
 	for _, ext := range node.NODE_EXTENSIONS {
-		file := filepath.Join(input.Project.PathRoot(), dir, base+ext)
+		file := filepath.Join(path.ResolveRootDir(input.CfgPath), dir, base+ext)
 		if _, err := os.Stat(file); err == nil {
 			return file, true
 		}

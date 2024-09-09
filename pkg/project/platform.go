@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/sst/ion/pkg/js"
 	"github.com/sst/ion/platform"
 )
 
@@ -41,13 +42,7 @@ func (p *Project) CopyPlatform(version string) error {
 	return os.WriteFile(filepath.Join(platformDir, "version"), []byte(version), 0644)
 }
 
-type PackageJson struct {
-	Version      string                 `json:"version"`
-	Dependencies map[string]string      `json:"dependencies"`
-	Other        map[string]interface{} `json:"-"`
-}
-
-func getPackageJson(proj *Project, pkg string) (*PackageJson, error) {
+func getPackageJson(proj *Project, pkg string) (*js.PackageJson, error) {
 	data, err := os.ReadFile(
 		filepath.Join(
 			proj.PathWorkingDir(),
@@ -61,7 +56,7 @@ func getPackageJson(proj *Project, pkg string) (*PackageJson, error) {
 		return nil, err
 	}
 
-	var parsed PackageJson
+	var parsed js.PackageJson
 	err = json.Unmarshal(data, &parsed)
 	if err != nil {
 		return nil, err

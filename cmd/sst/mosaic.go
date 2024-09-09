@@ -22,6 +22,7 @@ import (
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/bus"
 	"github.com/sst/ion/pkg/project"
+	"github.com/sst/ion/pkg/runtime"
 	"github.com/sst/ion/pkg/server"
 	"golang.org/x/sync/errgroup"
 )
@@ -153,6 +154,21 @@ func CmdMosaic(c *cli.Cli) error {
 	wg.Go(func() error {
 		defer c.Cancel()
 		return socket.Start(c.Context, p, server)
+	})
+
+	wg.Go(func() error {
+		evts := bus.Subscribe(&runtime.BuildInput{})
+		for {
+			select {
+			case <-c.Context.Done():
+				return nil
+			case evt := <-evts:
+				switch evt := evt.(type) {
+				case *runtime.BuildInput:
+					p.Runtime.AddTarget(evt)
+				}
+			}
+		}
 	})
 
 	os.Setenv("SST_SERVER", fmt.Sprintf("http://localhost:%v", server.Port))

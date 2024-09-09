@@ -18,6 +18,7 @@ import (
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/server/aws"
 	"github.com/sst/ion/pkg/server/resource"
+	"github.com/sst/ion/pkg/server/runtime"
 	"github.com/sst/ion/pkg/server/scrap"
 )
 
@@ -55,6 +56,7 @@ func (s *Server) Start(ctx context.Context, p *project.Project) error {
 	resource.Register(ctx, p, s.Rpc)
 	aws.Register(ctx, p, s.Rpc)
 	scrap.Register(ctx, p, s.Rpc)
+	runtime.Register(ctx, p, s.Rpc)
 
 	server := &http.Server{
 		Handler: s.Mux,
