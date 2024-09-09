@@ -12,6 +12,8 @@ export interface FunctionCodeUpdaterInputs {
    */
   functionLastModified: Input<string>;
   region: Input<string>;
+  // If the function is deployed in a container, this is the image URI
+  imageUri?: Input<string>;
 }
 
 export interface FunctionCodeUpdater {

@@ -33,11 +33,12 @@ var loaderMap = map[string]api.Loader{
 }
 
 type Runtime struct {
+	cfgPath  string
 	contexts map[string]esbuild.BuildContext
 	results  map[string]esbuild.BuildResult
 }
 
-func New() *Runtime {
+func New(cfgPath string) *Runtime {
 	return &Runtime{
 		contexts: map[string]esbuild.BuildContext{},
 		results:  map[string]esbuild.BuildResult{},

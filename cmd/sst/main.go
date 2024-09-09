@@ -109,6 +109,13 @@ func run() error {
 			return err
 		}
 	}
+	if global.NeedsUv() {
+		spin.Start()
+		err := global.InstallUv()
+		if err != nil {
+			return err
+		}
+	}
 	spin.Stop()
 	return c.Run()
 }

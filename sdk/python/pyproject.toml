@@ -1,0 +1,11 @@
+[project]
+name = "sst-sdk"
+version = "0.1.0"
+description = "SST SDK"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

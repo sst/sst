@@ -2,6 +2,7 @@ package resource
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,6 +20,7 @@ type FunctionCodeUpdaterInputs struct {
 	FunctionName         string `json:"functionName"`
 	FunctionLastModified string `json:"functionLastModified"`
 	Region               string `json:"region"`
+	ImageUri             string `json:"imageUri"`
 }
 
 type FunctionCodeUpdaterOutputs struct {
@@ -66,6 +68,23 @@ func (r *FunctionCodeUpdater) updateCode(input *FunctionCodeUpdaterInputs) (stri
 
 	cfg.Region = input.Region
 	client := lambda.NewFromConfig(cfg)
+
+	// Handle the case where the function is deployed in a container
+	if input.ImageUri != "" {
+		ret, err := client.UpdateFunctionCode(r.context, &lambda.UpdateFunctionCodeInput{
+			FunctionName: aws.String(input.FunctionName),
+			ImageUri:     aws.String(input.ImageUri),
+		})
+		if err != nil {
+			slog.Error("failed to update function code", "error", err, "imageUri", input.ImageUri)
+			return "", err
+		}
+
+		if ret.Version != nil {
+			return *ret.Version, nil
+		}
+		return "unknown", nil
+	}
 
 	ret, err := client.UpdateFunctionCode(r.context, &lambda.UpdateFunctionCodeInput{
 		FunctionName: aws.String(input.FunctionName),

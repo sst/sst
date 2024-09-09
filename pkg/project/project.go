@@ -20,6 +20,7 @@ import (
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/runtime"
 	"github.com/sst/ion/pkg/runtime/node"
+	"github.com/sst/ion/pkg/runtime/python"
 	"github.com/sst/ion/pkg/runtime/worker"
 )
 
@@ -108,6 +109,7 @@ func New(input *ProjectConfig) (*Project, error) {
 			input.Config,
 			node.New(),
 			worker.New(),
+			python.New(),
 		),
 	}
 	tmp := proj.PathWorkingDir()

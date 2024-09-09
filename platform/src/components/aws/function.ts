@@ -11,8 +11,9 @@ import {
   all,
   interpolate,
   unsecret,
+  secret,
 } from "@pulumi/pulumi";
-import { build } from "../../runtime/node.js";
+import { buildNode } from "../../runtime/node.js";
 import { FunctionCodeUpdater } from "./providers/function-code-updater.js";
 import { bootstrap } from "./helpers/bootstrap.js";
 import { Duration, DurationMinutes, toSeconds } from "../duration.js";
@@ -25,6 +26,7 @@ import { physicalName } from "../naming.js";
 import { RETENTION } from "./logging.js";
 import {
   cloudwatch,
+  ecr,
   getCallerIdentityOutput,
   getRegionOutput,
   iam,
@@ -34,6 +36,8 @@ import {
 } from "@pulumi/aws";
 import { Permission, permission } from "./permission.js";
 import { Vpc } from "./vpc.js";
+import { buildPython, buildPythonContainer } from "../../runtime/python.js";
+import * as docker_build from "@pulumi/docker-build";
 import { rpc } from "../rpc/rpc.js";
 
 /**
@@ -255,7 +259,9 @@ export interface FunctionArgs {
    * }
    * ```
    */
-  runtime?: Input<"nodejs18.x" | "nodejs20.x" | "provided.al2023">;
+  runtime?: Input<
+    "nodejs18.x" | "nodejs20.x" | "provided.al2023" | "python3.11"
+  >;
   /**
    * Path to the source code directory for the function. By default, the handler is
    * bundled with [esbuild](https://esbuild.github.io/). Use `bundle` to skip bundling.
@@ -772,6 +778,43 @@ export interface FunctionArgs {
     splitting?: Input<boolean>;
   }>;
   /**
+   * Configure your python function.
+   *
+   *
+   * By default, SST will package all files in the same directory as the `handler` file.
+   * This means that you need to your handler file be the root of all files that need to be
+   * included in the function package. The only exception to this is a parent `pyproject.toml`
+   * file. SST will look for this file by finding the closest parent directory that contains
+   * a `pyproject.toml` file.
+   *
+   * @example
+   * ```markdown
+   * project-root/
+   * ├── functions/
+   * │   ├── pyproject.toml
+   * │   ├── handler.py
+   * │   └── utils.py
+   * └── sst.config.ts
+   * ```
+   */
+  python?: Input<{
+    /**
+     * Whether to deploy the function to the container runtime. You should use this
+     * if you are deploying a function that needs native dependencies, is large,
+     * or if you need to customize some runtime configuration.
+     * @default `false`
+     * @example
+     * ```ts
+     * {
+     *   python: {
+     *     container: true
+     *   }
+     * }
+     * ```
+     */
+    container?: Input<boolean>;
+  }>;
+  /**
    * Add additional files to copy into the function package. Takes a list of objects
    * with `from` and `to` paths. These will be copied over before the function package
    * is zipped up.
@@ -1017,6 +1060,11 @@ export class Function extends Component implements Link.Linkable {
     super(__pulumiType, name, args, opts);
 
     const parent = this;
+    const pythonContainerMode = output(args.python).apply(
+      (python) => python?.container ?? false,
+    );
+    // Useful for future runtimes
+    const containerDeployment = pythonContainerMode;
     const dev = normalizeDev();
     const region = normalizeRegion();
     const injections = normalizeInjections();
@@ -1036,11 +1084,14 @@ export class Function extends Component implements Link.Linkable {
     const { bundle, handler: handler0 } = buildHandler();
     const { handler, wrapper } = buildHandlerWrapper();
     const role = createRole();
-    const zipPath = zipBundleFolder();
+    const { zipPath, image } = createBuildAsset();
+
     const bundleHash = calculateHash();
     const file = createBucketObject();
+
     const logGroup = createLogGroup();
     const fn = createFunction();
+
     const codeUpdater = updateFunctionCode();
 
     const fnUrl = createUrl();
@@ -1293,11 +1344,47 @@ export class Function extends Component implements Link.Linkable {
     }
 
     function buildHandler() {
-      return dev.apply((dev) => {
+      return all([runtime, dev]).apply(([runtime, dev]) => {
         if (dev) {
           return {
             handler: "bootstrap",
             bundle: path.join($cli.paths.platform, "dist", "bridge"),
+          };
+        }
+
+        if (runtime === "python3.11") {
+          const buildResult = all([args, pythonContainerMode, linkData]).apply(
+            async ([args, pythonContainerMode, linkData]) => {
+              if (pythonContainerMode) {
+                const result = await buildPythonContainer(name, {
+                  ...args,
+                  links: linkData,
+                });
+                if (result.type === "error") {
+                  throw new Error(
+                    `Failed to build function "${args.handler}": ` +
+                      result.errors.join("\n").trim(),
+                  );
+                }
+                return result;
+              }
+              const result = await buildPython(name, {
+                ...args,
+                links: linkData,
+              });
+              if (result.type === "error") {
+                throw new Error(
+                  `Failed to build function "${args.handler}": ` +
+                    result.errors.join("\n").trim(),
+                );
+              }
+              return result;
+            },
+          );
+
+          return {
+            handler: buildResult.handler,
+            bundle: buildResult.out,
           };
         }
 
@@ -1310,7 +1397,7 @@ export class Function extends Component implements Link.Linkable {
 
         const buildResult = all([args, linkData]).apply(
           async ([args, linkData]) => {
-            const result = await build(name, {
+            const result = await buildNode(name, {
               ...args,
               links: linkData,
             });
@@ -1338,9 +1425,21 @@ export class Function extends Component implements Link.Linkable {
         linkData,
         streaming,
         injections,
+        runtime,
       ]).apply(
-        async ([dev, bundle, handler, linkData, streaming, injections]) => {
+        async ([
+          dev,
+          bundle,
+          handler,
+          linkData,
+          streaming,
+          injections,
+          runtime,
+        ]) => {
           if (dev) return { handler };
+          if (runtime === "python3.11") {
+            return { handler };
+          }
 
           const hasUserInjections = injections.length > 0;
           // already injected via esbuild when bundle is undefined
@@ -1487,13 +1586,90 @@ export class Function extends Component implements Link.Linkable {
       );
     }
 
-    function zipBundleFolder() {
+    function createBuildAsset() {
       // Note: cannot point the bundle to the `.open-next/server-function`
       //       b/c the folder contains node_modules. And pnpm node_modules
       //       contains symlinks. Pulumi cannot zip symlinks correctly.
       //       We will zip the folder ourselves.
-      return all([bundle, wrapper, copyFiles]).apply(
-        async ([bundle, wrapper, copyFiles]) => {
+
+      // If deploying to a container we need to first build the image. The zip
+      // is always needed so the FunctionCodeUpdater can track the contents of the
+      // image. This is convoluted, but I did not want to change too much of the function
+      // internals.
+      return all([bundle, wrapper, copyFiles, containerDeployment, dev]).apply(
+        async ([bundle, wrapper, copyFiles, containerDeployment, dev]) => {
+          function createImage() {
+            if (!containerDeployment) return undefined;
+            if (dev) return undefined;
+            // The build artifact directory already exists, with all the user code and
+            // config files. It also has the dockerfile, we need to now just build and push to
+            // the container registry.
+
+            // TODO: walln - check service implementation for .dockerignore stuff
+
+            // Get ECR repository
+            const bootstrapData = region.apply((region) =>
+              bootstrap.forRegion(region),
+            );
+            const authToken = ecr.getAuthorizationTokenOutput({
+              registryId: bootstrapData.assetEcrRegistryId,
+            });
+
+            // build image
+            //aws-python-container::sst:aws:Function::MyPythonFunction
+            return new docker_build.Image(
+              `${name}Image`,
+              {
+                // tags: [$interpolate`${bootstrapData.assetEcrUrl}:latest`],
+                tags: [$interpolate`${bootstrapData.assetEcrUrl}:latest`],
+                // Cannot use latest tag it breaks lambda because for whatever reason
+                // .ref is actually digest + tags and is not properly qualified???
+                context: {
+                  location: path.join(
+                    $cli.paths.work,
+                    "artifacts",
+                    `${name}-src`,
+                  ),
+                },
+                // Use the pushed image as a cache source.
+                cacheFrom: [
+                  {
+                    registry: {
+                      ref: $interpolate`${bootstrapData.assetEcrUrl}:cache`,
+                    },
+                  },
+                ],
+                // TODO: walln - investigate buildx ecr caching best practices
+                // Include an inline cache with our pushed image.
+                // cacheTo: [{
+                //     registry: {
+                //       imageManifest: true,
+                //       ociMediaTypes: true,
+                //       ref: $interpolate`${bootstrapData.assetEcrUrl}:cache`,
+                //     }
+                // }],
+                cacheTo: [
+                  {
+                    inline: {},
+                  },
+                ],
+                /// TODO: walln - enable arm64 builds by using architecture args
+                push: true,
+                registries: [
+                  authToken.apply((authToken) => ({
+                    address: authToken.proxyEndpoint,
+                    username: authToken.userName,
+                    password: secret(authToken.password),
+                  })),
+                ],
+              },
+              { parent: parent },
+            );
+          }
+
+          const image = createImage();
+
+          // Now proceed with the zipping this is the normal path for non-container deployments
           const zipPath = path.resolve(
             $cli.paths.work,
             "artifacts",
@@ -1559,7 +1735,7 @@ export class Function extends Component implements Link.Linkable {
             await archive.finalize();
           });
 
-          return zipPath;
+          return { zipPath, image };
         },
       );
     }
@@ -1603,59 +1779,101 @@ export class Function extends Component implements Link.Linkable {
     }
 
     function createFunction() {
-      return all([logging, logGroup]).apply(([logging, logGroup]) => {
-        const transformed = transform(
-          args.transform?.function,
-          `${name}Function`,
-          {
-            name: args.name,
-            description: all([args.description, dev]).apply(
-              ([description, dev]) =>
-                dev
-                  ? description
-                    ? `${description.substring(0, 240)} (live)`
-                    : "live"
-                  : `${description ?? ""}`,
-            ),
-            code: new asset.FileArchive(
-              path.join($cli.paths.platform, "functions", "empty-function"),
-            ),
-            handler: unsecret(handler),
-            role: args.role ?? role!.arn,
-            runtime,
-            timeout: timeout.apply((timeout) => toSeconds(timeout)),
-            memorySize: memory.apply((memory) => toMBs(memory)),
-            environment: {
-              variables: environment,
+      return all([
+        logging,
+        logGroup,
+        runtime,
+        pythonContainerMode,
+        image,
+        dev,
+        containerDeployment,
+      ]).apply(
+        ([
+          logging,
+          logGroup,
+          runtime,
+          pythonContainerMode,
+          image,
+          dev,
+          containerDeployment,
+        ]) => {
+          const transformed = transform(
+            args.transform?.function,
+            `${name}Function`,
+            {
+              name: args.name,
+              description: all([args.description, dev]).apply(
+                ([description, dev]) =>
+                  dev
+                    ? description
+                      ? `${description.substring(0, 240)} (live)`
+                      : "live"
+                    : `${description ?? ""}`,
+              ),
+              code: new asset.FileArchive(
+                path.join($cli.paths.platform, "functions", "empty-function"),
+              ),
+              handler: unsecret(handler),
+              role: args.role ?? role!.arn,
+              runtime,
+              timeout: timeout.apply((timeout) => toSeconds(timeout)),
+              memorySize: memory.apply((memory) => toMBs(memory)),
+              environment: {
+                variables: environment,
+              },
+              architectures,
+              loggingConfig: logging && {
+                logFormat: logging.format === "json" ? "JSON" : "Text",
+                logGroup: logging.logGroup ?? logGroup!.name,
+              },
+              vpcConfig: args.vpc && {
+                securityGroupIds: output(args.vpc).securityGroups,
+                subnetIds: output(args.vpc).privateSubnets,
+              },
+              layers: args.layers,
+              tags: args.tags,
             },
-            architectures,
-            loggingConfig: logging && {
-              logFormat: logging.format === "json" ? "JSON" : "Text",
-              logGroup: logging.logGroup ?? logGroup!.name,
+            { parent },
+          );
+          if (containerDeployment && !dev) {
+            return new lambda.Function(
+              transformed[0],
+              {
+                ...transformed[1],
+                // if the runtime is python3.11 and we are in container mode, deploy image
+                packageType: "Image",
+                imageUri: image?.ref.apply(
+                  (ref) => ref?.replace(":latest", ""),
+                ),
+                code: undefined,
+                runtime: undefined,
+                handler: undefined,
+                imageConfig: {
+                  commands: [handler],
+                },
+                architectures: all([transformed[1].architectures]).apply(
+                  ([architectures]) => (dev ? ["x86_64"] : architectures!),
+                ),
+              },
+              transformed[2],
+            );
+          }
+          return new lambda.Function(
+            transformed[0],
+            {
+              ...transformed[1],
+              packageType: "Zip",
+              runtime: all([transformed[1].runtime]).apply(([runtime]) =>
+                dev ? "provided.al2023" : runtime!,
+              ),
+              architectures: all([transformed[1].architectures]).apply(
+                ([architectures]) => (dev ? ["x86_64"] : architectures!),
+              ),
             },
-            vpcConfig: args.vpc && {
-              securityGroupIds: output(args.vpc).securityGroups,
-              subnetIds: output(args.vpc).privateSubnets,
-            },
-            layers: args.layers,
-            tags: args.tags,
-          },
-          { parent },
-        );
-        return new lambda.Function(
-          transformed[0],
-          {
-            ...transformed[1],
-            runtime: all([transformed[1].runtime, dev]).apply(
-              ([runtime, dev]) => (dev ? "provided.al2023" : runtime!),
-            ),
-            architectures: all([transformed[1].architectures, dev]).apply(
-              ([architectures, dev]) => (dev ? ["x86_64"] : architectures!),
-            ),
-          },
-          transformed[2],
-        );
-      });
+            transformed[2],
+          );
+        },
+      );
     }
 
     function createUrl() {
@@ -1678,17 +1896,20 @@ export class Function extends Component implements Link.Linkable {
     }
 
     function updateFunctionCode() {
-      return new FunctionCodeUpdater(
-        `${name}CodeUpdater`,
-        {
-          functionName: fn.name,
-          s3Bucket: file.bucket,
-          s3Key: file.key,
-          functionLastModified: fn.lastModified,
-          region,
-        },
-        { parent },
-      );
+      return all([image]).apply(([image]) => {
+        return new FunctionCodeUpdater(
+          `${name}CodeUpdater`,
+          {
+            functionName: fn.name,
+            s3Bucket: file.bucket,
+            s3Key: file.key,
+            functionLastModified: fn.lastModified,
+            region,
+            imageUri: image?.ref.apply((ref) => ref?.replace(":latest", "")),
+          },
+          { parent },
+        );
+      });
     }
   }
 

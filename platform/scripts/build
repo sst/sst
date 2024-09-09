@@ -10,3 +10,9 @@ bun build ./functions/nodejs-runtime/index.ts --target=node --outdir ./dist/node
 bun build ./functions/nodejs-runtime/loop.ts --target=node --outdir ./dist/nodejs-runtime/
 GOARCH=amd64 GOOS=linux go build -o ./dist/bridge/bootstrap ./functions/bridge
 node ./scripts/build.mjs
+
+mkdir -p ./dist/python-runtime/
+cp ./functions/python-runtime/index.py ./dist/python-runtime/index.py
+
+mkdir -p ./dist/dockerfiles/
+cp ./functions/docker/python.Dockerfile ./dist/dockerfiles/python.Dockerfile

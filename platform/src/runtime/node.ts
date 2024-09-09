@@ -12,7 +12,7 @@ const limiter = new Semaphore(
   parseInt(process.env.SST_BUILD_CONCURRENCY || "4"),
 );
 
-export async function build(
+export async function buildNode(
   name: string,
   input: pulumi.Unwrap<FunctionArgs> & {
     links?: {

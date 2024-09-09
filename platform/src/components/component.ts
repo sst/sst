@@ -59,7 +59,8 @@ export class Component extends ComponentResource {
             !args.name.startsWith(args.opts.parent!.__name)
           ) {
             throw new Error(
-              `In "${name}" component, the logical name of "${args.name}" (${args.type}) is not prefixed with parent's name`,
+              // @ts-expect-error
+              `In "${name}" component, the logical name of "${args.name}" (${args.type}) is not prefixed with parent's name ${args.opts.parent!.__name}`,
             );
           }
 
@@ -133,6 +134,7 @@ export class Component extends ComponentResource {
               "cloudflare:index/record:Record",
               "cloudflare:index/workerDomain:WorkerDomain",
               "docker:index/image:Image",
+              "docker-build:index:Image",
               "vercel:index/dnsRecord:DnsRecord",
             ].includes(args.type)
           )
