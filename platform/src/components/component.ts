@@ -59,10 +59,10 @@ export class Component extends ComponentResource {
             !args.name.startsWith(args.opts.parent!.__name)
           ) {
             throw new Error(
-              // @ts-expect-error
               `In "${name}" component, the logical name of "${args.name}" (${
                 args.type
               }) is not prefixed with parent's name ${
+                // @ts-expect-error
                 args.opts.parent!.__name
               }`,
             );

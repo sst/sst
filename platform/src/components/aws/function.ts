@@ -37,7 +37,7 @@ import {
 import { Permission, permission } from "./permission.js";
 import { Vpc } from "./vpc.js";
 import { buildPython, buildPythonContainer } from "../../runtime/python.js";
-import * as docker_build from "@pulumi/docker-build";
+import { Image } from "@pulumi/docker-build";
 import { rpc } from "../rpc/rpc.js";
 
 /**
@@ -1617,7 +1617,7 @@ export class Function extends Component implements Link.Linkable {
 
             // build image
             //aws-python-container::sst:aws:Function::MyPythonFunction
-            return new docker_build.Image(
+            return new Image(
               `${name}Image`,
               {
                 // tags: [$interpolate`${bootstrapData.assetEcrUrl}:latest`],

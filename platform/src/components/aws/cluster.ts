@@ -1,5 +1,4 @@
 import { ComponentResourceOptions } from "@pulumi/pulumi";
-import * as docker from "@pulumi/docker";
 import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
 import { Dns } from "../dns";
@@ -7,7 +6,6 @@ import { FunctionArgs } from "./function";
 import { Service } from "./service";
 import { RETENTION } from "./logging.js";
 import { cloudwatch, ec2, ecs, iam, lb } from "@pulumi/aws";
-import { Vpc } from "./vpc";
 import { ImageArgs } from "@pulumi/docker-build";
 
 export const supportedCpus = {
