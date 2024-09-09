@@ -3,7 +3,7 @@
 /**
  * ## T3 Stack in AWS
  *
- * Deploy a [T3 stack](https://create.t3.gg) with Drizzle and Postgres to AWS. To use this
+ * Deploy [T3 stack](https://create.t3.gg) with Drizzle and Postgres to AWS. To use this
  * example run:
  *
  * ```bash
