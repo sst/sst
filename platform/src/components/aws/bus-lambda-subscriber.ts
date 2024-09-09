@@ -9,6 +9,7 @@ import { Component, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { BusSubscriberArgs } from "./bus";
 import { cloudwatch, lambda } from "@pulumi/aws";
+import { FunctionBuilder, functionBuilder } from "./helpers/function-builder";
 
 export interface Args extends BusSubscriberArgs {
   /**
@@ -41,7 +42,7 @@ export interface Args extends BusSubscriberArgs {
  * You'll find this component returned by the `subscribe` method of the `Bus` component.
  */
 export class BusLambdaSubscriber extends Component {
-  private readonly fn: Output<Function>;
+  private readonly fn: FunctionBuilder;
   private readonly permission: lambda.Permission;
   private readonly rule: cloudwatch.EventRule;
   private readonly target: cloudwatch.EventTarget;
@@ -62,7 +63,7 @@ export class BusLambdaSubscriber extends Component {
     this.target = target;
 
     function createFunction() {
-      return Function.fromDefinition(
+      return functionBuilder(
         `${name}Function`,
         args.subscriber,
         {
@@ -134,7 +135,7 @@ export class BusLambdaSubscriber extends Component {
       /**
        * The Lambda function that'll be notified.
        */
-      function: this.fn,
+      function: this.fn.apply((fn) => fn.getFunction()),
       /**
        * The Lambda permission.
        */

@@ -2,7 +2,7 @@ import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { FunctionArgs } from "./function";
+import { FunctionArgs, FunctionArn } from "./function";
 import { hashStringToPrettyString, physicalName, logicalName } from "../naming";
 import { parseEventBusArn } from "./helpers/arn";
 import { BusLambdaSubscriber } from "./bus-lambda-subscriber";
@@ -246,9 +246,15 @@ export class Bus extends Component implements Link.Linkable {
    *   timeout: "60 seconds"
    * });
    * ```
+   *
+   * Subscribe with an existing Lambda function.
+   *
+   * ```js title="sst.config.ts"
+   * bus.subscribe("arn:aws:lambda:us-east-1:123456789012:function:my-function");
+   * ```
    */
   public subscribe(
-    subscriber: string | FunctionArgs,
+    subscriber: string | FunctionArgs | FunctionArn,
     args: BusSubscriberArgs = {},
   ) {
     return Bus._subscribeFunction(
@@ -303,7 +309,7 @@ export class Bus extends Component implements Link.Linkable {
    */
   public static subscribe(
     busArn: Input<string>,
-    subscriber: string | FunctionArgs,
+    subscriber: string | FunctionArgs | FunctionArn,
     args?: BusSubscriberArgs,
   ) {
     return output(busArn).apply((busArn) => {
@@ -322,7 +328,7 @@ export class Bus extends Component implements Link.Linkable {
     name: string,
     busName: Input<string>,
     busArn: Input<string>,
-    subscriber: string | FunctionArgs,
+    subscriber: string | FunctionArgs | FunctionArn,
     args: BusSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
   ) {

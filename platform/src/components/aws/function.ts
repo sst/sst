@@ -36,6 +36,11 @@ import { Permission, permission } from "./permission.js";
 import { Vpc } from "./vpc.js";
 import { rpc } from "../rpc/rpc.js";
 
+/**
+ * Helper type to define function ARN type
+ */
+export type FunctionArn = `arn:${string}` & {};
+
 export type FunctionPermissionArgs = {
   /**
    * The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.

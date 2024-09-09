@@ -8,6 +8,8 @@ import { Component, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { DynamoSubscriberArgs } from "./dynamo";
 import { lambda } from "@pulumi/aws";
+import { FunctionBuilder, functionBuilder } from "./helpers/function-builder";
+import { parseFunctionArn } from "./helpers/arn";
 
 export interface Args extends DynamoSubscriberArgs {
   /**
@@ -36,7 +38,7 @@ export interface Args extends DynamoSubscriberArgs {
  * You'll find this component returned by the `subscribe` method of the `Dynamo` component.
  */
 export class DynamoLambdaSubscriber extends Component {
-  private readonly fn: Output<Function>;
+  private readonly fn: FunctionBuilder;
   private readonly eventSourceMapping: lambda.EventSourceMapping;
 
   constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
@@ -51,7 +53,7 @@ export class DynamoLambdaSubscriber extends Component {
     this.eventSourceMapping = eventSourceMapping;
 
     function createFunction() {
-      return Function.fromDefinition(
+      return functionBuilder(
         `${name}Function`,
         args.subscriber,
         {
@@ -80,7 +82,9 @@ export class DynamoLambdaSubscriber extends Component {
           `${name}EventSourceMapping`,
           {
             eventSourceArn: dynamo.streamArn,
-            functionName: fn.name,
+            functionName: fn.arn.apply(
+              (arn) => parseFunctionArn(arn).functionName,
+            ),
             filterCriteria: args.filters
               ? output(args.filters).apply((filters) => ({
                   filters: filters.map((filter) => ({
@@ -104,7 +108,7 @@ export class DynamoLambdaSubscriber extends Component {
       /**
        * The Lambda function that'll be notified.
        */
-      function: this.fn,
+      function: this.fn.apply((fn) => fn.getFunction()),
       /**
        * The Lambda event source mapping.
        */

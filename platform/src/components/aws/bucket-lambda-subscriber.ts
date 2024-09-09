@@ -9,6 +9,7 @@ import { Component, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { BucketSubscriberArgs } from "./bucket";
 import { lambda, s3 } from "@pulumi/aws";
+import { FunctionBuilder, functionBuilder } from "./helpers/function-builder";
 
 export interface Args extends BucketSubscriberArgs {
   /**
@@ -45,7 +46,7 @@ export interface Args extends BucketSubscriberArgs {
  * You'll find this component returned by the `subscribe` method of the `Bucket` component.
  */
 export class BucketLambdaSubscriber extends Component {
-  private readonly fn: Output<Function>;
+  private readonly fn: FunctionBuilder;
   private readonly permission: lambda.Permission;
   private readonly notification: s3.BucketNotification;
 
@@ -78,7 +79,7 @@ export class BucketLambdaSubscriber extends Component {
     this.notification = notification;
 
     function createFunction() {
-      return Function.fromDefinition(
+      return functionBuilder(
         `${name}Function`,
         args.subscriber,
         {
@@ -139,7 +140,7 @@ export class BucketLambdaSubscriber extends Component {
       /**
        * The Lambda function that'll be notified.
        */
-      function: this.fn,
+      function: this.fn.apply((fn) => fn.getFunction()),
       /**
        * The Lambda permission.
        */

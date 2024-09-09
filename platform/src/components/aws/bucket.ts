@@ -15,7 +15,7 @@ import {
 import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { FunctionArgs } from "./function";
+import { FunctionArgs, FunctionArn } from "./function";
 import { Duration, toSeconds } from "../duration";
 import { VisibleError } from "../error";
 import { parseBucketArn } from "./helpers/arn";
@@ -568,9 +568,15 @@ export class Bucket extends Component implements Link.Linkable {
    *   timeout: "60 seconds",
    * });
    * ```
+   *
+   * Subscribe with an existing Lambda function.
+   *
+   * ```js title="sst.config.ts"
+   * bucket.subscribe("arn:aws:lambda:us-east-1:123456789012:function:my-function");
+   * ```
    */
   public subscribe(
-    subscriber: string | FunctionArgs,
+    subscriber: string | FunctionArgs | FunctionArn,
     args?: BucketSubscriberArgs,
   ) {
     this.ensureNotSubscribed();
@@ -633,7 +639,7 @@ export class Bucket extends Component implements Link.Linkable {
    */
   public static subscribe(
     bucketArn: Input<string>,
-    subscriber: string | FunctionArgs,
+    subscriber: string | FunctionArgs | FunctionArn,
     args?: BucketSubscriberArgs,
   ) {
     return output(bucketArn).apply((bucketArn) => {
@@ -652,7 +658,7 @@ export class Bucket extends Component implements Link.Linkable {
     name: string,
     bucketName: Input<string>,
     bucketArn: Input<string>,
-    subscriber: string | FunctionArgs,
+    subscriber: string | FunctionArgs | FunctionArn,
     args: BucketSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
   ) {

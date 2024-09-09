@@ -2,7 +2,7 @@ import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { FunctionArgs } from "./function";
+import { FunctionArgs, FunctionArn } from "./function";
 import { hashStringToPrettyString, logicalName } from "../naming";
 import { parseTopicArn } from "./helpers/arn";
 import { SnsTopicLambdaSubscriber } from "./sns-topic-lambda-subscriber";
@@ -245,9 +245,15 @@ export class SnsTopic extends Component implements Link.Linkable {
    *   timeout: "60 seconds"
    * });
    * ```
+   *
+   * Subscribe with an existing Lambda function.
+   *
+   * ```js title="sst.config.ts"
+   * topic.subscribe("arn:aws:lambda:us-east-1:123456789012:function:my-function");
+   * ```
    */
   public subscribe(
-    subscriber: string | FunctionArgs,
+    subscriber: string | FunctionArgs | FunctionArn,
     args: SnsTopicSubscriberArgs = {},
   ) {
     return SnsTopic._subscribeFunction(
@@ -301,7 +307,7 @@ export class SnsTopic extends Component implements Link.Linkable {
    */
   public static subscribe(
     topicArn: Input<string>,
-    subscriber: string | FunctionArgs,
+    subscriber: string | FunctionArgs | FunctionArn,
     args?: SnsTopicSubscriberArgs,
   ) {
     return output(topicArn).apply((topicArn) =>
@@ -317,7 +323,7 @@ export class SnsTopic extends Component implements Link.Linkable {
   private static _subscribeFunction(
     name: string,
     topicArn: Input<string>,
-    subscriber: string | FunctionArgs,
+    subscriber: string | FunctionArgs | FunctionArn,
     args: SnsTopicSubscriberArgs = {},
     opts: $util.ComponentResourceOptions = {},
   ) {

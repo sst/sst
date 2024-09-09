@@ -5,7 +5,7 @@ import { Component, Transform, transform } from "../component.js";
 import { Input } from "../input.js";
 import { Link } from "../link.js";
 import { hashStringToPrettyString, logicalName } from "../naming.js";
-import { FunctionArgs } from "./function.js";
+import { FunctionArgs, FunctionArn } from "./function.js";
 import { KinesisStreamLambdaSubscriber } from "./kinesis-stream-lambda-subscriber.js";
 import { parseKinesisStreamArn } from "./helpers/arn.js";
 import { permission } from "./permission.js";
@@ -187,9 +187,15 @@ export class KinesisStream extends Component implements Link.Linkable {
    *   timeout: "60 seconds"
    * });
    * ```
+   *
+   * Subscribe with an existing Lambda function.
+   *
+   * ```js title="sst.config.ts"
+   * stream.subscribe("arn:aws:lambda:us-east-1:123456789012:function:my-function");
+   * ```
    */
   public subscribe(
-    subscriber: string | FunctionArgs,
+    subscriber: string | FunctionArgs | FunctionArn,
     args?: KinesisStreamLambdaSubscriberArgs,
   ) {
     return KinesisStream._subscribe(
@@ -249,7 +255,7 @@ export class KinesisStream extends Component implements Link.Linkable {
    */
   public static subscribe(
     streamArn: Input<string>,
-    subscriber: string | FunctionArgs,
+    subscriber: string | FunctionArgs | FunctionArn,
     args?: KinesisStreamLambdaSubscriberArgs,
   ) {
     return output(streamArn).apply((streamArn) =>
@@ -265,7 +271,7 @@ export class KinesisStream extends Component implements Link.Linkable {
   private static _subscribe(
     name: string,
     streamArn: Input<string>,
-    subscriber: string | FunctionArgs,
+    subscriber: string | FunctionArgs | FunctionArn,
     args: KinesisStreamLambdaSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
   ) {

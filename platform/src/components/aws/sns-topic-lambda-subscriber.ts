@@ -8,6 +8,7 @@ import { Component, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { SnsTopicSubscriberArgs } from "./sns-topic";
 import { lambda, sns } from "@pulumi/aws";
+import { FunctionBuilder, functionBuilder } from "./helpers/function-builder";
 
 export interface Args extends SnsTopicSubscriberArgs {
   /**
@@ -36,7 +37,7 @@ export interface Args extends SnsTopicSubscriberArgs {
  * You'll find this component returned by the `subscribe` method of the `SnsTopic` component.
  */
 export class SnsTopicLambdaSubscriber extends Component {
-  private readonly fn: Output<Function>;
+  private readonly fn: FunctionBuilder;
   private readonly permission: lambda.Permission;
   private readonly subscription: sns.TopicSubscription;
 
@@ -54,7 +55,7 @@ export class SnsTopicLambdaSubscriber extends Component {
     this.subscription = subscription;
 
     function createFunction() {
-      return Function.fromDefinition(
+      return functionBuilder(
         `${name}Function`,
         args.subscriber,
         {
@@ -103,7 +104,7 @@ export class SnsTopicLambdaSubscriber extends Component {
       /**
        * The Lambda function that'll be notified.
        */
-      function: this.fn,
+      function: this.fn.apply((fn) => fn.getFunction()),
       /**
        * The Lambda permission.
        */

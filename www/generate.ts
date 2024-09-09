@@ -762,6 +762,11 @@ function renderType(
     if (linkableProvider) {
       return `[<code class="type">${linkableProvider.namespace}</code>](/docs/component/${linkableProvider.doc})`;
     }
+    if (type.name === "FunctionArn") {
+      return [
+        `<code class="primitive">\`arn:aws:lambda:\${string}\`</code>`,
+      ].join("");
+    }
     // types in the same doc (links to the class ie. `subscribe()` return type)
     if (isModuleComponent(module) && type.name === useClassName(module)) {
       return `[<code class="type">${type.name}</code>](.)`;

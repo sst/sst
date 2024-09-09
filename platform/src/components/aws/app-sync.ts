@@ -3,7 +3,7 @@ import { ComponentResourceOptions, interpolate, output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { FunctionArgs } from "./function";
+import { FunctionArgs, FunctionArn } from "./function";
 import { logicalName } from "../naming";
 import { VisibleError } from "../error";
 import { AppSyncDataSource } from "./app-sync-data-source";
@@ -212,7 +212,7 @@ export interface AppSyncDataSourceArgs {
    * }
    * ```
    */
-  lambda?: Input<string | FunctionArgs>;
+  lambda?: Input<string | FunctionArgs | FunctionArn>;
   /**
    * The ARN for the DynamoDB table.
    * @example
@@ -670,6 +670,15 @@ export class AppSync extends Component implements Link.Linkable {
    *     timeout: "60 seconds"
    *   }
    * });
+   * ```
+   *
+   * Add a data source with an existing Lambda function.
+   *
+   * ```js title="sst.config.ts"
+   * api.addDataSource({
+   *   name: "lambdaDS",
+   *   lambda: "arn:aws:lambda:us-east-1:123456789012:function:my-function"
+   * })
    * ```
    *
    * Add a DynamoDB table as a data source.

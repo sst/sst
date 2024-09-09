@@ -10,6 +10,7 @@ import { Component, Transform, transform } from "../component";
 import { Function, FunctionArgs } from "./function";
 import { ApiGatewayWebSocketRouteArgs } from "./apigateway-websocket";
 import { apigatewayv2, lambda } from "@pulumi/aws";
+import { FunctionBuilder, functionBuilder } from "./helpers/function-builder";
 
 export interface Args extends ApiGatewayWebSocketRouteArgs {
   /**
@@ -54,7 +55,7 @@ export interface Args extends ApiGatewayWebSocketRouteArgs {
  * You'll find this component returned by the `route` method of the `ApiGatewayWebSocket` component.
  */
 export class ApiGatewayWebSocketRoute extends Component {
-  private readonly fn: Output<Function>;
+  private readonly fn: FunctionBuilder;
   private readonly permission: lambda.Permission;
   private readonly apiRoute: apigatewayv2.Route;
   private readonly integration: apigatewayv2.Integration;
@@ -77,7 +78,7 @@ export class ApiGatewayWebSocketRoute extends Component {
     this.integration = integration;
 
     function createFunction() {
-      return Function.fromDefinition(
+      return functionBuilder(
         `${name}Handler`,
         args.handler,
         {
@@ -147,7 +148,7 @@ export class ApiGatewayWebSocketRoute extends Component {
       /**
        * The Lambda function.
        */
-      function: this.fn,
+      function: this.fn.apply((fn) => fn.getFunction()),
       /**
        * The Lambda permission.
        */

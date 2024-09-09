@@ -6,18 +6,19 @@ import {
   output,
 } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
-import { Function, FunctionArgs } from "./function";
+import { FunctionArgs, FunctionArn } from "./function";
 import { apigatewayv2, lambda } from "@pulumi/aws";
 import {
   ApiGatewayV2BaseRouteArgs,
   createApiRoute,
 } from "./apigatewayv2-base-route";
+import { FunctionBuilder, functionBuilder } from "./helpers/function-builder";
 
 export interface Args extends ApiGatewayV2BaseRouteArgs {
   /**
    * The route function.
    */
-  handler: Input<string | FunctionArgs>;
+  handler: Input<string | FunctionArgs | FunctionArn>;
   /**
    * @internal
    */
@@ -35,7 +36,7 @@ export interface Args extends ApiGatewayV2BaseRouteArgs {
  * You'll find this component returned by the `route` method of the `ApiGatewayV2` component.
  */
 export class ApiGatewayV2LambdaRoute extends Component {
-  private readonly fn: Output<Function>;
+  private readonly fn: FunctionBuilder;
   private readonly permission: lambda.Permission;
   private readonly apiRoute: Output<apigatewayv2.Route>;
   private readonly integration: apigatewayv2.Integration;
@@ -58,7 +59,7 @@ export class ApiGatewayV2LambdaRoute extends Component {
     this.integration = integration;
 
     function createFunction() {
-      return Function.fromDefinition(
+      return functionBuilder(
         `${name}Handler`,
         args.handler,
         {
@@ -107,7 +108,7 @@ export class ApiGatewayV2LambdaRoute extends Component {
       /**
        * The Lambda function.
        */
-      function: this.fn,
+      function: this.fn.apply((fn) => fn.getFunction()),
       /**
        * The Lambda permission.
        */

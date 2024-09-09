@@ -2,7 +2,7 @@ import { ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { Function, FunctionArgs } from "./function";
+import { Function, FunctionArgs, FunctionArn } from "./function";
 import { hashStringToPrettyString, logicalName } from "../naming";
 import { RealtimeLambdaSubscriber } from "./realtime-lambda-subscriber";
 import { iot, lambda } from "@pulumi/aws";
@@ -285,9 +285,17 @@ export class Realtime extends Component implements Link.Linkable {
    *   }
    * );
    * ```
+   *
+   * Subscribe with an existing Lambda function.
+   *
+   * ```js title="sst.config.ts"
+   * server.subscribe("arn:aws:lambda:us-east-1:123456789012:function:my-function", {
+   *   filter: `${$app.name}/${$app.stage}/chat/room1`
+   * });
+   * ```
    */
   public subscribe(
-    subscriber: string | FunctionArgs,
+    subscriber: string | FunctionArgs | FunctionArn,
     args: RealtimeSubscriberArgs,
   ) {
     return all([subscriber, args.filter]).apply(([subscriber, filter]) => {

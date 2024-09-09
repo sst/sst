@@ -10,6 +10,7 @@ import { VisibleError } from "../error";
 import { AppSyncDataSourceArgs } from "./app-sync";
 import { parseDynamoArn } from "./helpers/arn";
 import { appsync, iam } from "@pulumi/aws";
+import { FunctionBuilder, functionBuilder } from "./helpers/function-builder";
 
 export interface DataSourceArgs extends AppSyncDataSourceArgs {
   /**
@@ -34,7 +35,7 @@ export interface DataSourceArgs extends AppSyncDataSourceArgs {
  */
 export class AppSyncDataSource extends Component {
   private readonly dataSource: appsync.DataSource;
-  private readonly lambda?: Output<Function>;
+  private readonly lambda?: FunctionBuilder;
   private readonly serviceRole?: iam.Role;
 
   constructor(
@@ -91,7 +92,7 @@ export class AppSyncDataSource extends Component {
     function createFunction() {
       if (!args.lambda) return;
 
-      return Function.fromDefinition(`${name}Function`, args.lambda, {
+      return functionBuilder(`${name}Function`, args.lambda, {
         description: `${args.apiComponentName} data source`,
       });
     }
@@ -242,7 +243,7 @@ export class AppSyncDataSource extends Component {
           throw new VisibleError(
             "Cannot access `nodes.function` because the data source does not use a Lambda function.",
           );
-        return self.lambda;
+        return self.lambda.apply((fn) => fn.getFunction());
       },
       /**
        * The DataSource service's IAM role.

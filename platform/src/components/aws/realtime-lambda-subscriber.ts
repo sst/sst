@@ -10,6 +10,8 @@ import { Function, FunctionArgs } from "./function";
 import { RealtimeSubscriberArgs } from "./realtime";
 import { lambda } from "@pulumi/aws";
 import { iot } from "@pulumi/aws";
+import { FunctionBuilder, functionBuilder } from "./helpers/function-builder";
+import { parseFunctionArn } from "./helpers/arn";
 
 export interface Args extends RealtimeSubscriberArgs {
   /**
@@ -38,7 +40,7 @@ export interface Args extends RealtimeSubscriberArgs {
  * You'll find this component returned by the `subscribe` method of the `Realtime` component.
  */
 export class RealtimeLambdaSubscriber extends Component {
-  private readonly fn: Output<Function>;
+  private readonly fn: FunctionBuilder;
   private readonly permission: lambda.Permission;
   private readonly rule: iot.TopicRule;
 
@@ -57,7 +59,7 @@ export class RealtimeLambdaSubscriber extends Component {
     this.rule = rule;
 
     function createFunction() {
-      return Function.fromDefinition(
+      return functionBuilder(
         `${name}Handler`,
         args.subscriber,
         {
@@ -89,7 +91,7 @@ export class RealtimeLambdaSubscriber extends Component {
         `${name}Permission`,
         {
           action: "lambda:InvokeFunction",
-          function: fn.name,
+          function: fn.arn.apply((arn) => parseFunctionArn(arn).functionName),
           principal: "iot.amazonaws.com",
           sourceArn: rule.arn,
         },
@@ -106,7 +108,7 @@ export class RealtimeLambdaSubscriber extends Component {
       /**
        * The Lambda function that'll be notified.
        */
-      function: this.fn,
+      function: this.fn.apply((fn) => fn.getFunction()),
       /**
        * The Lambda permission.
        */

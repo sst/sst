@@ -8,7 +8,7 @@ import {
 import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { FunctionArgs } from "./function";
+import { FunctionArgs, FunctionArn } from "./function";
 import { hashStringToPrettyString, physicalName, logicalName } from "../naming";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
 import { RETENTION } from "./logging";
@@ -516,10 +516,16 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
    *   memory: "2048 MB"
    * });
    * ```
+   *
+   * Add a route with an existing Lambda function.
+   *
+   * ```js title="sst.config.ts"
+   * api.route("sendMessage", "arn:aws:lambda:us-east-1:123456789012:function:my-function");
+   * ```
    */
   public route(
     route: string,
-    handler: string | FunctionArgs,
+    handler: string | FunctionArgs | FunctionArn,
     args: ApiGatewayWebSocketRouteArgs = {},
   ) {
     const prefix = this.constructorName;

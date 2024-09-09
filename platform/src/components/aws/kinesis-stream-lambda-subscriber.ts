@@ -4,6 +4,8 @@ import { Component, transform } from "../component";
 import { Input } from "../input.js";
 import { Function, FunctionArgs } from "./function.js";
 import { KinesisStreamLambdaSubscriberArgs } from "./kinesis-stream.js";
+import { FunctionBuilder, functionBuilder } from "./helpers/function-builder";
+import { parseFunctionArn } from "./helpers/arn";
 
 export interface Args extends KinesisStreamLambdaSubscriberArgs {
   /**
@@ -32,7 +34,7 @@ export interface Args extends KinesisStreamLambdaSubscriberArgs {
  * You'll find this component returned by the `subscribe` method of the `KinesisStream` component.
  */
 export class KinesisStreamLambdaSubscriber extends Component {
-  private readonly fn: Output<Function>;
+  private readonly fn: FunctionBuilder;
   private readonly eventSourceMapping: aws.lambda.EventSourceMapping;
   constructor(name: string, args: Args, opts?: $util.ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -47,7 +49,7 @@ export class KinesisStreamLambdaSubscriber extends Component {
 
     function createFunction() {
       return output(args.subscriber).apply((subscriber) => {
-        return Function.fromDefinition(
+        return functionBuilder(
           `${name}Function`,
           subscriber,
           {
@@ -80,7 +82,9 @@ export class KinesisStreamLambdaSubscriber extends Component {
           `${name}EventSourceMapping`,
           {
             eventSourceArn: stream.arn,
-            functionName: fn.name,
+            functionName: fn.arn.apply(
+              (arn) => parseFunctionArn(arn).functionName,
+            ),
             startingPosition: "LATEST",
             filterCriteria: args.filters && {
               filters: output(args.filters).apply((filters) =>
@@ -105,7 +109,7 @@ export class KinesisStreamLambdaSubscriber extends Component {
       /**
        * The Lambda function that'll be notified.
        */
-      function: self.fn,
+      function: self.fn.apply((fn) => fn.getFunction()),
       /**
        * The Lambda event source mapping.
        */

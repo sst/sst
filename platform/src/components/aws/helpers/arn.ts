@@ -1,6 +1,16 @@
 import { aws } from "../..";
 import { VisibleError } from "../../error";
 
+export function parseFunctionArn(arn: string) {
+  // arn:aws:lambda:region:account-id:function:function-name
+  const functionName = arn.split(":")[6];
+  if (!arn.startsWith("arn:") || !functionName)
+    throw new VisibleError(
+      `The provided ARN "${arn}" is not a Lambda function ARN.`,
+    );
+  return { functionName };
+}
+
 export function parseBucketArn(arn: string) {
   // arn:aws:s3:::bucket-name
   const bucketName = arn.split(":")[5];

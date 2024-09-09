@@ -1,8 +1,9 @@
 import { ComponentResourceOptions, output, Output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
-import { Function, FunctionArgs } from "./function";
+import { Function, FunctionArgs, FunctionArn } from "./function";
 import { Input } from "../input.js";
 import { cloudwatch, lambda } from "@pulumi/aws";
+import { functionBuilder, FunctionBuilder } from "./helpers/function-builder";
 
 export interface CronArgs {
   /**
@@ -27,7 +28,7 @@ export interface CronArgs {
    * }
    * ```
    */
-  job: Input<string | FunctionArgs>;
+  job: Input<string | FunctionArgs | FunctionArn>;
   /**
    * The schedule for the cron job.
    *
@@ -103,7 +104,7 @@ export interface CronArgs {
  * ```
  */
 export class Cron extends Component {
-  private fn: Output<Function>;
+  private fn: FunctionBuilder;
   private rule: cloudwatch.EventRule;
   private target: cloudwatch.EventTarget;
 
@@ -123,7 +124,7 @@ export class Cron extends Component {
 
     function createFunction() {
       return output(args.job).apply((job) =>
-        Function.fromDefinition(`${name}Handler`, job, {}, undefined, {
+        functionBuilder(`${name}Handler`, job, {}, undefined, {
           parent,
         }),
       );
@@ -178,7 +179,7 @@ export class Cron extends Component {
       /**
        * The AWS Lambda Function that's invoked when the cron job runs.
        */
-      job: this.fn,
+      job: this.fn.apply((fn) => fn.getFunction()),
       /**
        * The EventBridge Rule resource.
        */

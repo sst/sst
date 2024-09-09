@@ -2,7 +2,7 @@ import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
 import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
-import { FunctionArgs } from "./function";
+import { FunctionArgs, FunctionArn } from "./function";
 import { hashStringToPrettyString, physicalName, logicalName } from "../naming";
 import { VisibleError } from "../error";
 import { DnsValidatedCertificate } from "./dns-validated-certificate";
@@ -1010,10 +1010,16 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    *   memory: "2048 MB"
    * });
    * ```
+   *
+   * Add a route with an existing Lambda function.
+   *
+   * ```js title="sst.config.ts"
+   * api.route("GET /", "arn:aws:lambda:us-east-1:123456789012:function:my-function");
+   * ```
    */
   public route(
     rawRoute: string,
-    handler: string | FunctionArgs,
+    handler: Input<string | FunctionArgs | FunctionArn>,
     args: ApiGatewayV2RouteArgs = {},
   ) {
     const route = this.parseRoute(rawRoute);

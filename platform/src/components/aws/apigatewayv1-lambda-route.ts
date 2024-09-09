@@ -12,6 +12,7 @@ import {
   ApiGatewayV1BaseRouteArgs,
   createMethod,
 } from "./apigatewayv1-base-route";
+import { FunctionBuilder, functionBuilder } from "./helpers/function-builder";
 
 export interface Args extends ApiGatewayV1BaseRouteArgs {
   /**
@@ -35,7 +36,7 @@ export interface Args extends ApiGatewayV1BaseRouteArgs {
  * You'll find this component returned by the `route` method of the `ApiGatewayV1` component.
  */
 export class ApiGatewayV1LambdaRoute extends Component {
-  private readonly fn: Output<Function>;
+  private readonly fn: FunctionBuilder;
   private readonly permission: lambda.Permission;
   private readonly integration: apigateway.Integration;
 
@@ -57,7 +58,7 @@ export class ApiGatewayV1LambdaRoute extends Component {
     function createFunction() {
       const { method, path } = args;
 
-      return Function.fromDefinition(
+      return functionBuilder(
         `${name}Handler`,
         args.handler,
         {
@@ -92,7 +93,7 @@ export class ApiGatewayV1LambdaRoute extends Component {
             httpMethod: method.httpMethod,
             integrationHttpMethod: "POST",
             type: "AWS_PROXY",
-            uri: fn.nodes.function.invokeArn,
+            uri: fn.invokeArn,
           },
           { parent: self, dependsOn: [permission] },
         ),
@@ -108,7 +109,7 @@ export class ApiGatewayV1LambdaRoute extends Component {
       /**
        * The Lambda function.
        */
-      function: this.fn,
+      function: this.fn.apply((fn) => fn.getFunction()),
       /**
        * The Lambda permission.
        */
