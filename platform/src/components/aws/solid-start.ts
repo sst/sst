@@ -147,7 +147,7 @@ export interface SolidStartArgs extends SsrSiteArgs {
    * Set in your SolidStart app. These are made available:
    *
    * 1. In `vinxi build`, they are loaded into `process.env`.
-   * 2. Locally while running `sst dev vinxi dev`.
+   * 2. Locally while running through `sst dev`.
    *
    * :::tip
    * You can also `link` resources to your SolidStart app and access them in a type-safe way with the [SDK](/docs/reference/sdk/). We recommend linking since it's more secure.

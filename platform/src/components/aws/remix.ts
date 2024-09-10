@@ -148,7 +148,7 @@ export interface RemixArgs extends SsrSiteArgs {
    * Set [environment variables](https://remix.run/docs/en/main/guides/envvars) in your Remix app. These are made available:
    *
    * 1. In `remix build`, they are loaded into `process.env`.
-   * 2. Locally while running `sst dev remix dev`.
+   * 2. Locally while running through `sst dev`.
    *
    * :::tip
    * You can also `link` resources to your Remix app and access them in a type-safe way with the [SDK](/docs/reference/sdk/). We recommend linking since it's more secure.
@@ -572,21 +572,21 @@ export class Remix extends Component implements Link.Linkable {
             },
             edgeFunctions: edge
               ? {
-                  server: {
-                    function: serverConfig,
-                  },
-                }
+                server: {
+                  function: serverConfig,
+                },
+              }
               : undefined,
             origins: {
               ...(edge
                 ? {}
                 : {
+                  server: {
                     server: {
-                      server: {
-                        function: serverConfig,
-                      },
+                      function: serverConfig,
                     },
-                  }),
+                  },
+                }),
               s3: {
                 s3: {
                   copy: [
@@ -603,16 +603,16 @@ export class Remix extends Component implements Link.Linkable {
             behaviors: [
               edge
                 ? {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    edgeFunction: "server",
-                    origin: "s3",
-                  }
+                  cacheType: "server",
+                  cfFunction: "serverCfFunction",
+                  edgeFunction: "server",
+                  origin: "s3",
+                }
                 : {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    origin: "server",
-                  },
+                  cacheType: "server",
+                  cfFunction: "serverCfFunction",
+                  origin: "server",
+                },
               ...buildMeta.staticRoutes.map(
                 (route) =>
                   ({

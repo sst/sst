@@ -147,7 +147,7 @@ export interface SvelteKitArgs extends SsrSiteArgs {
    * Set [environment variables](https://vitejs.dev/guide/env-and-mode.html#env-files) in your SvelteKit app. These are made available:
    *
    * 1. In `vite build`, they are loaded into `process.env`.
-   * 2. Locally while running `sst dev vite dev`.
+   * 2. Locally while running through `sst dev`.
    *
    * :::tip
    * You can also `link` resources to your SvelteKit app and access them in a type-safe way with the [SDK](/docs/reference/sdk/). We recommend linking since it's more secure.
@@ -471,7 +471,7 @@ export class SvelteKit extends Component implements Link.Linkable {
           if (appDir && appPath && appPath.endsWith(appDir)) {
             basePath = appPath.substring(0, appPath.length - appDir.length);
           }
-        } catch (e) {}
+        } catch (e) { }
 
         return {
           basePath,
@@ -517,11 +517,11 @@ export class SvelteKit extends Component implements Link.Linkable {
             },
             copyFiles: buildMeta.serverFiles
               ? [
-                  {
-                    from: path.join(outputPath, buildMeta.serverFiles),
-                    to: "prerendered",
-                  },
-                ]
+                {
+                  from: path.join(outputPath, buildMeta.serverFiles),
+                  to: "prerendered",
+                },
+              ]
               : undefined,
           };
 
@@ -537,17 +537,17 @@ export class SvelteKit extends Component implements Link.Linkable {
             },
             edgeFunctions: edge
               ? {
-                  server: { function: serverConfig },
-                }
+                server: { function: serverConfig },
+              }
               : undefined,
             origins: {
               ...(edge
                 ? {}
                 : {
-                    server: {
-                      server: { function: serverConfig },
-                    },
-                  }),
+                  server: {
+                    server: { function: serverConfig },
+                  },
+                }),
               s3: {
                 s3: {
                   copy: [
@@ -569,16 +569,16 @@ export class SvelteKit extends Component implements Link.Linkable {
             behaviors: [
               edge
                 ? {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    edgeFunction: "server",
-                    origin: "s3",
-                  }
+                  cacheType: "server",
+                  cfFunction: "serverCfFunction",
+                  edgeFunction: "server",
+                  origin: "s3",
+                }
                 : {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    origin: "server",
-                  },
+                  cacheType: "server",
+                  cfFunction: "serverCfFunction",
+                  origin: "server",
+                },
               ...buildMeta.staticRoutes.map(
                 (route) =>
                   ({

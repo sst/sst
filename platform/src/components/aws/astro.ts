@@ -148,7 +148,7 @@ export interface AstroArgs extends SsrSiteArgs {
    * Set [environment variables](https://docs.astro.build/en/guides/environment-variables/) in your Astro site. These are made available:
    *
    * 1. In `astro build`, they are loaded into `import.meta.env`.
-   * 2. Locally while running `sst dev astro dev`.
+   * 2. Locally while running `astro dev` through `sst dev`.
    *
    * :::tip
    * You can also `link` resources to your Astro site and access them in a type-safe way with the [SDK](/docs/reference/sdk/). We recommend linking since it's more secure.
@@ -693,11 +693,10 @@ function useCloudFrontRoutingInjection(buildMetadata: BuildMetaConfig) {
     var matchedRoute = findFirstMatch(findMatches(request.uri, routeData));
     if (matchedRoute[0]) {
       if (!matchedRoute[1] && !/^.*\\.[^\\/]+$/.test(request.uri)) {
-        ${
-          buildMetadata.pageResolution === "file"
-            ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
-            : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
-        }
+        ${buildMetadata.pageResolution === "file"
+      ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
+      : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
+    }
       } else if (matchedRoute[1] === 2) {
         var redirectPath = matchedRoute[2];
         matchedRoute[0].exec(request.uri).forEach((match, index) => {
