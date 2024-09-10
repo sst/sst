@@ -68,7 +68,9 @@ func (p *process) start() error {
 }
 
 func (p *process) Kill() {
-	util.TerminateProcess(p.cmd.Process.Pid)
+	if p.cmd != nil && p.cmd.Process != nil {
+		util.TerminateProcess(p.cmd.Process.Pid)
+	}
 	p.vt.Close()
 }
 
