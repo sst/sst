@@ -5,6 +5,7 @@ go 1.21.3
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/aws/aws-cdk-go/awscdk/v2 v2.151.0
+	github.com/aws/aws-sdk-go v1.44.298
 	github.com/aws/aws-sdk-go-v2 v1.30.3
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.38.4

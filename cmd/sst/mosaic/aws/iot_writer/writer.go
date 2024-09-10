@@ -1,30 +1,41 @@
 package iot_writer
 
 import (
+	"bytes"
+	"context"
 	"encoding/binary"
+	"io"
 	"log/slog"
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go/aws"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"github.com/sst/ion/internal/util"
 )
 
-const BUFFER_SIZE = 1024 * 100
+const BUFFER_SIZE = 1024 * 120
+const MAX_COUNT = 3
 
 type IoTWriter struct {
 	topic  string
 	count  int
+	s3     *s3.Client
+	bucket string
 	client MQTT.Client
 	buffer []byte // buffer to accumulate data
 	last   time.Time
 }
 
-func New(client MQTT.Client, topic string) *IoTWriter {
+func New(client MQTT.Client, s3 *s3.Client, bucket string, topic string) *IoTWriter {
 	return &IoTWriter{
 		client: client,
 		buffer: make([]byte, 0, BUFFER_SIZE),
 		topic:  topic,
 		last:   time.Now(),
+		s3:     s3,
+		bucket: bucket,
 	}
 }
 
@@ -32,6 +43,10 @@ func (iw *IoTWriter) Write(p []byte) (int, error) {
 	totalWritten := 0
 
 	for len(p) > 0 {
+		if iw.count == MAX_COUNT {
+			iw.buffer = append(iw.buffer, p...)
+			break
+		}
 		// Calculate the space left in the buffer
 		spaceLeft := BUFFER_SIZE - len(iw.buffer)
 
@@ -47,14 +62,14 @@ func (iw *IoTWriter) Write(p []byte) (int, error) {
 
 		// If the buffer is full, write the chunk
 		if len(iw.buffer) == BUFFER_SIZE {
-			iw.Flush()
+			iw.flush()
 		}
 	}
 
 	return totalWritten, nil
 }
 
-func (iw *IoTWriter) Flush() error {
+func (iw *IoTWriter) flush() error {
 	if len(iw.buffer) > 0 {
 		slog.Info("writing to topic", "topic", iw.topic, "data", len(iw.buffer))
 		// encode int to 4 bytes at the beginning of the buffer
@@ -73,6 +88,24 @@ func (iw *IoTWriter) Flush() error {
 }
 
 func (iw *IoTWriter) Close() error {
+	if len(iw.buffer) <= BUFFER_SIZE {
+		iw.flush()
+	} else {
+		slog.Info("flushing to s3")
+		key := "temporary/" + util.RandomString(8)
+		iw.s3.PutObject(context.TODO(), &s3.PutObjectInput{
+			Bucket: aws.String(iw.bucket),
+			Key:    aws.String(key),
+			Body:   bytes.NewReader(iw.buffer),
+		})
+		bytes := make([]byte, 4)
+		binary.BigEndian.PutUint32(bytes, uint32(99))
+		bytes = append(bytes, []byte(iw.bucket+"|"+key)...)
+		token := iw.client.Publish(iw.topic, 1, false, bytes)
+		if token.Wait() && token.Error() != nil {
+			return token.Error()
+		}
+	}
 	bytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(bytes, uint32(iw.count))
 	iw.count++
@@ -80,12 +113,14 @@ func (iw *IoTWriter) Close() error {
 	if token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
+	slog.Info("closed iot writer", "topic", iw.topic)
 	return nil
 }
 
 type Reader struct {
 	buffer map[string]map[int]ReadMsg
 	next   map[string]int
+	s3     *s3.Client
 }
 
 type ReadMsg struct {
@@ -93,17 +128,16 @@ type ReadMsg struct {
 	Data []byte
 }
 
-func NewReader() *Reader {
+func NewReader(s3 *s3.Client) *Reader {
 	return &Reader{
 		buffer: map[string]map[int]ReadMsg{},
 		next:   map[string]int{},
+		s3:     s3,
 	}
 }
 
 func (r *Reader) Read(m MQTT.Message) []ReadMsg {
 	payload := m.Payload()
-	id := int(binary.BigEndian.Uint32(payload[:4]))
-	payload = payload[4:]
 	topic := m.Topic()
 	requestID := strings.Split(topic, "/")[5]
 	requestBuffer, ok := r.buffer[requestID]
@@ -111,6 +145,23 @@ func (r *Reader) Read(m MQTT.Message) []ReadMsg {
 		requestBuffer = map[int]ReadMsg{}
 		r.buffer[requestID] = requestBuffer
 	}
+	id := int(binary.BigEndian.Uint32(payload[:4]))
+	if id == 99 {
+		data := string(payload[4:])
+		bucket, key, _ := strings.Cut(data, "|")
+		resp, _ := r.s3.GetObject(context.TODO(), &s3.GetObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+		})
+		body, _ := io.ReadAll(resp.Body)
+		return []ReadMsg{
+			{
+				Data: body,
+				ID:   requestID,
+			},
+		}
+	}
+	payload = payload[4:]
 	requestBuffer[id] = ReadMsg{
 		Data: payload,
 		ID:   requestID,

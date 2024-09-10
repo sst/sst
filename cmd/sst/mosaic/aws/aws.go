@@ -20,6 +20,7 @@ import (
 
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/sst/ion/cmd/sst/mosaic/aws/iot_writer"
 	"github.com/sst/ion/cmd/sst/mosaic/watcher"
@@ -95,6 +96,13 @@ func Start(
 		return err
 	}
 
+	bootstrapData, err := provider.AwsBootstrap(config)
+	if err != nil {
+		return err
+	}
+
+	s3Client := s3.NewFromConfig(config)
+
 	originalURL, err := url.Parse(fmt.Sprintf("wss://%s/mqtt?X-Amz-Expires=%s", *endpointResp.EndpointAddress, strconv.FormatInt(int64(expire/time.Second), 10)))
 	if err != nil {
 		return err
@@ -161,8 +169,15 @@ func Start(
 	shutdownChan := make(chan MQTT.Message, 1000)
 
 	prefix := fmt.Sprintf("ion/%s/%s", p.App().Name, p.App().Stage)
-	reader := iot_writer.NewReader()
+	reader := iot_writer.NewReader(s3Client)
 	if token := mqttClient.Subscribe(prefix+"/+/response/#", 1, func(c MQTT.Client, m MQTT.Message) {
+		splits := strings.Split(m.Topic(), "/")
+		workerID := splits[3]
+		go func() {
+			topic := prefix + "/" + workerID + "/ack"
+			slog.Info("acking", "topic", topic)
+			mqttClient.Publish(topic, 1, false, []byte{1}).Wait()
+		}()
 		slog.Info("iot", "topic", m.Topic())
 		for _, msg := range reader.Read(m) {
 			write, ok := pending.Load(msg.ID)
@@ -170,8 +185,12 @@ func Start(
 				return
 			}
 			casted := write.(*io.PipeWriter)
+			if len(msg.Data) == 0 {
+				slog.Info("closing", "requestID", msg.ID)
+				casted.Close()
+				break
+			}
 			casted.Write(msg.Data)
-			casted.Close()
 		}
 	}); token.Wait() && token.Error() != nil {
 		return token.Error()
@@ -313,9 +332,6 @@ func Start(
 						RequestID:  info.CurrentRequestID,
 						Input:      responseBody,
 					})
-					topic := prefix + "/" + info.WorkerID + "/ack"
-					slog.Info("acking", "topic", topic)
-					mqttClient.Publish(topic, 1, false, []byte{1}).Wait()
 				}
 				if evt.path[len(evt.path)-1] == "response" {
 					bus.Publish(&FunctionResponseEvent{
@@ -445,7 +461,7 @@ func Start(
 		slog.Info("lambda request", "path", path)
 		workerID := path[2]
 		requestID := util.RandomString(8)
-		writer := iot_writer.New(mqttClient, prefix+"/"+workerID+"/request/"+requestID)
+		writer := iot_writer.New(mqttClient, s3Client, bootstrapData.Asset, prefix+"/"+workerID+"/request/"+requestID)
 		read, write := io.Pipe()
 		pending.Store(requestID, write)
 		defer func() {
@@ -470,7 +486,6 @@ func Start(
 			write := io.MultiWriter(writer, requestBody)
 			io.Copy(write, r.Body)
 		}
-		writer.Flush()
 		writer.Close()
 
 		hijacker, ok := w.(http.Hijacker)

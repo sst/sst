@@ -23,6 +23,7 @@ import (
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/sst/ion/cmd/sst/mosaic/aws/iot_writer"
 )
@@ -34,6 +35,7 @@ var SST_STAGE = os.Getenv("SST_STAGE")
 var SST_FUNCTION_ID = os.Getenv("SST_FUNCTION_ID")
 var SST_FUNCTION_TIMEOUT = os.Getenv("SST_FUNCTION_TIMEOUT")
 var SST_REGION = os.Getenv("SST_REGION")
+var SST_ASSET_BUCKET = os.Getenv("SST_ASSET_BUCKET")
 
 var ENV_BLACKLIST = map[string]bool{
 	"SST_DEBUG_ENDPOINT":              true,
@@ -158,7 +160,7 @@ func run() error {
 	slog.Info("get lambda runtime api", "url", LAMBDA_RUNTIME_API)
 
 	requestChan := make(chan iot_writer.ReadMsg, 1000)
-	reader := iot_writer.NewReader()
+	reader := iot_writer.NewReader(s3Client)
 	if token := mqttClient.Subscribe(prefix+"/request/#", 1, func(c MQTT.Client, m MQTT.Message) {
 		for _, msg := range reader.Read(m) {
 			requestChan <- msg
@@ -202,7 +204,6 @@ func run() error {
 
 	ack := make(chan struct{})
 	if token := mqttClient.Subscribe(prefix+"/ack", 1, func(c MQTT.Client, m MQTT.Message) {
-		slog.Info("received ack")
 		go func() {
 			ack <- struct{}{}
 		}()
@@ -225,16 +226,21 @@ func run() error {
 	if SST_FUNCTION_TIMEOUT != "" {
 		// parse to int not int64
 		parsed, err := strconv.ParseInt(SST_FUNCTION_TIMEOUT, 10, 64)
-		if err != nil {
+		slog.Info("parsed timeout", "parsed", parsed)
+		if err == nil {
 			timeout = time.Millisecond * time.Duration(parsed)
 		}
 	}
+	// format as seconds
+	slog.Info("timeout", "timeout", timeout)
 	for {
+		slog.Info("waiting for next invocation")
 		// aws will sleep lambda until next invocation
 		req, err := http.Get("http://" + LAMBDA_RUNTIME_API + "/2018-06-01/runtime/invocation/next")
 		if err != nil {
 			return err
 		}
+		req.Body.Close()
 		requestID := req.Header.Get("lambda-runtime-aws-request-id")
 		requestContext, cancel := context.WithCancel(ctx)
 		slog.Info("dialing lambda runtime api")
@@ -260,12 +266,14 @@ func run() error {
 				reportError(requestID, "it does not seem like sst dev is running")
 				break
 			}
-			writer := iot_writer.New(mqttClient, prefix+"/response/"+msgID)
+			writer := iot_writer.New(mqttClient, s3Client, SST_ASSET_BUCKET, prefix+"/response/"+msgID)
 			err = forwardResponse(requestContext, writer, conn)
 			if err != nil {
+				slog.Error("failed to forward response", "error", err)
 				reportError(requestID, err.Error())
 				break
 			}
+			slog.Info("response sent", "method", req.Method)
 			if req.Method == "POST" {
 				break
 			}
@@ -306,32 +314,36 @@ func forwardRequest(ctx context.Context, requestChan chan iot_writer.ReadMsg, co
 	}
 }
 
+var cfg, _ = config.LoadDefaultConfig(context.TODO())
+var s3Client = s3.NewFromConfig(cfg)
+
 func forwardResponse(ctx context.Context, writer *iot_writer.IoTWriter, conn net.Conn) error {
 	slog.Info("forwarding response")
-	buf := make([]byte, 1024)
+	buf := make([]byte, 1024*5)
 	for {
-		conn.SetReadDeadline(time.Now().Add(time.Second * 1))
+		conn.SetReadDeadline(time.Now().Add(time.Second * 2))
 		select {
 		case <-ctx.Done():
 			return fmt.Errorf("context cancelled")
 		default:
 			n, err := conn.Read(buf)
 			if err != nil {
+				slog.Info("read error", "err", err)
 				if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
-					writer.Flush()
+					writer.Close()
 					return nil
 				}
 				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
 					continue
 				}
-				slog.Info("read error", "err", err)
 				return err
 			}
 			if n == 0 {
-				writer.Flush()
+				writer.Close()
 				return nil
 			}
-			writer.Write(buf[:n])
+			slice := buf[:n]
+			writer.Write(slice)
 		}
 	}
 }

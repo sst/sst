@@ -1067,6 +1067,7 @@ export class Function extends Component implements Link.Linkable {
     const containerDeployment = pythonContainerMode;
     const dev = normalizeDev();
     const region = normalizeRegion();
+    const bootstrapData = region.apply((region) => bootstrap.forRegion(region));
     const injections = normalizeInjections();
     const runtime = normalizeRuntime();
     const timeout = normalizeTimeout();
@@ -1205,8 +1206,8 @@ export class Function extends Component implements Link.Linkable {
     }
 
     function normalizeEnvironment() {
-      return all([args.environment, dev, args.link]).apply(
-        ([environment, dev]) => {
+      return all([args.environment, dev, bootstrapData]).apply(
+        ([environment, dev, bootstrap]) => {
           const result = environment ?? {};
           result.SST_RESOURCE_App = JSON.stringify({
             name: $app.name,
@@ -1217,6 +1218,7 @@ export class Function extends Component implements Link.Linkable {
             result.SST_FUNCTION_ID = name;
             result.SST_APP = $app.name;
             result.SST_STAGE = $app.stage;
+            result.SST_ASSET_BUCKET = bootstrap.asset;
             if (process.env.SST_FUNCTION_TIMEOUT)
               result.SST_FUNCTION_TIMEOUT = process.env.SST_FUNCTION_TIMEOUT;
           }
@@ -1527,6 +1529,13 @@ export class Function extends Component implements Link.Linkable {
                       actions: ["iot:*"],
                       resources: ["*"],
                     },
+                    {
+                      actions: ["s3:*"],
+                      resources: [
+                        interpolate`arn:aws:s3:::${bootstrapData.asset}`,
+                        interpolate`arn:aws:s3:::${bootstrapData.asset}/*`,
+                      ],
+                    },
                   ]
                 : []),
             ],
@@ -1607,10 +1616,6 @@ export class Function extends Component implements Link.Linkable {
 
             // TODO: walln - check service implementation for .dockerignore stuff
 
-            // Get ECR repository
-            const bootstrapData = region.apply((region) =>
-              bootstrap.forRegion(region),
-            );
             const authToken = ecr.getAuthorizationTokenOutput({
               registryId: bootstrapData.assetEcrRegistryId,
             });
