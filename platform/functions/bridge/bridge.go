@@ -222,7 +222,7 @@ func run() error {
 		mqttClient.Publish(prefix+"/shutdown", 1, false, initPayload).Wait()
 	}()
 
-	timeout := time.Second * 3
+	timeout := time.Second * 8
 	if SST_FUNCTION_TIMEOUT != "" {
 		// parse to int not int64
 		parsed, err := strconv.ParseInt(SST_FUNCTION_TIMEOUT, 10, 64)
