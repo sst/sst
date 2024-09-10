@@ -61,6 +61,7 @@ const sidebar = [
       { label: "Set up a Monorepo", slug: "docs/set-up-a-monorepo" },
       { label: "Share Across Stages", slug: "docs/share-across-stages" },
       { label: "Reference Resources", slug: "docs/reference-resources" },
+      { label: "Environment Variables", slug: "docs/environment-variables" },
     ],
   },
   {

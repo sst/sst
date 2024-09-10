@@ -1,0 +1,199 @@
+---
+title: Environment Variables
+description: Manage the environment variables in your app. 
+---
+
+You can manage the environment variables for all the components in your app, across all your stages, through the `sst.config.ts`.
+
+:::tip
+You don't need to use `.env` files in SST.
+:::
+
+While SST automatically loads your environment variables and `.env` files; we don't recommend relying on them.
+
+---
+
+## Recommended
+
+Typically, you'll use environment variables or `.env` files to share things like database URLs, secrets, or other config.
+
+To understand why we don't recommend `.env` files, let's look at each of these in detail.
+
+---
+
+### Links
+
+A very common use case for `.env` is to share something like a database URL across your app.
+
+Instead in SST, you can link the resources together.
+
+```ts title="sst.config.ts" {4}
+const rds = new sst.aws.Postgres("MyPostgres");
+
+new sst.aws.Nextjs("MyWeb", {
+  link: [rds]
+});
+```
+
+You can then access the database in your Next.js app with the [JS SDK](/docs/reference/sdk/).
+
+```ts title="app/page.tsx" {5-7}
+import { Resource } from "sst";
+
+export const db = drizzle(client, {
+  schema,
+  database: Resource.MyPostgres.database,
+  secretArn: Resource.MyPostgres.secretArn,
+  resourceArn: Resource.MyPostgres.clusterArn
+});
+```
+
+This has a couple of key advantages:
+
+1. You don't have to deploy your database separately and then store the credentials in a `.env` file.
+2. You don't need to update this for every stage.
+3. You don't have to share these URLs with your teammates.
+
+Anybody on your team can just run `sst deploy` on any stage and it'll deploy the app and link the resources.
+
+:::tip
+Your team can just `git checkout` and `sst deploy`; without the need for a separate `.env` file.
+:::
+
+You can learn more about [linking resources](/docs/linking/).
+
+---
+
+### Secrets
+
+Another common use case for `.env` is to manage secrets across your app.
+
+SST has a built-in way to handle secrets.
+
+```ts title="sst.config.ts" {4}
+const secret = new sst.Secret("MySecret");
+
+new sst.aws.Nextjs("MyWeb", {
+  link: [secret]
+});
+```
+
+You can set the secret using the `sst secret` CLI.
+
+```bash title="Terminal"
+sst secret set MySecret my-secret-value
+```
+
+This far more secure than storing it in a `.env` file and accidentally committing it to Git.
+
+Learn more about [secrets](/docs/component/secret).
+
+---
+
+### Other config
+
+Finally, people use `.env` files for some general config. These are often different across stages and are not really sensitive. For example, you might have your `SENTRY_DSN` that's different for dev and prod.
+
+We recommend putting these directly in your `sst.config.ts` instead. And using the right one based on the stage.
+
+```ts title="sst.config.ts"
+const SENTRY_DSN = $app.stage !== "prod"
+   ? "https://foo@sentry.io/bar"
+   : "https://baz@sentry.io/qux";
+```
+
+You can also conditionally set it based on if you are running `sst dev` or `sst deploy`.
+
+```ts title="sst.config.ts"
+const SENTRY_DSN = $dev === true
+   ? "https://foo@sentry.io/bar"
+   : "https://baz@sentry.io/qux";
+```
+
+And you can pass this into your frontends and functions.
+
+```ts title="sst.config.ts" {3}
+new sst.aws.Nextjs("MyWeb", {
+  environment: {
+    SENTRY_DSN
+  }
+});
+```
+
+Learn more about [`$app`](/docs/reference/global#app) and [`$dev`](/docs/reference/global#dev).
+
+---
+
+## Traditional
+
+As mentioned above, SST also supports the traditional approach. If you run `sst dev` or `sst deploy` with an environment variable:
+
+```bash title="Terminal" "SOME_ENV_VAR=FOO"
+SOME_ENV_VAR=FOO sst deploy
+```
+
+You can access it using the `process.env` in your `sst.config.ts`.
+
+```ts title="sst.config.ts"
+async run() {
+  console.log(process.env.SOME_ENV_VAR); // FOO
+}
+```
+
+However, this isn't automatically added to your frontends or functions. You'll need to add it manually.
+
+```ts title="sst.config.ts" {3}
+new sst.aws.Nextjs("MyWeb", {
+   environment: {
+     SOME_ENV_VAR: process.env.SOME_ENV_VAR || "fallback value",
+   }
+});
+```
+
+SST doesn't do this automatically because you might have multiple frontends or functions and you might not want to load it for all of them.
+
+:::tip
+Environment variables are not automatically added to your frontend or functions.
+:::
+
+Now you can access it in your frontend.
+
+```ts title="app/page.tsx"
+export default function Home() {
+  return <p>Hello {process.env.SOME_ENV_VAR}</p>;
+}
+```
+
+---
+
+### .env
+
+The same thing works if you have a `.env` file in your project root.
+
+```bash title=".env"
+SOME_ENV_VAR=FOO
+```
+
+It'll be loaded into `process.env` in your `sst.config.ts`.
+
+```ts title="sst.config.ts"
+async run() {
+  console.log(process.env.SOME_ENV_VAR); // FOO
+}
+```
+
+Or if you have a stage specific `.env.dev` file.
+
+```bash title=".env.dev"
+SOME_ENV_VAR=BAR
+```
+
+And you run `sst deploy --stage dev`, it'll be loaded into `process.env` in your `sst.config.ts`.
+
+```ts title="sst.config.ts"
+async run() {
+  console.log(process.env.SOME_ENV_VAR); // BAR
+}
+```
+
+While the traditional approach works, we do not recommend it because it's both cumbersome and not secure.
