@@ -99,8 +99,9 @@ func (iw *IoTWriter) Close() error {
 			Body:   bytes.NewReader(iw.buffer),
 		})
 		bytes := make([]byte, 4)
-		binary.BigEndian.PutUint32(bytes, uint32(99))
-		bytes = append(bytes, []byte(iw.bucket+"|"+key)...)
+		binary.BigEndian.PutUint32(bytes, uint32(iw.count))
+		iw.count++
+		bytes = append(bytes, []byte("blk"+iw.bucket+"|"+key)...)
 		token := iw.client.Publish(iw.topic, 1, false, bytes)
 		if token.Wait() && token.Error() != nil {
 			return token.Error()
@@ -108,12 +109,11 @@ func (iw *IoTWriter) Close() error {
 	}
 	bytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(bytes, uint32(iw.count))
-	iw.count++
 	token := iw.client.Publish(iw.topic, 1, false, bytes)
 	if token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
-	slog.Info("closed iot writer", "topic", iw.topic)
+	slog.Info("closed iot writer", "topic", iw.topic, "count", iw.count)
 	return nil
 }
 
@@ -146,22 +146,17 @@ func (r *Reader) Read(m MQTT.Message) []ReadMsg {
 		r.buffer[requestID] = requestBuffer
 	}
 	id := int(binary.BigEndian.Uint32(payload[:4]))
-	if id == 99 {
-		data := string(payload[4:])
-		bucket, key, _ := strings.Cut(data, "|")
+	payload = payload[4:]
+	if bytes.HasPrefix(payload, []byte("blk")) {
+		data := string(payload)
+		bucket, key, _ := strings.Cut(data[3:], "|")
+		slog.Info("fetching from s3", "bucket", bucket, "key", key)
 		resp, _ := r.s3.GetObject(context.TODO(), &s3.GetObjectInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 		})
-		body, _ := io.ReadAll(resp.Body)
-		return []ReadMsg{
-			{
-				Data: body,
-				ID:   requestID,
-			},
-		}
+		payload, _ = io.ReadAll(resp.Body)
 	}
-	payload = payload[4:]
 	requestBuffer[id] = ReadMsg{
 		Data: payload,
 		ID:   requestID,

@@ -41,12 +41,11 @@ func SubscribeAll() chan interface{} {
 }
 
 func Publish(event interface{}) {
+	t := reflect.TypeOf(event)
+	slog.Info("publishing", "type", t)
 	bus.mu.RLock()
 	defer bus.mu.RUnlock()
 
-	t := reflect.TypeOf(event)
-
-	slog.Info("publishing", "type", t)
 	// Send to type-specific subscribers
 	if chans, found := bus.subscribers[t]; found {
 		for _, ch := range chans {

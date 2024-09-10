@@ -171,15 +171,9 @@ func Start(
 	prefix := fmt.Sprintf("ion/%s/%s", p.App().Name, p.App().Stage)
 	reader := iot_writer.NewReader(s3Client)
 	if token := mqttClient.Subscribe(prefix+"/+/response/#", 1, func(c MQTT.Client, m MQTT.Message) {
-		splits := strings.Split(m.Topic(), "/")
-		workerID := splits[3]
-		go func() {
-			topic := prefix + "/" + workerID + "/ack"
-			slog.Info("acking", "topic", topic)
-			mqttClient.Publish(topic, 1, false, []byte{1}).Wait()
-		}()
-		slog.Info("iot", "topic", m.Topic())
+		slog.Info("iot", "topic", m.Topic(), "payload", len(m.Payload()))
 		for _, msg := range reader.Read(m) {
+			slog.Info("read", "requestID", msg.ID, "data", len(msg.Data))
 			write, ok := pending.Load(msg.ID)
 			if !ok {
 				return
@@ -188,7 +182,7 @@ func Start(
 			if len(msg.Data) == 0 {
 				slog.Info("closing", "requestID", msg.ID)
 				casted.Close()
-				break
+				return
 			}
 			casted.Write(msg.Data)
 		}
@@ -309,7 +303,6 @@ func Start(
 			return true
 		}
 
-		slog.Info("wheewooo")
 		for {
 			select {
 			case <-ctx.Done():
@@ -319,7 +312,6 @@ func Start(
 				if !ok {
 					continue
 				}
-
 				responseBody, err := io.ReadAll(evt.response.Body)
 				if err != nil {
 					continue
@@ -332,6 +324,9 @@ func Start(
 						RequestID:  info.CurrentRequestID,
 						Input:      responseBody,
 					})
+					topic := prefix + "/" + info.WorkerID + "/ack"
+					slog.Info("acking", "topic", topic)
+					mqttClient.Publish(topic, 1, false, []byte{1}).Wait()
 				}
 				if evt.path[len(evt.path)-1] == "response" {
 					bus.Publish(&FunctionResponseEvent{
@@ -420,6 +415,7 @@ func Start(
 				}
 				if _, ok := targets[payload.FunctionID]; !ok {
 					go func() {
+						slog.Info("dev not ready yet", "functionID", payload.FunctionID)
 						time.Sleep(time.Second * 1)
 						initChan <- m
 					}()
@@ -532,6 +528,9 @@ func Start(
 		}()
 
 		<-done
+		read.Close()
+		conn.Close()
+		write.Close()
 		slog.Info("lambda sent response", "workerID", workerID)
 	})
 
