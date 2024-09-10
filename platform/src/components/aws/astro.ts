@@ -37,14 +37,6 @@ export interface AstroArgs extends SsrSiteArgs {
    */
   dev?: false | DevArgs["dev"];
   /**
-   * The number of instances of the [server function](#nodes-server) to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
-   *
-   * This works by starting a serverless cron job to make _n_ concurrent requests to the server function every few minutes. Where _n_ is the number of instances to keep warm.
-   *
-   * @default `0`
-   */
-  warm?: SsrSiteArgs["warm"];
-  /**
    * Permissions and the resources that the [server function](#nodes-server) in your Astro site needs to access. These permissions are used to create the function's IAM role.
    *
    * :::tip
@@ -693,10 +685,11 @@ function useCloudFrontRoutingInjection(buildMetadata: BuildMetaConfig) {
     var matchedRoute = findFirstMatch(findMatches(request.uri, routeData));
     if (matchedRoute[0]) {
       if (!matchedRoute[1] && !/^.*\\.[^\\/]+$/.test(request.uri)) {
-        ${buildMetadata.pageResolution === "file"
-      ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
-      : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
-    }
+        ${
+          buildMetadata.pageResolution === "file"
+            ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
+            : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
+        }
       } else if (matchedRoute[1] === 2) {
         var redirectPath = matchedRoute[2];
         matchedRoute[0].exec(request.uri).forEach((match, index) => {

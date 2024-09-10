@@ -75,7 +75,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
      *
      * The viewer request function can be used to modify incoming requests before they reach your origin server. For example, you can redirect users, rewrite URLs, or add headers.
      *
-     * By default, a view request function is created to rewrite URLs to:
+     * By default, a viewer request function is created to rewrite URLs to:
      * - append `index.html` to the URL if the URL ends with a `/`.
      * - append `.html` to the URL if the URL does not contain a file extension.
      *

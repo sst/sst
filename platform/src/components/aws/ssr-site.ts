@@ -9,7 +9,6 @@ import {
   all,
   interpolate,
   ComponentResource,
-  ComponentResourceOptions,
 } from "@pulumi/pulumi";
 import { Cdn, CdnArgs } from "./cdn.js";
 import { Function, FunctionArgs } from "./function.js";
@@ -59,7 +58,6 @@ export interface SsrSiteArgs extends BaseSsrSiteArgs {
   domain?: CdnArgs["domain"];
   permissions?: FunctionArgs["permissions"];
   cachePolicy?: Input<string>;
-  warm?: Input<number>;
   invalidation?: Input<
     | false
     | {
@@ -106,6 +104,14 @@ export interface SsrSiteArgs extends BaseSsrSiteArgs {
         paths?: Input<"all" | "versioned" | string[]>;
       }
   >;
+  /**
+   * The number of instances of the [server function](#nodes-server) to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
+   *
+   * This works by starting a serverless cron job to make _n_ concurrent requests to the server function every few minutes. Where _n_ is the number of instances to keep warm.
+   *
+   * @default `0`
+   */
+  warm?: Input<number>;
   /**
    * Configure the Lambda function used for server.
    * @default `{architecture: "x86_64", memory: "1024 MB"}`
@@ -186,6 +192,112 @@ export interface SsrSiteArgs extends BaseSsrSiteArgs {
      * ```
      */
     layers?: Input<Input<string>[]>;
+    /**
+     * Configure CloudFront Functions to customize the behavior of HTTP requests and responses at the edge locations.
+     */
+    edge?: Input<{
+      /**
+       * Configure the viewer request function.
+       *
+       * The viewer request function can be used to modify incoming requests before they reach your origin server. For example, you can redirect users, rewrite URLs, or add headers.
+       *
+       * By default, a viewer request function is created to inject the `x-forwarded-host` header. The provided code will be injected at the end of the function.
+       *
+       * ```js
+       * function handler(event) {
+       *
+       *   // Default behavior code
+       *   ...
+       *
+       *   // User injected code
+       *   ...
+       *
+       *   return request;
+       * }
+       * ```
+       *
+       * @example
+       * Add a custom header to all requests
+       * ```js
+       * {
+       *   server: {
+       *     edge: {
+       *       viewerRequest: {
+       *         injection: `request.headers["x-foo"] = "bar";`
+       *       }
+       *     }
+       *   }
+       * }
+       * ```
+       */
+      viewerRequest?: Input<{
+        /**
+         * Code to inject into the viewer request function.
+         */
+        injection: Input<string>;
+        /**
+         * The KV stores to associate with the viewer request function.
+         *
+         * @example
+         * ```js
+         * {
+         *   server: {
+         *     edge: {
+         *       viewerRequest: {
+         *         kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
+         *       }
+         *     }
+         *   }
+         * }
+         * ```
+         */
+        kvStores?: Input<Input<string>[]>;
+      }>;
+      /**
+       * Configure the viewer response function.
+       *
+       * The viewer response function can be used to modify outgoing responses before they are sent to the client. For example, you can add security headers or change the response status code.
+       *
+       * By default, no viewer response function is set. A new function will be created with the provided code.
+       *
+       * @example
+       * Add a custom header to all responses
+       * ```js
+       * {
+       *   server: {
+       *     edge: {
+       *       viewerResponse: {
+       *         injection: `response.headers["x-foo"] = "bar";`
+       *       }
+       *     }
+       *   }
+       * }
+       * ```
+       */
+      viewerResponse?: Input<{
+        /**
+         * Code to inject into the viewer response function.
+         */
+        injection: Input<string>;
+        /**
+         * The KV stores to associate with the viewer response function.
+         *
+         * @example
+         * ```js
+         * {
+         *   server: {
+         *     edge: {
+         *       viewerResponse: {
+         *         kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
+         *       }
+         *     }
+         *   }
+         * }
+         * ```
+         */
+        kvStores?: Input<Input<string>[]>;
+      }>;
+    }>;
   };
   vpc?: FunctionArgs["vpc"];
   /**
@@ -358,10 +470,10 @@ export function createServersAndDistribution(
 ) {
   return all([outputPath, plan]).apply(([outputPath, plan]) => {
     const ssrFunctions: Function[] = [];
+    const cfFunctions: Record<string, cloudfront.Function> = {};
     let singletonCachePolicy: cloudfront.CachePolicy;
 
     const bucketFile = uploadAssets();
-    const cfFunctions = createCloudFrontFunctions();
     const edgeFunctions = createEdgeFunctions();
     const origins = buildOrigins();
     const originGroups = buildOriginGroups();
@@ -505,29 +617,6 @@ export function createServersAndDistribution(
           ? `;charset=${textEncoding}`
           : "";
       return `${mime}${charset}`;
-    }
-
-    function createCloudFrontFunctions() {
-      const functions: Record<string, cloudfront.Function> = {};
-
-      Object.entries(plan.cloudFrontFunctions ?? {}).forEach(
-        ([fnName, { injections }]) => {
-          functions[fnName] = new cloudfront.Function(
-            `${name}CloudfrontFunction${logicalName(fnName)}`,
-            {
-              runtime: "cloudfront-js-1.0",
-              code: `
-function handler(event) {
-  var request = event.request;
-  ${injections.join("\n")}
-  return request;
-}`,
-            },
-            { parent },
-          );
-        },
-      );
-      return functions;
     }
 
     function createEdgeFunctions() {
@@ -746,7 +835,6 @@ function handler(event) {
 
     function buildBehavior(behavior: Plan["behaviors"][number]) {
       const edgeFunction = edgeFunctions[behavior.edgeFunction || ""];
-      const cfFunction = cfFunctions[behavior.cfFunction || ""];
 
       if (behavior.cacheType === "static") {
         return {
@@ -757,11 +845,15 @@ function handler(event) {
           compress: true,
           // CloudFront's managed CachingOptimized policy
           cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
-          functionAssociations: cfFunction
+          functionAssociations: behavior.cfFunction
             ? [
                 {
                   eventType: "viewer-request",
-                  functionArn: cfFunction.arn,
+                  functionArn: useCfFunction(
+                    "assets",
+                    "request",
+                    behavior.cfFunction,
+                  ).arn,
                 },
               ]
             : [],
@@ -784,11 +876,15 @@ function handler(event) {
           cachePolicyId: args.cachePolicy ?? useServerBehaviorCachePolicy().id,
           // CloudFront's Managed-AllViewerExceptHostHeader policy
           originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
-          functionAssociations: cfFunction
+          functionAssociations: behavior.cfFunction
             ? [
                 {
                   eventType: "viewer-request",
-                  functionArn: cfFunction.arn,
+                  functionArn: useCfFunction(
+                    "server",
+                    "response",
+                    behavior.cfFunction,
+                  ).arn,
                 },
               ]
             : [],
@@ -805,6 +901,40 @@ function handler(event) {
       }
 
       throw new VisibleError(`Invalid behavior type in the "${name}" site.`);
+    }
+
+    function useCfFunction(
+      origin: "assets" | "server",
+      type: "request" | "response",
+      fnName: string,
+    ) {
+      const { injections } = plan.cloudFrontFunctions![fnName];
+      const config =
+        origin === "server"
+          ? output(args.server).apply((server) =>
+              type === "request"
+                ? server?.edge?.viewerRequest
+                : server?.edge?.viewerResponse,
+            )
+          : output(undefined);
+      cfFunctions[fnName] =
+        cfFunctions[fnName] ??
+        new cloudfront.Function(
+          `${name}CloudfrontFunction${logicalName(fnName)}`,
+          {
+            runtime: "cloudfront-js-2.0",
+            keyValueStoreAssociations: config.apply((v) => v?.kvStores ?? []),
+            code: interpolate`
+function handler(event) {
+  var request = event.request;
+  ${injections.join("\n")}
+  ${config.apply((v) => v?.injection ?? "")}
+  return request;
+}`,
+          },
+          { parent },
+        );
+      return cfFunctions[fnName];
     }
 
     function useServerBehaviorCachePolicy() {

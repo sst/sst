@@ -106,14 +106,6 @@ export interface NextjsArgs extends SsrSiteArgs {
    */
   dev?: false | DevArgs["dev"];
   /**
-   * The number of instances of the [server function](#nodes-server) to keep warm. This is useful for cases where you are experiencing long cold starts. The default is to not keep any instances warm.
-   *
-   * This works by starting a serverless cron job to make _n_ concurrent requests to the server function every few minutes. Where _n_ is the number of instances to keep warm.
-   *
-   * @default `0`
-   */
-  warm?: SsrSiteArgs["warm"];
-  /**
    * Permissions and the resources that the [server function](#nodes-server) in your Next.js app needs to access. These permissions are used to create the function's IAM role.
    *
    * :::tip
@@ -807,39 +799,39 @@ export class Nextjs extends Component implements Link.Linkable {
               },
               ...(revalidationQueueArn
                 ? [
-                  {
-                    actions: [
-                      "sqs:SendMessage",
-                      "sqs:GetQueueAttributes",
-                      "sqs:GetQueueUrl",
-                    ],
-                    resources: [revalidationQueueArn],
-                  },
-                ]
+                    {
+                      actions: [
+                        "sqs:SendMessage",
+                        "sqs:GetQueueAttributes",
+                        "sqs:GetQueueUrl",
+                      ],
+                      resources: [revalidationQueueArn],
+                    },
+                  ]
                 : []),
               ...(revalidationTableArn
                 ? [
-                  {
-                    actions: [
-                      "dynamodb:BatchGetItem",
-                      "dynamodb:GetRecords",
-                      "dynamodb:GetShardIterator",
-                      "dynamodb:Query",
-                      "dynamodb:GetItem",
-                      "dynamodb:Scan",
-                      "dynamodb:ConditionCheckItem",
-                      "dynamodb:BatchWriteItem",
-                      "dynamodb:PutItem",
-                      "dynamodb:UpdateItem",
-                      "dynamodb:DeleteItem",
-                      "dynamodb:DescribeTable",
-                    ],
-                    resources: [
-                      revalidationTableArn,
-                      `${revalidationTableArn}/*`,
-                    ],
-                  },
-                ]
+                    {
+                      actions: [
+                        "dynamodb:BatchGetItem",
+                        "dynamodb:GetRecords",
+                        "dynamodb:GetShardIterator",
+                        "dynamodb:Query",
+                        "dynamodb:GetItem",
+                        "dynamodb:Scan",
+                        "dynamodb:ConditionCheckItem",
+                        "dynamodb:BatchWriteItem",
+                        "dynamodb:PutItem",
+                        "dynamodb:UpdateItem",
+                        "dynamodb:DeleteItem",
+                        "dynamodb:DescribeTable",
+                      ],
+                      resources: [
+                        revalidationTableArn,
+                        `${revalidationTableArn}/*`,
+                      ],
+                    },
+                  ]
                 : []),
             ],
           };
