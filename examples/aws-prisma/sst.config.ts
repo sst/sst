@@ -3,57 +3,71 @@
 /**
  * ## Prisma in Lambda
  *
- * To use Prisma in a Lambda function you need:
+ * To use Prisma in a Lambda function you need to
  *
- * 1. [`@prisma/client`](https://www.npmjs.com/package/@prisma/client) package
- * 2. The generated Prisma client from `npx prisma generate`
+ * - Generate the Prisma Client with the right architecture
+ * - Copy the generated client to the function
+ * - Run the function inside a VPC
  *
- * You don't need a layer to deploy these because `nodejs.install` automatically uses the
- * right binary for the target Lambda architecture.
- *
- * ```ts title="sst.config.ts"
- * {
- *   nodejs: { install: ["@prisma/client"] }
- * }
- * ```
- *
- * However, this overwrites the default client in `node_modules/.prisma/client` that's generated
- * by Prisma. So we need to use a different directory.
+ * You can set the architecture using the `binaryTargets` option in `prisma/schema.prisma`.
  *
  * ```prisma title="prisma/schema.prisma"
- * generator client {
- *   provider = "prisma-client-js"
- *   output = "../.prisma/client"
- * }
+ * // For x86
+ * binaryTargets = ["native", "rhel-openssl-3.0.x"]
+ * // For ARM
+ * // binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
  * ```
  *
- * And then we need to copy the generated client to the function.
+ * You can also switch to ARM, just make sure to also change the function architecture in your
+ * `sst.config.ts`.
  *
  * ```ts title="sst.config.ts"
  * {
- *   copyFiles: [{
- *     from: ".prisma/client/"
- *   }]
+ *   // For ARM
+ *   architecture: "arm64"
  * }
  * ```
  *
- * We also need to import this client in the function.
+ * To generate the client, you need to run `prisma generate` when you make changes to the
+ * schema.
  *
- * ```ts title="prisma.ts"
- * import { PrismaClient } from "./.prisma/client";
+ * Since this [needs to be done on every deploy](https://www.prisma.io/docs/orm/more/help-and-troubleshooting/help-articles/vercel-caching-issue#a-custom-postinstall-script), we add a `postinstall` script to the `package.json`.
+ *
+ * ```json title="package.json"
+ * "scripts": {
+ *   "postinstall": "prisma generate"
+ * }
+ * ```
+ *
+ * This runs the command on `npm install`.
+ *
+ * We then need to copy the generated client to the function when we deploy.
+ *
+ * ```ts title="sst.config.ts"
+ * {
+ *   copyFiles: [{ from: "node_modules/.prisma/client/" }]
+ * }
+ * ```
+ *
+ * Our function also needs to run inside a VPC, since Prisma doesn't support the Data API.
+ *
+ * ```ts title="sst.config.ts"
+ * {
+ *   vpc
+ * }
  * ```
  *
  * #### Prisma in serverless environments
  *
- * Prisma unfortunately is [not great in serverless environments](https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/databases-connections#serverless-environments-faas). For a couple of reasons:
+ * Prisma is [not great in serverless environments](https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/databases-connections#serverless-environments-faas). For a couple of reasons:
  *
  * 1. It doesn't support Data API, so you need to manage the connection pool on your own.
  * 2. Without the Data API, your functions need to run inside a VPC.
  *    - You cannot use `sst dev` without [connecting to the VPC](/docs/live#using-a-vpc).
  * 3. Due to the internal architecture of their client, it's also has slower cold starts.
  *
- * Instead we recommend using Drizzle. This example is here for reference for people that are
- * already using Prisma.
+ * Instead we recommend using [Drizzle](https://orm.drizzle.team). This example is here for
+ * reference for people that are already using Prisma.
  */
 export default $config({
   app(input) {
@@ -71,11 +85,10 @@ export default $config({
       vpc,
       url: true,
       link: [rds],
+      // For ARM
+      // architecture: "arm64",
       handler: "index.handler",
-      copyFiles: [{
-        from: ".prisma/client/",
-      }],
-      nodejs: { install: ["@prisma/client"] },
+      copyFiles: [{ from: "node_modules/.prisma/client/" }],
     });
 
     return {
