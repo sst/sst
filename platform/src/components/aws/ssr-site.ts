@@ -882,7 +882,7 @@ export function createServersAndDistribution(
                   eventType: "viewer-request",
                   functionArn: useCfFunction(
                     "server",
-                    "response",
+                    "request",
                     behavior.cfFunction,
                   ).arn,
                 },
