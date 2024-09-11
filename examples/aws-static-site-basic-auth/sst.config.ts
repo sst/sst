@@ -46,28 +46,21 @@ export default $config({
         Buffer.from(`${username}:${password}`).toString("base64")
     );
 
-    const fn = new aws.cloudfront.Function("BasicAuth", {
-      runtime: "cloudfront-js-2.0",
-      code: $interpolate`
-        function handler(event) {
-          if (!event.request.headers.authorization || event.request.headers.authorization.value !== "Basic ${basicAuth}") {
-            return {
-              statusCode: 401,
-              headers: {
-                "www-authenticate": { value: "Basic" }
-              }
-            };
-          }
-          return event.request;
-        }`,
-    });
-
     new sst.aws.StaticSite("MySite", {
       path: "site",
-      // Don't password protect prod
-      edge: $app.stage !== "production"
-        ? { viewerRequest: fn.arn }
-        : undefined,
+      edge: {
+        viewerRequest: {
+          injection: $interpolate`
+            if (!event.request.headers.authorization || event.request.headers.authorization.value !== "Basic ${basicAuth}") {
+              return {
+                statusCode: 401,
+                headers: {
+                  "www-authenticate": { value: "Basic" }
+                }
+              };
+            }`,
+        },
+      },
     });
   },
 });
