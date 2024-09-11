@@ -1,0 +1,25 @@
+{
+  "name": "aws-nextjs-basic-auth",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "lint": "next lint",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "14.2.9",
+    "react": "^18",
+    "react-dom": "^18",
+    "sst": "3.0.133"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.9",
+    "typescript": "^5"
+  }
+}
