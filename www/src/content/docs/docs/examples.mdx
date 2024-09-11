@@ -460,9 +460,9 @@ Since this [needs to be done on every deploy](https://www.prisma.io/docs/orm/mor
 }
 ```
 
-This runs the command when you run `npm install`.
+This runs the command on `npm install`.
 
-Finally we need to copy the generated client to the function when we deploy.
+We then need to copy the generated client to the function when we deploy.
 
 ```ts title="sst.config.ts"
 {
@@ -480,15 +480,15 @@ Our function also needs to run inside a VPC, since Prisma doesn't support the Da
 
 #### Prisma in serverless environments
 
-Prisma unfortunately is [not great in serverless environments](https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/databases-connections#serverless-environments-faas). For a couple of reasons:
+Prisma is [not great in serverless environments](https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/databases-connections#serverless-environments-faas). For a couple of reasons:
 
 1. It doesn't support Data API, so you need to manage the connection pool on your own.
 2. Without the Data API, your functions need to run inside a VPC.
    - You cannot use `sst dev` without [connecting to the VPC](/docs/live#using-a-vpc).
 3. Due to the internal architecture of their client, it's also has slower cold starts.
 
-Instead we recommend using Drizzle. This example is here for reference for people that are
-already using Prisma.
+Instead we recommend using [Drizzle](https://orm.drizzle.team). This example is here for
+reference for people that are already using Prisma.
 ```ts title="sst.config.ts"
 const vpc = new sst.aws.Vpc("MyVpc", { nat: "managed" });
 const rds = new sst.aws.Postgres("MyPostgres", { vpc });
@@ -713,11 +713,11 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-sharp).
 ---
 ## Simple static site
 
-Deploy a simple HTML file as a static site with S3 and CloudFront.
+Deploy a simple HTML file as a static site with S3 and CloudFront. The website is stored in
+the `site/` directory.
 ```ts title="sst.config.ts"
-// Deploys the current directory as a static site
 new sst.aws.StaticSite("MySite", {
-  path: "./dist",
+  path: "site",
 });
 ```
 

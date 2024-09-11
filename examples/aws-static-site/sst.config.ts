@@ -3,7 +3,8 @@
 /**
  * ## Simple static site
  *
- * Deploy a simple HTML file as a static site with S3 and CloudFront.
+ * Deploy a simple HTML file as a static site with S3 and CloudFront. The website is stored in
+ * the `site/` directory.
  */
 export default $config({
   app(input) {
@@ -14,9 +15,8 @@ export default $config({
     };
   },
   async run() {
-    // Deploys the current directory as a static site
     new sst.aws.StaticSite("MySite", {
-      path: "./dist",
+      path: "site",
     });
   },
 });
