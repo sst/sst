@@ -108,6 +108,8 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
        *   }
        * }
        * ```
+       *
+       * You can use this add basic auth, [check out an example](/docs/examples/#aws-static-site-basic-auth).
        */
       injection: Input<string>;
       /**

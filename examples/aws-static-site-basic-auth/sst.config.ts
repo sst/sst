@@ -8,15 +8,23 @@
  * This is useful for dev environments where you want to share a static site with your team but
  * ensure that it's not publicly accessible.
  *
- * This works by deploying a CloudFront function that checks the basic auth header and matches
- * it against the `USERNAME` and `PASSWORD` secrets.
+ * This works by injecting some code into a CloudFront function that checks the basic auth
+ * header and matches it against the `USERNAME` and `PASSWORD` secrets.
  *
  * ```ts title="sst.config.ts"
  * {
- *   // Don't password protect prod
- *   edge: $app.stage !== "production"
- *     ? { viewerRequest: fn.arn }
- *     : undefined
+ *   injection: $interpolate`
+ *     if (
+ *         !event.request.headers.authorization
+ *           || event.request.headers.authorization.value !== "Basic ${basicAuth}"
+ *        ) {
+ *       return {
+ *         statusCode: 401,
+ *         headers: {
+ *           "www-authenticate": { value: "Basic" }
+ *         }
+ *       };
+ *     }`,
  * }
  * ```
  *
@@ -48,19 +56,25 @@ export default $config({
 
     new sst.aws.StaticSite("MySite", {
       path: "site",
-      edge: {
-        viewerRequest: {
-          injection: $interpolate`
-            if (!event.request.headers.authorization || event.request.headers.authorization.value !== "Basic ${basicAuth}") {
-              return {
-                statusCode: 401,
-                headers: {
-                  "www-authenticate": { value: "Basic" }
-                }
-              };
-            }`,
-        },
-      },
+      // Don't password protect prod
+      edge: $app.stage !== "production"
+        ? {
+            viewerRequest: {
+              injection: $interpolate`
+                if (
+                    !event.request.headers.authorization
+                      || event.request.headers.authorization.value !== "Basic ${basicAuth}"
+                   ) {
+                  return {
+                    statusCode: 401,
+                    headers: {
+                      "www-authenticate": { value: "Basic" }
+                    }
+                  };
+                }`,
+            },
+        }
+        : undefined,
     });
   },
 });
