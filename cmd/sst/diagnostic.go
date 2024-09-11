@@ -31,10 +31,6 @@ var CmdDiagnostic = &cli.Command{
 		workingDir := project.ResolveWorkingDir(cfg)
 		logDir := project.ResolveLogDir(cfg)
 		logFiles, err := os.ReadDir(logDir)
-		if len(logFiles) < 3 {
-			ui.Error("No logs found, run a command before generating a diagnostic report")
-			return nil
-		}
 		fmt.Println(ui.TEXT_DIM.Render("Generating diagnostic report from last run..."))
 		zipFile, err := os.Create(filepath.Join(workingDir, "report.zip"))
 		if err != nil {
