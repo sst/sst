@@ -66,7 +66,7 @@ To deploy our Express app, let's add an [AWS Fargate](https://aws.amazon.com/far
 
 ```js title="sst.config.ts" {10-12}
 async run() {
-  const vpc = new sst.aws.Vpc("MyVpc");
+  const vpc = new sst.aws.Vpc("MyVpc", { nat: "managed" });
 
   const cluster = new sst.aws.Cluster("MyCluster", { vpc });
 
