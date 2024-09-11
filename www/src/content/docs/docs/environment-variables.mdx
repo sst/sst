@@ -57,7 +57,7 @@ This has a couple of key advantages:
 Anybody on your team can just run `sst deploy` on any stage and it'll deploy the app and link the resources.
 
 :::tip
-Your team can just `git checkout` and `sst deploy`; without the need for a separate `.env` file.
+Your team can just `git checkout` and `sst deploy`, without the need for a separate `.env` file.
 :::
 
 You can learn more about [linking resources](/docs/linking/).
@@ -145,7 +145,7 @@ However, this isn't automatically added to your frontends or functions. You'll n
 ```ts title="sst.config.ts" {3}
 new sst.aws.Nextjs("MyWeb", {
    environment: {
-     SOME_ENV_VAR: process.env.SOME_ENV_VAR || "fallback value",
+     SOME_ENV_VAR: process.env.SOME_ENV_VAR ?? "fallback value",
    }
 });
 ```
