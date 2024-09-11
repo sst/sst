@@ -78,29 +78,27 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
      */
     viewerRequest?: Input<{
       /**
-       * Inject your code into the viewer request function.
+       * The code to inject into the viewer request function.
        *
        * By default, a viewer request function is created to rewrite URLs to:
-       * - append `index.html` to the URL if the URL ends with a `/`.
-       * - append `.html` to the URL if the URL does not contain a file extension.
+       * - Append `index.html` to the URL if the URL ends with a `/`.
+       * - Append `.html` to the URL if the URL does not contain a file extension.
        *
-       * The provided code will be injected at the end of the function.
+       * The given code will be injected at the end of the function.
        *
        * ```js
        * function handler(event) {
-       *
        *   // Default behavior code
-       *   ...
        *
        *   // User injected code
-       *   ...
        *
        *   return event.request;
        * }
        * ```
        *
        * @example
-       * Add a custom header to all requests
+       * To add a custom header to all requests.
+       *
        * ```js
        * {
        *   edge: {
@@ -115,12 +113,16 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
       /**
        * The KV stores to associate with the viewer request function.
        *
+       * Takes a list of CloudFront KeyValueStore ARNs.
+       *
        * @example
        * ```js
        * {
-       *   edge: {
-       *     viewerRequest: {
-       *       kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
+       *   server: {
+       *     edge: {
+       *       viewerRequest: {
+       *         kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
+       *       }
        *     }
        *   }
        * }
@@ -131,29 +133,43 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
     /**
      * Configure the viewer response function.
      *
-     * The viewer response function can be used to modify outgoing responses before they are sent to the client. For example, you can add security headers or change the response status code.
-     *
-     * By default, no viewer response function is set. A new function will be created with the provided code.
-     *
-     * @example
-     * Add a custom header to all responses
-     * ```js
-     * {
-     *   edge: {
-     *     viewerResponse: {
-     *       injection: `event.response.headers["x-foo"] = "bar";`
-     *     }
-     *   }
-     * }
-     * ```
+     * The viewer response function can be used to modify outgoing responses before they
+     * are sent to the client. For example, you can add security headers or change the response
+     * status code.
      */
     viewerResponse?: Input<{
       /**
-       * Code to inject into the viewer response function.
+       * The code to inject into the viewer response function.
+       *
+       * By default, no viewer response function is set. A new function will be created with
+       * the provided code.
+       *
+       * ```js
+       * function handler(event) {
+       *   // User injected code
+       *
+       *   return event.response;
+       * }
+       * ```
+       *
+       * @example
+       * To add a custom header to all responses.
+       *
+       * ```js
+       * {
+       *   edge: {
+       *     viewerResponse: {
+       *       injection: `event.response.headers["x-foo"] = "bar";`
+       *     }
+       *   }
+       * }
+       * ```
        */
       injection: Input<string>;
       /**
        * The KV stores to associate with the viewer response function.
+       *
+       * Takes a list of CloudFront KeyValueStore ARNs.
        *
        * @example
        * ```js
@@ -316,46 +332,46 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
   invalidation?: Input<
     | false
     | {
-        /**
-         * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
-         *
-         * :::tip
-         * For non-prod environments it might make sense to pass in `false`.
-         * :::
-         *
-         * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
-         * @default `false`
-         * @example
-         * ```js
-         * {
-         *   invalidation: {
-         *     wait: true
-         *   }
-         * }
-         * ```
-         */
-        wait?: Input<boolean>;
-        /**
-         * The paths to invalidate.
-         *
-         * You can either pass in an array of glob patterns to invalidate specific files. Or you can use the built-in option `all` to invalidation all files when any file changes.
-         *
-         * :::note
-         * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
-         * :::
-         * @default `"all"`
-         * @example
-         * Invalidate the `index.html` and all files under the `products/` route.
-         * ```js
-         * {
-         *   invalidation: {
-         *     paths: ["/index.html", "/products/*"]
-         *   }
-         * }
-         * ```
-         */
-        paths?: Input<"all" | string[]>;
-      }
+      /**
+       * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
+       *
+       * :::tip
+       * For non-prod environments it might make sense to pass in `false`.
+       * :::
+       *
+       * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
+       * @default `false`
+       * @example
+       * ```js
+       * {
+       *   invalidation: {
+       *     wait: true
+       *   }
+       * }
+       * ```
+       */
+      wait?: Input<boolean>;
+      /**
+       * The paths to invalidate.
+       *
+       * You can either pass in an array of glob patterns to invalidate specific files. Or you can use the built-in option `all` to invalidation all files when any file changes.
+       *
+       * :::note
+       * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
+       * :::
+       * @default `"all"`
+       * @example
+       * Invalidate the `index.html` and all files under the `products/` route.
+       * ```js
+       * {
+       *   invalidation: {
+       *     paths: ["/index.html", "/products/*"]
+       *   }
+       * }
+       * ```
+       */
+      paths?: Input<"all" | string[]>;
+    }
   >;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -611,8 +627,8 @@ export class StaticSite extends Component implements Link.Linkable {
         ...args.assets,
         path: args.assets?.path
           ? output(args.assets?.path).apply((v) =>
-              v.replace(/^\//, "").replace(/\/$/, ""),
-            )
+            v.replace(/^\//, "").replace(/\/$/, ""),
+          )
           : undefined,
       };
     }
@@ -670,8 +686,8 @@ export class StaticSite extends Component implements Link.Linkable {
       const s3Bucket = bucket
         ? bucket.nodes.bucket
         : s3.BucketV2.get(`${name}Assets`, assets.bucket!, undefined, {
-            parent,
-          });
+          parent,
+        });
 
       return {
         bucketName: s3Bucket.bucket,
@@ -806,29 +822,29 @@ export class StaticSite extends Component implements Link.Linkable {
             defaultRootObject: indexPage,
             customErrorResponses: args.errorPage
               ? [
-                  {
-                    errorCode: 403,
-                    responsePagePath: interpolate`/${args.errorPage}`,
-                    responseCode: 403,
-                  },
-                  {
-                    errorCode: 404,
-                    responsePagePath: interpolate`/${args.errorPage}`,
-                    responseCode: 404,
-                  },
-                ]
+                {
+                  errorCode: 403,
+                  responsePagePath: interpolate`/${args.errorPage}`,
+                  responseCode: 403,
+                },
+                {
+                  errorCode: 404,
+                  responsePagePath: interpolate`/${args.errorPage}`,
+                  responseCode: 404,
+                },
+              ]
               : [
-                  {
-                    errorCode: 403,
-                    responsePagePath: interpolate`/${indexPage}`,
-                    responseCode: 200,
-                  },
-                  {
-                    errorCode: 404,
-                    responsePagePath: interpolate`/${indexPage}`,
-                    responseCode: 200,
-                  },
-                ],
+                {
+                  errorCode: 403,
+                  responsePagePath: interpolate`/${indexPage}`,
+                  responseCode: 200,
+                },
+                {
+                  errorCode: 404,
+                  responsePagePath: interpolate`/${indexPage}`,
+                  responseCode: 200,
+                },
+              ],
             defaultCacheBehavior: {
               targetOriginId: "s3",
               viewerProtocolPolicy: "redirect-to-https",
@@ -844,11 +860,11 @@ export class StaticSite extends Component implements Link.Linkable {
                 },
                 ...(edge?.viewerResponse
                   ? [
-                      {
-                        eventType: "viewer-response",
-                        functionArn: createCloudfrontFunction("response").arn,
-                      },
-                    ]
+                    {
+                      eventType: "viewer-response",
+                      functionArn: createCloudfrontFunction("response").arn,
+                    },
+                  ]
                   : []),
               ]),
             },
@@ -864,14 +880,14 @@ export class StaticSite extends Component implements Link.Linkable {
     function createCloudfrontFunction(type: "request" | "response") {
       return type === "request"
         ? new cloudfront.Function(
-            `${name}Function`,
-            {
-              runtime: "cloudfront-js-2.0",
-              keyValueStoreAssociations: output(args.edge).apply(
-                (edge) => edge?.viewerRequest?.kvStores ?? [],
-              ),
-              code: output(args.edge).apply(
-                (edge) => `
+          `${name}Function`,
+          {
+            runtime: "cloudfront-js-2.0",
+            keyValueStoreAssociations: output(args.edge).apply(
+              (edge) => edge?.viewerRequest?.kvStores ?? [],
+            ),
+            code: output(args.edge).apply(
+              (edge) => `
 function handler(event) {
   if (event.request.uri.endsWith('/')) {
     event.request.uri += 'index.html';
@@ -881,28 +897,28 @@ function handler(event) {
   ${edge?.viewerRequest?.injection ?? ""}
   return event.request;
 }`,
-              ),
-            },
-            { parent },
-          )
+            ),
+          },
+          { parent },
+        )
         : new cloudfront.Function(
-            `${name}ResponseFunction`,
-            {
-              runtime: "cloudfront-js-2.0",
-              keyValueStoreAssociations: output(args.edge).apply(
-                (edge) => edge?.viewerResponse?.kvStores ?? [],
-              ),
-              code: output(args.edge).apply(
-                (edge) => `
+          `${name}ResponseFunction`,
+          {
+            runtime: "cloudfront-js-2.0",
+            keyValueStoreAssociations: output(args.edge).apply(
+              (edge) => edge?.viewerResponse?.kvStores ?? [],
+            ),
+            code: output(args.edge).apply(
+              (edge) => `
 function handler(event) {
   ${edge?.viewerResponse?.injection ?? ""}
   return event.response;
 }
 `,
-              ),
-            },
-            { parent },
-          );
+            ),
+          },
+          { parent },
+        );
     }
 
     function buildInvalidation() {
