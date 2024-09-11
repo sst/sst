@@ -1,7 +1,7 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
 /**
- * ## Simple static site
+ * ## AWS static site
  *
  * Deploy a simple HTML file as a static site with S3 and CloudFront. The website is stored in
  * the `site/` directory.

@@ -67,13 +67,13 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
    */
   path?: BaseStaticSiteArgs["path"];
   /**
-   * Configure CloudFront Functions to customize the behavior of HTTP requests and responses at the edge locations.
+   * Configure CloudFront Functions to customize the behavior of HTTP requests and responses at the edge.
    */
   edge?: Input<{
     /**
-     * The ARN of the CloudFront function to use for the viewer request.
+     * The ARN of a CloudFront function to modify the incoming request before it reaches your origin server.
      *
-     * The viewer request function can be used to modify incoming requests before they reach your origin server. For example, you can redirect users, rewrite URLs, or add headers.
+     * For example, you can use this to redirect users, rewrite URLs, or add headers.
      *
      * By default, a viewer request function is created to rewrite URLs to:
      * - append `index.html` to the URL if the URL ends with a `/`.
@@ -254,46 +254,46 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
   invalidation?: Input<
     | false
     | {
-        /**
-         * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
-         *
-         * :::tip
-         * For non-prod environments it might make sense to pass in `false`.
-         * :::
-         *
-         * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
-         * @default `false`
-         * @example
-         * ```js
-         * {
-         *   invalidation: {
-         *     wait: true
-         *   }
-         * }
-         * ```
-         */
-        wait?: Input<boolean>;
-        /**
-         * The paths to invalidate.
-         *
-         * You can either pass in an array of glob patterns to invalidate specific files. Or you can use the built-in option `all` to invalidation all files when any file changes.
-         *
-         * :::note
-         * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
-         * :::
-         * @default `"all"`
-         * @example
-         * Invalidate the `index.html` and all files under the `products/` route.
-         * ```js
-         * {
-         *   invalidation: {
-         *     paths: ["/index.html", "/products/*"]
-         *   }
-         * }
-         * ```
-         */
-        paths?: Input<"all" | string[]>;
-      }
+      /**
+       * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
+       *
+       * :::tip
+       * For non-prod environments it might make sense to pass in `false`.
+       * :::
+       *
+       * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
+       * @default `false`
+       * @example
+       * ```js
+       * {
+       *   invalidation: {
+       *     wait: true
+       *   }
+       * }
+       * ```
+       */
+      wait?: Input<boolean>;
+      /**
+       * The paths to invalidate.
+       *
+       * You can either pass in an array of glob patterns to invalidate specific files. Or you can use the built-in option `all` to invalidation all files when any file changes.
+       *
+       * :::note
+       * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
+       * :::
+       * @default `"all"`
+       * @example
+       * Invalidate the `index.html` and all files under the `products/` route.
+       * ```js
+       * {
+       *   invalidation: {
+       *     paths: ["/index.html", "/products/*"]
+       *   }
+       * }
+       * ```
+       */
+      paths?: Input<"all" | string[]>;
+    }
   >;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -550,8 +550,8 @@ export class StaticSite extends Component implements Link.Linkable {
         ...args.assets,
         path: args.assets?.path
           ? output(args.assets?.path).apply((v) =>
-              v.replace(/^\//, "").replace(/\/$/, ""),
-            )
+            v.replace(/^\//, "").replace(/\/$/, ""),
+          )
           : undefined,
       };
     }
@@ -609,8 +609,8 @@ export class StaticSite extends Component implements Link.Linkable {
       const s3Bucket = bucket
         ? bucket.nodes.bucket
         : s3.BucketV2.get(`${name}Assets`, assets.bucket!, undefined, {
-            parent,
-          });
+          parent,
+        });
 
       return {
         bucketName: s3Bucket.bucket,
@@ -745,29 +745,29 @@ export class StaticSite extends Component implements Link.Linkable {
             defaultRootObject: indexPage,
             customErrorResponses: args.errorPage
               ? [
-                  {
-                    errorCode: 403,
-                    responsePagePath: interpolate`/${args.errorPage}`,
-                    responseCode: 403,
-                  },
-                  {
-                    errorCode: 404,
-                    responsePagePath: interpolate`/${args.errorPage}`,
-                    responseCode: 404,
-                  },
-                ]
+                {
+                  errorCode: 403,
+                  responsePagePath: interpolate`/${args.errorPage}`,
+                  responseCode: 403,
+                },
+                {
+                  errorCode: 404,
+                  responsePagePath: interpolate`/${args.errorPage}`,
+                  responseCode: 404,
+                },
+              ]
               : [
-                  {
-                    errorCode: 403,
-                    responsePagePath: interpolate`/${indexPage}`,
-                    responseCode: 200,
-                  },
-                  {
-                    errorCode: 404,
-                    responsePagePath: interpolate`/${indexPage}`,
-                    responseCode: 200,
-                  },
-                ],
+                {
+                  errorCode: 403,
+                  responsePagePath: interpolate`/${indexPage}`,
+                  responseCode: 200,
+                },
+                {
+                  errorCode: 404,
+                  responsePagePath: interpolate`/${indexPage}`,
+                  responseCode: 200,
+                },
+              ],
             defaultCacheBehavior: {
               targetOriginId: "s3",
               viewerProtocolPolicy: "redirect-to-https",
@@ -784,11 +784,11 @@ export class StaticSite extends Component implements Link.Linkable {
                 },
                 ...(edge?.viewerResponse
                   ? [
-                      {
-                        eventType: "viewer-response",
-                        functionArn: edge.viewerResponse,
-                      },
-                    ]
+                    {
+                      eventType: "viewer-response",
+                      functionArn: edge.viewerResponse,
+                    },
+                  ]
                   : []),
               ]),
             },
