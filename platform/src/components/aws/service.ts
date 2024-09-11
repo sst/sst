@@ -343,7 +343,9 @@ export class Service extends Component implements Link.Linkable {
             },
             dockerfile: {
               location: imageArgsNew.apply((v) =>
-                path.join($cli.paths.root, v.dockerfile ?? "Dockerfile"),
+                v.dockerfile
+                  ? path.join($cli.paths.root, v.dockerfile)
+                  : path.join($cli.paths.root, v.context, "Dockerfile"),
               ),
             },
             buildArgs: imageArgsNew.apply((v) => v.args ?? {}),
