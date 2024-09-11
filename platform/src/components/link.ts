@@ -21,17 +21,19 @@ export module Link {
   }
 
   export class Ref extends ComponentResource {
-    constructor(target: string, type: string, properties: any) {
+    constructor(target: string, type: string, properties: any, include?: any) {
       super(
         "sst:sst:LinkRef",
         target + "LinkRef",
         {
           properties,
+          include,
         },
         {},
       );
       this.registerOutputs({
         target: target,
+        include,
         properties: {
           type: type.replaceAll(":", "."),
           ...properties,
@@ -77,7 +79,7 @@ export module Link {
         if (Link.isLinkable(resource) && !args.opts.parent) {
           try {
             const link = resource.getSSTLink();
-            new Ref(args.name, args.type, link.properties);
+            new Ref(args.name, args.type, link.properties, link.include);
           } catch (e) {}
         }
       });

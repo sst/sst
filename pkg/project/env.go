@@ -33,7 +33,7 @@ func (p *Project) EnvFor(ctx context.Context, complete *CompleteEvent, name stri
 	}
 	slog.Info("dev", "links", dev.Links)
 	for _, resource := range dev.Links {
-		value := complete.Links[resource]
+		value := complete.Links[resource].Properties
 		jsonValue, _ := json.Marshal(value)
 		env["SST_RESOURCE_"+resource] = string(jsonValue)
 	}

@@ -118,15 +118,6 @@ func Passphrase(backend Home, app, stage string) (string, error) {
 	return passphrase, nil
 }
 
-func GetLinks(backend Home, app, stage string) (map[string]interface{}, error) {
-	data := map[string]interface{}{}
-	err := getData(backend, "link", app, stage, true, &data)
-	if err != nil {
-		return nil, err
-	}
-	return data, err
-}
-
 type Summary struct {
 	Version         string         `json:"version"`
 	UpdateID        string         `json:"updateID"`
@@ -142,14 +133,6 @@ type Summary struct {
 type SummaryError struct {
 	URN     string `json:"urn"`
 	Message string `json:"message"`
-}
-
-func PutLinks(backend Home, app, stage string, data map[string]interface{}) error {
-	slog.Info("putting links", "app", app, "stage", stage)
-	if data == nil || len(data) == 0 {
-		return nil
-	}
-	return putData(backend, "link", app, stage, true, data)
 }
 
 func PutSummary(backend Home, app, stage, updateID string, summary Summary) error {

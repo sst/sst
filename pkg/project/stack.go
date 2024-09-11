@@ -27,13 +27,14 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/tokens"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/workspace"
-	"github.com/sst/ion/internal/fs"
 	"github.com/sst/ion/pkg/bus"
 	"github.com/sst/ion/pkg/flag"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/js"
+	"github.com/sst/ion/pkg/project/common"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/telemetry"
+	"github.com/sst/ion/pkg/types"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -59,8 +60,6 @@ type ProviderDownloadEvent struct {
 type BuildSuccessEvent struct {
 	Files []string
 }
-
-type Links map[string]interface{}
 
 type Receiver struct {
 	Name        string              `json:"name"`
@@ -95,7 +94,7 @@ type AwsReceiver struct {
 type Receivers map[string]Receiver
 
 type CompleteEvent struct {
-	Links       Links
+	Links       common.Links
 	Receivers   Receivers
 	Devs        Devs
 	Outputs     map[string]interface{}
@@ -468,58 +467,10 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 			return
 		}
 
-		cloudflareBindings := map[string]string{}
-		for _, resource := range complete.Resources {
-			outputs := decrypt(resource.Outputs).(map[string]interface{})
-			if match, ok := outputs["r2BucketBindings"].([]interface{}); ok {
-				for _, binding := range match {
-					item := binding.(map[string]interface{})
-					cloudflareBindings[item["name"].(string)] = "R2Bucket"
-				}
-			}
-			if match, ok := outputs["d1DatabaseBindings"].([]interface{}); ok {
-				for _, binding := range match {
-					item := binding.(map[string]interface{})
-					cloudflareBindings[item["name"].(string)] = "D1Database"
-				}
-			}
-			if match, ok := outputs["kvNamespaceBindings"].([]interface{}); ok {
-				for _, binding := range match {
-					item := binding.(map[string]interface{})
-					cloudflareBindings[item["name"].(string)] = "KVNamespace"
-				}
-			}
-			if match, ok := outputs["serviceBindings"].([]interface{}); ok {
-				for _, binding := range match {
-					item := binding.(map[string]interface{})
-					cloudflareBindings[item["name"].(string)] = "Service"
-				}
-			}
-		}
-
 		outputsFilePath := filepath.Join(p.PathWorkingDir(), "outputs.json")
 		outputsFile, _ := os.Create(outputsFilePath)
 		defer outputsFile.Close()
 		json.NewEncoder(outputsFile).Encode(complete.Outputs)
-
-		typesFileName := "sst-env.d.ts"
-		typesFilePath := filepath.Join(p.PathRoot(), typesFileName)
-		typesFile, _ := os.Create(typesFilePath)
-		defer typesFile.Close()
-
-		oldTypesFilePath := filepath.Join(p.PathWorkingDir(), "types.generated.ts")
-		oldTypesFile, _ := os.Create(oldTypesFilePath)
-		defer oldTypesFile.Close()
-
-		multi := io.MultiWriter(typesFile, oldTypesFile)
-
-		multi.Write([]byte("/* tslint:disable */\n"))
-		multi.Write([]byte("/* eslint-disable */\n"))
-		multi.Write([]byte("import \"sst\"\n"))
-		multi.Write([]byte("declare module \"sst\" {\n"))
-		multi.Write([]byte("  export interface Resource " + inferTypes(complete.Links, "  ") + "\n"))
-		multi.Write([]byte("}\n"))
-		multi.Write([]byte("export {}\n"))
 
 		// Generate python types if a python function exists
 		// shouldGeneratePythonTypes := false
@@ -546,54 +497,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 
 		// }
 
-		for _, receiver := range complete.Receivers {
-			envPathHint, err := fs.FindUp(filepath.Join(p.PathRoot(), receiver.Directory), "tsconfig.json")
-			if err != nil {
-				continue
-			}
-			envPath := filepath.Join(filepath.Dir(envPathHint), "sst-env.d.ts")
-			rel, _ := filepath.Rel(filepath.Dir(envPath), typesFilePath)
-			if rel == typesFileName && receiver.Cloudflare == nil {
-				continue
-			}
-			file, _ := os.Create(envPath)
-			file.WriteString("/* tslint:disable */\n")
-			file.WriteString("/* eslint-disable */\n")
-			if rel != typesFileName {
-				file.WriteString("/// <reference path=\"" + rel + "\" />\n")
-			}
-			defer file.Close()
-
-			if receiver.Cloudflare != nil {
-				if rel == typesFileName {
-					nonCloudflareLinks := map[string]interface{}{}
-					for _, link := range receiver.Links {
-						if cloudflareBindings[link] == "" {
-							nonCloudflareLinks[link] = complete.Links[link]
-						}
-					}
-					file.WriteString("import \"sst\"\n")
-					file.WriteString("declare module \"sst\" {\n")
-					file.WriteString("  export interface Resource " + inferTypes(nonCloudflareLinks, "  ") + "\n")
-					file.WriteString("}" + "\n")
-				}
-				bindings := map[string]interface{}{}
-				for _, link := range receiver.Links {
-					if cloudflareBindings[link] != "" {
-						bindings[link] = literal{value: `import("@cloudflare/workers-types").` + cloudflareBindings[link]}
-					}
-				}
-				if len(bindings) > 0 {
-					file.WriteString("// cloudflare \n")
-					file.WriteString("declare module \"sst\" {\n")
-					file.WriteString("  export interface Resource " + inferTypes(bindings, "  ") + "\n")
-					file.WriteString("}\n")
-				}
-			}
-			file.WriteString("export {}\n")
-		}
-
-		provider.PutLinks(p.home, p.app.Name, p.app.Stage, complete.Links)
+		types.Generate(p.PathConfig(), complete.Links)
 	}()
 
 	slog.Info("running stack command", "cmd", input.Command)
@@ -851,7 +755,7 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 	var deployment apitype.DeploymentV3
 	json.Unmarshal(exported.Deployment, &deployment)
 	complete := &CompleteEvent{
-		Links:       Links{},
+		Links:       common.Links{},
 		Versions:    map[string]int{},
 		ImportDiffs: map[string][]ImportDiff{},
 		Receivers:   Receivers{},
@@ -905,7 +809,20 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 		}
 
 		if resource.Type == "sst:sst:LinkRef" && outputs["target"] != nil && outputs["properties"] != nil {
-			complete.Links[outputs["target"].(string)] = outputs["properties"].(map[string]interface{})
+			slog.Info("link", "outputs", outputs)
+			link := common.Link{
+				Properties: outputs["properties"].(map[string]interface{}),
+				Include:    []common.LinkInclude{},
+			}
+			if outputs["include"] != nil {
+				for _, include := range outputs["include"].([]interface{}) {
+					link.Include = append(link.Include, common.LinkInclude{
+						Type:  include.(map[string]interface{})["type"].(string),
+						Other: include.(map[string]interface{}),
+					})
+				}
+			}
+			complete.Links[outputs["target"].(string)] = link
 		}
 	}
 

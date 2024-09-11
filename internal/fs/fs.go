@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func FindUp(initialPath, fileName string) (string, error) {
@@ -33,4 +34,26 @@ func Exists(path string) bool {
 		return false
 	}
 	return err == nil
+}
+
+func FindDown(dir, filename string) []string {
+	var result []string
+
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // Continue walking despite the error
+		}
+		if info.IsDir() {
+			name := info.Name()
+			if name == "node_modules" || strings.HasPrefix(name, ".") {
+				return filepath.SkipDir
+			}
+		}
+		if !info.IsDir() && info.Name() == filename {
+			result = append(result, path)
+		}
+		return nil
+	})
+
+	return result
 }

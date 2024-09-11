@@ -68,7 +68,7 @@ func CmdShell(c *cli.Cli) error {
 			env[key] = value
 		}
 		for resource, value := range complete.Links {
-			jsonValue, err := json.Marshal(value)
+			jsonValue, err := json.Marshal(value.Properties)
 			if err != nil {
 				return err
 			}
