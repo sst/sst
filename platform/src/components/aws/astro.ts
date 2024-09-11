@@ -682,17 +682,17 @@ function useCloudFrontRoutingInjection(buildMetadata: BuildMetaConfig) {
     var routeData = ${stringifiedTree};
     var findFirstMatch = (matches) => Array.isArray(matches[0]) ? findFirstMatch(matches[0]) : matches;
     var findMatches = (path, routeData) => routeData.map((route) => route[0].test(path) ? Array.isArray(route[1]) ? findMatches(path, route[1]) : route : null).filter(route => route !== null && route.length > 0);
-    var matchedRoute = findFirstMatch(findMatches(request.uri, routeData));
+    var matchedRoute = findFirstMatch(findMatches(event.request.uri, routeData));
     if (matchedRoute[0]) {
-      if (!matchedRoute[1] && !/^.*\\.[^\\/]+$/.test(request.uri)) {
+      if (!matchedRoute[1] && !/^.*\\.[^\\/]+$/.test(event.request.uri)) {
         ${
           buildMetadata.pageResolution === "file"
-            ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
-            : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
+            ? `event.request.uri = event.request.uri === "/" ? "/index.html" : event.request.uri.replace(/\\/?$/, ".html");`
+            : `event.request.uri = event.request.uri.replace(/\\/?$/, "/index.html");`
         }
       } else if (matchedRoute[1] === 2) {
         var redirectPath = matchedRoute[2];
-        matchedRoute[0].exec(request.uri).forEach((match, index) => {
+        matchedRoute[0].exec(event.request.uri).forEach((match, index) => {
           redirectPath = redirectPath.replace(\`\\\${\${index}}\`, match);
         });
         return {

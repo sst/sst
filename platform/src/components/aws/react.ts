@@ -488,7 +488,7 @@ export class React extends Component implements Link.Linkable {
                 injections: [
                   // Note: When using libraries like remix-flat-routes the file can
                   // contains special characters like "+". It needs to be encoded.
-                  `request.uri = request.uri.split('/').map(encodeURIComponent).join('/');`,
+                  `event.request.uri = event.request.uri.split('/').map(encodeURIComponent).join('/');`,
                 ],
               },
             },

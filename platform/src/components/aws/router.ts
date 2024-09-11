@@ -312,9 +312,8 @@ export class Router extends Component implements Link.Linkable {
             runtime: "cloudfront-js-1.0",
             code: [
               `function handler(event) {`,
-              `  var request = event.request;`,
-              `  request.headers["x-forwarded-host"] = request.headers.host;`,
-              `  return request;`,
+              `  event.request.headers["x-forwarded-host"] = event.request.headers.host;`,
+              `  return event.request;`,
               `}`,
             ].join("\n"),
           },

@@ -633,10 +633,10 @@ function useCloudFrontFormActionInjection() {
   //       ie. POST request with query string "?/action"
   //       CloudFront does not allow query string with "/". It needs to be encoded.
   return `
-for (var key in request.querystring) {
+for (var key in event.request.querystring) {
   if (key.includes("/")) {
-    request.querystring[encodeURIComponent(key)] = request.querystring[key];
-    delete request.querystring[key];
+    event.request.querystring[encodeURIComponent(key)] = event.request.querystring[key];
+    delete event.request.querystring[key];
   }
 }`;
 }
