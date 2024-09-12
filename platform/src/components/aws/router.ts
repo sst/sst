@@ -4,6 +4,7 @@ import { Link } from "../link";
 import type { Input } from "../input";
 import { Cdn, CdnArgs } from "./cdn";
 import { cloudfront, types } from "@pulumi/aws";
+import { hashStringToPrettyString } from "../naming";
 
 export interface RouterArgs {
   /**
@@ -134,42 +135,119 @@ export interface RouterArgs {
              */
             url: Input<string>;
             /**
-             * Configure CloudFront Functions to customize the behavior of HTTP requests and responses at the edge locations.
-             *
-             * @example
-             *
-             * ```js
-             * {
-             *   routes: {
-             *     "/api/*": {
-             *       edge: {
-             *         viewerRequest: "arn:aws:cloudfront::1234567890:function/MyViewRequestFunction"
-             *         viewerResponse: "arn:aws:cloudfront::1234567890:function/MyViewResponseFunction"
-             *       }
-             *     }
-             *   }
-             * }
-             * ```
+             * Configure CloudFront Functions to customize the behavior of HTTP requests and responses at the edge.
              */
             edge?: {
               /**
-               * The ARN of the CloudFront function to use for the viewer request.
+               * Configure the viewer request function.
                *
-               * The viewer request function can be used to modify incoming requests before they reach your origin server. For example, you can redirect users, rewrite URLs, or add headers.
-               *
-               * By default, a view request function is created to add the `x-forwarded-host` header to the request.
-               *
-               * @default Uses the default viewer request function.
+               * The viewer request function can be used to modify incoming requests before they reach
+               * your origin server. For example, you can redirect users, rewrite URLs, or add headers.
                */
-              viewerRequest?: Input<string>;
+              viewerRequest?: Input<{
+                /**
+                 * Inject your code into the viewer request function.
+                 *
+                 * By default, a viewer request function is created to inject the `x-forwarded-host`
+                 * header. The provided code will be injected at the end of the function.
+                 *
+                 * ```js
+                 * function handler(event) {
+                 *
+                 *   // Default behavior code
+                 *   ...
+                 *
+                 *   // User injected code
+                 *   ...
+                 *
+                 *   return event.request;
+                 * }
+                 * ```
+                 *
+                 * @example
+                 * Add a custom header to all requests
+                 * ```js
+                 * {
+                 *   routes: {
+                 *     "/api/*": {
+                 *       edge: {
+                 *         viewerRequest: {
+                 *           injection: `event.request.headers["x-foo"] = "bar";`
+                 *         }
+                 *       }
+                 *     }
+                 * }
+                 * ```
+                 */
+                injection: Input<string>;
+                /**
+                 * The KV stores to associate with the viewer request function.
+                 *
+                 * @example
+                 * ```js
+                 * {
+                 *   routes: {
+                 *     "/api/*": {
+                 *       edge: {
+                 *         viewerRequest: {
+                 *           kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
+                 *         }
+                 *       }
+                 *     }
+                 *   }
+                 * }
+                 * ```
+                 */
+                kvStores?: Input<Input<string>[]>;
+              }>;
               /**
-               * The ARN of the CloudFront function to use for the viewer response.
+               * Configure the viewer response function.
                *
-               * The viewer response function can be used to modify outgoing responses before they reach the viewer. For example, you can add headers, cache control, or rewrite URLs.
+               * The viewer response function can be used to modify outgoing responses before they are sent to the client. For example, you can add security headers or change the response status code.
                *
-               * @default No viewer response function is set.
+               * By default, no viewer response function is set. A new function will be created with the provided code.
+               *
+               * @example
+               * Add a custom header to all responses
+               * ```js
+               * {
+               *   routes: {
+               *     "/api/*": {
+               *       edge: {
+               *         viewerResponse: {
+               *           injection: `event.response.headers["x-foo"] = "bar";`
+               *         }
+               *       }
+               *     }
+               *   }
+               * }
+               * ```
                */
-              viewerResponse?: Input<string>;
+              viewerResponse?: Input<{
+                /**
+                 * Code to inject into the viewer response function.
+                 */
+                injection: Input<string>;
+                /**
+                 * The KV stores to associate with the viewer response function.
+                 *
+                 * @example
+                 * ```js
+                 * {
+                 *   routes: {
+                 *     "/api/*": {
+                 *       edge: {
+                 *         viewerResponse: {
+                 *           kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
+                 *         }
+                 *       }
+                 *     }
+                 *   }
+                 * }
+                 * ```
+                 */
+                kvStores?: Input<Input<string>[]>;
+              }>;
             };
           }
       >
@@ -303,23 +381,67 @@ export class Router extends Component implements Link.Linkable {
       });
     }
 
-    function createCloudFrontFunction() {
-      defaultCfFunction =
-        defaultCfFunction ??
-        new cloudfront.Function(
-          `${name}CloudfrontFunction`,
+    function createCloudFrontFunction(
+      path: string,
+      type: "request" | "response",
+      config?: {
+        injection: string;
+        kvStores?: string[];
+      },
+    ) {
+      console.log("createCloudFrontFunction", path, type, config);
+      if (type === "request" && !config) {
+        defaultCfFunction =
+          defaultCfFunction ??
+          new cloudfront.Function(
+            `${name}CloudfrontFunction`,
+            {
+              runtime: "cloudfront-js-2.0",
+              code: [
+                `function handler(event) {`,
+                `  event.request.headers["x-forwarded-host"] = event.request.headers.host;`,
+                `  return event.request;`,
+                `}`,
+              ].join("\n"),
+            },
+            { parent },
+          );
+        return defaultCfFunction;
+      }
+
+      if (type === "request") {
+        return new cloudfront.Function(
+          `${name}CloudfrontFunction${hashStringToPrettyString(path, 8)}`,
           {
-            runtime: "cloudfront-js-1.0",
-            code: [
-              `function handler(event) {`,
-              `  event.request.headers["x-forwarded-host"] = event.request.headers.host;`,
-              `  return event.request;`,
-              `}`,
-            ].join("\n"),
+            runtime: "cloudfront-js-2.0",
+            keyValueStoreAssociations: config!.kvStores ?? [],
+            code: `
+function handler(event) {
+  event.request.headers["x-forwarded-host"] = event.request.headers.host;
+  ${config!.injection ?? ""}
+  return event.request;
+}`,
           },
           { parent },
         );
-      return defaultCfFunction;
+      }
+      // TODO
+      // - test Router
+      // - reply to StaticSite and Router ppl in #general
+
+      return new cloudfront.Function(
+        `${name}CloudfrontFunction${hashStringToPrettyString(path, 8)}`,
+        {
+          runtime: "cloudfront-js-2.0",
+          keyValueStoreAssociations: config!.kvStores ?? [],
+          code: `
+function handler(event) {
+  ${config!.injection ?? ""}
+  return event.response;
+}`,
+        },
+        { parent },
+      );
     }
 
     function createCachePolicy() {
@@ -436,14 +558,21 @@ export class Router extends Component implements Link.Linkable {
           functionAssociations: [
             {
               eventType: "viewer-request",
-              functionArn:
-                route.edge?.viewerRequest ?? createCloudFrontFunction().arn,
+              functionArn: createCloudFrontFunction(
+                path,
+                "request",
+                route.edge?.viewerRequest,
+              ).arn,
             },
             ...(route.edge?.viewerResponse
               ? [
                   {
                     eventType: "viewer-response",
-                    functionArn: route.edge.viewerResponse,
+                    functionArn: createCloudFrontFunction(
+                      path,
+                      "response",
+                      route.edge.viewerResponse,
+                    ).arn,
                   },
                 ]
               : []),
