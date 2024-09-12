@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"os"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/cmd/sst/cli"
@@ -23,7 +24,14 @@ func CmdUI(c *cli.Cli) error {
 	}
 	types := []interface{}{}
 	filter := c.String("filter")
+	var u *ui.UI
+	opts := []ui.Option{
+		ui.WithDev,
+	}
 	if filter == "function" || filter == "" {
+		if err != nil {
+			return err
+		}
 		if filter != "" {
 			fmt.Println(ui.TEXT_HIGHLIGHT_BOLD.Render("Function Logs"))
 			fmt.Println()
@@ -42,6 +50,7 @@ func CmdUI(c *cli.Cli) error {
 		)
 	}
 	if filter == "sst" || filter == "" {
+		u = ui.New(c.Context, ui.WithDev)
 		types = append(types,
 			common.StdoutEvent{},
 			deployer.DeployFailedEvent{},
@@ -60,8 +69,14 @@ func CmdUI(c *cli.Cli) error {
 	if err != nil {
 		return err
 	}
-
-	u := ui.New(c.Context, ui.WithDev)
+	if filter == "function" {
+		log, err := os.Create(".sst/log/function.log")
+		if err != nil {
+			return err
+		}
+		opts = append(opts, ui.WithLog(log))
+	}
+	u = ui.New(c.Context, opts...)
 	slog.Info("initialized ui")
 	if filter == "sst" || filter == "" {
 		err = dev.Deploy(c.Context, url)

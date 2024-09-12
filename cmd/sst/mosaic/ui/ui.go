@@ -54,10 +54,12 @@ type UI struct {
 	hasBlank   bool
 	hasHeader  bool
 	options    *Options
+	log        *os.File
 }
 
 type Options struct {
 	Silent bool
+	Log    *os.File
 	Dev    bool
 }
 
@@ -69,6 +71,12 @@ func WithSilent(u *Options) {
 
 func WithDev(u *Options) {
 	u.Dev = true
+}
+
+func WithLog(file *os.File) Option {
+	return func(opts *Options) {
+		opts.Log = file
+	}
 }
 
 func New(ctx context.Context, options ...Option) *UI {
@@ -83,6 +91,9 @@ func New(ctx context.Context, options ...Option) *UI {
 		workerTime: map[string]time.Time{},
 		hasBlank:   false,
 		options:    opts,
+	}
+	if opts.Log != nil {
+		result.log = opts.Log
 	}
 	if isTTY && !opts.Silent {
 		result.footer = NewFooter()
@@ -102,11 +113,16 @@ func (u *UI) printf(tmpl string, args ...interface{}) {
 
 func (u *UI) println(args ...interface{}) {
 	u.buffer = append(u.buffer, args...)
+	line := fmt.Sprint(u.buffer...)
 	if u.footer == nil {
-		fmt.Println(fmt.Sprint(u.buffer...))
+		fmt.Println(line)
 	}
 	if u.footer != nil {
-		u.footer.Send(lineMsg(fmt.Sprint(u.buffer...)))
+		u.footer.Send(lineMsg(line))
+	}
+	if u.log != nil {
+		stripped := ansi.Strip(line)
+		u.log.WriteString(stripped + "\n")
 	}
 	u.buffer = []interface{}{}
 	u.hasBlank = false
@@ -522,6 +538,9 @@ func (u *UI) printEvent(barColor lipgloss.Style, label string, message ...string
 func (u *UI) Destroy() {
 	if u.footer != nil {
 		u.footer.Destroy()
+	}
+	if u.log != nil {
+		u.log.Close()
 	}
 }
 
