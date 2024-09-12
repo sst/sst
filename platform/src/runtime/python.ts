@@ -182,10 +182,7 @@ export async function buildPython(
     // in the output directory we run uv sync to create a virtual environment
     // first make the output directory the working directory
     // also need to use sst uv path because it is not guaranteed to be in the path
-    const installCmd = `cd ${path.join(
-      out,
-      pyProjectFile,
-    )} && ${uvPath()} sync`;
+    const installCmd = `cd ${path.join(out, pyProjectFile)} && uv sync`;
 
     // Once the packages are synced, we need to convert the virtual environment to site-packages so that lambda can find the packages
     const sitePackagesCmd = `cp -r ${path.join(
@@ -232,34 +229,4 @@ export async function buildPython(
   } finally {
     limiter.release();
   }
-}
-
-const configDir: string = (function (): string {
-  const homeDir = os.homedir(); // Get the user's home directory
-  if (!homeDir) {
-    throw new Error("Unable to determine user home directory");
-  }
-  const result = path.join(homeDir, ".config", "sst"); // Config directory path
-  const binDir = path.join(result, "bin");
-
-  // Add the bin directory to the PATH environment variable
-  process.env.PATH = `${binDir}${path.delimiter}${process.env.PATH}`;
-
-  // Create the directories if they don't exist
-  if (!fsSync.existsSync(result)) {
-    fsSync.mkdirSync(result, { recursive: true });
-  }
-  if (!fsSync.existsSync(binDir)) {
-    fsSync.mkdirSync(binDir, { recursive: true });
-  }
-
-  return result;
-})();
-
-function binPath(): string {
-  return path.join(configDir, "bin");
-}
-
-function uvPath(): string {
-  return path.join(binPath(), "uv");
 }

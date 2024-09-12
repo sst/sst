@@ -13,7 +13,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/sst/ion/internal/util"
-	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project/path"
 	"github.com/sst/ion/pkg/runtime"
 )
@@ -188,11 +187,9 @@ func (r *PythonRuntime) Run(ctx context.Context, input *runtime.RunInput) (runti
 		input.WorkerID,
 	)
 
-	uvPath := global.UvPath()
-
 	cmd := exec.CommandContext(
 		ctx,
-		uvPath,
+		"uv",
 		args...)
 
 	util.SetProcessGroupID(cmd)
