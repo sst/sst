@@ -56,6 +56,34 @@ export interface RouterArgs {
    * A map of routes to their destinations. The _key_ is the route path and the
    * _value_ is the destination URL. All routes need to start with `/`.
    *
+   * @example
+   *
+   * ```ts
+   * {
+   *   routes: {
+   *     "/*": "https://example.com"
+   *   }
+   * }
+   * ```
+   *
+   * You can also customize the route behavior with injecting some code into the CloudFront
+   * Functions. To do so, pass in an object, with the destination as the `url`.
+   *
+   * ```ts
+   * {
+   *   routes: {
+   *     "/*": {
+   *       url: "https://example.com",
+   *       edge: {
+   *         viewerRequest: {
+   *           injection: `event.request.headers["x-foo"] = "bar";`
+   *         }
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   *
    * When router receives a request, the requested path is compared with path patterns
    * in the order they are listed. The first match determines which URL the
    * request is routed to.
@@ -69,8 +97,6 @@ export interface RouterArgs {
    * :::note
    * If you don't have a `/*` route, you'll get a 404 error for any requests that don't match a route.
    * :::
-   *
-   * @example
    *
    * Suppose you have the following three routes.
    *
@@ -96,23 +122,6 @@ export interface RouterArgs {
    *   }
    * }
    * ```
-   *
-   * Customize the route behavior with CloudFront Functions.
-   *
-   * ```js
-   * {
-   *   routes: {
-   *     "/api/*": {
-   *       url: "https://example.com",
-   *       edge: {
-   *         viewerRequest: {
-   *           injection: `event.request.headers["x-foo"] = "bar";`
-   *         }
-   *       }
-   *     }
-   *   }
-   * }
-   * ```
    */
   routes: Input<
     Record<
@@ -120,104 +129,79 @@ export interface RouterArgs {
       Input<
         | string
         | {
+          /**
+           * The destination URL.
+           *
+           * @example
+           *
+           * ```js
+           * {
+           *   routes: {
+           *     "/api/*": {
+           *       url: "https://example.com"
+           *     }
+           *   }
+           * }
+           * ```
+           */
+          url: Input<string>;
+          /**
+           * Configure CloudFront Functions to customize the behavior of HTTP requests and responses at the edge.
+           */
+          edge?: {
             /**
-             * The destination URL.
+             * Configure the viewer request function.
              *
-             * @example
-             *
-             * ```js
-             * {
-             *   routes: {
-             *     "/api/*": {
-             *       url: "https://example.com",
-             *     }
-             *   }
-             * }
-             * ```
+             * The viewer request function can be used to modify incoming requests before they
+             * reach your origin server. For example, you can redirect users, rewrite URLs,
+             * or add headers.
              */
-            url: Input<string>;
-            /**
-             * Configure CloudFront Functions to customize the behavior of HTTP requests and responses at the edge.
-             */
-            edge?: {
+            viewerRequest?: Input<{
               /**
-               * Configure the viewer request function.
+               * The code to inject into the viewer request function.
                *
-               * The viewer request function can be used to modify incoming requests before they reach
-               * your origin server. For example, you can redirect users, rewrite URLs, or add headers.
-               */
-              viewerRequest?: Input<{
-                /**
-                 * Inject your code into the viewer request function.
-                 *
-                 * By default, a viewer request function is created to inject the `x-forwarded-host`
-                 * header. The provided code will be injected at the end of the function.
-                 *
-                 * ```js
-                 * function handler(event) {
-                 *
-                 *   // Default behavior code
-                 *   ...
-                 *
-                 *   // User injected code
-                 *   ...
-                 *
-                 *   return event.request;
-                 * }
-                 * ```
-                 *
-                 * @example
-                 * Add a custom header to all requests
-                 * ```js
-                 * {
-                 *   routes: {
-                 *     "/api/*": {
-                 *       edge: {
-                 *         viewerRequest: {
-                 *           injection: `event.request.headers["x-foo"] = "bar";`
-                 *         }
-                 *       }
-                 *     }
-                 * }
-                 * ```
-                 */
-                injection: Input<string>;
-                /**
-                 * The KV stores to associate with the viewer request function.
-                 *
-                 * @example
-                 * ```js
-                 * {
-                 *   routes: {
-                 *     "/api/*": {
-                 *       edge: {
-                 *         viewerRequest: {
-                 *           kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
-                 *         }
-                 *       }
-                 *     }
-                 *   }
-                 * }
-                 * ```
-                 */
-                kvStores?: Input<Input<string>[]>;
-              }>;
-              /**
-               * Configure the viewer response function.
+               * By default, a viewer request function is created to add the `x-forwarded-host`
+               * header. The given code will be injected at the end of this function.
                *
-               * The viewer response function can be used to modify outgoing responses before they are sent to the client. For example, you can add security headers or change the response status code.
+               * ```js
+               * function handler(event) {
+               *   // Default behavior code
                *
-               * By default, no viewer response function is set. A new function will be created with the provided code.
+               *   // User injected code
+               *
+               *   return event.request;
+               * }
+               * ```
                *
                * @example
-               * Add a custom header to all responses
+               * To add a custom header to all requests.
+               *
+               * ```js
+               * {
+               *   server: {
+               *     edge: {
+               *       viewerRequest: {
+               *         injection: `event.request.headers["x-foo"] = "bar";`
+               *       }
+               *     }
+               *   }
+               * }
+               * ```
+               */
+              injection: Input<string>;
+              /**
+               * The KV stores to associate with the viewer request function.
+               *
+               * Takes a list of CloudFront KeyValueStore ARNs.
+               *
+               * @example
                * ```js
                * {
                *   routes: {
                *     "/api/*": {
                *       edge: {
-               *         viewerResponse: {
-               *           injection: `event.response.headers["x-foo"] = "bar";`
+               *         viewerRequest: {
+               *           kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
                *         }
                *       }
                *     }
@@ -225,33 +209,89 @@ export interface RouterArgs {
                * }
                * ```
                */
-              viewerResponse?: Input<{
-                /**
-                 * Code to inject into the viewer response function.
-                 */
-                injection: Input<string>;
-                /**
-                 * The KV stores to associate with the viewer response function.
-                 *
-                 * @example
-                 * ```js
-                 * {
-                 *   routes: {
-                 *     "/api/*": {
-                 *       edge: {
-                 *         viewerResponse: {
-                 *           kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
-                 *         }
-                 *       }
-                 *     }
-                 *   }
-                 * }
-                 * ```
-                 */
-                kvStores?: Input<Input<string>[]>;
-              }>;
-            };
-          }
+              kvStores?: Input<Input<string>[]>;
+            }>;
+            /**
+             * Configure the viewer response function.
+             *
+             * The viewer response function can be used to modify outgoing responses before
+             * they are sent to the client. For example, you can add security headers or change
+             * the response status code.
+             *
+             * By default, no viewer response function is set. A new function will be created
+             * with the provided code.
+             *
+             * @example
+             * Add a custom header to all responses
+             * ```js
+             * {
+             *   routes: {
+             *     "/api/*": {
+             *       edge: {
+             *         viewerResponse: {
+             *           injection: `event.response.headers["x-foo"] = "bar";`
+             *         }
+             *       }
+             *     }
+             *   }
+             * }
+             * ```
+             */
+            viewerResponse?: Input<{
+              /**
+               * The code to inject into the viewer response function.
+               *
+               * By default, no viewer response function is set. A new function will be created with
+               * the provided code.
+               *
+               * ```js
+               * function handler(event) {
+               *   // User injected code
+               *
+               *   return event.response;
+               * }
+               * ```
+               *
+               * @example
+               * To add a custom header to all responses.
+               *
+               * ```js
+               * {
+               *   server: {
+               *     edge: {
+               *       viewerResponse: {
+               *         injection: `event.response.headers["x-foo"] = "bar";`
+               *       }
+               *     }
+               *   }
+               * }
+               * ```
+               */
+              injection: Input<string>;
+              /**
+               * The KV stores to associate with the viewer response function.
+               *
+               * Takes a list of CloudFront KeyValueStore ARNs.
+               *
+               * @example
+               * ```js
+               * {
+               *   routes: {
+               *     "/api/*": {
+               *       edge: {
+               *         viewerResponse: {
+               *           kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
+               *         }
+               *       }
+               *     }
+               *   }
+               * }
+               * ```
+               */
+              kvStores?: Input<Input<string>[]>;
+            }>;
+          };
+        }
       >
     >
   >;
@@ -568,15 +608,15 @@ function handler(event) {
             },
             ...(route.edge?.viewerResponse
               ? [
-                  {
-                    eventType: "viewer-response",
-                    functionArn: createCloudFrontFunction(
-                      path,
-                      "response",
-                      route.edge.viewerResponse,
-                    ).arn,
-                  },
-                ]
+                {
+                  eventType: "viewer-response",
+                  functionArn: createCloudFrontFunction(
+                    path,
+                    "response",
+                    route.edge.viewerResponse,
+                  ).arn,
+                },
+              ]
               : []),
           ],
           ...defaultConfig,

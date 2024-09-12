@@ -424,13 +424,13 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-multi-r
 ---
 ## AWS Next.js basic auth
 
-This deploys a simple Next.js app and adds basic auth to it.
+Deploys a simple Next.js app and adds basic auth to it.
 
 This is useful for dev environments where you want to share your app your team but ensure
 that it's not publicly accessible.
 
 :::tip
-This works for all our SSR sites, like Astro, Remix, SvelteKit, etc.
+You can use this for all the SSR sites, like Astro, Remix, SvelteKit, etc.
 :::
 
 This works by injecting some code into a CloudFront function that checks the basic auth
@@ -795,15 +795,23 @@ This deploys a simple static site and adds basic auth to it.
 This is useful for dev environments where you want to share a static site with your team but
 ensure that it's not publicly accessible.
 
-This works by deploying a CloudFront function that checks the basic auth header and matches
-it against the `USERNAME` and `PASSWORD` secrets.
+This works by injecting some code into a CloudFront function that checks the basic auth
+header and matches it against the `USERNAME` and `PASSWORD` secrets.
 
 ```ts title="sst.config.ts"
 {
-  // Don't password protect prod
-  edge: $app.stage !== "production"
-    ? { viewerRequest: fn.arn }
-    : undefined
+  injection: $interpolate`
+    if (
+        !event.request.headers.authorization
+          || event.request.headers.authorization.value !== "Basic ${basicAuth}"
+       ) {
+      return {
+        statusCode: 401,
+        headers: {
+          "www-authenticate": { value: "Basic" }
+        }
+      };
+    }`,
 }
 ```
 
@@ -824,27 +832,26 @@ const basicAuth = $output([username.value, password.value]).apply(
     Buffer.from(`${username}:${password}`).toString("base64")
 );
 
-const fn = new aws.cloudfront.Function("BasicAuth", {
-  runtime: "cloudfront-js-2.0",
-  code: $interpolate`
-    function handler(event) {
-      if (!event.request.headers.authorization || event.request.headers.authorization.value !== "Basic ${basicAuth}") {
-        return {
-          statusCode: 401,
-          headers: {
-            "www-authenticate": { value: "Basic" }
-          }
-        };
-      }
-      return event.request;
-    }`,
-});
-
 new sst.aws.StaticSite("MySite", {
   path: "site",
   // Don't password protect prod
   edge: $app.stage !== "production"
-    ? { viewerRequest: fn.arn }
+    ? {
+        viewerRequest: {
+          injection: $interpolate`
+            if (
+                !event.request.headers.authorization
+                  || event.request.headers.authorization.value !== "Basic ${basicAuth}"
+               ) {
+              return {
+                statusCode: 401,
+                headers: {
+                  "www-authenticate": { value: "Basic" }
+                }
+              };
+            }`,
+        },
+    }
     : undefined,
 });
 ```
