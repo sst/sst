@@ -334,46 +334,46 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
   invalidation?: Input<
     | false
     | {
-      /**
-       * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
-       *
-       * :::tip
-       * For non-prod environments it might make sense to pass in `false`.
-       * :::
-       *
-       * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
-       * @default `false`
-       * @example
-       * ```js
-       * {
-       *   invalidation: {
-       *     wait: true
-       *   }
-       * }
-       * ```
-       */
-      wait?: Input<boolean>;
-      /**
-       * The paths to invalidate.
-       *
-       * You can either pass in an array of glob patterns to invalidate specific files. Or you can use the built-in option `all` to invalidation all files when any file changes.
-       *
-       * :::note
-       * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
-       * :::
-       * @default `"all"`
-       * @example
-       * Invalidate the `index.html` and all files under the `products/` route.
-       * ```js
-       * {
-       *   invalidation: {
-       *     paths: ["/index.html", "/products/*"]
-       *   }
-       * }
-       * ```
-       */
-      paths?: Input<"all" | string[]>;
-    }
+        /**
+         * Configure if `sst deploy` should wait for the CloudFront cache invalidation to finish.
+         *
+         * :::tip
+         * For non-prod environments it might make sense to pass in `false`.
+         * :::
+         *
+         * Waiting for the CloudFront cache invalidation process to finish ensures that the new content will be served once the deploy finishes. However, this process can sometimes take more than 5 mins.
+         * @default `false`
+         * @example
+         * ```js
+         * {
+         *   invalidation: {
+         *     wait: true
+         *   }
+         * }
+         * ```
+         */
+        wait?: Input<boolean>;
+        /**
+         * The paths to invalidate.
+         *
+         * You can either pass in an array of glob patterns to invalidate specific files. Or you can use the built-in option `all` to invalidation all files when any file changes.
+         *
+         * :::note
+         * Invalidating `all` counts as one invalidation, while each glob pattern counts as a single invalidation path.
+         * :::
+         * @default `"all"`
+         * @example
+         * Invalidate the `index.html` and all files under the `products/` route.
+         * ```js
+         * {
+         *   invalidation: {
+         *     paths: ["/index.html", "/products/*"]
+         *   }
+         * }
+         * ```
+         */
+        paths?: Input<"all" | string[]>;
+      }
   >;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -629,8 +629,8 @@ export class StaticSite extends Component implements Link.Linkable {
         ...args.assets,
         path: args.assets?.path
           ? output(args.assets?.path).apply((v) =>
-            v.replace(/^\//, "").replace(/\/$/, ""),
-          )
+              v.replace(/^\//, "").replace(/\/$/, ""),
+            )
           : undefined,
       };
     }
@@ -650,35 +650,7 @@ export class StaticSite extends Component implements Link.Linkable {
         ...transform(
           args.transform?.assets,
           `${name}Assets`,
-          {
-            transform: {
-              policy: (policyArgs) => {
-                const newPolicy = iam.getPolicyDocumentOutput({
-                  statements: [
-                    {
-                      principals: [
-                        {
-                          type: "Service",
-                          identifiers: ["cloudfront.amazonaws.com"],
-                        },
-                      ],
-                      actions: ["s3:GetObject"],
-                      resources: [interpolate`${bucket!.arn}/*`],
-                    },
-                  ],
-                }).json;
-                policyArgs.policy = output([
-                  policyArgs.policy,
-                  newPolicy,
-                ]).apply(([policy, newPolicy]) => {
-                  const policyJson = JSON.parse(policy as string);
-                  const newPolicyJson = JSON.parse(newPolicy as string);
-                  policyJson.Statement.push(...newPolicyJson.Statement);
-                  return JSON.stringify(policyJson);
-                });
-              },
-            },
-          },
+          { access: "cloudfront" },
           { parent, retainOnDelete: false },
         ),
       );
@@ -688,8 +660,8 @@ export class StaticSite extends Component implements Link.Linkable {
       const s3Bucket = bucket
         ? bucket.nodes.bucket
         : s3.BucketV2.get(`${name}Assets`, assets.bucket!, undefined, {
-          parent,
-        });
+            parent,
+          });
 
       return {
         bucketName: s3Bucket.bucket,
@@ -824,29 +796,29 @@ export class StaticSite extends Component implements Link.Linkable {
             defaultRootObject: indexPage,
             customErrorResponses: args.errorPage
               ? [
-                {
-                  errorCode: 403,
-                  responsePagePath: interpolate`/${args.errorPage}`,
-                  responseCode: 403,
-                },
-                {
-                  errorCode: 404,
-                  responsePagePath: interpolate`/${args.errorPage}`,
-                  responseCode: 404,
-                },
-              ]
+                  {
+                    errorCode: 403,
+                    responsePagePath: interpolate`/${args.errorPage}`,
+                    responseCode: 403,
+                  },
+                  {
+                    errorCode: 404,
+                    responsePagePath: interpolate`/${args.errorPage}`,
+                    responseCode: 404,
+                  },
+                ]
               : [
-                {
-                  errorCode: 403,
-                  responsePagePath: interpolate`/${indexPage}`,
-                  responseCode: 200,
-                },
-                {
-                  errorCode: 404,
-                  responsePagePath: interpolate`/${indexPage}`,
-                  responseCode: 200,
-                },
-              ],
+                  {
+                    errorCode: 403,
+                    responsePagePath: interpolate`/${indexPage}`,
+                    responseCode: 200,
+                  },
+                  {
+                    errorCode: 404,
+                    responsePagePath: interpolate`/${indexPage}`,
+                    responseCode: 200,
+                  },
+                ],
             defaultCacheBehavior: {
               targetOriginId: "s3",
               viewerProtocolPolicy: "redirect-to-https",
@@ -862,11 +834,11 @@ export class StaticSite extends Component implements Link.Linkable {
                 },
                 ...(edge?.viewerResponse
                   ? [
-                    {
-                      eventType: "viewer-response",
-                      functionArn: createCloudfrontFunction("response").arn,
-                    },
-                  ]
+                      {
+                        eventType: "viewer-response",
+                        functionArn: createCloudfrontFunction("response").arn,
+                      },
+                    ]
                   : []),
               ]),
             },
@@ -882,14 +854,14 @@ export class StaticSite extends Component implements Link.Linkable {
     function createCloudfrontFunction(type: "request" | "response") {
       return type === "request"
         ? new cloudfront.Function(
-          `${name}Function`,
-          {
-            runtime: "cloudfront-js-2.0",
-            keyValueStoreAssociations: output(args.edge).apply(
-              (edge) => edge?.viewerRequest?.kvStores ?? [],
-            ),
-            code: output(args.edge).apply(
-              (edge) => `
+            `${name}Function`,
+            {
+              runtime: "cloudfront-js-2.0",
+              keyValueStoreAssociations: output(args.edge).apply(
+                (edge) => edge?.viewerRequest?.kvStores ?? [],
+              ),
+              code: output(args.edge).apply(
+                (edge) => `
 function handler(event) {
   if (event.request.uri.endsWith('/')) {
     event.request.uri += 'index.html';
@@ -899,28 +871,28 @@ function handler(event) {
   ${edge?.viewerRequest?.injection ?? ""}
   return event.request;
 }`,
-            ),
-          },
-          { parent },
-        )
+              ),
+            },
+            { parent },
+          )
         : new cloudfront.Function(
-          `${name}ResponseFunction`,
-          {
-            runtime: "cloudfront-js-2.0",
-            keyValueStoreAssociations: output(args.edge).apply(
-              (edge) => edge?.viewerResponse?.kvStores ?? [],
-            ),
-            code: output(args.edge).apply(
-              (edge) => `
+            `${name}ResponseFunction`,
+            {
+              runtime: "cloudfront-js-2.0",
+              keyValueStoreAssociations: output(args.edge).apply(
+                (edge) => edge?.viewerResponse?.kvStores ?? [],
+              ),
+              code: output(args.edge).apply(
+                (edge) => `
 function handler(event) {
   ${edge?.viewerResponse?.injection ?? ""}
   return event.response;
 }
 `,
-            ),
-          },
-          { parent },
-        );
+              ),
+            },
+            { parent },
+          );
     }
 
     function buildInvalidation() {

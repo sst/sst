@@ -19,6 +19,7 @@ export type Prettify<T> = {
 export type Transform<T> =
   | Partial<T>
   | ((args: T, opts: $util.CustomResourceOptions, name: string) => undefined);
+
 export function transform<T extends object>(
   transform: Transform<T> | undefined,
   name: string,
@@ -369,6 +370,12 @@ export function $transform<T, Args, Options>(
     cb(input.props as any, input.opts as any);
     return input;
   });
+}
+
+export function $lazy<T>(fn: () => T) {
+  return output(undefined)
+    .apply(async () => output(fn()))
+    .apply((x) => x);
 }
 
 export class Version extends ComponentResource {

@@ -111,6 +111,7 @@ export interface BucketArgs {
    * :::
    *
    * Should only be turned on if you want to host public files directly from the bucket.
+   * @deprecated Use `access` instead.
    * @default `false`
    * @example
    * ```js
@@ -120,6 +121,21 @@ export interface BucketArgs {
    * ```
    */
   public?: Input<boolean>;
+  /**
+   * Enable public read access for all the files in the bucket.
+   *
+   * Following are the possible values:
+   * - `public`: Host files directly from the bucket.
+   * - `cloudfront`: Use CloudFront to serve files from the bucket.
+   *
+   * @example
+   * ```js
+   * {
+   *   access: "public"
+   * }
+   * ```
+   */
+  access?: Input<"public" | "cloudfront">;
   /**
    * The CORS configuration for the bucket. Defaults to `true`, which is the same as:
    *
@@ -319,7 +335,7 @@ export class Bucket extends Component implements Link.Linkable {
     }
 
     const parent = this;
-    const publicAccess = normalizePublicAccess();
+    const access = normalizeAccess();
 
     const bucket = createBucket();
     const publicAccessBlock = createPublicAccess();
@@ -332,8 +348,10 @@ export class Bucket extends Component implements Link.Linkable {
     // another policy is created after this one.
     this.bucket = policy.apply(() => bucket);
 
-    function normalizePublicAccess() {
-      return output(args.public).apply((v) => v ?? false);
+    function normalizeAccess() {
+      return all([args.public, args.access]).apply(([pub, access]) =>
+        pub === true ? "public" : access,
+      );
     }
 
     function createBucket() {
@@ -374,9 +392,9 @@ export class Bucket extends Component implements Link.Linkable {
           {
             bucket: bucket.bucket,
             blockPublicAcls: true,
-            blockPublicPolicy: publicAccess.apply((v) => !v),
+            blockPublicPolicy: access.apply((v) => v !== "public"),
             ignorePublicAcls: true,
-            restrictPublicBuckets: publicAccess.apply((v) => !v),
+            restrictPublicBuckets: access.apply((v) => v !== "public"),
           },
           { parent },
         ),
@@ -384,11 +402,18 @@ export class Bucket extends Component implements Link.Linkable {
     }
 
     function createBucketPolicy() {
-      return publicAccess.apply((publicAccess) => {
+      return access.apply((access) => {
         const statements = [];
-        if (publicAccess) {
+        if (access) {
           statements.push({
-            principals: [{ type: "*", identifiers: ["*"] }],
+            principals: [
+              access === "public"
+                ? { type: "*", identifiers: ["*"] }
+                : {
+                    type: "Service",
+                    identifiers: ["cloudfront.amazonaws.com"],
+                  },
+            ],
             actions: ["s3:GetObject"],
             resources: [interpolate`${bucket.arn}/*`],
           });
