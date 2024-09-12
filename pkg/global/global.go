@@ -1,7 +1,6 @@
 package global
 
 import (
-	"archive/tar"
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
@@ -125,119 +124,12 @@ func BunPath() string {
 	return filepath.Join(BinPath(), "bun")
 }
 
-func UvPath() string {
-	return filepath.Join(BinPath(), "uv")
-}
-
 func BinPath() string {
 	return filepath.Join(configDir, "bin")
 }
 
 func CertPath() string {
 	return filepath.Join(configDir, "cert")
-}
-
-func NeedsUv() bool {
-	path := UvPath()
-	slog.Info("checking for uv", "path", path)
-	if _, err := os.Stat(path); err != nil {
-		return true
-	}
-	cmd := exec.Command(path, "--version")
-	output, err := cmd.Output()
-	if err != nil {
-		return true
-	}
-	version := strings.Fields(strings.TrimSpace(string(output)))[1]
-	return version != UV_VERSION
-}
-
-func InstallUv() error {
-	slog.Info("uv install")
-	goos := runtime.GOOS
-	arch := runtime.GOARCH
-	uvPath := UvPath()
-
-	var filename string
-	switch {
-	case goos == "darwin" && arch == "arm64":
-		filename = "uv-aarch64-apple-darwin.tar.gz"
-	case goos == "darwin" && arch == "amd64":
-		filename = "uv-x86_64-apple-darwin.tar.gz"
-	case goos == "linux" && arch == "arm64":
-		filename = "uv-aarch64-unknown-linux-gnu.tar.gz"
-	case goos == "linux" && arch == "amd64":
-		filename = "uv-x86_64-unknown-linux-gnu.tar.gz"
-	default:
-	}
-	if filename == "" {
-		return fmt.Errorf("unsupported platform: %s %s", goos, arch)
-	}
-
-	url := "https://github.com/astral-sh/uv/releases/download/" + UV_VERSION + "/" + filename
-	slog.Info("uv downloading", "url", url)
-	response, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad status: %s", response.Status)
-	}
-
-	// Read the entire response body into memory
-	bodyBytes, err := io.ReadAll(response.Body)
-	if err != nil {
-		return err
-	}
-
-	// use a buffer to extract the tar.gz file
-	gzipReader, err := gzip.NewReader(bytes.NewReader(bodyBytes))
-	if err != nil {
-		return err
-	}
-	defer gzipReader.Close()
-
-	tarReader := tar.NewReader(gzipReader)
-
-	for {
-		header, err := tarReader.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return fmt.Errorf("untar: Next() failed: %v", err)
-		}
-
-		// Check if the current file is the `uv` binary
-		if filepath.Base(header.Name) == "uv" {
-			tmpFile := filepath.Join(BinPath(), "sst-uv-download")
-			outFile, err := os.Create(tmpFile)
-			if err != nil {
-				return err
-			}
-			defer outFile.Close()
-
-			if _, err := io.Copy(outFile, tarReader); err != nil {
-				return err
-			}
-
-			outFile.Close()
-
-			err = os.Rename(tmpFile, uvPath)
-			if err != nil {
-				return err
-			}
-
-			err = os.Chmod(uvPath, 0755)
-			if err != nil {
-				return err
-			}
-			break
-		}
-	}
-
-	return nil
 }
 
 func NeedsBun() bool {
