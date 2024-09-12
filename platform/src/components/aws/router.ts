@@ -105,7 +105,9 @@ export interface RouterArgs {
    *     "/api/*": {
    *       url: "https://example.com",
    *       edge: {
-   *         viewerRequest: "arn:aws:cloudfront::1234567890:function/MyViewRequestFunction"
+   *         viewerRequest: {
+   *           injection: `event.request.headers["x-foo"] = "bar";`
+   *         }
    *       }
    *     }
    *   }
