@@ -39,7 +39,11 @@ type BuildInput struct {
 }
 
 func (input *BuildInput) Out() string {
-	return filepath.Join(path.ResolveWorkingDir(input.CfgPath), "artifacts", input.FunctionID)
+	suffix := ""
+	if input.Dev {
+		suffix = "-dev"
+	}
+	return filepath.Join(path.ResolveWorkingDir(input.CfgPath), "artifacts", input.FunctionID+suffix)
 }
 
 type BuildOutput struct {
