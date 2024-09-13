@@ -31,7 +31,7 @@ export default $config({
       ),
     });
 
-    new sst.aws.Router("MyRouter", {
+    const router = new sst.aws.Router("MyRouter", {
       routes: {
         "/*": {
           bucket,
@@ -39,5 +39,9 @@ export default $config({
         },
       },
     });
+
+    return {
+      image: $interpolate`${router.url}/spongebob.svg`,
+    };
   },
 });
