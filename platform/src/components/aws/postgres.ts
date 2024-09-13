@@ -85,7 +85,7 @@ export interface PostgresArgs {
      */
     min?: Input<ACU>;
     /**
-     * The maximum number of ACUs, ranges from 0.5 to 128, in increments of 0.5.
+     * The maximum number of ACUs, ranges from 1 to 128, in increments of 0.5.
      *
      * @default `4 ACU`
      * @example
