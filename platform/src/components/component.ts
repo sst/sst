@@ -231,6 +231,7 @@ export class Component extends ComponentResource {
             {
               types: [
                 "aws:ec2/eip:Eip",
+                "aws:ec2/instance:Instance",
                 "aws:ec2/internetGateway:InternetGateway",
                 "aws:ec2/natGateway:NatGateway",
                 "aws:ec2/routeTable:RouteTable",

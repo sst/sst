@@ -1,8 +1,9 @@
 import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
-import { ec2, getAvailabilityZonesOutput } from "@pulumi/aws";
+import { ec2, getAvailabilityZonesOutput, iam } from "@pulumi/aws";
 import { Vpc as VpcV1 } from "./vpc-v1";
+import { Link } from "../link";
 export type { VpcArgs as VpcV1Args } from "./vpc-v1";
 
 export interface VpcArgs {
@@ -29,6 +30,22 @@ export interface VpcArgs {
    * ```
    */
   nat?: Input<"managed">;
+  /**
+   * Configures a bastion host that can be used to connect to resources in the VPC.
+   *
+   * When enabled, an EC2 instance with the bastion AMI will be launched in a public subnet.
+   * The instance will have AWS SSM (AWS Session Manager) enabled for secure access without
+   * the need for SSH key management.
+   *
+   * @default Bastion is not created
+   * @example
+   * ```ts
+   * {
+   *   bastion: true
+   * }
+   * ```
+   */
+  bastion?: Input<true>;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -70,6 +87,10 @@ export interface VpcArgs {
      * Transform the EC2 route table resource for the private subnet.
      */
     privateRouteTable?: Transform<ec2.RouteTableArgs>;
+    /**
+     * Transform the EC2 bastion instance resource.
+     */
+    bastionInstance?: Transform<ec2.InstanceArgs>;
   };
 }
 
@@ -131,7 +152,7 @@ interface VpcRef {
  * });
  * ```
  */
-export class Vpc extends Component {
+export class Vpc extends Component implements Link.Linkable {
   private vpc: ec2.Vpc;
   private internetGateway: ec2.InternetGateway;
   private securityGroup: ec2.SecurityGroup;
@@ -141,6 +162,7 @@ export class Vpc extends Component {
   private _privateSubnets: Output<ec2.Subnet[]>;
   private publicRouteTables: Output<ec2.RouteTable[]>;
   private privateRouteTables: Output<ec2.RouteTable[]>;
+  private bastionInstance?: ec2.Instance;
   public static v1 = VpcV1;
 
   constructor(name: string, args?: VpcArgs, opts?: ComponentResourceOptions) {
@@ -171,6 +193,7 @@ export class Vpc extends Component {
     const { publicSubnets, publicRouteTables } = createPublicSubnets();
     const { elasticIps, natGateways } = createNatGateways();
     const { privateSubnets, privateRouteTables } = createPrivateSubnets();
+    const bastionInstance = createBastion();
 
     this.vpc = vpc;
     this.internetGateway = internetGateway;
@@ -181,6 +204,7 @@ export class Vpc extends Component {
     this._privateSubnets = privateSubnets;
     this.publicRouteTables = publicRouteTables;
     this.privateRouteTables = privateRouteTables;
+    this.bastionInstance = bastionInstance;
 
     function normalizeAz() {
       const zones = getAvailabilityZonesOutput({
@@ -401,6 +425,73 @@ export class Vpc extends Component {
         privateRouteTables: ret.apply((ret) => ret.map((r) => r.routeTable)),
       };
     }
+
+    function createBastion() {
+      if (!args?.bastion) return;
+
+      const sg = new ec2.SecurityGroup(`${name}BastionSecurityGroup`, {
+        vpcId: vpc.id,
+        ingress: [
+          {
+            protocol: "tcp",
+            fromPort: 22,
+            toPort: 22,
+            cidrBlocks: ["0.0.0.0/0"],
+          },
+        ],
+        egress: [
+          {
+            protocol: "-1",
+            fromPort: 0,
+            toPort: 0,
+            cidrBlocks: ["0.0.0.0/0"],
+          },
+        ],
+      });
+
+      const role = new iam.Role(`${name}BastionRole`, {
+        assumeRolePolicy: iam.getPolicyDocumentOutput({
+          statements: [
+            {
+              actions: ["sts:AssumeRole"],
+              principals: [
+                {
+                  type: "Service",
+                  identifiers: ["ec2.amazonaws.com"],
+                },
+              ],
+            },
+          ],
+        }).json,
+        managedPolicyArns: [
+          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+        ],
+      });
+      const instanceProfile = new iam.InstanceProfile(`${name}BastionProfile`, {
+        role: role.name,
+      });
+      return new ec2.Instance(
+        ...transform(
+          args?.transform?.bastionInstance,
+          `${name}BastionInstance`,
+          {
+            instanceType: "t2.micro",
+            ami: "ami-0427090fd1714168b",
+            subnetId: publicSubnets.apply((v) => v[0].id),
+            vpcSecurityGroupIds: [sg.id],
+            iamInstanceProfile: instanceProfile.name,
+            userData: [
+              `#!/bin/bash`,
+              `set -ex`,
+              `sudo yum install -y amazon-ssm-agent`,
+              `sudo systemctl enable amazon-ssm-agent`,
+              `sudo systemctl start amazon-ssm-agent`,
+            ].join("\n"),
+          },
+          { parent },
+        ),
+      );
+    }
   }
 
   /**
@@ -433,6 +524,14 @@ export class Vpc extends Component {
    */
   public get securityGroups() {
     return [this.securityGroup.id];
+  }
+
+  /**
+   * The bastion instance id.
+   */
+  public get bastion() {
+    if (!this.bastionInstance) throw new Error("Bastion instance not created");
+    return this.bastionInstance?.id;
   }
 
   /**
@@ -476,6 +575,10 @@ export class Vpc extends Component {
        * The Amazon EC2 route table for the private subnet.
        */
       privateRouteTables: this.privateRouteTables,
+      /**
+       * The Amazon EC2 bastion instance.
+       */
+      bastionInstance: this.bastionInstance,
     };
   }
 
@@ -604,6 +707,15 @@ export class Vpc extends Component {
       natGateways,
       elasticIps,
     } satisfies VpcRef as VpcArgs);
+  }
+
+  /** @internal */
+  public getSSTLink() {
+    return {
+      properties: {
+        bastion: this.bastion,
+      },
+    };
   }
 }
 
