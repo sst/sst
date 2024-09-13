@@ -53,7 +53,7 @@ export default $config({
   async run() {
     const username = new sst.Secret("USERNAME");
     const password = new sst.Secret("PASSWORD");
-    const basicAuth = $output([username.value, password.value]).apply(
+    const basicAuth = $resolve([username.value, password.value]).apply(
       ([username, password]) =>
         Buffer.from(`${username}:${password}`).toString("base64")
     );

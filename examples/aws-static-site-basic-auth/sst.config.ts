@@ -49,7 +49,7 @@ export default $config({
   async run() {
     const username = new sst.Secret("USERNAME");
     const password = new sst.Secret("PASSWORD");
-    const basicAuth = $output([username.value, password.value]).apply(
+    const basicAuth = $resolve([username.value, password.value]).apply(
       ([username, password]) =>
         Buffer.from(`${username}:${password}`).toString("base64")
     );
@@ -59,20 +59,20 @@ export default $config({
       // Don't password protect prod
       edge: $app.stage !== "production"
         ? {
-            viewerRequest: {
-              injection: $interpolate`
-                if (
-                    !event.request.headers.authorization
-                      || event.request.headers.authorization.value !== "Basic ${basicAuth}"
-                   ) {
-                  return {
-                    statusCode: 401,
-                    headers: {
-                      "www-authenticate": { value: "Basic" }
-                    }
-                  };
-                }`,
-            },
+          viewerRequest: {
+            injection: $interpolate`
+              if (
+                  !event.request.headers.authorization
+                    || event.request.headers.authorization.value !== "Basic ${basicAuth}"
+                 ) {
+                return {
+                  statusCode: 401,
+                  headers: {
+                    "www-authenticate": { value: "Basic" }
+                  }
+                };
+              }`,
+          },
         }
         : undefined,
     });
