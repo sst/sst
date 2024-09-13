@@ -22,7 +22,7 @@ interface Triggers {
    * Triggered after the user successfully responds to the previous challenge, and a new
    * challenge needs to be created.
    *
-   * Takes the handler path or the function args.
+   * Takes the handler path, the function args, or a function ARN.
    */
   createAuthChallenge?: string | FunctionArgs | FunctionArn;
   /**
@@ -30,7 +30,7 @@ interface Triggers {
    * verification, and when an admin creates a user. Use this trigger to customize the
    * email provider.
    *
-   * Takes the handler path or the function args.
+   * Takes the handler path, the function args, or a function ARN.
    */
   customEmailSender?: string | FunctionArgs | FunctionArn;
   /**
@@ -38,14 +38,14 @@ interface Triggers {
    * verification, and when an admin creates a user. Use this trigger to customize the
    * message that is sent to your users.
    *
-   * Takes the handler path or the function args.
+   * Takes the handler path, the function args, or a function ARN.
    */
   customMessage?: string | FunctionArgs | FunctionArn;
   /**
    * Triggered when an SMS message needs to be sent, such as for MFA or verification codes.
    * Use this trigger to customize the SMS provider.
    *
-   * Takes the handler path or the function args.
+   * Takes the handler path, the function args, or a function ARN.
    */
   customSmsSender?: string | FunctionArgs | FunctionArn;
   /**
@@ -53,14 +53,14 @@ interface Triggers {
    * user has completed the authentication process or if additional challenges are needed.
    * ARN of the lambda function to name a custom challenge.
    *
-   * Takes the handler path or the function args.
+   * Takes the handler path, the function args, or a function ARN.
    */
   defineAuthChallenge?: string | FunctionArgs | FunctionArn;
   /**
    * Triggered after a successful authentication event. Use this to perform custom actions,
    * such as logging or modifying user attributes, after the user is authenticated.
    *
-   * Takes the handler path or the function args.
+   * Takes the handler path, the function args, or a function ARN.
    */
   postAuthentication?: string | FunctionArgs | FunctionArn;
   /**
@@ -68,7 +68,7 @@ interface Triggers {
    * verification. Use this to perform additional actions, like sending a welcome email or
    * initializing user data, after user confirmation.
    *
-   * Takes the handler path or the function args.
+   * Takes the handler path, the function args, or a function ARN.
    */
   postConfirmation?: string | FunctionArgs | FunctionArn;
   /**
@@ -76,21 +76,21 @@ interface Triggers {
    * validation or checks (like checking if the user is banned) before continuing
    * authentication.
    *
-   * Takes the handler path or the function args.
+   * Takes the handler path, the function args, or a function ARN.
    */
   preAuthentication?: string | FunctionArgs | FunctionArn;
   /**
    * Triggered before the user sign-up process completes. Use this to perform custom
    * validation, auto-confirm users, or auto-verify attributes based on custom logic.
    *
-   * Takes the handler path or the function args.
+   * Takes the handler path, the function args, or a function ARN.
    */
   preSignUp?: string | FunctionArgs | FunctionArn;
   /**
    * Triggered before tokens are generated in the authentication process. Use this to
    * customize or add claims to the tokens that will be generated and returned to the user.
    *
-   * Takes the handler path or the function args.
+   * Takes the handler path, the function args, or a function ARN.
    */
   preTokenGeneration?: string | FunctionArgs | FunctionArn;
   /**
@@ -104,7 +104,7 @@ interface Triggers {
    * Use this to import and validate users from an existing user directory into the
    * Cognito User Pool during sign-in.
    *
-   * Takes the handler path or the function args.
+   * Takes the handler path, the function args, or a function ARN.
    */
   userMigration?: string | FunctionArgs | FunctionArn;
   /**
@@ -112,7 +112,7 @@ interface Triggers {
    * verify the user's response to the challenge and determine whether to continue
    * authenticating the user.
    *
-   * Takes the handler path or the function args.
+   * Takes the handler path, the function args, or a function ARN.
    */
   verifyAuthChallengeResponse?: string | FunctionArgs | FunctionArn;
 }
@@ -528,17 +528,17 @@ export class CognitoUserPool extends Component implements Link.Linkable {
                     triggers.customEmailSender === undefined
                       ? undefined
                       : {
-                          lambdaArn: createTrigger("customEmailSender")!,
-                          lambdaVersion: "V1_0",
-                        },
+                        lambdaArn: createTrigger("customEmailSender")!,
+                        lambdaVersion: "V1_0",
+                      },
                   customMessage: createTrigger("customMessage"),
                   customSmsSender:
                     triggers.customSmsSender === undefined
                       ? undefined
                       : {
-                          lambdaArn: createTrigger("customSmsSender")!,
-                          lambdaVersion: "V1_0",
-                        },
+                        lambdaArn: createTrigger("customSmsSender")!,
+                        lambdaVersion: "V1_0",
+                      },
                   defineAuthChallenge: createTrigger("defineAuthChallenge"),
                   postAuthentication: createTrigger("postAuthentication"),
                   postConfirmation: createTrigger("postConfirmation"),
@@ -548,9 +548,9 @@ export class CognitoUserPool extends Component implements Link.Linkable {
                     triggers.preTokenGeneration === undefined
                       ? undefined
                       : {
-                          lambdaArn: createTrigger("preTokenGeneration")!,
-                          lambdaVersion: triggers.preTokenGenerationVersion,
-                        },
+                        lambdaArn: createTrigger("preTokenGeneration")!,
+                        lambdaVersion: triggers.preTokenGenerationVersion,
+                      },
                   userMigration: createTrigger("userMigration"),
                   verifyAuthChallengeResponse: createTrigger(
                     "verifyAuthChallengeResponse",

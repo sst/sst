@@ -425,9 +425,9 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-          ([domain, key]) =>
-            key ? `wss://${domain}/${key}/` : `wss://${domain}`,
-        )
+        ([domain, key]) =>
+          key ? `wss://${domain}/${key}/` : `wss://${domain}`,
+      )
       : interpolate`${this.api.apiEndpoint}/${this.stage.name}`;
   }
 
@@ -517,7 +517,7 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
    * });
    * ```
    *
-   * Add a route with an existing Lambda function.
+   * Or pass in the ARN of an existing Lambda function.
    *
    * ```js title="sst.config.ts"
    * api.route("sendMessage", "arn:aws:lambda:us-east-1:123456789012:function:my-function");

@@ -17,6 +17,8 @@ import { FunctionBuilder, functionBuilder } from "./helpers/function-builder";
 export interface Args extends ApiGatewayV2BaseRouteArgs {
   /**
    * The route function.
+   *
+   * Takes the handler path, the function args, or a function ARN.
    */
   handler: Input<string | FunctionArgs | FunctionArn>;
   /**

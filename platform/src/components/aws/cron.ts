@@ -17,7 +17,7 @@ export interface CronArgs {
    * }
    * ```
    *
-   * Alternatively, you can pass in the full function props.
+   * You can pass in the full function props.
    *
    * ```ts
    * {
@@ -25,6 +25,14 @@ export interface CronArgs {
    *     handler: "src/cron.handler",
    *     timeout: "60 seconds"
    *   }
+   * }
+   * ```
+   *
+   * You can also pass in a function ARN.
+   *
+   * ```ts
+   * {
+   *   job: "arn:aws:lambda:us-east-1:000000000000:function:my-sst-app-jayair-MyFunction",
    * }
    * ```
    */

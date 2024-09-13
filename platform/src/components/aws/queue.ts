@@ -84,16 +84,16 @@ export interface QueueArgs {
   dlq?: Input<
     | string
     | {
-        /**
-         * The ARN of the dead-letter queue.
-         */
-        queue: Input<string>;
-        /**
-         * The number of times the main queue will retry the message before sending it to the dead-letter queue.
-         * @default `3`
-         */
-        retry: Input<number>;
-      }
+      /**
+       * The ARN of the dead-letter queue.
+       */
+      queue: Input<string>;
+      /**
+       * The number of times the main queue will retry the message before sending it to the dead-letter queue.
+       * @default `3`
+       */
+      retry: Input<number>;
+    }
   >;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -430,7 +430,7 @@ export class Queue extends Component implements Link.Linkable {
    * });
    * ```
    *
-   * Subscribe with an existing Lambda function.
+   * Or pass in the ARN of an existing Lambda function.
    *
    * ```js title="sst.config.ts"
    * queue.subscribe("arn:aws:lambda:us-east-1:123456789012:function:my-function");
