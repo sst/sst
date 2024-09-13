@@ -4,7 +4,9 @@ import { Link } from "../link";
 import type { Input } from "../input";
 import { Cdn, CdnArgs } from "./cdn";
 import { cloudfront, types } from "@pulumi/aws";
-import { hashStringToPrettyString } from "../naming";
+import { hashStringToPrettyString, physicalName } from "../naming";
+import { Bucket } from "./bucket";
+import { OriginAccessControl } from "./providers/origin-access-control";
 
 export interface RouterArgs {
   /**
@@ -129,158 +131,195 @@ export interface RouterArgs {
       Input<
         | string
         | {
-          /**
-           * The destination URL.
-           *
-           * @example
-           *
-           * ```js
-           * {
-           *   routes: {
-           *     "/api/*": {
-           *       url: "https://example.com"
-           *     }
-           *   }
-           * }
-           * ```
-           */
-          url: Input<string>;
-          /**
-           * Configure CloudFront Functions to customize the behavior of HTTP requests and responses at the edge.
-           */
-          edge?: {
             /**
-             * Configure the viewer request function.
-             *
-             * The viewer request function can be used to modify incoming requests before they
-             * reach your origin server. For example, you can redirect users, rewrite URLs,
-             * or add headers.
-             */
-            viewerRequest?: Input<{
-              /**
-               * The code to inject into the viewer request function.
-               *
-               * By default, a viewer request function is created to add the `x-forwarded-host`
-               * header. The given code will be injected at the end of this function.
-               *
-               * ```js
-               * function handler(event) {
-               *   // Default behavior code
-               *
-               *   // User injected code
-               *
-               *   return event.request;
-               * }
-               * ```
-               *
-               * @example
-               * To add a custom header to all requests.
-               *
-               * ```js
-               * {
-               *   server: {
-               *     edge: {
-               *       viewerRequest: {
-               *         injection: `event.request.headers["x-foo"] = "bar";`
-               *       }
-               *     }
-               *   }
-               * }
-               * ```
-               */
-              injection: Input<string>;
-              /**
-               * The KV stores to associate with the viewer request function.
-               *
-               * Takes a list of CloudFront KeyValueStore ARNs.
-               *
-               * @example
-               * ```js
-               * {
-               *   routes: {
-               *     "/api/*": {
-               *       edge: {
-               *         viewerRequest: {
-               *           kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
-               *         }
-               *       }
-               *     }
-               *   }
-               * }
-               * ```
-               */
-              kvStores?: Input<Input<string>[]>;
-            }>;
-            /**
-             * Configure the viewer response function.
-             *
-             * The viewer response function can be used to modify outgoing responses before
-             * they are sent to the client. For example, you can add security headers or change
-             * the response status code.
-             *
-             * By default, no viewer response function is set. A new function will be created
-             * with the provided code.
+             * The destination URL.
              *
              * @example
-             * Add a custom header to all responses
+             *
              * ```js
              * {
              *   routes: {
              *     "/api/*": {
-             *       edge: {
-             *         viewerResponse: {
-             *           injection: `event.response.headers["x-foo"] = "bar";`
-             *         }
+             *       url: "https://example.com"
+             *     }
+             *   }
+             * }
+             * ```
+             */
+            url?: Input<string>;
+            /**
+             * The destination bucket.
+             *
+             * @example
+             *
+             * If you have an SST bucket.
+             *
+             * ```ts
+             * const myBucket = new sst.aws.Bucket("MyBucket", {
+             *   access: "cloudfront",
+             * });
+             * ```
+             *
+             * :::note
+             * Make sure to set the `access` prop to grant CloudFront access to the bucket.
+             * :::
+             *
+             * You can pass it in directly.
+             *
+             * ```js
+             * {
+             *   routes: {
+             *     "/files/*": {
+             *       bucket: myBucket
+             *     }
+             *   }
+             * }
+             * ```
+             *
+             * Or you can pass in the regional domain of an existing S3 bucket.
+             *
+             * ```js
+             * {
+             *   routes: {
+             *     "/files/*": {
+             *       bucket: {
+             *         regionalDomain: "my-bucket.s3.us-east-1.amazonaws.com"
              *       }
              *     }
              *   }
              * }
              * ```
              */
-            viewerResponse?: Input<{
+            bucket?: Input<
+              | Bucket
+              | {
+                  /**
+                   * The regional domain of the bucket.
+                   */
+                  regionalDomain: Input<string>;
+                }
+            >;
+            /**
+             * Rewrite the request path.
+             *
+             * @example
+             *
+             * By default, if the route path is `/files/*` and a request comes in for `/files/logo.png`,
+             * the request path the destination sees is `/files/logo.png`. In the case of a bucket route,
+             * the file `logo.png` is served from the `files` directory in the bucket.
+             *
+             * If you want to serve the file from the root of the bucket, you can rewrite
+             * the request path to `/logo.png`.
+             *
+             * ```js
+             * {
+             *   routes: {
+             *     "/files/*": {
+             *       bucket: myBucket,
+             *       rewrite: {
+             *         regex: "^/files/(.*)$",
+             *         to: "/$1"
+             *       }
+             *     }
+             *   }
+             * }
+             * ```
+             */
+            rewrite?: Input<{
               /**
-               * The code to inject into the viewer response function.
-               *
-               * By default, no viewer response function is set. A new function will be created with
-               * the provided code.
-               *
-               * ```js
-               * function handler(event) {
-               *   // User injected code
-               *
-               *   return event.response;
-               * }
-               * ```
-               *
-               * @example
-               * To add a custom header to all responses.
-               *
-               * ```js
-               * {
-               *   server: {
-               *     edge: {
-               *       viewerResponse: {
-               *         injection: `event.response.headers["x-foo"] = "bar";`
-               *       }
-               *     }
-               *   }
-               * }
-               * ```
+               * The regex to match the request path.
                */
-              injection: Input<string>;
+              regex: Input<string>;
               /**
-               * The KV stores to associate with the viewer response function.
+               * The replacement for the matched path.
+               */
+              to: Input<string>;
+            }>;
+            /**
+             * Configure CloudFront Functions to customize the behavior of HTTP requests and responses at the edge.
+             */
+            edge?: {
+              /**
+               * Configure the viewer request function.
                *
-               * Takes a list of CloudFront KeyValueStore ARNs.
+               * The viewer request function can be used to modify incoming requests before they
+               * reach your origin server. For example, you can redirect users, rewrite URLs,
+               * or add headers.
+               */
+              viewerRequest?: Input<{
+                /**
+                 * The code to inject into the viewer request function.
+                 *
+                 * By default, a viewer request function is created to add the `x-forwarded-host`
+                 * header. The given code will be injected at the end of this function.
+                 *
+                 * ```js
+                 * function handler(event) {
+                 *   // Default behavior code
+                 *
+                 *   // User injected code
+                 *
+                 *   return event.request;
+                 * }
+                 * ```
+                 *
+                 * @example
+                 * To add a custom header to all requests.
+                 *
+                 * ```js
+                 * {
+                 *   server: {
+                 *     edge: {
+                 *       viewerRequest: {
+                 *         injection: `event.request.headers["x-foo"] = "bar";`
+                 *       }
+                 *     }
+                 *   }
+                 * }
+                 * ```
+                 */
+                injection: Input<string>;
+                /**
+                 * The KV stores to associate with the viewer request function.
+                 *
+                 * Takes a list of CloudFront KeyValueStore ARNs.
+                 *
+                 * @example
+                 * ```js
+                 * {
+                 *   routes: {
+                 *     "/api/*": {
+                 *       edge: {
+                 *         viewerRequest: {
+                 *           kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
+                 *         }
+                 *       }
+                 *     }
+                 *   }
+                 * }
+                 * ```
+                 */
+                kvStores?: Input<Input<string>[]>;
+              }>;
+              /**
+               * Configure the viewer response function.
+               *
+               * The viewer response function can be used to modify outgoing responses before
+               * they are sent to the client. For example, you can add security headers or change
+               * the response status code.
+               *
+               * By default, no viewer response function is set. A new function will be created
+               * with the provided code.
                *
                * @example
+               * Add a custom header to all responses
                * ```js
                * {
                *   routes: {
                *     "/api/*": {
                *       edge: {
                *         viewerResponse: {
-               *           kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
+               *           injection: `event.response.headers["x-foo"] = "bar";`
                *         }
                *       }
                *     }
@@ -288,10 +327,61 @@ export interface RouterArgs {
                * }
                * ```
                */
-              kvStores?: Input<Input<string>[]>;
-            }>;
-          };
-        }
+              viewerResponse?: Input<{
+                /**
+                 * The code to inject into the viewer response function.
+                 *
+                 * By default, no viewer response function is set. A new function will be created with
+                 * the provided code.
+                 *
+                 * ```js
+                 * function handler(event) {
+                 *   // User injected code
+                 *
+                 *   return event.response;
+                 * }
+                 * ```
+                 *
+                 * @example
+                 * To add a custom header to all responses.
+                 *
+                 * ```js
+                 * {
+                 *   server: {
+                 *     edge: {
+                 *       viewerResponse: {
+                 *         injection: `event.response.headers["x-foo"] = "bar";`
+                 *       }
+                 *     }
+                 *   }
+                 * }
+                 * ```
+                 */
+                injection: Input<string>;
+                /**
+                 * The KV stores to associate with the viewer response function.
+                 *
+                 * Takes a list of CloudFront KeyValueStore ARNs.
+                 *
+                 * @example
+                 * ```js
+                 * {
+                 *   routes: {
+                 *     "/api/*": {
+                 *       edge: {
+                 *         viewerResponse: {
+                 *           kvStores: ["arn:aws:cloudfront::123456789012:key-value-store/my-store"]
+                 *         }
+                 *       }
+                 *     }
+                 *   }
+                 * }
+                 * ```
+                 */
+                kvStores?: Input<Input<string>[]>;
+              }>;
+            };
+          }
       >
     >
   >;
@@ -359,6 +449,22 @@ export interface RouterArgs {
  * });
  * ```
  *
+ * #### Route to a bucket
+ *
+ * ```ts title="sst.config.ts"
+ * const myBucket = new sst.aws.Bucket("MyBucket", {
+ *   access: "cloudfront",
+ * });
+ *
+ * new sst.aws.Router("MyRouter", {
+ *   routes: {
+ *     "/files/*": myBucket
+ *   }
+ * });
+ * ```
+ *
+ * Make sure to allow AWS CloudFront to access the bucket by setting the `access` prop on the bucket.
+ *
  * #### Route all API requests separately
  *
  * ```ts {4} title="sst.config.ts"
@@ -393,6 +499,7 @@ export class Router extends Component implements Link.Linkable {
     super(__pulumiType, name, args, opts);
 
     let defaultCfFunction: cloudfront.Function;
+    let defaultOac: OriginAccessControl;
     const parent = this;
 
     const routes = normalizeRoutes();
@@ -411,11 +518,16 @@ export class Router extends Component implements Link.Linkable {
       return output(args.routes).apply((routes) => {
         return Object.fromEntries(
           Object.entries(routes).map(([path, route]) => {
-            if (!path.startsWith("/")) {
+            // Route path must start with "/"
+            if (!path.startsWith("/"))
               throw new Error(
                 `In "${name}" Router, the route path "${path}" must start with a "/"`,
               );
-            }
+
+            if (typeof route !== "string" && route.url && route.bucket)
+              throw new Error(
+                `In "${name}" Router, the route path "${path}" cannot have both a url and a bucket`,
+              );
 
             return [path, typeof route === "string" ? { url: route } : route];
           }),
@@ -423,67 +535,99 @@ export class Router extends Component implements Link.Linkable {
       });
     }
 
-    function createCloudFrontFunction(
+    function createCfRequestDefaultFunction() {
+      defaultCfFunction =
+        defaultCfFunction ??
+        new cloudfront.Function(
+          `${name}CloudfrontFunction`,
+          {
+            runtime: "cloudfront-js-2.0",
+            code: [
+              `function handler(event) {`,
+              `  event.request.headers["x-forwarded-host"] = event.request.headers.host;`,
+              `  return event.request;`,
+              `}`,
+            ].join("\n"),
+          },
+          { parent },
+        );
+      return defaultCfFunction;
+    }
+
+    function createCfRequestFunction(
       path: string,
-      type: "request" | "response",
-      config?: {
+      config:
+        | {
+            injection: string;
+            kvStores?: string[];
+          }
+        | undefined,
+      rewrite:
+        | {
+            regex: string;
+            to: string;
+          }
+        | undefined,
+      injectHostHeader: boolean,
+    ) {
+      return new cloudfront.Function(
+        `${name}CloudfrontFunction${hashStringToPrettyString(path, 8)}`,
+        {
+          runtime: "cloudfront-js-2.0",
+          keyValueStoreAssociations: config?.kvStores ?? [],
+          code: `
+function handler(event) {
+  ${
+    injectHostHeader
+      ? `event.request.headers["x-forwarded-host"] = event.request.headers.host;`
+      : ""
+  }
+  ${
+    rewrite
+      ? `
+const re = new RegExp("${rewrite.regex}");
+event.request.uri = event.request.uri.replace(re, "${rewrite.to}");`
+      : ""
+  }
+  ${config?.injection ?? ""}
+  return event.request;
+}`,
+        },
+        { parent },
+      );
+    }
+
+    function createCfResponseFunction(
+      path: string,
+      config: {
         injection: string;
         kvStores?: string[];
       },
     ) {
-      console.log("createCloudFrontFunction", path, type, config);
-      if (type === "request" && !config) {
-        defaultCfFunction =
-          defaultCfFunction ??
-          new cloudfront.Function(
-            `${name}CloudfrontFunction`,
-            {
-              runtime: "cloudfront-js-2.0",
-              code: [
-                `function handler(event) {`,
-                `  event.request.headers["x-forwarded-host"] = event.request.headers.host;`,
-                `  return event.request;`,
-                `}`,
-              ].join("\n"),
-            },
-            { parent },
-          );
-        return defaultCfFunction;
-      }
-
-      if (type === "request") {
-        return new cloudfront.Function(
-          `${name}CloudfrontFunction${hashStringToPrettyString(path, 8)}`,
-          {
-            runtime: "cloudfront-js-2.0",
-            keyValueStoreAssociations: config!.kvStores ?? [],
-            code: `
-function handler(event) {
-  event.request.headers["x-forwarded-host"] = event.request.headers.host;
-  ${config!.injection ?? ""}
-  return event.request;
-}`,
-          },
-          { parent },
-        );
-      }
-      // TODO
-      // - test Router
-      // - reply to StaticSite and Router ppl in #general
-
       return new cloudfront.Function(
-        `${name}CloudfrontFunction${hashStringToPrettyString(path, 8)}`,
+        `${name}CloudfrontFunctionResponse${hashStringToPrettyString(path, 8)}`,
         {
           runtime: "cloudfront-js-2.0",
           keyValueStoreAssociations: config!.kvStores ?? [],
           code: `
 function handler(event) {
-  ${config!.injection ?? ""}
+  ${config.injection ?? ""}
   return event.response;
 }`,
         },
         { parent },
       );
+    }
+
+    function createOriginAccessControl() {
+      defaultOac =
+        defaultOac ??
+        new OriginAccessControl(
+          `${name}S3AccessControl`,
+          { name: physicalName(64, name) },
+          { parent },
+        );
+      return defaultOac;
     }
 
     function createCachePolicy() {
@@ -545,7 +689,7 @@ function handler(event) {
     }
 
     function buildOrigins() {
-      const defaultConfig = {
+      const urlDefaultConfig = {
         customOriginConfig: {
           httpPort: 80,
           httpsPort: 443,
@@ -556,17 +700,31 @@ function handler(event) {
       };
 
       return output(routes).apply((routes) => {
-        const origins = Object.entries(routes).map(([path, route]) => ({
-          originId: path,
-          domainName: new URL(route.url).host,
-          ...defaultConfig,
-        }));
+        const origins = Object.entries(routes).map(([path, route]) => {
+          if (route.url) {
+            return {
+              originId: path,
+              domainName: new URL(route.url).host,
+              ...urlDefaultConfig,
+            };
+          }
+
+          return {
+            originId: path,
+            domainName:
+              route.bucket instanceof Bucket
+                ? route.bucket.nodes.bucket.bucketRegionalDomainName
+                : route.bucket!.regionalDomain,
+            originPath: "",
+            originAccessControlId: createOriginAccessControl().id,
+          };
+        });
 
         if (!routes["/*"]) {
           origins.push({
             originId: "/*",
             domainName: "do-not-exist.sst.dev",
-            ...defaultConfig,
+            ...urlDefaultConfig,
           });
         }
         return origins;
@@ -574,7 +732,7 @@ function handler(event) {
     }
 
     function buildBehaviors() {
-      const defaultConfig = {
+      const urlDefaultConfig = {
         viewerProtocolPolicy: "redirect-to-https",
         allowedMethods: [
           "DELETE",
@@ -593,40 +751,56 @@ function handler(event) {
         originRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
       };
 
+      const bucketDefaultConfig = {
+        viewerProtocolPolicy: "redirect-to-https",
+        allowedMethods: ["GET", "HEAD", "OPTIONS"],
+        cachedMethods: ["GET", "HEAD"],
+        compress: true,
+        // CloudFront's managed CachingOptimized policy
+        cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
+      };
+
       return output(routes).apply((routes) => {
         const behaviors = Object.entries(routes).map(([path, route]) => ({
           ...(path === "/*" ? {} : { pathPattern: path }),
           targetOriginId: path,
           functionAssociations: [
-            {
-              eventType: "viewer-request",
-              functionArn: createCloudFrontFunction(
-                path,
-                "request",
-                route.edge?.viewerRequest,
-              ).arn,
-            },
+            ...(route.url || route.edge?.viewerRequest || route.rewrite
+              ? [
+                  {
+                    eventType: "viewer-request",
+                    functionArn:
+                      route.edge?.viewerRequest || route.rewrite
+                        ? createCfRequestFunction(
+                            path,
+                            route.edge?.viewerRequest,
+                            route.rewrite,
+                            route.url !== undefined,
+                          ).arn
+                        : createCfRequestDefaultFunction().arn,
+                  },
+                ]
+              : []),
             ...(route.edge?.viewerResponse
               ? [
-                {
-                  eventType: "viewer-response",
-                  functionArn: createCloudFrontFunction(
-                    path,
-                    "response",
-                    route.edge.viewerResponse,
-                  ).arn,
-                },
-              ]
+                  {
+                    eventType: "viewer-response",
+                    functionArn: createCfResponseFunction(
+                      path,
+                      route.edge.viewerResponse,
+                    ).arn,
+                  },
+                ]
               : []),
           ],
-          ...defaultConfig,
+          ...(route.url ? urlDefaultConfig : bucketDefaultConfig),
         }));
 
         if (!routes["/*"]) {
           behaviors.push({
             targetOriginId: "/*",
             functionAssociations: [],
-            ...defaultConfig,
+            ...urlDefaultConfig,
           });
         }
         return behaviors;
