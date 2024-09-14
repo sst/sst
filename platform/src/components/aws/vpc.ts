@@ -429,47 +429,57 @@ export class Vpc extends Component implements Link.Linkable {
     function createBastion() {
       if (!args?.bastion) return;
 
-      const sg = new ec2.SecurityGroup(`${name}BastionSecurityGroup`, {
-        vpcId: vpc.id,
-        ingress: [
-          {
-            protocol: "tcp",
-            fromPort: 22,
-            toPort: 22,
-            cidrBlocks: ["0.0.0.0/0"],
-          },
-        ],
-        egress: [
-          {
-            protocol: "-1",
-            fromPort: 0,
-            toPort: 0,
-            cidrBlocks: ["0.0.0.0/0"],
-          },
-        ],
-      });
-
-      const role = new iam.Role(`${name}BastionRole`, {
-        assumeRolePolicy: iam.getPolicyDocumentOutput({
-          statements: [
+      const sg = new ec2.SecurityGroup(
+        `${name}BastionSecurityGroup`,
+        {
+          vpcId: vpc.id,
+          ingress: [
             {
-              actions: ["sts:AssumeRole"],
-              principals: [
-                {
-                  type: "Service",
-                  identifiers: ["ec2.amazonaws.com"],
-                },
-              ],
+              protocol: "tcp",
+              fromPort: 22,
+              toPort: 22,
+              cidrBlocks: ["0.0.0.0/0"],
             },
           ],
-        }).json,
-        managedPolicyArns: [
-          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
-        ],
-      });
-      const instanceProfile = new iam.InstanceProfile(`${name}BastionProfile`, {
-        role: role.name,
-      });
+          egress: [
+            {
+              protocol: "-1",
+              fromPort: 0,
+              toPort: 0,
+              cidrBlocks: ["0.0.0.0/0"],
+            },
+          ],
+        },
+        { parent },
+      );
+
+      const role = new iam.Role(
+        `${name}BastionRole`,
+        {
+          assumeRolePolicy: iam.getPolicyDocumentOutput({
+            statements: [
+              {
+                actions: ["sts:AssumeRole"],
+                principals: [
+                  {
+                    type: "Service",
+                    identifiers: ["ec2.amazonaws.com"],
+                  },
+                ],
+              },
+            ],
+          }).json,
+          managedPolicyArns: [
+            "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+          ],
+        },
+        { parent },
+      );
+      const instanceProfile = new iam.InstanceProfile(
+        `${name}BastionProfile`,
+        { role: role.name },
+        { parent },
+      );
       return new ec2.Instance(
         ...transform(
           args?.transform?.bastionInstance,
