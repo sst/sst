@@ -105,6 +105,7 @@ interface VpcRef {
   publicRouteTables: Output<ec2.RouteTable[]>;
   natGateways: Output<ec2.NatGateway[]>;
   elasticIps: Output<ec2.Eip[]>;
+  bastionInstance: Output<ec2.Instance | undefined>;
 }
 
 /**
@@ -162,7 +163,7 @@ export class Vpc extends Component implements Link.Linkable {
   private _privateSubnets: Output<ec2.Subnet[]>;
   private publicRouteTables: Output<ec2.RouteTable[]>;
   private privateRouteTables: Output<ec2.RouteTable[]>;
-  private bastionInstance?: ec2.Instance;
+  private bastionInstance: Output<ec2.Instance | undefined>;
   public static v1 = VpcV1;
 
   constructor(name: string, args?: VpcArgs, opts?: ComponentResourceOptions) {
@@ -180,6 +181,7 @@ export class Vpc extends Component implements Link.Linkable {
       this.privateRouteTables = output(ref.privateRouteTables);
       this.natGateways = output(ref.natGateways);
       this.elasticIps = ref.elasticIps;
+      this.bastionInstance = ref.bastionInstance;
       return;
     }
     const parent = this;
@@ -204,7 +206,7 @@ export class Vpc extends Component implements Link.Linkable {
     this._privateSubnets = privateSubnets;
     this.publicRouteTables = publicRouteTables;
     this.privateRouteTables = privateRouteTables;
-    this.bastionInstance = bastionInstance;
+    this.bastionInstance = output(bastionInstance);
 
     function normalizeAz() {
       const zones = getAvailabilityZonesOutput({
@@ -427,7 +429,7 @@ export class Vpc extends Component implements Link.Linkable {
     }
 
     function createBastion() {
-      if (!args?.bastion) return;
+      if (!args?.bastion) return output(undefined);
 
       const sg = new ec2.SecurityGroup(
         `${name}BastionSecurityGroup`,
@@ -497,6 +499,9 @@ export class Vpc extends Component implements Link.Linkable {
               `sudo systemctl enable amazon-ssm-agent`,
               `sudo systemctl start amazon-ssm-agent`,
             ].join("\n"),
+            tags: {
+              "sst:lookup-type": "bastion",
+            },
           },
           { parent },
         ),
@@ -540,8 +545,10 @@ export class Vpc extends Component implements Link.Linkable {
    * The bastion instance id.
    */
   public get bastion() {
-    if (!this.bastionInstance) throw new Error("Bastion instance not created");
-    return this.bastionInstance?.id;
+    return this.bastionInstance.apply((v) => {
+      if (!v) throw new Error("Bastion instance not created");
+      return v.id;
+    });
   }
 
   /**
@@ -704,6 +711,18 @@ export class Vpc extends Component implements Link.Linkable {
         ),
       ),
     );
+    const bastionInstance = ec2
+      .getInstancesOutput({
+        filters: [
+          { name: "tag:sst:lookup-type", values: ["bastion"] },
+          { name: "vpc-id", values: [vpc.id] },
+        ],
+      })
+      .ids.apply((ids) =>
+        ids.length
+          ? ec2.Instance.get(`${name}BastionInstance`, ids[0])
+          : undefined,
+      );
 
     return new Vpc(name, {
       ref: true,
@@ -716,6 +735,7 @@ export class Vpc extends Component implements Link.Linkable {
       publicRouteTables,
       natGateways,
       elasticIps,
+      bastionInstance,
     } satisfies VpcRef as VpcArgs);
   }
 
@@ -723,7 +743,7 @@ export class Vpc extends Component implements Link.Linkable {
   public getSSTLink() {
     return {
       properties: {
-        bastion: this.bastion,
+        bastion: this.bastionInstance.apply((v) => v?.id),
       },
     };
   }

@@ -110,6 +110,7 @@ export class Component extends ComponentResource {
               "aws:appsync/domainNameApiAssociation:DomainNameApiAssociation",
               "aws:ec2/routeTableAssociation:RouteTableAssociation",
               "aws:iam/accessKey:AccessKey",
+              "aws:iam/instanceProfile:InstanceProfile",
               "aws:iam/policy:Policy",
               "aws:iam/userPolicy:UserPolicy",
               "aws:cloudfront/cachePolicy:CachePolicy",
