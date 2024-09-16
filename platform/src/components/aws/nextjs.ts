@@ -231,7 +231,7 @@ export interface NextjsArgs extends SsrSiteArgs {
    * Set [environment variables](https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables) in your Next.js app. These are made available:
    *
    * 1. In `next build`, they are loaded into `process.env`.
-   * 2. Locally while running `next dev` through `sst dev`.
+   * 2. Locally while running through `sst dev`.
    *
    * :::tip
    * You can also `link` resources to your Next.js app and access them in a type-safe way with the [SDK](/docs/reference/sdk/). We recommend linking since it's more secure.
@@ -799,39 +799,39 @@ export class Nextjs extends Component implements Link.Linkable {
               },
               ...(revalidationQueueArn
                 ? [
-                    {
-                      actions: [
-                        "sqs:SendMessage",
-                        "sqs:GetQueueAttributes",
-                        "sqs:GetQueueUrl",
-                      ],
-                      resources: [revalidationQueueArn],
-                    },
-                  ]
+                  {
+                    actions: [
+                      "sqs:SendMessage",
+                      "sqs:GetQueueAttributes",
+                      "sqs:GetQueueUrl",
+                    ],
+                    resources: [revalidationQueueArn],
+                  },
+                ]
                 : []),
               ...(revalidationTableArn
                 ? [
-                    {
-                      actions: [
-                        "dynamodb:BatchGetItem",
-                        "dynamodb:GetRecords",
-                        "dynamodb:GetShardIterator",
-                        "dynamodb:Query",
-                        "dynamodb:GetItem",
-                        "dynamodb:Scan",
-                        "dynamodb:ConditionCheckItem",
-                        "dynamodb:BatchWriteItem",
-                        "dynamodb:PutItem",
-                        "dynamodb:UpdateItem",
-                        "dynamodb:DeleteItem",
-                        "dynamodb:DescribeTable",
-                      ],
-                      resources: [
-                        revalidationTableArn,
-                        `${revalidationTableArn}/*`,
-                      ],
-                    },
-                  ]
+                  {
+                    actions: [
+                      "dynamodb:BatchGetItem",
+                      "dynamodb:GetRecords",
+                      "dynamodb:GetShardIterator",
+                      "dynamodb:Query",
+                      "dynamodb:GetItem",
+                      "dynamodb:Scan",
+                      "dynamodb:ConditionCheckItem",
+                      "dynamodb:BatchWriteItem",
+                      "dynamodb:PutItem",
+                      "dynamodb:UpdateItem",
+                      "dynamodb:DeleteItem",
+                      "dynamodb:DescribeTable",
+                    ],
+                    resources: [
+                      revalidationTableArn,
+                      `${revalidationTableArn}/*`,
+                    ],
+                  },
+                ]
                 : []),
             ],
           };

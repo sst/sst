@@ -17,6 +17,7 @@ const sidebar = [
     label: "Get Started",
     items: [
       { label: "API", slug: "docs/start/aws/api" },
+      { label: "Nuxt", slug: "docs/start/aws/nuxt" },
       { label: "Solid", slug: "docs/start/aws/solid" },
       { label: "tRPC", slug: "docs/start/aws/trpc" },
       { label: "Hono", slug: "docs/start/aws/hono" },
