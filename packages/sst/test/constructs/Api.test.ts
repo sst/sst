@@ -46,7 +46,7 @@ beforeEach(() => {
 test("constructor: httpApi is undefined", async () => {
   const stack = new Stack(await createApp(), "stack");
   const api = new Api(stack, "Api", {});
-  expect(api.url).toMatch(/^\${Token\[TOKEN\.\d{3}\]}$/);
+  expect(api.url).toMatch(/^\${Token\[TOKEN\.\d{3,4}\]}$/);
   expect(api.customDomainUrl).toBeUndefined();
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
     Name: "test-app-Api",
@@ -62,7 +62,7 @@ test("constructor: httpApi is props", async () => {
       },
     },
   });
-  expect(api.url).toMatch(/^\${Token\[TOKEN\.\d{3}\]}$/);
+  expect(api.url).toMatch(/^\${Token\[TOKEN\.\d{3,4}\]}$/);
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
     Name: "test-app-Api",
     Description: "foo",
@@ -78,7 +78,7 @@ test("constructor: httpApi is construct", async () => {
       }),
     },
   });
-  expect(api.url).toMatch(/^\${Token\[TOKEN\.\d{3}\]}$/);
+  expect(api.url).toMatch(/^\${Token\[TOKEN\.\d{3,4}\]}$/);
   hasResource(stack, "AWS::ApiGatewayV2::Api", {
     Name: "existing-api",
   });
