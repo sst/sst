@@ -48,7 +48,6 @@
   },
   "optionalDependencies": {},
   "dependencies": {
-    "@aws-sdk/client-lambda": "3.478.0",
     "aws4fetch": "^1.0.18",
     "jose": "5.2.3",
     "openid-client": "5.6.4"
