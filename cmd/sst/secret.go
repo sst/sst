@@ -326,7 +326,7 @@ var CmdSecretSet = &cli.Command{
 				}
 			}
 		}
-		if !regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`).MatchString(key) {
+		if !regexp.MustCompile(`^[A-Z][a-zA-Z0-9_]*$`).MatchString(key) {
 			return util.NewReadableError(nil, "Secret names must start with a capital letter and contain only letters and numbers")
 		}
 		p, err := c.InitProject()
