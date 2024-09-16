@@ -9,6 +9,11 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.Nuxt("MyWeb");
+    const bucket = new sst.aws.Bucket("MyBucket", {
+      public: true
+    });
+    new sst.aws.Nuxt("MyWeb", {
+      link: [bucket],
+    });
   },
 });

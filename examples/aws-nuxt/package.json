@@ -4,18 +4,17 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "sst dev nuxt dev",
+    "dev": "nuxt dev",
     "generate": "nuxt generate",
     "postinstall": "nuxt prepare",
     "preview": "nuxt preview"
   },
   "dependencies": {
-    "nuxt": "^3.11.2",
+    "@aws-sdk/client-s3": "^3.651.1",
+    "@aws-sdk/s3-request-presigner": "^3.651.1",
+    "nuxt": "^3.13.0",
     "sst": "latest",
-    "vue": "^3.4.21",
-    "vue-router": "^4.3.0"
-  },
-  "overrides": {
-    "nitropack": "npm:nitropack-nightly"
+    "vue": "latest",
+    "vue-router": "latest"
   }
 }
