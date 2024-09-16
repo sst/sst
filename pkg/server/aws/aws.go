@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/rpc"
+	"sync"
 
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
@@ -12,6 +13,7 @@ import (
 type aws struct {
 	project        *project.Project
 	bootstrapCache map[string]*provider.AwsBootstrapData
+	lock           sync.RWMutex
 }
 
 type BootstrapInput struct {
@@ -19,7 +21,9 @@ type BootstrapInput struct {
 }
 
 func (a *aws) Bootstrap(input *BootstrapInput, output *provider.AwsBootstrapData) error {
+	a.lock.RLock()
 	cached, ok := a.bootstrapCache[input.Region]
+	a.lock.RUnlock()
 	if ok {
 		*output = *cached
 		return nil
@@ -35,7 +39,9 @@ func (a *aws) Bootstrap(input *BootstrapInput, output *provider.AwsBootstrapData
 	if err != nil {
 		return err
 	}
+	a.lock.Lock()
 	a.bootstrapCache[input.Region] = data
+	a.lock.Unlock()
 	*output = *data
 	return nil
 }
