@@ -125,15 +125,19 @@ func (r *PythonRuntime) Match(runtime string) bool {
 	return strings.HasPrefix(runtime, "python")
 }
 
+type Source struct {
+	URL   string  `toml:"url,omitempty"`
+	Git   string  `toml:"git,omitempty"`
+	Subdirectory *string `toml:"subdirectory,omitempty"`
+}
+
 type PyProject struct {
 	Project struct {
 		Dependencies []string `toml:"dependencies"`
 	} `toml:"project"`
 	Tool struct {
 		Uv struct {
-			Sources map[string]struct {
-				URL string `toml:"url"`
-			} `toml:"sources"`
+			Sources map[string]Source `toml:"sources"`
 		} `toml:"uv"`
 	} `toml:"tool"`
 }
@@ -170,6 +174,30 @@ func (r *PythonRuntime) Run(ctx context.Context, input *runtime.RunInput) (runti
 		"requests",
 	}
 
+	// We need to check if the dependency is a git dependency
+	// If it is, we can confirm if its in the uv.sources as a git dependency
+	// then we need to remove it from the dependencies list
+	filteredDependencies := []string{}
+	// Iterate over each dependency
+	for _, dep := range dependencies {
+		// Check if the dependency is in the sources map
+		if source, exists := sources[dep]; exists {
+			if source.Git != "" {
+				// It's a Git dependency listed in sources, so skip it
+				slog.Debug("Skipping dependency: %s (Git: %s)\n", dep, source.Git)
+				continue
+			}
+		}
+		// Add the dependency to the filtered list if it's not a Git dependency
+		filteredDependencies = append(filteredDependencies, dep)
+	}
+	dependencies = filteredDependencies
+
+	slog.Info("Dependencies: %v\n", dependencies)
+	slog.Info("Sources: %v\n", sources)
+
+
+
 	for _, dep := range dependencies {
 		args = append(args, "--with", dep)
 	}
@@ -177,7 +205,16 @@ func (r *PythonRuntime) Run(ctx context.Context, input *runtime.RunInput) (runti
 	// If sources are specified, use them
 	if len(sources) > 0 {
 		for _, source := range sources {
-			args = append(args, "--find-links", source.URL)
+			if source.URL != "" {
+				args = append(args, "--find-links", source.URL)
+			} else if source.Git != "" {
+				repo_url := "git+" + source.Git
+				if source.Subdirectory != nil {
+					repo_url = repo_url + "#subdirectory=" + *source.Subdirectory
+				}
+				// uv run --with git+https://github.com/sst/ion.git#subdirectory=sdk/python python.py
+				args = append(args, "--with", repo_url)
+			}
 		}
 	}
 

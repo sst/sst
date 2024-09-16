@@ -15,7 +15,7 @@ func Generate(root string, links common.Links) error {
 	projects := fs.FindDown(root, "pyproject.toml")
 	files := []io.Writer{}
 	for _, project := range projects {
-		path := filepath.Join(filepath.Dir(project), "sst_env.pyi")
+		path := filepath.Join(filepath.Dir(project), "sst_sdk.pyi")
 		file, _ := os.Create(path)
 		files = append(files, file)
 	}

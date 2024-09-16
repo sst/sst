@@ -481,7 +481,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		// 	}
 		// }
 
-		// pythonTypesFileName := "sst_env.pyi"
+		// pythonTypesFileName := "sst_sdk.pyi"
 		// pythonTypesFilePath := filepath.Join(p.PathRoot(), pythonTypesFileName)
 		// if shouldGeneratePythonTypes {
 		// 	pythonTypesFile, _ := os.Create(pythonTypesFilePath)
