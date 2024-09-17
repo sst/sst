@@ -126,8 +126,8 @@ func (r *PythonRuntime) Match(runtime string) bool {
 }
 
 type Source struct {
-	URL   string  `toml:"url,omitempty"`
-	Git   string  `toml:"git,omitempty"`
+	URL          string  `toml:"url,omitempty"`
+	Git          string  `toml:"git,omitempty"`
 	Subdirectory *string `toml:"subdirectory,omitempty"`
 }
 
@@ -192,11 +192,6 @@ func (r *PythonRuntime) Run(ctx context.Context, input *runtime.RunInput) (runti
 		filteredDependencies = append(filteredDependencies, dep)
 	}
 	dependencies = filteredDependencies
-
-	slog.Info("Dependencies: %v\n", dependencies)
-	slog.Info("Sources: %v\n", sources)
-
-
 
 	for _, dep := range dependencies {
 		args = append(args, "--with", dep)
