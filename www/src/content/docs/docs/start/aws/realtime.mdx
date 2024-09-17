@@ -80,16 +80,27 @@ import { realtime } from "sst/aws/realtime";
 export const handler = realtime.authorizer(async (token) => {
   const prefix = `${Resource.App.name}/${Resource.App.stage}`;
 
-  // Validate token
+  const isValid = token === "PLACEHOLDER_TOKEN";
 
-  return {
-    publish: [`${prefix}/*`],
-    subscribe: [`${prefix}/*`],
-  };
+  return isValid
+    ? {
+      publish: [`${prefix}/*`],
+      subscribe: [`${prefix}/*`],
+    }
+    : {
+      publish: [],
+      subscribe: [],
+    };
 });
 ```
 
-Here we are saying that a user has access to publish and subscribe to any topic namespaced user the app and stage name. In production, we would validate the given token against our database or auth provider.
+Here we are saying that a user with a valid token has access to publish and subscribe to any topic namespaced user the app and stage name.
+
+:::tip
+Namespace your topics with the app and stage name to keep them unique.
+:::
+
+In production, we would validate the given token against our database or auth provider.
 
 ---
 
@@ -100,15 +111,15 @@ Now let's create a chat interface in our app. Create a new component in `compone
 ```tsx title="components/chat.tsx" {29-33}
 "use client";
 
+import mqtt from "mqtt";
 import { useState, useEffect } from "react";
-import { iot, mqtt } from "aws-iot-device-sdk-v2";
 import styles from "./chat.module.css";
 
 export default function Chat(
   { topic, endpoint, authorizer }: { topic: string, endpoint: string, authorizer: string }
 ) {
   const [messages, setMessages] = useState<string[]>([]);
-  const [connection, setConnection] = useState<mqtt.MqttClientConnection | null>(null);
+  const [connection, setConnection] = useState<mqtt.MqttClient | null>(null);
 
   return (
     <div className={styles.chat}>
@@ -126,11 +137,7 @@ export default function Chat(
 
           const input = (e.target as HTMLFormElement).message;
 
-          connection!.publish(
-            topic,
-            input.value,
-            mqtt.QoS.AtLeastOnce
-          );
+          connection!.publish(topic, input.value, { qos: 1 });
           input.value = "";
         }}
       >
@@ -207,10 +214,10 @@ Add some styles.
 }
 ```
 
-Install the npm packages.
+Install the npm package.
 
 ```bash
-npm install aws-iot-device-sdk-v2
+npm install mqtt
 ```
 
 ---
@@ -257,7 +264,7 @@ export default function Home() {
 We are directly accessing our Realtime component with `Resource.MyRealtime.*`.
 :::
 
-Here we are going to publish and subscribe to a _topic_ called `sst-chat` and it's namespaced under the name of the app and the stage our app is deployed to.
+Here we are going to publish and subscribe to a _topic_ called `sst-chat`, namespaced under the name of the app and the stage our app is deployed to.
 
 ---
 
@@ -267,17 +274,13 @@ When our chat component loads, it'll create a new connection to our realtime ser
 
 ```ts title="components/chat.tsx"
 function createConnection(endpoint: string, authorizer: string) {
-  const client = new mqtt.MqttClient();
-  const id = window.crypto.randomUUID();
-
-  return client.new_connection(
-    iot.AwsIotMqttConnectionConfigBuilder.new_with_websockets()
-      .with_clean_session(true)
-      .with_client_id(`client_${id}`)
-      .with_endpoint(endpoint)
-      .with_custom_authorizer("", authorizer, "", "PLACEHOLDER_TOKEN")
-      .build()
-  );
+  return mqtt.connect(`wss://${endpoint}/mqtt?x-amz-customauthorizer-name=${authorizer}`, {
+    protocolVersion: 5,
+    manualConnect: true,
+    username: "", // Must be empty for the authorizer
+    password: "PLACEHOLDER_TOKEN", // Passed as the token to the authorizer
+    clientId: `client_${window.crypto.randomUUID()}`,
+  });
 }
 ```
 
@@ -291,7 +294,7 @@ useEffect(() => {
 
   connection.on("connect", async () => {
     try {
-      await connection.subscribe(topic, mqtt.QoS.AtLeastOnce);
+      await connection.subscribeAsync(topic, { qos: 1 });
       setConnection(connection);
     } catch (e) { }
   });
@@ -304,7 +307,7 @@ useEffect(() => {
   connection.connect();
 
   return () => {
-    connection.disconnect();
+    connection.end();
     setConnection(null);
   };
 }, [topic, endpoint, authorizer]);

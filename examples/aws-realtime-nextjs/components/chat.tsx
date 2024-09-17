@@ -1,35 +1,31 @@
 "use client";
 
+import mqtt from "mqtt";
 import { useState, useEffect } from "react";
-import { iot, mqtt } from "aws-iot-device-sdk-v2";
 import styles from "./chat.module.css";
 
 function createConnection(endpoint: string, authorizer: string) {
-  const client = new mqtt.MqttClient();
-  const id = window.crypto.randomUUID();
-
-  return client.new_connection(
-    iot.AwsIotMqttConnectionConfigBuilder.new_with_websockets()
-      .with_clean_session(true)
-      .with_client_id(`client_${id}`)
-      .with_endpoint(endpoint)
-      .with_custom_authorizer("", authorizer, "", "PLACEHOLDER_TOKEN")
-      .build()
-  );
+  return mqtt.connect(`wss://${endpoint}/mqtt?x-amz-customauthorizer-name=${authorizer}`, {
+    protocolVersion: 5,
+    manualConnect: true,
+    username: "", // Must be empty for the authorizer
+    password: "PLACEHOLDER_TOKEN", // Passed as the token to the authorizer
+    clientId: `client_${window.crypto.randomUUID()}`,
+  });
 }
 
 export default function Chat(
   { topic, endpoint, authorizer }: { topic: string, endpoint: string, authorizer: string }
 ) {
   const [messages, setMessages] = useState<string[]>([]);
-  const [connection, setConnection] = useState<mqtt.MqttClientConnection | null>(null);
+  const [connection, setConnection] = useState<mqtt.MqttClient | null>(null);
 
   useEffect(() => {
     const connection = createConnection(endpoint, authorizer);
 
     connection.on("connect", async () => {
       try {
-        await connection.subscribe(topic, mqtt.QoS.AtLeastOnce);
+        await connection.subscribeAsync(topic, { qos: 1 });
         setConnection(connection);
       } catch (e) { }
     });
@@ -42,7 +38,7 @@ export default function Chat(
     connection.connect();
 
     return () => {
-      connection.disconnect();
+      connection.end();
       setConnection(null);
     };
   }, [topic, endpoint, authorizer]);
@@ -63,11 +59,7 @@ export default function Chat(
 
           const input = (e.target as HTMLFormElement).message;
 
-          connection!.publish(
-            topic,
-            input.value,
-            mqtt.QoS.AtLeastOnce
-          );
+          connection!.publish(topic, input.value, { qos: 1 });
           input.value = "";
         }}
       >
