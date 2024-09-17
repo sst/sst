@@ -812,6 +812,7 @@ function renderType(
       Service: "service",
       SnsTopicLambdaSubscriber: "sns-topic-lambda-subscriber",
       SnsTopicQueueSubscriber: "sns-topic-queue-subscriber",
+      Vpc: "vpc",
     }[type.name];
     if (externalModule) {
       const hash = type.name.endsWith("Args")
@@ -1967,6 +1968,7 @@ async function buildComponents() {
       "../platform/src/components/aws/bucket-queue-subscriber.ts",
       "../platform/src/components/aws/bucket-topic-subscriber.ts",
       "../platform/src/components/aws/cluster.ts",
+      "../platform/src/components/aws/cluster-v1.ts",
       "../platform/src/components/aws/cognito-identity-pool.ts",
       "../platform/src/components/aws/cognito-identity-provider.ts",
       "../platform/src/components/aws/cognito-user-pool.ts",
@@ -1983,6 +1985,7 @@ async function buildComponents() {
       "../platform/src/components/aws/nuxt.ts",
       "../platform/src/components/aws/realtime.ts",
       "../platform/src/components/aws/realtime-lambda-subscriber.ts",
+      "../platform/src/components/aws/redis.ts",
       "../platform/src/components/aws/remix.ts",
       "../platform/src/components/aws/queue.ts",
       "../platform/src/components/aws/queue-lambda-subscriber.ts",

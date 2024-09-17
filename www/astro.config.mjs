@@ -72,6 +72,7 @@ const sidebar = [
       "docs/component/aws/cron",
       "docs/component/aws/nuxt",
       "docs/component/aws/astro",
+      "docs/component/aws/redis",
       "docs/component/aws/email",
       "docs/component/aws/remix",
       "docs/component/aws/nextjs",
@@ -162,7 +163,10 @@ const sidebar = [
   {
     label: "Deprecated",
     collapsed: true,
-    items: [{ label: "Vpc.v1", slug: "docs/component/aws/vpc-v1" }],
+    items: [
+      { label: "Vpc.v1", slug: "docs/component/aws/vpc-v1" },
+      { label: "Cluster.v1", slug: "docs/component/aws/cluster-v1" },
+    ],
   },
 ];
 

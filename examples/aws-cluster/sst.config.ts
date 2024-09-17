@@ -13,10 +13,9 @@ export default $config({
       public: true,
     });
 
-    const vpc = new sst.aws.Vpc("MyVpc", { nat: "managed" });
+    const vpc = new sst.aws.Vpc("MyVpc");
 
     const cluster = new sst.aws.Cluster("MyCluster", { vpc });
-
     cluster.addService("MyService", {
       public: {
         ports: [{ listen: "80/http" }],

@@ -80,17 +80,20 @@ export class Component extends ComponentResource {
             args.type.startsWith("sst:") ||
             args.type === "pulumi-nodejs:dynamic:Resource" ||
             args.type === "random:index/randomId:RandomId" ||
+            args.type === "random:index/randomPassword:RandomPassword" ||
             // resources manually named
             [
               "aws:appsync/dataSource:DataSource",
               "aws:appsync/function:Function",
               "aws:appsync/resolver:Resolver",
+              "aws:cloudwatch/eventBus:EventBus",
               "aws:cognito/identityPool:IdentityPool",
               "aws:ecs/service:Service",
               "aws:ecs/taskDefinition:TaskDefinition",
               "aws:lb/targetGroup:TargetGroup",
               "aws:s3/bucketV2:BucketV2",
-              "aws:cloudwatch/eventBus:EventBus",
+              "aws:servicediscovery/privateDnsNamespace:PrivateDnsNamespace",
+              "aws:servicediscovery/service:Service",
             ].includes(args.type) ||
             // resources not prefixed
             [
@@ -124,6 +127,7 @@ export class Component extends ComponentResource {
               "aws:cognito/identityPoolRoleAttachment:IdentityPoolRoleAttachment",
               "aws:cognito/identityProvider:IdentityProvider",
               "aws:cognito/userPoolClient:UserPoolClient",
+              "aws:elasticache/replicationGroup:ReplicationGroup",
               "aws:lambda/eventSourceMapping:EventSourceMapping",
               "aws:lambda/functionUrl:FunctionUrl",
               "aws:lambda/invocation:Invocation",
@@ -228,7 +232,10 @@ export class Component extends ComponentResource {
               cb: () => physicalName(255, args.name),
             },
             {
-              types: ["aws:rds/subnetGroup:SubnetGroup"],
+              types: [
+                "aws:elasticache/subnetGroup:SubnetGroup",
+                "aws:rds/subnetGroup:SubnetGroup",
+              ],
               field: "name",
               cb: () => physicalName(255, args.name).toLowerCase(),
             },

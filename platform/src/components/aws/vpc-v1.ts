@@ -2,7 +2,6 @@ import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
 import { ec2, getAvailabilityZonesOutput } from "@pulumi/aws";
-import { InternetGateway } from "@pulumi/aws/ec2";
 
 export interface VpcArgs {
   /**
