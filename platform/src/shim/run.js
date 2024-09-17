@@ -1,7 +1,7 @@
 import * as util from "@pulumi/pulumi";
 import { Link } from "../components/link";
 import { $config } from "../config";
-import { $transform } from "../components/component";
+import { $transform, $asset } from "../components/component";
 
 const $secrets = JSON.parse(process.env.SST_SECRETS || "{}");
 const { output, apply, all, interpolate, concat, jsonParse, jsonStringify } =
@@ -18,6 +18,7 @@ export {
   jsonParse as "$jsonParse",
   jsonStringify as "$jsonStringify",
   util as "$util",
+  $asset as "$asset",
   $config as "$config",
   $transform as "$transform",
   $secrets as "$secrets",

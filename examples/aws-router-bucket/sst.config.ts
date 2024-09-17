@@ -26,9 +26,7 @@ export default $config({
       bucket: bucket.name,
       key: "public/spongebob.svg",
       contentType: "image/svg+xml",
-      source: new $util.asset.FileAsset(
-        path.join($cli.paths.root, "spongebob.svg")
-      ),
+      source: $asset("spongebob.svg"),
     });
 
     const router = new sst.aws.Router("MyRouter", {

@@ -4,10 +4,13 @@ import {
   Inputs,
   runtime,
   output,
+  asset as pulumiAsset,
 } from "@pulumi/pulumi";
 import { physicalName } from "./naming.js";
 import { VisibleError } from "./error.js";
 import { getRegionOutput } from "@pulumi/aws";
+import path from "path";
+import { statSync } from "fs";
 
 /**
  * Helper type to inline nested types
@@ -372,6 +375,20 @@ export function $transform<T, Args, Options>(
     cb(input.props as any, input.opts as any);
     return input;
   });
+}
+
+export function $asset(assetPath: string) {
+  const fullPath = path.isAbsolute(assetPath)
+    ? assetPath
+    : path.join($cli.paths.root, assetPath);
+
+  try {
+    return statSync(fullPath).isDirectory()
+      ? new pulumiAsset.FileArchive(fullPath)
+      : new pulumiAsset.FileAsset(fullPath);
+  } catch (e) {
+    throw new VisibleError(`Asset not found: ${fullPath}`);
+  }
 }
 
 export function $lazy<T>(fn: () => T) {
