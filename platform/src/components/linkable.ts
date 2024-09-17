@@ -117,7 +117,7 @@ export interface Definition<
  * You can also wrap any Pulumi Resource class to make it linkable.
  *
  * ```ts title="sst.config.ts"
- * Linkable.wrap(aws.dynamodb.Table, (table) => ({
+ * sst.Linkable.wrap(aws.dynamodb.Table, (table) => ({
  *   properties: { tableName: table.name },
  *   include: [
  *     sst.aws.permission({
