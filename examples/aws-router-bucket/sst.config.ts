@@ -3,9 +3,9 @@
 import path from "path";
 
 /**
- * ## AWS Router and bucket
+ * ## Router and bucket
  *
- * Creates a router that serves static files from the `public` folder in a bucket.
+ * Creates a router that serves static files from the `public` folder of a given bucket.
  */
 export default $config({
   app(input) {
