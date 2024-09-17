@@ -343,6 +343,61 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-info).
 
 
 ---
+## AWS JSX Email
+
+Uses [JSX Email](https://jsx.email) and the `Email` component to design and send emails.
+
+To test this example, change the `sst.config.ts` to use your own email address.
+
+```ts title="sst.config.ts"
+sender: "email@example.com"
+```
+
+Then run.
+
+```bash
+npm install
+npx sst dev
+```
+
+You'll get an email from AWS asking you to confirm your email address. Click the link to
+verify it.
+
+Next, go to the URL in the `sst dev` CLI output. You should now receive an email rendered
+using JSX Email.
+
+```ts title="index.ts"
+import { Template } from "./templates/email";
+
+await render(Template({
+  email: "spongebob@example.com",
+  name: "Spongebob Squarepants"
+}))
+```
+
+Once you are ready to go to production, you can:
+
+- [Request production access](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html) for SES
+- And [use your domain](/docs/component/aws/email/) to send emails
+```ts title="sst.config.ts"
+const email = new sst.aws.Email("MyEmail", {
+  sender: "email@example.com",
+});
+const api = new sst.aws.Function("MyApi", {
+  handler: "index.handler",
+  link: [email],
+  url: true,
+});
+
+return {
+  api: api.url,
+};
+```
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-jsx-email).
+
+
+---
 ## Kinesis streams
 
 Create a Kinesis stream, and subscribe to it with a function.
@@ -465,7 +520,7 @@ the [`--fallback`](/docs/reference/cli#secret) flag.
 ```ts title="sst.config.ts"
 const username = new sst.Secret("USERNAME");
 const password = new sst.Secret("PASSWORD");
-const basicAuth = $output([username.value, password.value]).apply(
+const basicAuth = $resolve([username.value, password.value]).apply(
   ([username, password]) =>
     Buffer.from(`${username}:${password}`).toString("base64")
 );
@@ -712,6 +767,43 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-queue).
 
 
 ---
+## AWS Router and bucket
+
+Creates a router that serves static files from the `public` folder in a bucket.
+```ts title="sst.config.ts"
+// Create a bucket that CloudFront can access
+const bucket = new sst.aws.Bucket("MyBucket", {
+  access: "cloudfront",
+});
+
+// Upload the image to the `public` folder
+new aws.s3.BucketObjectv2("MyImage", {
+  bucket: bucket.name,
+  key: "public/spongebob.svg",
+  contentType: "image/svg+xml",
+  source: new $util.asset.FileAsset(
+    path.join($cli.paths.root, "spongebob.svg")
+  ),
+});
+
+const router = new sst.aws.Router("MyRouter", {
+  routes: {
+    "/*": {
+      bucket,
+      rewrite: { regex: "^/(.*)$", to: "/public/$1" },
+    },
+  },
+});
+
+return {
+  image: $interpolate`${router.url}/spongebob.svg`,
+};
+```
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-router-bucket).
+
+
+---
 ## Router and function URL
 
 Creates a router that routes all requests to a function with a URL.
@@ -827,7 +919,7 @@ the [`--fallback`](/docs/reference/cli#secret) flag.
 ```ts title="sst.config.ts"
 const username = new sst.Secret("USERNAME");
 const password = new sst.Secret("PASSWORD");
-const basicAuth = $output([username.value, password.value]).apply(
+const basicAuth = $resolve([username.value, password.value]).apply(
   ([username, password]) =>
     Buffer.from(`${username}:${password}`).toString("base64")
 );
@@ -837,20 +929,20 @@ new sst.aws.StaticSite("MySite", {
   // Don't password protect prod
   edge: $app.stage !== "production"
     ? {
-        viewerRequest: {
-          injection: $interpolate`
-            if (
-                !event.request.headers.authorization
-                  || event.request.headers.authorization.value !== "Basic ${basicAuth}"
-               ) {
-              return {
-                statusCode: 401,
-                headers: {
-                  "www-authenticate": { value: "Basic" }
-                }
-              };
-            }`,
-        },
+      viewerRequest: {
+        injection: $interpolate`
+          if (
+              !event.request.headers.authorization
+                || event.request.headers.authorization.value !== "Basic ${basicAuth}"
+             ) {
+            return {
+              statusCode: 401,
+              headers: {
+                "www-authenticate": { value: "Basic" }
+              }
+            };
+          }`,
+      },
     }
     : undefined,
 });

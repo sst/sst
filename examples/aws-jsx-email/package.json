@@ -1,0 +1,22 @@
+{
+  "name": "aws-jsx-email",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A simple starter for jsx-email",
+  "scripts": {
+    "build": "email build ./templates",
+    "create": "email create",
+    "dev": "email preview ./templates"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.651.1",
+    "jsx-email": "^1.10.11",
+    "sst": "latest"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.145",
+    "@types/react": "^18.2.0",
+    "react": "^18.2.0",
+    "typescript": "^5.2.2"
+  }
+}
