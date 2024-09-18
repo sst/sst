@@ -175,7 +175,7 @@ export class Vpc extends Component implements Link.Linkable {
 
   constructor(name: string, args?: VpcArgs, opts?: ComponentResourceOptions) {
     const _version = 2;
-    super(__pulumiType, name, args, opts, _version);
+    super(__pulumiType, name, args, opts, { _version });
 
     if (args && "ref" in args) {
       const ref = args as VpcRef;

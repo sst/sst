@@ -856,7 +856,11 @@ export class Cluster extends Component {
     opts?: ComponentResourceOptions,
   ) {
     const _version = 2;
-    super(__pulumiType, name, args, opts, _version);
+    const _breakingChange = [
+      `The new version of "sst.aws.Cluster" deploys services in the public subnets by default, and does not require VPC to have NAT gateways.`,
+      `Where previously in "sst.aws.Cluster.v1" it would deploy the services in the private subnets.`,
+    ].join(" ");
+    super(__pulumiType, name, args, opts, { _version, _breakingChange });
 
     const parent = this;
 

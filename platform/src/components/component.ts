@@ -46,7 +46,10 @@ export class Component extends ComponentResource {
     name: string,
     args?: Inputs,
     opts?: ComponentResourceOptions,
-    _version: number = 1,
+    _versionInfo: {
+      _version: number;
+      _breakingChange?: string;
+    } = { _version: 1 },
   ) {
     const transforms = ComponentTransforms.get(type) ?? [];
     for (const transform of transforms) {
@@ -331,13 +334,16 @@ export class Component extends ComponentResource {
 
     // Check component version
     const oldVersion = $cli.state.version[name];
-    const newVersion = _version;
+    const newVersion = _versionInfo._version;
     if (oldVersion) {
       const className = type.replaceAll(":", ".");
       if (oldVersion < newVersion) {
         throw new VisibleError(
           [
             `There is a new version of "${className}" that has breaking changes.`,
+            ...(_versionInfo._breakingChange
+              ? [_versionInfo._breakingChange]
+              : []),
             `To continue using the previous version, rename "${className}" to "${className}.v${oldVersion}".`,
             `Or recreate this component to update - https://ion.sst.dev/docs/components/#versioning`,
           ].join(" "),
