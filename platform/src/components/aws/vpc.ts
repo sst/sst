@@ -1,4 +1,10 @@
-import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
+import {
+  ComponentResourceOptions,
+  Output,
+  all,
+  interpolate,
+  output,
+} from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
 import {
@@ -718,7 +724,10 @@ export class Vpc extends Component implements Link.Linkable {
       const natGatewayIds = subnets.map((subnet, i) =>
         ec2
           .getNatGatewaysOutput({
-            filters: [{ name: "subnet-id", values: [subnet.id] }],
+            filters: [
+              { name: "subnet-id", values: [subnet.id] },
+              { name: "state", values: ["available"] },
+            ],
           })
           .ids.apply((ids) => ids[0]),
       );
@@ -748,9 +757,14 @@ export class Vpc extends Component implements Link.Linkable {
           ? ec2.Instance.get(`${name}BastionInstance`, ids[0])
           : undefined,
       );
+
+    const namespaceId = servicediscovery.getDnsNamespaceOutput({
+      name: "sst",
+      type: "DNS_PRIVATE",
+    }).id;
     const cloudmapNamespace = servicediscovery.PrivateDnsNamespace.get(
       `${name}CloudmapNamespace`,
-      vpc.id,
+      interpolate`${namespaceId}:${vpcID}`,
     );
 
     return new Vpc(name, {
