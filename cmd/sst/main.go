@@ -839,7 +839,6 @@ var root = &cli.Command{
 					"```bash frame=\"none\" frame=\"none\"",
 					"sst remove --stage production",
 					"```",
-					"```",
 					"Optionally, remove specific resources by passing in a list of their URNs.",
 					"You can get the URN of a resource from the [Console](/docs/console/#resources).",
 					"",
