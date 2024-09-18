@@ -10,7 +10,7 @@ export default $config({
   },
   async run() {
     const bucket = new sst.aws.Bucket("MyBucket", {
-      public: true,
+      access: "public",
     });
     new sst.aws.Nextjs("MyWeb", {
       link: [bucket],

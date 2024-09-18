@@ -10,7 +10,7 @@ export default $config({
   },
   async run() {
     const bucket = new sst.aws.Bucket("MyBucket", {
-      public: true,
+      access: "public",
     });
 
     const vpc = new sst.aws.Vpc("MyVpc");

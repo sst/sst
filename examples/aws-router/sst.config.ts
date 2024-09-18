@@ -19,7 +19,7 @@ export default $config({
       url: true,
     });
     const bucket = new sst.aws.Bucket("MyBucket", {
-      public: true,
+      access: "public",
     });
     const router = new sst.aws.Router("MyRouter", {
       domain: "router.ion.dev.sst.dev",

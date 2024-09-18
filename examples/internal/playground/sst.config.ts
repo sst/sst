@@ -28,7 +28,7 @@ export default $config({
   },
   async run() {
     const bucket = new sst.aws.Bucket("MyBucket", {
-      public: true,
+      access: "public",
       transform: {
         bucket: (args) => {
           args.tags = { foo: "bar" };

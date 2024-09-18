@@ -781,9 +781,7 @@ new aws.s3.BucketObjectv2("MyImage", {
   bucket: bucket.name,
   key: "public/spongebob.svg",
   contentType: "image/svg+xml",
-  source: new $util.asset.FileAsset(
-    path.join($cli.paths.root, "spongebob.svg")
-  ),
+  source: $asset("spongebob.svg"),
 });
 
 const router = new sst.aws.Router("MyRouter", {
@@ -813,7 +811,7 @@ const api = new sst.aws.Function("MyApi", {
   url: true,
 });
 const bucket = new sst.aws.Bucket("MyBucket", {
-  public: true,
+  access: "public",
 });
 const router = new sst.aws.Router("MyRouter", {
   domain: "router.ion.dev.sst.dev",

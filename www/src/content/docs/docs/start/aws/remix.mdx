@@ -53,11 +53,11 @@ Once complete, click on **MyWeb** in the sidebar and open your Remix app in your
 
 ## 2. Add an S3 Bucket
 
-Let's add a `public` S3 Bucket for file uploads. Update your `sst.config.ts`.
+Let's allow public `access` to our S3 Bucket for file uploads. Update your `sst.config.ts`.
 
 ```js title="sst.config.ts"
 const bucket = new sst.aws.Bucket("MyBucket", {
-  public: true
+  access: "public"
 });
 ```
 

@@ -15,7 +15,7 @@ export default $config({
   },
   async run() {
     const bucket = new sst.aws.Bucket("MyBucket", {
-      public: true,
+      access: "public",
     });
     const hono = new sst.aws.Function("Hono", {
       url: true,
