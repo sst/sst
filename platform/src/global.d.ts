@@ -60,7 +60,7 @@ interface $APP
      * The providers currently being used in the app.
      */
     providers: App["providers"];
-  }> {}
+  }> { }
 
 declare global {
   // @ts-expect-error
@@ -240,19 +240,25 @@ declare global {
   export const $transform: typeof import("./components/component").$transform;
 
   /**
-   * Packages a file or directory into a Pulumi asset.
+   * Packages a file or directory into a Pulumi asset. This can be used for Pulumi resources that
+   * take an asset as input.
    *
-   * When the asset path is a file, this returns a `FileAsset`.
-   * When the asset path is a directory, this returns a `FileArchive` with the contents of the directory.
+   * When the given path is a file, it returns a
+   * [`FileAsset`](https://www.pulumi.com/docs/iac/concepts/assets-archives/#assets). If the
+   * path is a directory, it returns a
+   * [`FileArchive`](https://www.pulumi.com/docs/iac/concepts/assets-archives/#assets) with the
+   * zipped contents of the directory.
    *
-   * If the asset path is absolute, it'll be used as is. Otherwise, it'll be relative to the root of the app.
+   * :::tip
+   * This automatically resolves paths relative to the root of the app.
+   * :::
+   *
+   * Relative paths are resolved relative to the root of the app. While, absolute paths are used as is.
    *
    * @example
    *
-   * #### Uploading a file to S3
-   *
    * If you have a file inside the `images` directory at the root of your app, you can upload it
-   * to S3 like this.
+   * to S3 on deploy.
    *
    * ```ts title="sst.config.ts" {7}
    * const bucket = new aws.s3.Bucket("MyBucket");
@@ -265,9 +271,7 @@ declare global {
    * });
    * ```
    *
-   * #### Uploading a directory as a zip
-   *
-   * You can also use this to zip up the files in the "files" directory and upload it to S3.
+   * You can also use this to zip up the files in the `files/` directory and upload it to S3.
    *
    * ```ts title="sst.config.ts" {5}
    * new aws.s3.BucketObjectv2("MyZip", {
