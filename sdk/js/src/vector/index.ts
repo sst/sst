@@ -1,13 +1,5 @@
-import { AwsClient } from "aws4fetch";
 import { Resource } from "../resource.js";
-
-const client = new AwsClient({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  sessionToken: process.env.AWS_SESSION_TOKEN!,
-  region: process.env.AWS_REGION!,
-});
-const endpoint = `https://lambda.${process.env.AWS_REGION}.amazonaws.com/2015-03-31`;
+import { client } from "../aws/client.js";
 
 export interface PutEvent {
   /**
@@ -264,7 +256,7 @@ export function VectorClient<
         // @ts-expect-error
         Resource[name].putFunction,
         JSON.stringify(event),
-        "Failed to store into the vector db"
+        "Failed to store into the vector db",
       );
     },
 
@@ -273,7 +265,7 @@ export function VectorClient<
         // @ts-expect-error
         Resource[name].queryFunction,
         JSON.stringify(event),
-        "Failed to query the vector db"
+        "Failed to query the vector db",
       );
     },
 
@@ -282,7 +274,7 @@ export function VectorClient<
         // @ts-expect-error
         Resource[name].removeFunction,
         JSON.stringify(event),
-        "Failed to remove from the vector db"
+        "Failed to remove from the vector db",
       );
     },
   };
@@ -292,16 +284,18 @@ async function invokeFunction<T>(
   functionName: string,
   body: string,
   errorMessage: string,
-  attempts = 0
+  attempts = 0,
 ): Promise<T> {
   try {
-    const response = await client.fetch(
+    const c = await client();
+    const endpoint = `https://lambda.${process.env.AWS_REGION}.amazonaws.com/2015-03-31`;
+    const response = await c.fetch(
       `${endpoint}/functions/${functionName}/invocations`,
       {
         method: "POST",
         headers: { Accept: "application/json" },
         body,
-      }
+      },
     );
 
     // success
@@ -352,13 +346,13 @@ async function invokeFunction<T>(
 
     // retry
     await new Promise((resolve) =>
-      setTimeout(resolve, 1.5 ** attempts * 100 * Math.random())
+      setTimeout(resolve, 1.5 ** attempts * 100 * Math.random()),
     );
     return await invokeFunction<T>(
       functionName,
       body,
       errorMessage,
-      attempts + 1
+      attempts + 1,
     );
   }
 }
