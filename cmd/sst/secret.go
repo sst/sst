@@ -192,6 +192,7 @@ var CmdSecretLoad = &cli.Command{
 		url, _ := server.Discover(p.PathConfig(), p.App().Stage)
 		if url != "" {
 			dev.Deploy(c.Context, url)
+			return nil
 		}
 
 		ui.Success("Run \"sst deploy\" to update.")
@@ -349,15 +350,17 @@ var CmdSecretSet = &cli.Command{
 			return util.NewReadableError(err, "Could not set secret")
 		}
 		url, _ := server.Discover(p.PathConfig(), p.App().Stage)
+		suffix := " Run \"sst deploy\" to update."
 		if url != "" {
+			suffix = ""
 			dev.Deploy(c.Context, url)
 		}
 
 		if c.Bool("fallback") {
-			ui.Success(fmt.Sprintf("Set fallback value for \"%s\". Run \"sst deploy\" to update.", key))
+			ui.Success(fmt.Sprintf("Set fallback value for \"%s\".%s", key, suffix))
 			return nil
 		}
-		ui.Success(fmt.Sprintf("Set \"%s\" for stage \"%s\". Run \"sst deploy\" to update.", key, p.App().Stage))
+		ui.Success(fmt.Sprintf("Set \"%s\" for stage \"%s\".%s", key, p.App().Stage, suffix))
 		return nil
 	},
 }
@@ -438,14 +441,16 @@ var CmdSecretRemove = &cli.Command{
 			return util.NewReadableError(err, "Could not set secret")
 		}
 		url, _ := server.Discover(p.PathConfig(), p.App().Stage)
+		suffix := " Run \"sst deploy\" to update."
 		if url != "" {
+			suffix = ""
 			dev.Deploy(c.Context, url)
 		}
 		if c.Bool("fallback") {
-			ui.Success(fmt.Sprintf("Removed fallback value for \"%s\"", key))
+			ui.Success(fmt.Sprintf("Removed fallback value for \"%s\".%s", key, suffix))
 			return nil
 		}
-		ui.Success(fmt.Sprintf("Removed \"%s\" for stage \"%s\"", key, p.App().Stage))
+		ui.Success(fmt.Sprintf("Removed \"%s\" for stage \"%s\".%s", key, p.App().Stage, suffix))
 		return nil
 	},
 }
