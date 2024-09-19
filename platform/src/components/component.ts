@@ -48,8 +48,8 @@ export class Component extends ComponentResource {
     opts?: ComponentResourceOptions,
     _versionInfo: {
       _version: number;
-      _breakingChange?: string;
-      _forceUpgrade?: number;
+      _message?: string;
+      _forceUpgrade?: `v${number}`;
     } = { _version: 1 },
   ) {
     const transforms = ComponentTransforms.get(type) ?? [];
@@ -341,13 +341,13 @@ export class Component extends ComponentResource {
       // Invalid forceUpgrade value
       if (
         _versionInfo._forceUpgrade &&
-        _versionInfo._forceUpgrade !== newVersion
+        _versionInfo._forceUpgrade !== `v${newVersion}`
       ) {
         throw new VisibleError(
           [
-            `The value of "forceUpgrade" does not match the version of "${className}" component (${newVersion}).`,
-            `Set "forceUpgrade: ${newVersion}" in the component to upgrade.`,
-          ].join(" "),
+            `The value of "forceUpgrade" does not match the version of "${className}" component.`,
+            `Set "forceUpgrade" to "v${newVersion}" to upgrade to the new version.`,
+          ].join("\n"),
         );
       }
       // Version upgraded without forceUpgrade
@@ -355,12 +355,8 @@ export class Component extends ComponentResource {
         throw new VisibleError(
           [
             `There is a new version of "${className}" that has breaking changes.`,
-            ...(_versionInfo._breakingChange
-              ? [_versionInfo._breakingChange]
-              : []),
-            `To continue using the previous version, rename "${className}" to "${className}.v${oldVersion}".`,
-            `Or recreate this component to update - https://ion.sst.dev/docs/components/#versioning`,
-          ].join(" "),
+            ...(_versionInfo._message ? [_versionInfo._message] : []),
+          ].join("\n"),
         );
       }
       // Version downgraded
@@ -369,7 +365,7 @@ export class Component extends ComponentResource {
           [
             `It seems you are trying to use an older version of "${className}".`,
             `You need to recreate this component to rollback - https://ion.sst.dev/docs/components/#versioning`,
-          ].join(" "),
+          ].join("\n"),
         );
       }
     }

@@ -179,28 +179,46 @@ export interface ClusterArgs {
       }>;
   /**
    * Force upgrade from `Cluster.v1` to the latest `Cluster` version. The only valid value
-   * is `2`, which is the version of the new `Cluster`.
+   * is `v2`, which is the version of the new `Cluster`.
    *
    * In `Cluster.v1`, load balancers are deployed in public subnets, and services are
    * deployed in private subnets. The VPC is required to have NAT gateways.
    *
    * In the latest `Cluster`, both the load balancer and the services are deployed in
-   * public subnets. The VPC is not required to have NAT gateways.
+   * public subnets. The VPC is not required to have NAT gateways. So the new default makes
+   * this cheaper to run.
    *
-   * After upgrading, new service containers will be deployed in public subnets.
+   * To upgrade, add the prop.
+   *
+   * ```ts
+   * {
+   *   forceUpgrade: "v2"
+   * }
+   * ```
+   *
+   * Run `sst deploy`.
+   *
+   * :::tip
+   * You can remove this prop after you upgrade.
+   * :::
+   *
+   * This upgrades your component and the resources it created. You can now optionally
+   * remove the prop.
+   *
+   * After the upgrade, new services will be deployed in public subnets.
    *
    * :::caution
-   * New service containers will be deployed in public subnets.
+   * New service will be deployed in public subnets.
    * :::
    *
    * To continue deploying in private subnets, set `vpc.serviceSubnets` to a list of
    * private subnets.
    *
    * ```js title="sst.config.ts" {4,8}
-   * const myVpc = new sst.aws.Vpc("MyVpc");
+   * const myVpc = new sst.aws.Vpc("MyVpc", { nat: "managed" });
    *
    * const cluster = new sst.aws.Cluster("MyCluster", {
-   *   forceUpgrade: 2,
+   *   forceUpgrade: "v2",
    *   vpc: {
    *     id: myVpc.id,
    *     loadBalancerSubnets: myVpc.publicSubnets,
@@ -212,7 +230,7 @@ export interface ClusterArgs {
    * });
    * ```
    */
-  forceUpgrade?: 2;
+  forceUpgrade?: "v2";
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -896,12 +914,21 @@ export class Cluster extends Component {
     args: ClusterArgs,
     opts?: ComponentResourceOptions,
   ) {
+    const _version = 2;
     super(__pulumiType, name, args, opts, {
-      _version: 2,
-      _breakingChange: [
-        `The new version of "sst.aws.Cluster" deploys services in the public subnets by default, and does not require VPC to have NAT gateways.`,
-        `Where previously in "sst.aws.Cluster.v1" it would deploy the services in the private subnets.`,
-      ].join(" "),
+      _version,
+      _message: [
+        ``,
+        `What changed:`,
+        `  - In the old version, load balancers were deployed in public subnets, and services were deployed in private subnets. The VPC was required to have NAT gateways.`,
+        `  - In the latest version, both the load balancer and the services are deployed in public subnets. The VPC is not required to have NAT gateways. So the new default makes this cheaper to run.`,
+        ``,
+        `To upgrade:`,
+        `  - Set \`forceUpgrade: "v${_version}"\` on the "Cluster" component. Learn more https://sst.dev/docs/component/aws/cluster#forceupgrade`,
+        ``,
+        `To continue using v${$cli.state.version[name]}:`,
+        `  - Rename "Cluster" to "Cluster.v${$cli.state.version[name]}". Learn more about versioning - https://ion.sst.dev/docs/components/#versioning`,
+      ].join("\n"),
       _forceUpgrade: args.forceUpgrade,
     });
 

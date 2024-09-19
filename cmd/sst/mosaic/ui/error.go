@@ -12,10 +12,22 @@ func parseError(input string) []string {
 		input = regexp.MustCompile(`<ref \*\d+>\s*`).ReplaceAllString(input, "")
 		input = strings.TrimSpace(input)
 		lines := strings.Split(input, "\n")
-		if strings.HasPrefix(lines[0], "VisibleError") {
-			stripped := strings.SplitN(lines[0], ": ", 2)
-			return stripped[1:]
+
+		// Remove the "VisibleError: " prefix from the first line if it exists
+		if strings.HasPrefix(lines[0], "VisibleError: ") {
+			lines[0] = strings.TrimPrefix(lines[0], "VisibleError: ")
+
+			// Find the first line that starts with spaces followed by "at" and
+			// remove that line and all following lines
+			for i, line := range lines {
+				trimmed := strings.TrimLeft(line, " ")
+				if strings.HasPrefix(trimmed, "at") {
+					// Remove all lines starting from this point
+					return lines[:i]
+				}
+			}
 		}
+
 		return lines
 	}
 

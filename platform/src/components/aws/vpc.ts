@@ -181,7 +181,10 @@ export class Vpc extends Component implements Link.Linkable {
 
   constructor(name: string, args?: VpcArgs, opts?: ComponentResourceOptions) {
     const _version = 2;
-    super(__pulumiType, name, args, opts, { _version });
+    super(__pulumiType, name, args, opts, {
+      _version,
+      _message: `To continue using the previous version, rename "Vpc" to "Vpc.v${$cli.state.version[name]}". Or recreate this component to update - https://sst.dev/docs/component/aws/cluster#forceupgrade`,
+    });
 
     if (args && "ref" in args) {
       const ref = args as VpcRef;

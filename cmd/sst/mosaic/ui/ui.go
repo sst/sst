@@ -412,7 +412,9 @@ func (u *UI) Event(unknown interface{}) {
 				if status.URN != "" {
 					u.println(TEXT_DANGER_BOLD.Render("   " + u.FormatURN(status.URN)))
 				}
-				u.print(TEXT_NORMAL.Render("   " + strings.Join(parseError(status.Message), "\n   ")))
+				for _, line := range parseError(status.Message) {
+					u.println(TEXT_NORMAL.Render("   " + line))
+				}
 				importDiffs, ok := evt.ImportDiffs[status.URN]
 				if ok {
 					isSSTComponent := strings.Contains(status.URN, "::sst")
