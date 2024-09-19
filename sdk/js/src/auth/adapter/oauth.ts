@@ -96,7 +96,7 @@ export const OauthAdapter =
       });
 
       // response_mode=form_post
-      routes.get("/callback", async (c) => {
+      routes.post("/callback", async (c) => {
         const [callback, client] = getClient(c);
         const form = await c.req.formData();
         if (form.get("error")) {

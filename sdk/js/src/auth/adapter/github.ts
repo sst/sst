@@ -1,6 +1,5 @@
 import { Issuer } from "openid-client";
 import { OauthAdapter, OauthBasicConfig } from "./oauth.js";
-import { OidcAdapter, OidcBasicConfig } from "./oidc.js";
 
 const issuer = new Issuer({
   issuer: "https://github.com",
@@ -8,26 +7,12 @@ const issuer = new Issuer({
   token_endpoint: "https://github.com/login/oauth/access_token",
 });
 
-type Config =
-  | ({
-      mode: "oauth";
-    } & OauthBasicConfig)
-  | ({
-      mode: "oidc";
-    } & OidcBasicConfig);
-
+type Config = OauthBasicConfig;
 export const GithubAdapter =
   /* @__PURE__ */
   (config: Config) => {
-    if (config.mode === "oauth") {
-      return OauthAdapter({
-        issuer,
-        ...config,
-      });
-    }
-    return OidcAdapter({
+    return OauthAdapter({
       issuer,
-      scope: "openid email profile",
       ...config,
     });
   };

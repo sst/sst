@@ -317,7 +317,6 @@ export function AuthHandler<
   app.all("/*", async (c) => {
     return c.notFound();
   });
-  console.log(app.routes);
 
   return app;
 }
