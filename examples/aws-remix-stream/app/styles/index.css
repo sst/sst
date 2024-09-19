@@ -1,0 +1,41 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f0f8ff;
+}
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.bio-section {
+  background-color: #fff;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+}
+.bio-content {
+  display: flex;
+  align-items: center;
+}
+.bio-text {
+  flex: 1;
+  padding-right: 20px;
+}
+.character-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px;
+}
+.character-card {
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+}
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+}

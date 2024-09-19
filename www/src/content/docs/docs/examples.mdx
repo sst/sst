@@ -767,6 +767,49 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-queue).
 
 
 ---
+## AWS Remix Streaming
+
+Follows the [Remix Streaming](https://remix.run/docs/en/main/guides/streaming) guide to create
+an app that streams data.
+
+Uses the `defer` utility to stream data through the `loader` function.
+
+```tsx title="app/routes/_index.tsx"
+return defer({
+  spongebob,
+  friends: friendsPromise,
+});
+```
+
+Then uses the the `Suspense` and `Await` components to render the data.
+
+```tsx title="app/routes/_index.tsx"
+<Suspense fallback={<div>Loading...</div>}>
+  <Await resolve={friends}>
+    { /* ... */ }
+  </Await>
+</Suspense>
+```
+
+You should see the _friends_ section load after a 3 second delay.
+
+:::note
+Safari handles streaming differently than other browsers.
+:::
+
+Safari uses a [different heuristic](https://bugs.webkit.org/show_bug.cgi?id=252413) to
+determine when to stream data. You need to render _enough_ initial HTML to trigger streaming.
+This is typically only a problem for demo apps.
+
+Streaming works out of the box with the `Remix` component.
+```ts title="sst.config.ts"
+new sst.aws.Remix("MyWeb");
+```
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-remix-stream).
+
+
+---
 ## Router and bucket
 
 Creates a router that serves static files from the `public` folder of a given bucket.
