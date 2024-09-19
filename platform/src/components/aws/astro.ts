@@ -551,6 +551,12 @@ export class Astro extends Component implements Link.Linkable {
             plan.behaviors.push(
               {
                 cacheType: "server",
+                cfFunction: "serverHostOnly",
+                origin: "regionalServer",
+              },
+              {
+                pattern: "*",
+                cacheType: "server",
                 cfFunction: "server",
                 origin: "fallthroughServer",
                 allowedMethods: ["GET", "HEAD", "OPTIONS"],
@@ -567,15 +573,6 @@ export class Astro extends Component implements Link.Linkable {
                 origin: "regionalServer",
                 allowedMethods: ["GET", "HEAD", "OPTIONS"],
               },
-              ...buildMeta.serverRoutes?.map(
-                (route) =>
-                  ({
-                    cacheType: "server",
-                    cfFunction: "serverHostOnly",
-                    pattern: route,
-                    origin: "regionalServer",
-                  }) as const,
-              ),
             );
           }
 
