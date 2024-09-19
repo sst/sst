@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/evanw/esbuild/pkg/api"
 	esbuild "github.com/evanw/esbuild/pkg/api"
@@ -19,6 +20,7 @@ import (
 type Runtime struct {
 	contexts map[string]esbuild.BuildContext
 	results  map[string]esbuild.BuildResult
+	lock     sync.RWMutex
 }
 
 type Properties struct {
@@ -31,6 +33,7 @@ func New() *Runtime {
 	return &Runtime{
 		contexts: map[string]esbuild.BuildContext{},
 		results:  map[string]esbuild.BuildResult{},
+		lock:     sync.RWMutex{},
 	}
 }
 
@@ -115,15 +118,21 @@ func (w *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 		MainFields:        []string{"module", "main"},
 	}
 
+	w.lock.RLock()
 	buildContext, ok := w.contexts[input.FunctionID]
+	w.lock.RUnlock()
 	if !ok {
 		buildContext, _ = esbuild.Context(options)
+		w.lock.Lock()
 		w.contexts[input.FunctionID] = buildContext
+		w.lock.Unlock()
 	}
 
 	result := buildContext.Rebuild()
 	if len(result.Errors) == 0 {
+		w.lock.Lock()
 		w.results[input.FunctionID] = result
+		w.lock.Unlock()
 	}
 	errors := []string{}
 	for _, error := range result.Errors {
@@ -160,7 +169,9 @@ func (w *Runtime) getFile(input *runtime.BuildInput) (string, bool) {
 }
 
 func (r *Runtime) ShouldRebuild(functionID string, file string) bool {
+	r.lock.RLock()
 	result, ok := r.results[functionID]
+	r.lock.RUnlock()
 	if !ok {
 		return false
 	}
