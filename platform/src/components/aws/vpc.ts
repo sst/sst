@@ -764,7 +764,8 @@ export class Vpc extends Component implements Link.Linkable {
     }).id;
     const cloudmapNamespace = servicediscovery.PrivateDnsNamespace.get(
       `${name}CloudmapNamespace`,
-      interpolate`${namespaceId}:${vpcID}`,
+      namespaceId,
+      { vpc: vpcID },
     );
 
     return new Vpc(name, {
