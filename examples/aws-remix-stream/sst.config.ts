@@ -1,7 +1,7 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
 /**
- * ## AWS Remix Streaming
+ * ## AWS Remix streaming
  *
  * Follows the [Remix Streaming](https://remix.run/docs/en/main/guides/streaming) guide to create
  * an app that streams data.
