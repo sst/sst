@@ -277,6 +277,19 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
        * ```
        */
       path?: Input<string>;
+      /**
+       * Configure if files from previous deployments should be purged from the bucket.
+       * @default `true`
+       * @example
+       * ```js
+       * {
+       *   assets: {
+       *     purge: false
+       *   }
+       * }
+       * ```
+       */
+      purge?: Input<boolean>;
     }
   >;
   /**
@@ -632,6 +645,7 @@ export class StaticSite extends Component implements Link.Linkable {
               v.replace(/^\//, "").replace(/\/$/, ""),
             )
           : undefined,
+        purge: args.assets?.purge ?? true,
       };
     }
 
@@ -727,7 +741,7 @@ export class StaticSite extends Component implements Link.Linkable {
           {
             bucketName,
             files: bucketFiles,
-            purge: true,
+            purge: assets.purge,
           },
           { parent },
         );
