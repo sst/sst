@@ -49,6 +49,7 @@ export class Component extends ComponentResource {
     _versionInfo: {
       _version: number;
       _breakingChange?: string;
+      _forceUpgrade?: number;
     } = { _version: 1 },
   ) {
     const transforms = ComponentTransforms.get(type) ?? [];
@@ -337,7 +338,20 @@ export class Component extends ComponentResource {
     const newVersion = _versionInfo._version;
     if (oldVersion) {
       const className = type.replaceAll(":", ".");
-      if (oldVersion < newVersion) {
+      // Invalid forceUpgrade value
+      if (
+        _versionInfo._forceUpgrade &&
+        _versionInfo._forceUpgrade !== newVersion
+      ) {
+        throw new VisibleError(
+          [
+            `The value of "forceUpgrade" does not match the version of "${className}" component (${newVersion}).`,
+            `Set "forceUpgrade: ${newVersion}" in the component to upgrade.`,
+          ].join(" "),
+        );
+      }
+      // Version upgraded without forceUpgrade
+      if (oldVersion < newVersion && !_versionInfo._forceUpgrade) {
         throw new VisibleError(
           [
             `There is a new version of "${className}" that has breaking changes.`,
@@ -349,6 +363,7 @@ export class Component extends ComponentResource {
           ].join(" "),
         );
       }
+      // Version downgraded
       if (oldVersion > newVersion) {
         throw new VisibleError(
           [
@@ -358,6 +373,8 @@ export class Component extends ComponentResource {
         );
       }
     }
+
+    // Set version
     if (newVersion > 1) {
       new Version(name, newVersion, { parent: this });
     }

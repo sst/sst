@@ -119,18 +119,7 @@ export interface ClusterArgs {
    * The VPC to use for the cluster.
    *
    * @example
-   * ```js
-   * {
-   *   vpc: {
-   *     id: "vpc-0d19d2b8ca2b268a1",
-   *     publicSubnets: ["subnet-0b6a2b73896dc8c4c", "subnet-021389ebee680c2f0"],
-   *     privateSubnets: ["subnet-0db7376a7ad4db5fd ", "subnet-06fc7ee8319b2c0ce"],
-   *     securityGroups: ["sg-0399348378a4c256c"],
-   *   }
-   * }
-   * ```
-   *
-   * Or create a `Vpc` component.
+   * Create a `Vpc` component.
    *
    * ```js title="sst.config.ts"
    * const myVpc = new sst.aws.Vpc("MyVpc");
@@ -141,6 +130,22 @@ export interface ClusterArgs {
    * ```js
    * {
    *   vpc: myVpc
+   * }
+   * ```
+   *
+   * By default, both the load balancer and the services are deployed in public subnets.
+   * The above is equivalent to:
+   *
+   * ```js
+   * {
+   *   vpc: {
+   *     id: myVpc.id,
+   *     loadBalancerSubnets: myVpc.publicSubnets,
+   *     serviceSubnets: myVpc.publicSubnets,
+   *     securityGroups: myVpc.securityGroups,
+   *     cloudmapNamespaceId: myVpc.nodes.cloudmapNamespace.id,
+   *     cloudmapNamespaceName: myVpc.nodes.cloudmapNamespace.name,
+   *   }
    * }
    * ```
    */
@@ -172,6 +177,42 @@ export interface ClusterArgs {
          */
         cloudmapNamespaceName: Input<string>;
       }>;
+  /**
+   * Force upgrade from `Cluster.v1` to the latest `Cluster` version. The only valid value
+   * is `2`, which is the version of the new `Cluster`.
+   *
+   * In `Cluster.v1`, load balancers are deployed in public subnets, and services are
+   * deployed in private subnets. The VPC is required to have NAT gateways.
+   *
+   * In the latest `Cluster`, both the load balancer and the services are deployed in
+   * public subnets. The VPC is not required to have NAT gateways.
+   *
+   * After upgrading, new service containers will be deployed in public subnets.
+   *
+   * :::caution
+   * New service containers will be deployed in public subnets.
+   * :::
+   *
+   * To continue deploying in private subnets, set `vpc.serviceSubnets` to a list of
+   * private subnets.
+   *
+   * ```js title="sst.config.ts" {4,8}
+   * const myVpc = new sst.aws.Vpc("MyVpc");
+   *
+   * const cluster = new sst.aws.Cluster("MyCluster", {
+   *   forceUpgrade: 2,
+   *   vpc: {
+   *     id: myVpc.id,
+   *     loadBalancerSubnets: myVpc.publicSubnets,
+   *     serviceSubnets: myVpc.privateSubnets,
+   *     securityGroups: myVpc.securityGroups,
+   *     cloudmapNamespaceId: myVpc.nodes.cloudmapNamespace.id,
+   *     cloudmapNamespaceName: myVpc.nodes.cloudmapNamespace.name,
+   *   }
+   * });
+   * ```
+   */
+  forceUpgrade?: 2;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -855,12 +896,14 @@ export class Cluster extends Component {
     args: ClusterArgs,
     opts?: ComponentResourceOptions,
   ) {
-    const _version = 2;
-    const _breakingChange = [
-      `The new version of "sst.aws.Cluster" deploys services in the public subnets by default, and does not require VPC to have NAT gateways.`,
-      `Where previously in "sst.aws.Cluster.v1" it would deploy the services in the private subnets.`,
-    ].join(" ");
-    super(__pulumiType, name, args, opts, { _version, _breakingChange });
+    super(__pulumiType, name, args, opts, {
+      _version: 2,
+      _breakingChange: [
+        `The new version of "sst.aws.Cluster" deploys services in the public subnets by default, and does not require VPC to have NAT gateways.`,
+        `Where previously in "sst.aws.Cluster.v1" it would deploy the services in the private subnets.`,
+      ].join(" "),
+      _forceUpgrade: args.forceUpgrade,
+    });
 
     const parent = this;
 
