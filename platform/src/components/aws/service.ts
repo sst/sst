@@ -180,16 +180,18 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function normalizeImage() {
-      return all([args.image ?? {}, architecture]).apply(
-        ([image, architecture]) => ({
+      return all([args.image, architecture]).apply(([image, architecture]) => {
+        if (typeof image === "string") return image;
+
+        return {
           ...image,
-          context: image.context ?? ".",
+          context: image?.context ?? ".",
           platform:
             architecture === "arm64"
               ? Platform.Linux_arm64
               : Platform.Linux_amd64,
-        }),
-      );
+        };
+      });
     }
 
     function normalizeCpu() {
@@ -315,68 +317,61 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function createImage() {
-      // Edit .dockerignore file
-      const imageArgsNew = imageArgs.apply((imageArgs) => {
-        const context = path.join($cli.paths.root, imageArgs.context);
-        const dockerfile = imageArgs.dockerfile ?? "Dockerfile";
+      return imageArgs.apply((imageArgs) => {
+        if (typeof imageArgs === "string") return output(imageArgs);
 
-        // get .dockerignore file
-        const file = (() => {
-          let filePath = path.join(context, `${dockerfile}.dockerignore`);
-          if (fs.existsSync(filePath)) return filePath;
-          filePath = path.join(context, ".dockerignore");
-          if (fs.existsSync(filePath)) return filePath;
-        })();
+        const contextPath = path.join($cli.paths.root, imageArgs.context);
+        const dockerfile = imageArgs.dockerfile ?? "Dockerfile";
+        const dockerfilePath = imageArgs.dockerfile
+          ? path.join(contextPath, imageArgs.dockerfile)
+          : path.join(contextPath, imageArgs.context, "Dockerfile");
+        const dockerIgnorePath = fs.existsSync(
+          path.join(contextPath, `${dockerfile}.dockerignore`),
+        )
+          ? path.join(contextPath, `${dockerfile}.dockerignore`)
+          : path.join(contextPath, ".dockerignore");
 
         // add .sst to .dockerignore if not exist
-        const content = file ? fs.readFileSync(file).toString() : "";
-        const lines = content.split("\n");
+        const lines = fs.existsSync(dockerIgnorePath)
+          ? fs.readFileSync(dockerIgnorePath).toString().split("\n")
+          : [];
         if (!lines.find((line) => line === ".sst")) {
           fs.writeFileSync(
-            file ?? path.join(context, ".dockerignore"),
+            dockerIgnorePath,
             [...lines, "", "# sst", ".sst"].join("\n"),
           );
         }
-        return imageArgs;
-      });
 
-      // Build image
-      return new Image(
-        ...transform(
-          args.transform?.image,
-          `${name}Image`,
-          {
-            context: {
-              location: imageArgsNew.apply((v) =>
-                path.join($cli.paths.root, v.context),
-              ),
+        // Build image
+        const image = new Image(
+          ...transform(
+            args.transform?.image,
+            `${name}Image`,
+            {
+              context: { location: contextPath },
+              dockerfile: { location: dockerfilePath },
+              buildArgs: imageArgs.args ?? {},
+              platforms: [imageArgs.platform],
+              tags: [interpolate`${bootstrapData.assetEcrUrl}:${name}`],
+              registries: [
+                ecr
+                  .getAuthorizationTokenOutput({
+                    registryId: bootstrapData.assetEcrRegistryId,
+                  })
+                  .apply((authToken) => ({
+                    address: authToken.proxyEndpoint,
+                    password: secret(authToken.password),
+                    username: authToken.userName,
+                  })),
+              ],
+              push: true,
             },
-            dockerfile: {
-              location: imageArgsNew.apply((v) =>
-                v.dockerfile
-                  ? path.join($cli.paths.root, v.dockerfile)
-                  : path.join($cli.paths.root, v.context, "Dockerfile"),
-              ),
-            },
-            buildArgs: imageArgsNew.apply((v) => v.args ?? {}),
-            platforms: [imageArgs.platform],
-            tags: [interpolate`${bootstrapData.assetEcrUrl}:${name}`],
-            registries: [
-              ecr
-                .getAuthorizationTokenOutput({
-                  registryId: bootstrapData.assetEcrRegistryId,
-                })
-                .apply((authToken) => ({
-                  address: authToken.proxyEndpoint,
-                  password: secret(authToken.password),
-                  username: authToken.userName,
-                })),
-            ],
-            push: true,
-          },
-          { parent: self },
-        ),
-      );
+            { parent: self },
+          ),
+        );
+
+        return interpolate`${bootstrapData.assetEcrUrl}@${image.digest}`;
+      });
     }
 
     function createLoadBalancer() {
@@ -615,7 +610,7 @@ export class Service extends Component implements Link.Linkable {
             containerDefinitions: $jsonStringify([
               {
                 name,
-                image: interpolate`${bootstrapData.assetEcrUrl}@${image.digest}`,
+                image,
                 pseudoTerminal: true,
                 portMappings: [{ containerPortRange: "1-65535" }],
                 logConfiguration: {
@@ -785,11 +780,14 @@ export class Service extends Component implements Link.Linkable {
     function registerReceiver() {
       self.registerOutputs({
         _receiver: imageArgs.apply((imageArgs) => ({
-          directory: path.join(
-            imageArgs.dockerfile
-              ? path.dirname(imageArgs.dockerfile)
-              : imageArgs.context,
-          ),
+          directory:
+            typeof imageArgs === "string"
+              ? undefined
+              : path.join(
+                  imageArgs.dockerfile
+                    ? path.dirname(imageArgs.dockerfile)
+                    : imageArgs.context,
+                ),
           links: linkData.apply((input) => input.map((item) => item.name)),
           environment: {
             ...args.environment,
@@ -812,11 +810,13 @@ export class Service extends Component implements Link.Linkable {
           directory: output(args.dev?.directory).apply(
             (dir) =>
               dir ||
-              path.join(
-                imageArgs.dockerfile
-                  ? path.dirname(imageArgs.dockerfile)
-                  : imageArgs.context,
-              ),
+              (typeof imageArgs === "string"
+                ? undefined
+                : path.join(
+                    imageArgs.dockerfile
+                      ? path.dirname(imageArgs.dockerfile)
+                      : imageArgs.context,
+                  )),
           ),
           command: args.dev?.command,
         })),

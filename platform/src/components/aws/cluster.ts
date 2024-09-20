@@ -283,13 +283,16 @@ export interface ClusterServiceArgs {
     directory?: Input<string>;
   };
   /**
-   * Configure the docker build command for building the image.
+   * Configure the docker build command for building the image or specify a pre-built image.
+   *
+   * @default Build a docker image from the Dockerfile in the root directory.
+   * @example
+   *
+   * Building a docker image.
    *
    * Prior to building the image, SST will automatically add the `.sst` directory
    * to the `.dockerignore` if not already present.
    *
-   * @default `{}`
-   * @example
    * ```js
    * {
    *   image: {
@@ -301,48 +304,59 @@ export interface ClusterServiceArgs {
    *   }
    * }
    * ```
+   *
+   * Alternatively, you can pass in a pre-built image.
+   *
+   * ```js
+   * {
+   *   image: "nginxdemos/hello:plain-text"
+   * }
+   * ```
    */
-  image?: Input<{
-    /**
-     * The path to the [Docker build context](https://docs.docker.com/build/building/context/#local-context). The path is relative to your project's `sst.config.ts`.
-     * @default `"."`
-     * @example
-     *
-     * To change where the docker build context is located.
-     *
-     * ```js
-     * {
-     *   context: "./app"
-     * }
-     * ```
-     */
-    context?: Input<string>;
-    /**
-     * The path to the [Dockerfile](https://docs.docker.com/reference/cli/docker/image/build/#file).
-     * The path is relative to the build `context`.
-     * @default `"Dockerfile"`
-     * @example
-     * To use a different Dockerfile.
-     * ```js
-     * {
-     *   dockerfile: "Dockerfile.prod"
-     * }
-     * ```
-     */
-    dockerfile?: Input<string>;
-    /**
-     * Key-value pairs of [build args](https://docs.docker.com/build/guide/build-args/) to pass to the docker build command.
-     * @example
-     * ```js
-     * {
-     *   args: {
-     *     MY_VAR: "value"
-     *   }
-     * }
-     * ```
-     */
-    args?: Input<Record<string, Input<string>>>;
-  }>;
+  image?: Input<
+    | string
+    | {
+        /**
+         * The path to the [Docker build context](https://docs.docker.com/build/building/context/#local-context). The path is relative to your project's `sst.config.ts`.
+         * @default `"."`
+         * @example
+         *
+         * To change where the docker build context is located.
+         *
+         * ```js
+         * {
+         *   context: "./app"
+         * }
+         * ```
+         */
+        context?: Input<string>;
+        /**
+         * The path to the [Dockerfile](https://docs.docker.com/reference/cli/docker/image/build/#file).
+         * The path is relative to the build `context`.
+         * @default `"Dockerfile"`
+         * @example
+         * To use a different Dockerfile.
+         * ```js
+         * {
+         *   dockerfile: "Dockerfile.prod"
+         * }
+         * ```
+         */
+        dockerfile?: Input<string>;
+        /**
+         * Key-value pairs of [build args](https://docs.docker.com/build/guide/build-args/) to pass to the docker build command.
+         * @example
+         * ```js
+         * {
+         *   args: {
+         *     MY_VAR: "value"
+         *   }
+         * }
+         * ```
+         */
+        args?: Input<Record<string, Input<string>>>;
+      }
+  >;
   /**
    * Configure a public endpoint for the service. When configured, a load balancer
    * will be created to route traffic to the containers. By default, the endpoint is an
