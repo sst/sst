@@ -316,6 +316,33 @@ export interface CognitoUserPoolClientArgs {
   /**
    * A list of identity providers that are supported for this client.
    * @default `["COGNITO"]`
+   * @example
+   *
+   * :::tip
+   * Reference federated identity providers using their `providerName` property.
+   * :::
+   *
+   * If you are using a federated identity provider
+   *
+   * ```js title="sst.config.ts"
+   * const provider = userPool.addIdentityProvider("MyProvider", {
+   *   type: "oidc",
+   *   details: {
+   *     authorize_scopes: "email profile",
+   *     client_id: "your-client-id",
+   *     client_secret: "your-client-secret"
+   *   },
+   * });
+   * ```
+   *
+   * Make sure to pass in `provider.providerName` instead of hardcoding it to `"MyProvider"`.
+   * This ensures the client is created after the provider.
+   *
+   * ```ts
+   * userPool.addClient("Web", {
+   *   providers: [provider.providerName]
+   * });
+   * ```
    */
   providers?: Input<Input<string>[]>;
   /**
@@ -626,31 +653,6 @@ export class CognitoUserPool extends Component implements Link.Linkable {
    *
    * ```ts
    * userPool.addClient("Web");
-   * ```
-   *
-   * And if you are using an identity provider.
-   *
-   * ```js title="sst.config.ts"
-   * const provider = userPool.addIdentityProvider("MyProvider", {
-   *   type: "oidc",
-   *   details: {
-   *     authorize_scopes: "email profile",
-   *     client_id: "your-client-id",
-   *     client_secret: "your-client-secret"
-   *   },
-   * });
-   * ```
-   * :::tip
-   * Don't hardcode the provider name. Reference it from the `providerName` property.
-   * :::
-   *
-   * Make sure to pass in the provider's `providerName` instead of hardcoding it. This
-   * ensures the client is created after the provider.
-   *
-   * ```ts
-   * userPool.addClient("Web", {
-   *   providers: [provider.providerName]
-   * });
    * ```
    */
   public addClient(name: string, args?: CognitoUserPoolClientArgs) {
