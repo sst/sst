@@ -425,73 +425,73 @@ export interface ApiGatewayV1RouteArgs {
   auth?: Input<
     | false
     | {
-      /**
-       * Enable IAM authorization for a given API route.
-       *
-       * When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
-       */
-      iam?: Input<true>;
-      /**
-       * Enable custom Lambda authorization for a given API route. Pass in the authorizer ID.
-       * @example
-       * ```js
-       * {
-       *   auth: {
-       *     custom: myAuthorizer.id
-       *   }
-       * }
-       * ```
-       *
-       * Where `myAuthorizer` is:
-       *
-       * ```js
-       * const userPool = new aws.cognito.UserPool();
-       * const myAuthorizer = api.addAuthorizer({
-       *   name: "MyAuthorizer",
-       *   userPools: [userPool.arn]
-       * });
-       * ```
-       */
-      custom?: Input<string>;
-      /**
-       * Enable Cognito User Pool authorization for a given API route.
-       *
-       * @example
-       * You can configure JWT auth.
-       *
-       * ```js
-       * {
-       *   auth: {
-       *     cognito: {
-       *       authorizer: myAuthorizer.id,
-       *       scopes: ["read:profile", "write:profile"]
-       *     }
-       *   }
-       * }
-       * ```
-       *
-       * Where `myAuthorizer` is:
-       *
-       * ```js
-       * const userPool = new aws.cognito.UserPool();
-       *
-       * const myAuthorizer = api.addAuthorizer({
-       *   name: "MyAuthorizer",
-       *   userPools: [userPool.arn]
-       * });
-       * ```
-       */
-      cognito?: Input<{
         /**
-         * Authorizer ID of the Cognito User Pool authorizer.
+         * Enable IAM authorization for a given API route.
+         *
+         * When IAM auth is enabled, clients need to use Signature Version 4 to sign their requests with their AWS credentials.
          */
-        authorizer: Input<string>;
+        iam?: Input<true>;
         /**
-         * Defines the permissions or access levels that the authorization token grants.
+         * Enable custom Lambda authorization for a given API route. Pass in the authorizer ID.
+         * @example
+         * ```js
+         * {
+         *   auth: {
+         *     custom: myAuthorizer.id
+         *   }
+         * }
+         * ```
+         *
+         * Where `myAuthorizer` is:
+         *
+         * ```js
+         * const userPool = new aws.cognito.UserPool();
+         * const myAuthorizer = api.addAuthorizer({
+         *   name: "MyAuthorizer",
+         *   userPools: [userPool.arn]
+         * });
+         * ```
          */
-        scopes?: Input<Input<string>[]>;
-      }>;
-    }
+        custom?: Input<string>;
+        /**
+         * Enable Cognito User Pool authorization for a given API route.
+         *
+         * @example
+         * You can configure JWT auth.
+         *
+         * ```js
+         * {
+         *   auth: {
+         *     cognito: {
+         *       authorizer: myAuthorizer.id,
+         *       scopes: ["read:profile", "write:profile"]
+         *     }
+         *   }
+         * }
+         * ```
+         *
+         * Where `myAuthorizer` is:
+         *
+         * ```js
+         * const userPool = new aws.cognito.UserPool();
+         *
+         * const myAuthorizer = api.addAuthorizer({
+         *   name: "MyAuthorizer",
+         *   userPools: [userPool.arn]
+         * });
+         * ```
+         */
+        cognito?: Input<{
+          /**
+           * Authorizer ID of the Cognito User Pool authorizer.
+           */
+          authorizer: Input<string>;
+          /**
+           * Defines the permissions or access levels that the authorization token grants.
+           */
+          scopes?: Input<Input<string>[]>;
+        }>;
+      }
   >;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -670,9 +670,9 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
           ? { types: "REGIONAL" as const }
           : endpoint.type === "private"
             ? {
-              types: "PRIVATE" as const,
-              vpcEndpointIds: endpoint.vpcEndpointIds,
-            }
+                types: "PRIVATE" as const,
+                vpcEndpointIds: endpoint.vpcEndpointIds,
+              }
             : { types: "EDGE" as const };
       });
     }
@@ -697,9 +697,9 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
   public get url() {
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.basePath]).apply(
-        ([domain, key]) =>
-          key ? `https://${domain}/${key}/` : `https://${domain}`,
-      )
+          ([domain, key]) =>
+            key ? `https://${domain}/${key}/` : `https://${domain}`,
+        )
       : interpolate`https://${this.api.id}.execute-api.${this.region}.amazonaws.com/${$app.stage}/`;
   }
 
@@ -712,6 +712,10 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
        * The Amazon API Gateway REST API
        */
       api: this.api,
+      /**
+       * The Amazon API Gateway REST API stage
+       */
+      stage: this.stage,
       /**
        * The CloudWatch LogGroup for the access logs.
        */
