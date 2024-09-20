@@ -17,7 +17,13 @@ import { buildNode } from "../../runtime/node.js";
 import { bootstrap } from "./helpers/bootstrap.js";
 import { Duration, DurationMinutes, toSeconds } from "../duration.js";
 import { Size, toMBs } from "../size.js";
-import { Component, Prettify, Transform, transform } from "../component.js";
+import {
+  $print,
+  Component,
+  Prettify,
+  Transform,
+  transform,
+} from "../component.js";
 import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
 import type { Input } from "../input.js";
@@ -865,6 +871,77 @@ export interface FunctionArgs {
     }[]
   >;
   /**
+   * Configure the concurrency settings for the function.
+   *
+   * @default No concurrency settings set
+   * @example
+   * ```js
+   * {
+   *   concurrency: {
+   *     provisioned: 10,
+   *     reserved: 50
+   *   }
+   * }
+   * ```
+   */
+  concurrency?: Input<{
+    /**
+     * Provisioned concurrency ensures a specific number of Lambda instances are always
+     * ready to handle requests, reducing cold start times. Enabling this will incur
+     * extra charges.
+     *
+     * :::note
+     * Enabling provisioned concurrency will incur extra charges.
+     * :::
+     *
+     * Note that `versioning` needs to be enabled for provisioned concurrency.
+     *
+     * @default No provisioned concurrency
+     * @example
+     * ```js
+     * {
+     *   concurrency: {
+     *     provisioned: 10
+     *   }
+     * }
+     * ```
+     */
+    provisioned?: Input<number>;
+    /**
+     * Reserved concurrency limits the maximum number of concurrent executions for a
+     * function, ensuring critical functions always have capacity. It does not incur
+     * extra charges.
+     *
+     * :::note
+     * Setting this to `0` will disable the function from being triggered.
+     * :::
+     *
+     * @default No reserved concurrency
+     * @example
+     * ```js
+     * {
+     *   concurrency: {
+     *     reserved: 50
+     *   }
+     * }
+     * ```
+     */
+    reserved?: Input<number>;
+  }>;
+  /**
+   * Enable versioning for the function.
+   *
+   *
+   * @default false
+   * @example
+   * ```js
+   * {
+   *   versioning: true
+   * }
+   * ```
+   */
+  versioning?: Input<true>;
+  /**
    * A list of Lambda layer ARNs to add to the function.
    *
    * :::note
@@ -1087,6 +1164,7 @@ export class Function extends Component implements Link.Linkable {
     const logGroup = createLogGroup();
     const fn = createFunction();
     const fnUrl = createUrl();
+    createProvisioned();
 
     const links = linkData.apply((input) => input.map((item) => item.name));
 
@@ -1567,7 +1645,7 @@ export class Function extends Component implements Link.Linkable {
                     "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
                   ]
                 : []),
-              ...(args.vpc
+              ...(vpc
                 ? [
                     "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
                   ]
@@ -1773,12 +1851,13 @@ export class Function extends Component implements Link.Linkable {
                 logFormat: logging.format === "json" ? "JSON" : "Text",
                 logGroup: logging.logGroup ?? logGroup!.name,
               },
-              vpcConfig: args.vpc && {
-                securityGroupIds: output(args.vpc).securityGroups,
-                subnetIds: output(args.vpc).privateSubnets,
+              vpcConfig: vpc && {
+                securityGroupIds: vpc.securityGroups,
+                subnetIds: vpc.privateSubnets,
               },
               layers: args.layers,
               tags: args.tags,
+              publish: output(args.versioning).apply((v) => v ?? false),
               ...(isContainer
                 ? {
                     packageType: "Image",
@@ -1838,6 +1917,30 @@ export class Function extends Component implements Link.Linkable {
           { parent },
         );
       });
+    }
+
+    function createProvisioned() {
+      return all([args.concurrency, fn.publish]).apply(
+        ([concurrency, publish]) => {
+          if (!concurrency?.provisioned || concurrency.provisioned === 0)
+            return;
+
+          if (publish !== true)
+            throw new VisibleError(
+              `Provisioned concurrency requires function versioning. Set "versioning: true" to enable function versioning.`,
+            );
+
+          return new lambda.ProvisionedConcurrencyConfig(
+            `${name}Provisioned`,
+            {
+              functionName: fn.name,
+              qualifier: fn.version,
+              provisionedConcurrentExecutions: concurrency.provisioned,
+            },
+            { parent },
+          );
+        },
+      );
     }
   }
 

@@ -5,6 +5,7 @@ import {
   runtime,
   output,
   asset as pulumiAsset,
+  Input,
 } from "@pulumi/pulumi";
 import { physicalName } from "./naming.js";
 import { VisibleError } from "./error.js";
@@ -136,6 +137,7 @@ export class Component extends ComponentResource {
               "aws:lambda/functionUrl:FunctionUrl",
               "aws:lambda/invocation:Invocation",
               "aws:lambda/permission:Permission",
+              "aws:lambda/provisionedConcurrencyConfig:ProvisionedConcurrencyConfig",
               "aws:lb/listener:Listener",
               "aws:route53/record:Record",
               "aws:s3/bucketCorsConfigurationV2:BucketCorsConfigurationV2",
@@ -421,6 +423,10 @@ export function $lazy<T>(fn: () => T) {
   return output(undefined)
     .apply(async () => output(fn()))
     .apply((x) => x);
+}
+
+export function $print(...msg: Input<string>[]) {
+  return output(msg).apply((msg) => console.log(...msg));
 }
 
 export class Version extends ComponentResource {
