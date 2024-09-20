@@ -41,7 +41,7 @@ export default $config({
     const cfFunction = new aws.cloudfront.Function("AstroRedirect", {
       runtime: "cloudfront-js-2.0",
       code: [
-        `function handler(event) {`,
+        `async function handler(event) {`,
         `  const request = event.request;`,
         // ie. request.uri is /examples/foo
         `  return {`,

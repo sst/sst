@@ -87,7 +87,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
        * The given code will be injected at the end of the function.
        *
        * ```js
-       * function handler(event) {
+       * async function handler(event) {
        *   // Default behavior code
        *
        *   // User injected code
@@ -147,7 +147,7 @@ export interface StaticSiteArgs extends BaseStaticSiteArgs {
        * the provided code.
        *
        * ```js
-       * function handler(event) {
+       * async function handler(event) {
        *   // User injected code
        *
        *   return event.response;
@@ -876,7 +876,7 @@ export class StaticSite extends Component implements Link.Linkable {
               ),
               code: output(args.edge).apply(
                 (edge) => `
-function handler(event) {
+async function handler(event) {
   if (event.request.uri.endsWith('/')) {
     event.request.uri += 'index.html';
   } else if (!event.request.uri.includes('.')) {
@@ -898,7 +898,7 @@ function handler(event) {
               ),
               code: output(args.edge).apply(
                 (edge) => `
-function handler(event) {
+async function handler(event) {
   ${edge?.viewerResponse?.injection ?? ""}
   return event.response;
 }

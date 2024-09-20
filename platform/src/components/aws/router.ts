@@ -163,7 +163,7 @@ interface BaseRouteArgs {
        * header. The given code will be injected at the end of this function.
        *
        * ```js
-       * function handler(event) {
+       * async function handler(event) {
        *   // Default behavior code
        *
        *   // User injected code
@@ -244,7 +244,7 @@ interface BaseRouteArgs {
        * the provided code.
        *
        * ```js
-       * function handler(event) {
+       * async function handler(event) {
        *   // User injected code
        *
        *   return event.response;
@@ -611,7 +611,7 @@ export class Router extends Component implements Link.Linkable {
           {
             runtime: "cloudfront-js-2.0",
             code: [
-              `function handler(event) {`,
+              `async function handler(event) {`,
               `  event.request.headers["x-forwarded-host"] = event.request.headers.host;`,
               `  return event.request;`,
               `}`,
@@ -626,15 +626,15 @@ export class Router extends Component implements Link.Linkable {
       path: string,
       config:
         | {
-          injection: string;
-          kvStores?: string[];
-        }
+            injection: string;
+            kvStores?: string[];
+          }
         | undefined,
       rewrite:
         | {
-          regex: string;
-          to: string;
-        }
+            regex: string;
+            to: string;
+          }
         | undefined,
       injectHostHeader: boolean,
     ) {
@@ -644,17 +644,19 @@ export class Router extends Component implements Link.Linkable {
           runtime: "cloudfront-js-2.0",
           keyValueStoreAssociations: config?.kvStores ?? [],
           code: `
-function handler(event) {
-  ${injectHostHeader
-              ? `event.request.headers["x-forwarded-host"] = event.request.headers.host;`
-              : ""
-            }
-  ${rewrite
-              ? `
+async function handler(event) {
+  ${
+    injectHostHeader
+      ? `event.request.headers["x-forwarded-host"] = event.request.headers.host;`
+      : ""
+  }
+  ${
+    rewrite
+      ? `
 const re = new RegExp("${rewrite.regex}");
 event.request.uri = event.request.uri.replace(re, "${rewrite.to}");`
-              : ""
-            }
+      : ""
+  }
   ${config?.injection ?? ""}
   return event.request;
 }`,
@@ -676,7 +678,7 @@ event.request.uri = event.request.uri.replace(re, "${rewrite.to}");`
           runtime: "cloudfront-js-2.0",
           keyValueStoreAssociations: config!.kvStores ?? [],
           code: `
-function handler(event) {
+async function handler(event) {
   ${config.injection ?? ""}
   return event.response;
 }`,
@@ -833,30 +835,30 @@ function handler(event) {
           functionAssociations: [
             ...("url" in route || route.edge?.viewerRequest || route.rewrite
               ? [
-                {
-                  eventType: "viewer-request",
-                  functionArn:
-                    route.edge?.viewerRequest || route.rewrite
-                      ? createCfRequestFunction(
-                        path,
-                        route.edge?.viewerRequest,
-                        route.rewrite,
-                        "url" in route,
-                      ).arn
-                      : createCfRequestDefaultFunction().arn,
-                },
-              ]
+                  {
+                    eventType: "viewer-request",
+                    functionArn:
+                      route.edge?.viewerRequest || route.rewrite
+                        ? createCfRequestFunction(
+                            path,
+                            route.edge?.viewerRequest,
+                            route.rewrite,
+                            "url" in route,
+                          ).arn
+                        : createCfRequestDefaultFunction().arn,
+                  },
+                ]
               : []),
             ...(route.edge?.viewerResponse
               ? [
-                {
-                  eventType: "viewer-response",
-                  functionArn: createCfResponseFunction(
-                    path,
-                    route.edge.viewerResponse,
-                  ).arn,
-                },
-              ]
+                  {
+                    eventType: "viewer-response",
+                    functionArn: createCfResponseFunction(
+                      path,
+                      route.edge.viewerResponse,
+                    ).arn,
+                  },
+                ]
               : []),
           ],
           ...("url" in route ? urlDefaultConfig : bucketDefaultConfig),

@@ -210,7 +210,7 @@ export interface SsrSiteArgs extends BaseSsrSiteArgs {
          * header. The given code will be injected at the end of this function.
          *
          * ```js
-         * function handler(event) {
+         * async function handler(event) {
          *   // Default behavior code
          *
          *   // User injected code
@@ -272,7 +272,7 @@ export interface SsrSiteArgs extends BaseSsrSiteArgs {
          * the provided code.
          *
          * ```js
-         * function handler(event) {
+         * async function handler(event) {
          *   // User injected code
          *
          *   return event.response;
@@ -915,7 +915,7 @@ export function createServersAndDistribution(
             runtime: "cloudfront-js-2.0",
             keyValueStoreAssociations: config.apply((v) => v?.kvStores ?? []),
             code: interpolate`
-function handler(event) {
+async function handler(event) {
   ${injections.join("\n")}
   ${config.apply((v) => v?.injection ?? "")}
   return event.request;
