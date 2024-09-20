@@ -528,17 +528,17 @@ export class CognitoUserPool extends Component implements Link.Linkable {
                     triggers.customEmailSender === undefined
                       ? undefined
                       : {
-                        lambdaArn: createTrigger("customEmailSender")!,
-                        lambdaVersion: "V1_0",
-                      },
+                          lambdaArn: createTrigger("customEmailSender")!,
+                          lambdaVersion: "V1_0",
+                        },
                   customMessage: createTrigger("customMessage"),
                   customSmsSender:
                     triggers.customSmsSender === undefined
                       ? undefined
                       : {
-                        lambdaArn: createTrigger("customSmsSender")!,
-                        lambdaVersion: "V1_0",
-                      },
+                          lambdaArn: createTrigger("customSmsSender")!,
+                          lambdaVersion: "V1_0",
+                        },
                   defineAuthChallenge: createTrigger("defineAuthChallenge"),
                   postAuthentication: createTrigger("postAuthentication"),
                   postConfirmation: createTrigger("postConfirmation"),
@@ -548,9 +548,9 @@ export class CognitoUserPool extends Component implements Link.Linkable {
                     triggers.preTokenGeneration === undefined
                       ? undefined
                       : {
-                        lambdaArn: createTrigger("preTokenGeneration")!,
-                        lambdaVersion: triggers.preTokenGenerationVersion,
-                      },
+                          lambdaArn: createTrigger("preTokenGeneration")!,
+                          lambdaVersion: triggers.preTokenGenerationVersion,
+                        },
                   userMigration: createTrigger("userMigration"),
                   verifyAuthChallengeResponse: createTrigger(
                     "verifyAuthChallengeResponse",
@@ -626,6 +626,31 @@ export class CognitoUserPool extends Component implements Link.Linkable {
    *
    * ```ts
    * userPool.addClient("Web");
+   * ```
+   *
+   * And if you are using an identity provider.
+   *
+   * ```js title="sst.config.ts"
+   * const provider = userPool.addIdentityProvider("MyProvider", {
+   *   type: "oidc",
+   *   details: {
+   *     authorize_scopes: "email profile",
+   *     client_id: "your-client-id",
+   *     client_secret: "your-client-secret"
+   *   },
+   * });
+   * ```
+   * :::tip
+   * Don't hardcode the provider name. Reference it from the `providerName` property.
+   * :::
+   *
+   * Make sure to pass in the provider's `providerName` instead of hardcoding it. This
+   * ensures the client is created after the provider.
+   *
+   * ```ts
+   * userPool.addClient("Web", {
+   *   providers: [provider.providerName]
+   * });
    * ```
    */
   public addClient(name: string, args?: CognitoUserPoolClientArgs) {
