@@ -554,6 +554,51 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-nextjs-
 
 
 ---
+## AWS Next.js streaming
+
+An example of how to use streaming Next.js RSC. Uses `Suspense` to stream an async component.
+
+```tsx title="app/page.tsx"
+<Suspense fallback={<div>Loading...</div>}>
+  <Friends />
+</Suspense>
+```
+
+For this demo we also need to make sure the route is not statically built.
+
+```ts title="app/page.tsx"
+export const dynamic = "force-dynamic";
+```
+
+This is deployed with OpenNext, which needs a config to enable streaming.
+
+```ts title="open-next.config.ts" {4}
+export default {
+  default: {
+    override: {
+      wrapper: "aws-lambda-streaming"
+    }
+  }
+};
+```
+
+You should see the _friends_ section load after a 3 second delay.
+
+:::note
+Safari handles streaming differently than other browsers.
+:::
+
+Safari uses a [different heuristic](https://bugs.webkit.org/show_bug.cgi?id=252413) to
+determine when to stream data. You need to render _enough_ initial HTML to trigger streaming.
+This is typically only a problem for demo apps.
+```ts title="sst.config.ts"
+new sst.aws.Nextjs("MyWeb");
+```
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-nextjs-stream).
+
+
+---
 ## Prisma in Lambda
 
 To use Prisma in a Lambda function you need to
@@ -767,7 +812,7 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-queue).
 
 
 ---
-## AWS Remix Streaming
+## AWS Remix streaming
 
 Follows the [Remix Streaming](https://remix.run/docs/en/main/guides/streaming) guide to create
 an app that streams data.
