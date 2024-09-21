@@ -520,7 +520,7 @@ export class Cdn extends Component {
           // },
           // ```
           //
-          // Ideally, we don't santize the logical name. But that's a breaking change.
+          // Ideally, we don't sanitize the logical name. But that's a breaking change.
           //
           // As a workaround, starting v3.0.79, we prefix the logical name with a unique
           // index for records with logical names that will trash.

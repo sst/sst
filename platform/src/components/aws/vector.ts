@@ -225,7 +225,7 @@ export class Vector extends Component implements Link.Linkable {
    * @param clusterID The RDS cluster id of the existing Vector database.
    *
    * @example
-   * Imagine you create a vector databse  in the `dev` stage. And in your personal stage `frank`,
+   * Imagine you create a vector database  in the `dev` stage. And in your personal stage `frank`,
    * instead of creating a new database, you want to share the same database from `dev`.
    *
    * ```ts title="sst.config.ts"

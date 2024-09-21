@@ -16,9 +16,9 @@ Deploy just like any other sst project:
 sst deploy --stage production
 ```
 
-### Github Actions
+### GitHub Actions
 
-When deploying from your local machine, your application is built with Docker. If you want to deploy from Github Actions or another CI service, you'll need to use the swift:5.10-amazonlinux2 image.
+When deploying from your local machine, your application is built with Docker. If you want to deploy from GitHub Actions or another CI service, you'll need to use the swift:5.10-amazonlinux2 image.
 
 ## Multiple Targets
 

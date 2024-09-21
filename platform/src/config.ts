@@ -510,7 +510,7 @@ export interface TagEvent {
 }
 
 /**
- * A git event for when a pull request is updated or deleted. For exampple:
+ * A git event for when a pull request is updated or deleted. For example:
  *
  * ```js
  * {

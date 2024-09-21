@@ -15,7 +15,7 @@
  * }
  * ```
  *
- * You can also sepcify a hosted zone ID if you have multiple hosted zones with the same domain.
+ * You can also specify a hosted zone ID if you have multiple hosted zones with the same domain.
  *
  * ```ts
  * {

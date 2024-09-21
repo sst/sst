@@ -656,11 +656,11 @@ function renderType(
     //   "type": "literal",
     //   "value": "arm64"
     // }
-    const santized =
+    const sanitized =
       typeof type.value === "string"
         ? type.value!.replace(/([*:])/g, "\\$1")
         : type.value;
-    return `<code class="symbol">&ldquo;</code><code class="primitive">${santized}</code><code class="symbol">&rdquo;</code>`;
+    return `<code class="symbol">&ldquo;</code><code class="primitive">${sanitized}</code><code class="symbol">&rdquo;</code>`;
   }
   function renderTemplateLiteralType(type: TypeDoc.TemplateLiteralType) {
     // ie. memory: `${number} MB`

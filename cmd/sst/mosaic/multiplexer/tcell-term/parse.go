@@ -428,7 +428,7 @@ func csiEntry(r rune, p *Parser) stateFn {
 		return ground
 	default:
 		// Return to ground on unexpected characters
-		p.emit(fmt.Errorf("unexpected characted: %c", r))
+		p.emit(fmt.Errorf("unexpected character: %c", r))
 		return ground
 	}
 }
@@ -462,7 +462,7 @@ func csiParam(r rune, p *Parser) stateFn {
 		return csiIgnore
 	default:
 		// Return to ground on unexpected characters
-		p.emit(fmt.Errorf("unexpected characted: %c", r))
+		p.emit(fmt.Errorf("unexpected character: %c", r))
 		return ground
 	}
 }
@@ -521,7 +521,7 @@ func csiIntermediate(r rune, p *Parser) stateFn {
 		return ground
 	default:
 		// Return to ground on unexpected characters
-		p.emit(fmt.Errorf("unexpected characted: %c", r))
+		p.emit(fmt.Errorf("unexpected character: %c", r))
 		return ground
 	}
 }
@@ -586,7 +586,7 @@ func dcsIntermediate(r rune, p *Parser) stateFn {
 		return dcsPassthrough
 	default:
 		// Return to ground on unexpected characters
-		p.emit(fmt.Errorf("unexpected characted: %c", r))
+		p.emit(fmt.Errorf("unexpected character: %c", r))
 		return ground
 	}
 }
@@ -617,7 +617,7 @@ func dcsParam(r rune, p *Parser) stateFn {
 		return dcsPassthrough
 	default:
 		// Return to ground on unexpected characters
-		p.emit(fmt.Errorf("unexpected characted: %c", r))
+		p.emit(fmt.Errorf("unexpected character: %c", r))
 		return ground
 	}
 }

@@ -146,7 +146,7 @@ func (r *PythonRuntime) Run(ctx context.Context, input *runtime.RunInput) (runti
 	// Get the directory of the Handler
 	handlerDir := filepath.Dir(filepath.Join(input.Build.Out, input.Build.Handler))
 
-	// We have to manually construct the dependencies to install because uv curerntly does not support importing a
+	// We have to manually construct the dependencies to install because uv currently does not support importing a
 	// foreign pyproject.toml as a configuration file and we have to run the python-runtime file rather than
 	// the handler file
 

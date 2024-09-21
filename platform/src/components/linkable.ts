@@ -261,7 +261,7 @@ export class Linkable<T extends Record<string, any>>
    * This overrides the built-in link and lets you create your own.
    *
    * :::tip
-   * You can modfiy the permissions granted by a linked resource.
+   * You can modify the permissions granted by a linked resource.
    * :::
    *
    * In the above example, we're modifying the permissions to access a linked `sst.aws.Bucket`

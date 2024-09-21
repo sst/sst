@@ -55,7 +55,7 @@ export default {
       if (SST_ASSET_MANIFEST[pathname]) {
         headers.set("etag", SST_ASSET_MANIFEST[pathname]);
         headers.set("content-type", object.metadata.contentType);
-        headers.set("cache-controle", object.metadata.cacheControl);
+        headers.set("cache-control", object.metadata.cacheControl);
       }
       const response = new Response(object.value, {
         status,

@@ -132,7 +132,7 @@ Say we've deployed a `Function` with it set to `{ timeout: 10 seconds" }`. At th
 
 - We now go change the timeout to 20 seconds in the AWS Console.
   - The config and state are out of sync with the resource since they are still set to 10 seconds.
-- Now if we deploy our app, the config will be comapred to the state.
+- Now if we deploy our app, the config will be compared to the state.
   - It'll find no differences and so it won't update the resource.
 
 The config and state will stay out of sync with the resource.

@@ -469,8 +469,8 @@ var root = &cli.Command{
 				{
 					Name: "target",
 					Description: cli.Description{
-						Short: "Comma seperated list of target URNs",
-						Long:  "Comma seperated list of target URNs.",
+						Short: "Comma separated list of target URNs",
+						Long:  "Comma separated list of target URNs.",
 					},
 				},
 			},
@@ -501,7 +501,7 @@ var root = &cli.Command{
 					"This is useful for cases when you pull some changes from a teammate and want to",
 					"see what will be deployed; before doing the actual deploy.",
 					"",
-					"Optionall, you can diff a specific set of resources by passing in a list of their URNs.",
+					"Optionally, you can diff a specific set of resources by passing in a list of their URNs.",
 					"",
 					"```bash frame=\"none\"",
 					"sst diff --target urn:pulumi:prod::www::sst:aws:Astro::Astro,urn:pulumi:prod::www::sst:aws:Bucket::Assets",
@@ -522,8 +522,8 @@ var root = &cli.Command{
 				{
 					Name: "target",
 					Description: cli.Description{
-						Short: "Comma seperated list of target URNs",
-						Long:  "Comma seperated list of target URNs.",
+						Short: "Comma separated list of target URNs",
+						Long:  "Comma separated list of target URNs.",
 					},
 				},
 				{
@@ -852,8 +852,8 @@ var root = &cli.Command{
 					Name: "target",
 					Type: "string",
 					Description: cli.Description{
-						Short: "Comma seperated list of target URNs",
-						Long:  "Comma seperated list of target URNs.",
+						Short: "Comma separated list of target URNs",
+						Long:  "Comma separated list of target URNs.",
 					},
 				},
 			},
@@ -991,8 +991,8 @@ var root = &cli.Command{
 					Name: "target",
 					Type: "string",
 					Description: cli.Description{
-						Short: "Comma seperated list of target URNs",
-						Long:  "Comma seperated list of target URNs.",
+						Short: "Comma separated list of target URNs",
+						Long:  "Comma separated list of target URNs.",
 					},
 				},
 			},
