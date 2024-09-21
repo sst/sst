@@ -61,6 +61,22 @@ Here's how you can contribute:
 - Find a bug? Open an issue
 - Feature request? Submit a PR 
 
+## Running Locally
+
+1. Clone the repo
+2. `bun install`
+3. `cd platform && bun run build`
+
+Now you can run the CLI locally on any of the `examples/` apps.
+
+```bash
+cd examples/aws-api
+go run ../../cmd/sst <command>
+```
+
+If you want to build the CLI, you can run `go build ./cmd/sst` from the root. This will create a
+`sst` binary that you can use.
+
 ---
 
 **Join our community** [Discord](https://sst.dev/discord) | [YouTube](https://www.youtube.com/c/sst-dev) | [Twitter](https://twitter.com/SST_dev)
