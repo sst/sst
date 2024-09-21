@@ -490,6 +490,12 @@ export class Nuxt extends Component implements Link.Linkable {
               origin: "server",
             },
             {
+              pattern: "_server/",
+              cacheType: "server",
+              cfFunction: "serverCfFunction",
+              origin: "server",
+            },
+            {
               pattern: "*",
               cacheType: "server",
               cfFunction: "serverCfFunction",
