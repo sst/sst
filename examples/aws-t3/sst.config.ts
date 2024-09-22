@@ -78,7 +78,7 @@
  * "db:generate": "sst shell drizzle-kit generate",
  * "db:migrate": "sst shell drizzle-kit migrate",
  * "db:push": "sst shell drizzle-kit push",
- * "db:studio": "sst shel drizzle-kit studio",
+ * "db:studio": "sst shell drizzle-kit studio",
  * ```
  *
  * So running `npm run db:push` will run Drizzle Kit with the right credentials.
