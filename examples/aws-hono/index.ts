@@ -1,5 +1,4 @@
 import { Resource } from "sst";
-import {} from "sst";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
   S3Client,
@@ -13,10 +12,6 @@ import { handle } from "hono/aws-lambda";
 const s3 = new S3Client({});
 
 const app = new Hono()
-  .put("/test", async (c) => {
-    const body = await c.req.text();
-    return new Response(body.length.toString());
-  })
   .get("/", async (c) => {
     const command = new PutObjectCommand({
       Key: crypto.randomUUID(),
