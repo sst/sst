@@ -123,9 +123,48 @@ type StackCommandEvent struct {
 }
 
 type Error struct {
-	Message string `json:"message"`
-	URN     string `json:"urn"`
+	Message string   `json:"message"`
+	URN     string   `json:"urn"`
+	Help    []string `json:"help"`
 }
+
+type CommonError struct {
+	Code    string   `json:"code"`
+	Message string   `json:"message"`
+	Short   []string `json:"short"`
+	Long    []string `json:"long"`
+}
+
+var CommonErrors = []CommonError{
+	{
+		Code: "TooManyCacheBehaviors",
+		Message: "TooManyCacheBehaviors: Your request contains more CacheBehaviors than are allowed per distribution",
+		Short: []string{
+			"There are too many top-level files and directories inside your app's public asset folder. Move some of them inside subdirectories.",
+			"Learn more about this https://sst.dev/docs/common-errors#toomanycachebehaviors",
+		},
+		Long: []string{
+			"This error usually happens to SvelteKit, SolidStart, Nuxt, and Analog apps.",
+			"CloudFront distributions have a limit of 25 cache behaviors per distribution. Each top-level file and directory inside your app's asset folder creates a cache behavior. For example, in the case of a SvelteKit app, the static assets are in the `static` folder. If you have two files in it, it creates 2 cache behaviors.",
+			"```",
+			"static/",
+			"├── favicon.png  # Cache behavior for /favicon.png",
+			"└── logo.png  		# Cache behavior for /logo.png",
+			"```",
+			"If you have too many files, it creates too many cache behaviors and hits the limit.",
+			"The solution is to move some of the files into subdirectories. For example, by moving the files in the `images` folder, it will only create 1 cache behavior.",
+			"```",
+			"static/",
+			"└── images/      # Cache behavior for /images/*",
+			"    ├── logo.png",
+			"    └── logo.png",
+			"```",
+			"Learn more about CloudFront limits [here](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-web-distributions).",
+			"Alternatively, you can request a limit increase via the AWS Support.",
+		},
+	},
+};
+
 
 var ErrStackRunFailed = fmt.Errorf("stack run had errors")
 var ErrStageNotFound = fmt.Errorf("stage not found")
@@ -405,9 +444,19 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 					if strings.Contains(event.DiagnosticEvent.Message, "failed to register new resource") {
 						break
 					}
+
+					// check if the error is a common error
+					help := []string{}
+					for _, commonError := range CommonErrors {
+						if strings.Contains(event.DiagnosticEvent.Message, commonError.Message) {
+							help = append(help, commonError.Short...)
+						}
+					}
+
 					errors = append(errors, Error{
 						Message: event.DiagnosticEvent.Message,
 						URN:     event.DiagnosticEvent.URN,
+						Help:    help,
 					})
 					telemetry.Track("cli.resource.error", map[string]interface{}{
 						"error": event.DiagnosticEvent.Message,

@@ -162,6 +162,7 @@ const sidebar = [
     ],
   },
   { label: "Examples", slug: "docs/examples" },
+  { label: "Common Errors", slug: "docs/common-errors" },
   {
     label: "Deprecated",
     collapsed: true,

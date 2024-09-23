@@ -12,7 +12,9 @@
     "generate-components": "tsx generate.ts components",
     "generate-examples": "tsx generate.ts examples",
     "generate-cli": "bun generate-cli-json && tsx generate.ts cli",
-    "generate-cli-json": "go run ../cmd/sst introspect > cli-doc.json"
+    "generate-cli-json": "go run ../cmd/sst introspect > cli-doc.json",
+    "generate-errors": "bun generate-errors-json && tsx generate.ts common-errors",
+    "generate-errors-json": "go run ../cmd/sst common-errors > common-errors-doc.json"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.2",
