@@ -1218,10 +1218,21 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    *
    * @param args Configure the authorizer.
    * @example
-   * Add a JWT authorizer.
+   * Add a Lambda authorizer.
    *
    * ```js title="sst.config.ts"
    * api.addAuthorizer({
+   *   name: "myAuthorizer",
+   *   lambda: {
+   *     function: "src/authorizer.index"
+   *   }
+   * });
+   * ```
+   *
+   * Add a JWT authorizer.
+   *
+   * ```js title="sst.config.ts"
+   * const authorizer = api.addAuthorizer({
    *   name: "myAuthorizer",
    *   jwt: {
    *     issuer: "https://issuer.com/",
@@ -1231,13 +1242,29 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
    * });
    * ```
    *
-   * Add a Lambda authorizer.
+   * Add a Cognito UserPool as a JWT authorizer.
    *
    * ```js title="sst.config.ts"
-   * api.addAuthorizer({
-   *   name: "myAuthorizer",
-   *   lambda: {
-   *     function: "src/authorizer.index"
+   * const pool = new sst.aws.CognitoUserPool("MyUserPool");
+   * const poolClient = userPool.addClient("Web");
+   *
+   * const authorizer = api.addAuthorizer({
+   *   name: "myCognitoAuthorizer",
+   *   jwt: {
+   *     issuer: $interpolate`https://cognito-idp.${aws.getRegionOutput().name}.amazonaws.com/${pool.id}`,
+   *     audiences: [poolClient.id]
+   *   }
+   * });
+   * ```
+   *
+   * Now you can use the authorizer in your routes.
+   *
+   * ```js title="sst.config.ts"
+   * api.route("GET /", "src/get.handler", {
+   *   auth: {
+   *     jwt: {
+   *       authorizer: authorizer.id
+   *     }
    *   }
    * });
    * ```
