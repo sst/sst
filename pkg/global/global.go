@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/pulumi/pulumi/sdk/v3"
+	"github.com/sst/ion/pkg/flag"
 )
 
 var PULUMI_VERSION = "v" + sdk.Version.String()
@@ -132,6 +133,9 @@ func CertPath() string {
 }
 
 func NeedsBun() bool {
+	if flag.NO_BUN {
+		return false
+	}
 	path := BunPath()
 	slog.Info("checking for bun", "path", path)
 	if _, err := os.Stat(path); err != nil {

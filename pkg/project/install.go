@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sst/ion/pkg/flag"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/npm"
 	"golang.org/x/sync/errgroup"
@@ -154,7 +155,7 @@ func (p *Project) writeTypes() error {
 func (p *Project) fetchDeps() error {
 	slog.Info("fetching deps")
 	manager := global.BunPath()
-	if os.Getenv("NO_BUN") != "" {
+	if flag.NO_BUN {
 		manager = "npm"
 	}
 	cmd := exec.Command(manager, "install")
