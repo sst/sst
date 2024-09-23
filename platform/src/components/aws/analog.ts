@@ -136,7 +136,7 @@ export interface AnalogArgs extends SsrSiteArgs {
    */
   invalidation?: SsrSiteArgs["invalidation"];
   /**
-   * Set in your Analog app. These are made available:
+   * Set [environment variables](https://analogjs.org/docs/guides/migrating#using-environment-variables) in your Analog app. These are made available:
    *
    * 1. In `ng build`, they are loaded into `process.env`.
    * 2. Locally while running `sst dev ng serve`.
@@ -145,12 +145,15 @@ export interface AnalogArgs extends SsrSiteArgs {
    * You can also `link` resources to your Analog app and access them in a type-safe way with the [SDK](/docs/reference/sdk/). We recommend linking since it's more secure.
    * :::
    *
+   * Only variables prefixed with `VITE_` are available in the browser.
+   *
    * @example
    * ```js
    * {
    *   environment: {
    *     API_URL: api.url,
-   *     STRIPE_PUBLISHABLE_KEY: "pk_test_123"
+   *     // Accessible in the browser
+   *     VITE_STRIPE_PUBLISHABLE_KEY: "pk_test_123"
    *   }
    * }
    * ```
