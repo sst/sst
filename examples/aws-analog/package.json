@@ -1,5 +1,5 @@
 {
-  "name": "analog-sst",
+  "name": "aws-analog",
   "version": "0.0.0",
   "type": "module",
   "engines": {
@@ -15,8 +15,8 @@
   },
   "private": true,
   "dependencies": {
-    "@analogjs/content": "^1.7.3",
-    "@analogjs/router": "^1.7.3",
+    "@analogjs/content": "^1.8.1",
+    "@analogjs/router": "^1.8.1",
     "@angular/animations": "^18.0.0",
     "@angular/build": "^18.0.0",
     "@angular/common": "^18.0.0",
@@ -27,6 +27,8 @@
     "@angular/platform-browser-dynamic": "^18.0.0",
     "@angular/platform-server": "^18.0.0",
     "@angular/router": "^18.0.0",
+    "@aws-sdk/client-s3": "^3.654.0",
+    "@aws-sdk/s3-request-presigner": "^3.654.0",
     "front-matter": "^4.0.2",
     "marked": "^5.0.2",
     "marked-gfm-heading-id": "^3.1.0",
@@ -34,17 +36,17 @@
     "marked-mangle": "^1.1.7",
     "prismjs": "^1.29.0",
     "rxjs": "~7.8.0",
+    "sst": "latest",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"
   },
   "devDependencies": {
-    "@analogjs/platform": "^1.7.3",
-    "@analogjs/vite-plugin-angular": "^1.7.3",
-    "@analogjs/vitest-angular": "^1.7.3",
+    "@analogjs/platform": "^1.8.1",
+    "@analogjs/vite-plugin-angular": "^1.8.1",
+    "@analogjs/vitest-angular": "^1.8.1",
     "@angular/cli": "^18.0.0",
     "@angular/compiler-cli": "^18.0.0",
     "jsdom": "^22.0.0",
-    "sst": "latest",
     "typescript": "~5.4.2",
     "vite": "^5.0.0",
     "vite-tsconfig-paths": "^4.2.0",

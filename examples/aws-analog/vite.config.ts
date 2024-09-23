@@ -11,13 +11,11 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     mainFields: ['module'],
   },
-  plugins: [
-    analog({
-      nitro: {
-        preset: 'aws-lambda',
-      }
-    })
-  ],
+  plugins: [analog({
+    nitro: {
+      preset: "aws-lambda",
+    }
+  })],
   test: {
     globals: true,
     environment: 'jsdom',

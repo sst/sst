@@ -1,0 +1,194 @@
+---
+title: Analog on AWS with SST
+description: Create and deploy an Analog app to AWS with SST.
+---
+
+We are going to create an [Analog app](https://analogjs.org/), add an S3 Bucket for file uploads, and deploy it to AWS using SST.
+
+:::tip[View source]
+You can [view the source](https://github.com/sst/ion/tree/dev/examples/aws-analog) of this example in our repo.
+:::
+
+Before you get started, make sure to [configure your AWS credentials](/docs/iam-credentials#credentials).
+
+---
+
+## 1. Create a project
+
+Let's start by creating our project.
+
+```bash
+npm create analog@latest
+cd aws-analog
+```
+
+We are picking the **Full-stack Application** option and **not adding Tailwind**.
+
+---
+
+#### Init SST
+
+Now let's initialize SST in our app.
+
+```bash
+npx sst@latest init
+npm install
+```
+
+Select the defaults and pick **AWS**. This'll create a `sst.config.ts` file in your project root.
+
+It'll also ask you to update your `vite.config.ts` with something like this.
+
+```diff lang="ts" title="vite.config.ts"
+plugins: [analog({
++  nitro: {
++    preset: "aws-lambda",
++  }
+})],
+```
+
+---
+
+#### Start dev mode
+
+Run the following to start dev mode. This'll start SST and your Analog app.
+
+```bash
+npx sst dev
+```
+
+Once complete, click on **MyWeb** in the sidebar and open your Analog app in your browser.
+
+---
+
+## 2. Add an S3 Bucket
+
+Let's allow public `access` to our S3 Bucket for file uploads. Update your `sst.config.ts`.
+
+```js title="sst.config.ts"
+const bucket = new sst.aws.Bucket("MyBucket", {
+  access: "public"
+});
+```
+
+Add this above the `Analog` component.
+
+#### Link the bucket
+
+Now, link the bucket to our Analog app.
+
+```js title="sst.config.ts" {2}
+new sst.aws.Analog("MyWeb", {
+  link: [bucket],
+});
+```
+
+---
+
+## 3. Generate a pre-signed URL
+
+When our app loads, we'll generate a pre-signed URL for the file upload on the server. Create a new `src/pages/index.server.ts` with the following.
+
+```ts title="src/pages/index.server.ts" {10}
+import { Resource } from 'sst';
+import { PageServerLoad } from '@analogjs/router';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+
+export const load = async ({ }: PageServerLoad) => {
+  const command = new PutObjectCommand({
+    Key: crypto.randomUUID(),
+    // @ts-ignore: Generated on deploy
+    Bucket: Resource.MyBucket.name,
+  });
+
+  const url = await getSignedUrl(new S3Client({}), command);
+
+  return {
+    url
+  };
+};
+```
+
+:::tip
+We are directly accessing our S3 bucket with `Resource.MyBucket.name`.
+:::
+
+And install the npm packages.
+
+```bash
+npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+```
+
+---
+
+## 4. Create an upload form
+
+Add the upload form client in `src/pages/index.page.ts`. Replace it with the following.
+
+```ts title="src/pages/index.page.ts" {6,20}
+import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { injectLoad } from '@analogjs/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+
+import { load } from './index.server';
+
+@Component({
+  selector: 'app-home',
+  standalone: true,
+  imports: [FormsModule],
+  template: `
+    <form (ngSubmit)="onSubmit($event)">
+      <input type="file" name="file">
+      <button type="submit">Upload</button>
+    </form>
+  `,
+})
+export default class HomeComponent {
+  data = toSignal(injectLoad<typeof load>(), { requireSync: true });
+
+  async onSubmit(event: Event): Promise<void> {
+    const file = (event.target as HTMLFormElement)['file'].files?.[0]!;
+
+    const image = await fetch(this.data().url, {
+      body: file,
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type,
+        'Content-Disposition': `attachment; filename="${file.name}"`,
+      },
+    });
+
+    window.location.href = image.url.split('?')[0];
+  }
+}
+```
+
+Here we are injecting the pre-signed URL from the server into the component.
+
+Head over to the local Analog app site in your browser, `http://localhost:5173` and try **uploading an image**. You should see it upload and then download the image.
+
+---
+
+## 5. Deploy your app
+
+Now let's deploy your app to AWS.
+
+```bash
+npx sst deploy --stage production
+```
+
+You can use any stage name here but it's good to create a new stage for production.
+
+---
+
+## Connect the console
+
+As a next step, you can setup the [SST Console](/docs/console/) to _**git push to deploy**_ your app and monitor it for any issues. 
+
+![SST Console Autodeploy](../../../../../assets/docs/start/sst-console-autodeploy.png)
+
+You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
+
+

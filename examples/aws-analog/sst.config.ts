@@ -9,11 +9,12 @@ export default $config({
     };
   },
   async run() {
+    const bucket = new sst.aws.Bucket("MyBucket", {
+      access: "public"
+    });
+
     new sst.aws.Analog("MyWeb", {
-      dev: {
-        command: "npm run start"
-      },
+      link: [bucket],
     });
   },
 });
-
