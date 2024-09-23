@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 )
 
 type Package struct {
@@ -18,7 +19,11 @@ type Package struct {
 
 func Get(name string, version string) (*Package, error) {
 	slog.Info("getting package", "name", name, "version", version)
-	url := "https://registry.npmjs.org/" + name + "/" + version
+	baseUrl := os.Getenv("NPM_REGISTRY")
+	if baseUrl == "" {
+		baseUrl = "https://registry.npmjs.org"
+	}
+	url := fmt.Sprintf("%s/%s/%s", baseUrl, name, version)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
