@@ -1,0 +1,43 @@
+---
+import type { Character } from "./character";
+
+const friends: Character[] = await new Promise((resolve) => setTimeout(() => {
+	setTimeout(() => {
+		resolve(
+			[
+				{ name: "Patrick Star", image: "patrick.png" },
+				{ name: "Sandy Cheeks", image: "sandy.png" },
+				{ name: "Squidward Tentacles", image: "squidward.png" },
+				{ name: "Mr. Krabs", image: "mr-krabs.png" },
+			]
+		);
+	}, 3000);
+}));
+---
+<div class="grid">
+  {friends.map((friend) => (
+    <div class="card">
+      <img class="img" src={friend.image} alt={friend.name} />
+      <p>{friend.name}</p>
+    </div>
+  ))}
+</div>
+
+<style>
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px;
+}
+.card {
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+}
+.img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+</style>

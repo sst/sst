@@ -1,0 +1,19 @@
+{
+  "name": "aws-astro-stream",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "astro": "astro",
+    "build": "astro check && astro build",
+    "dev": "astro dev",
+    "preview": "astro preview",
+    "start": "astro dev"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.3",
+    "astro": "^4.15.9",
+    "astro-sst": "2.43.5",
+    "sst": "latest",
+    "typescript": "^5.6.2"
+  }
+}

@@ -1,0 +1,35 @@
+---
+import type { Character } from "./character";
+
+const spongebob: Character = {
+	name: "SpongeBob SquarePants",
+	description: "SpongeBob SquarePants is the main character of the popular animated TV series. He's a cheerful sea sponge who lives in a pineapple house in the underwater city of Bikini Bottom. SpongeBob works as a fry cook at the Krusty Krab and loves jellyfishing with his best friend Patrick Star.",
+	image: "spongebob.png",
+};
+---
+<section class="section">
+  <h1>{spongebob.name}</h1>
+  <div class="content">
+    <div class="text">
+      <p>{spongebob.description}</p>
+    </div>
+    <img src={spongebob.image} alt={spongebob.name} />
+  </div>
+</section>
+
+<style>
+.section {
+  background-color: #fff;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+}
+.content {
+  display: flex;
+  align-items: center;
+}
+.text {
+  flex: 1;
+  padding-right: 20px;
+}
+</style>
