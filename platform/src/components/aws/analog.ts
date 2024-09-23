@@ -393,9 +393,7 @@ export class Analog extends Component implements Link.Linkable {
     const outputPath = buildApp(parent, name, args, sitePath);
     const preset = outputPath.apply((output) => {
       const nitro = JSON.parse(
-        fs
-          .readFileSync(path.join(output, "dist/analog/nitro.json"))
-          .toString(),
+        fs.readFileSync(path.join(output, "dist/analog/nitro.json")).toString(),
       );
       if (!["aws-lambda"].includes(nitro.preset)) {
         throw new VisibleError(
@@ -447,9 +445,19 @@ export class Analog extends Component implements Link.Linkable {
     }
 
     function loadBuildMetadata() {
-      return outputPath.apply(() => ({
-        assetsPath: path.join("dist/analog", "public"),
-      }));
+      return outputPath.apply((outputPath) => {
+        const assetsPath = path.join("dist/analog", "public");
+
+        return {
+          assetsPath,
+          // create 1 behaviour for each top level asset file/folder
+          staticRoutes: fs
+            .readdirSync(path.join(outputPath, assetsPath), {
+              withFileTypes: true,
+            })
+            .map((item) => (item.isDirectory() ? `${item.name}/*` : item.name)),
+        };
+      });
     }
 
     function buildPlan() {
@@ -504,13 +512,14 @@ export class Analog extends Component implements Link.Linkable {
               cfFunction: "serverCfFunction",
               origin: "server",
             },
-            {
-              pattern: "*",
-              cacheType: "server",
-              cfFunction: "serverCfFunction",
-              origin: "fallthrough",
-              allowedMethods: ["GET", "HEAD", "OPTIONS"],
-            },
+            ...buildMeta.staticRoutes.map(
+              (route) =>
+                ({
+                  cacheType: "static",
+                  pattern: route,
+                  origin: "s3",
+                }) as const,
+            ),
           ],
         });
       });
