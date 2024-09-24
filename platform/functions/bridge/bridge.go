@@ -55,7 +55,6 @@ var ENV_BLACKLIST = map[string]bool{
 	"LAMBDA_RUNTIME_DIR":              true,
 	"LANG":                            true,
 	"NODE_PATH":                       true,
-	"TZ":                              true,
 	"SHLVL":                           true,
 	"AWS_XRAY_DAEMON_PORT":            true,
 	"AWS_XRAY_CONTEXT_MISSING":        true,
