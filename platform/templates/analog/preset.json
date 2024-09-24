@@ -4,6 +4,19 @@
       "type": "copy"
     },
     {
+      "type": "patch",
+      "properties": {
+        "file": "package.json",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/overrides/nitropack",
+            "value": "npm:nitropack-nightly@latest"
+          }
+        ]
+      }
+    },
+    {
       "type": "npm",
       "properties": {
         "file": "package.json",
