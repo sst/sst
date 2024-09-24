@@ -258,7 +258,7 @@ export const useNodeHandler = (): RuntimeHandler => {
           const cmd = [
             "npm install",
             "--omit=dev",
-            "--no-optional",
+            "--omit=optional",
             "--force",
             "--platform=linux",
             input.props.architecture === "arm_64"
