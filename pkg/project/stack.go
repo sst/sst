@@ -137,34 +137,36 @@ type CommonError struct {
 
 var CommonErrors = []CommonError{
 	{
-		Code: "TooManyCacheBehaviors",
+		Code:    "TooManyCacheBehaviors",
 		Message: "TooManyCacheBehaviors: Your request contains more CacheBehaviors than are allowed per distribution",
 		Short: []string{
-			"There are too many top-level files and directories inside your app's public asset folder. Move some of them inside subdirectories.",
+			"There are too many top-level files and directories inside your app's public asset directory. Move some of them inside subdirectories.",
 			"Learn more about this https://sst.dev/docs/common-errors#toomanycachebehaviors",
 		},
 		Long: []string{
-			"This error usually happens to SvelteKit, SolidStart, Nuxt, and Analog apps.",
-			"CloudFront distributions have a limit of 25 cache behaviors per distribution. Each top-level file and directory inside your app's asset folder creates a cache behavior. For example, in the case of a SvelteKit app, the static assets are in the `static` folder. If you have two files in it, it creates 2 cache behaviors.",
+			"This error usually happens to `SvelteKit`, `SolidStart`, `Nuxt`, and `Analog` components.",
+			"",
+			"CloudFront distributions have a **limit of 25 cache behaviors** per distribution. Each top-level file or directory in your frontend app's asset directory creates a cache behavior.",
+			"",
+			"For example, in the case of SvelteKit, the static assets are in the `static/` directory. If you have a file and a directory in it, it'll create 2 cache behaviors.",
 			"```",
 			"static/",
-			"├── favicon.png  # Cache behavior for /favicon.png",
-			"└── logo.png  		# Cache behavior for /logo.png",
+			"├── icons/       # Cache behavior for /icons/*",
+			"└── logo.png     # Cache behavior for /logo.png",
 			"```",
-			"If you have too many files, it creates too many cache behaviors and hits the limit.",
-			"The solution is to move some of the files into subdirectories. For example, by moving the files in the `images` folder, it will only create 1 cache behavior.",
+			"So if you have many of these at the top-level, you'll hit the limit. You can request a limit increase through the AWS Support.",
+			"",
+			"Alternatively, you can move some of these into subdirectories. For example, moving them to an `images/` directory, will only create 1 cache behavior.",
 			"```",
 			"static/",
 			"└── images/      # Cache behavior for /images/*",
-			"    ├── logo.png",
+			"    ├── icons/",
 			"    └── logo.png",
 			"```",
-			"Learn more about CloudFront limits [here](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-web-distributions).",
-			"Alternatively, you can request a limit increase via the AWS Support.",
+			"Learn more about these [CloudFront limits](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-web-distributions).",
 		},
 	},
-};
-
+}
 
 var ErrStackRunFailed = fmt.Errorf("stack run had errors")
 var ErrStageNotFound = fmt.Errorf("stage not found")

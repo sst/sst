@@ -94,6 +94,7 @@
   border-inline-start: 5px solid var(--divider-color);
   padding-inline-start: 1rem;
   font-size: var(--sl-text-h4);
+  color: var(--color-text-secondary);
 }
 
 /**
