@@ -7,12 +7,16 @@ authors = [
 ]
 dependencies = [
     "python-dateutil>=2.9.0.post0",
-    "sst-sdk",
+    "sst",
 ]
 
 # It is recommended to specify your python version to match your Lambda runtime otherwise you may
 # encounter issues with dependencies.
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.12"
 
 [tool.uv.sources]
-sst-sdk = { git = "https://github.com/sst/ion.git", subdirectory = "sdk/python" }
+# TODO: Before merging this PR, replace with SST's own source
+sst = { git = "https://github.com/walln/ion.git", subdirectory = "sdk/python", branch = "walln/python-fixes" }
+
+[tool.setuptools]
+py-modules = []

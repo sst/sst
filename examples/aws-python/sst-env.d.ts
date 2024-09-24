@@ -5,6 +5,10 @@ import "sst"
 export {}
 declare module "sst" {
   export interface Resource {
+    "MyLinkableValue": {
+      "foo": string
+      "type": "sst.sst.Linkable"
+    }
     "MyPythonFunction": {
       "name": string
       "type": "sst.aws.Function"

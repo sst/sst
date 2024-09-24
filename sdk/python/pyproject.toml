@@ -1,5 +1,5 @@
 [project]
-name = "sst-sdk"
+name = "sst"
 version = "0.1.0"
 description = "SST SDK"
 readme = "README.md"
