@@ -91,7 +91,7 @@ func (c *Cli) InitProject() (*project.Project, error) {
 	}
 
 	if err := p.LoadHome(); err != nil {
-		return nil, util.NewReadableError(err, err.Error())
+		return nil, err
 	}
 
 	app := p.App()

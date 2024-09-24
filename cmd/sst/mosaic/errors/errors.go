@@ -31,9 +31,10 @@ func Transform(err error) error {
 		project.ErrVersionMismatch,
 	}
 
-	match, ok := mapping[err]
-	if ok {
-		return util.NewReadableError(err, match)
+	for compare, msg := range mapping {
+		if errors.Is(err, compare) {
+			return util.NewReadableError(err, msg)
+		}
 	}
 
 	for _, r := range readable {
