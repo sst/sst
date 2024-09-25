@@ -25,7 +25,7 @@ export interface RedisArgs {
    */
   version?: Input<string>;
   /**
-   * The node instance type to use for the Redis cluster.  Check out the [supported instance types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html).
+   * The type of instance to use for the nodes of the Redis cluster. Check out the [supported instance types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html).
    *
    * @default `"t4g.micro"`
    * @example
@@ -72,23 +72,23 @@ export interface RedisArgs {
    * {
    *   vpc: {
    *     subnets: ["subnet-0db7376a7ad4db5fd ", "subnet-06fc7ee8319b2c0ce"],
-   *     securityGroups: ["sg-0399348378a4c256c"],
+   *     securityGroups: ["sg-0399348378a4c256c"]
    *   }
    * }
    * ```
    */
   vpc:
-    | Vpc
-    | Input<{
-        /**
-         * A list of subnet IDs in the VPC to deploy the Redis cluster in.
-         */
-        subnets: Input<Input<string>[]>;
-        /**
-         * A list of VPC security group IDs.
-         */
-        securityGroups: Input<Input<string>[]>;
-      }>;
+  | Vpc
+  | Input<{
+    /**
+     * A list of subnet IDs in the VPC to deploy the Redis cluster in.
+     */
+    subnets: Input<Input<string>[]>;
+    /**
+     * A list of VPC security group IDs.
+     */
+    securityGroups: Input<Input<string>[]>;
+  }>;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -138,19 +138,19 @@ interface RedisRef {
  *
  * ```ts title="app/page.tsx" {1,6,7,12,13}
  * import { Resource } from "sst";
- * import { Cluster } from "ioredis"
+ * import { Cluster } from "ioredis";
  *
  * const client = new Cluster(
  *   [{
  *     host: Resource.MyRedis.host,
- *     port: Resource.MyRedis.port,
+ *     port: Resource.MyRedis.port
  *   }],
  *   {
  *     redisOptions: {
  *       tls: { checkServerIdentity: () => undefined },
  *       username: Resource.MyRedis.username,
- *       password: Resource.MyRedis.password,
- *     },
+ *       password: Resource.MyRedis.password
+ *     }
  *   }
  * );
  * ```
