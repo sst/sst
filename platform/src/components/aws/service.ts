@@ -323,8 +323,8 @@ export class Service extends Component implements Link.Linkable {
         const contextPath = path.join($cli.paths.root, imageArgs.context);
         const dockerfile = imageArgs.dockerfile ?? "Dockerfile";
         const dockerfilePath = imageArgs.dockerfile
-          ? path.join(contextPath, imageArgs.dockerfile)
-          : path.join(contextPath, imageArgs.context, "Dockerfile");
+          ? path.join($cli.paths.root, imageArgs.dockerfile)
+          : path.join($cli.paths.root, imageArgs.context, "Dockerfile");
         const dockerIgnorePath = fs.existsSync(
           path.join(contextPath, `${dockerfile}.dockerignore`),
         )
