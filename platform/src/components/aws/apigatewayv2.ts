@@ -1207,8 +1207,13 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
   }
 
   private buildRouteId(route: string) {
+    // Previously, `this.api.id` was used as the ID. `this.api.id` was of type Output<string>
+    // the value evaluates to the mistake id.
+    // In the future version, we will release a breaking change to fix this.
+    const mistakeId =
+      "Calling [toString] on an [Output<T>] is not supported.\n\nTo get the value of an Output<T> as an Output<string> consider either:\n1: o.apply(v => `prefix${v}suffix`)\n2: pulumi.interpolate `prefix${v}suffix`\n\nSee https://www.pulumi.com/docs/concepts/inputs-outputs for more details.\nThis function may throw in a future version of @pulumi/pulumi.";
     const suffix = logicalName(
-      hashStringToPrettyString([this.api.id, route].join(""), 6),
+      hashStringToPrettyString([mistakeId, route].join(""), 6),
     );
     return `${this.constructorName}Route${suffix}`;
   }
