@@ -1,0 +1,15 @@
+<h1>Upload an Image</h1>
+
+<%= form_with(url: upload_path, local: true, multipart: true) do |form| %>
+  <div>
+    <%= form.label :file %>
+    <%= form.file_field :file %>
+  </div>
+
+  <%= form.submit 'Upload Image' %>
+<% end %>
+
+<% if params[:uploaded_url].present? %>
+  <p>Your file has been uploaded! You can access it here:</p>
+  <%= link_to params[:uploaded_url], params[:uploaded_url], target: '_blank' %>
+<% end %>
