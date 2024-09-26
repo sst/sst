@@ -592,7 +592,7 @@ var root = &cli.Command{
 					"",
 					"You'll need to run `sst install` if you update the `providers` in your config.",
 					"",
-					"By default these packages are fetched from the NPM registry. If you want to use a different registry, you can set the `NPM_REGISTRY` environment variable.",
+					"By default, these packages are fetched from the NPM registry. If you want to use a different registry, you can set the `NPM_REGISTRY` environment variable.",
 					"",
 					"```bash frame=\"none\"",
 					"NPM_REGISTRY=https://my-registry.com sst add aws",
