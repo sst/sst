@@ -65,7 +65,8 @@ Here's how you can contribute:
 
 1. Clone the repo
 2. `bun install`
-3. `cd platform && bun run build`
+3. `go mod tidy`
+4. `cd platform && bun run build`
 
 Now you can run the CLI locally on any of the `examples/` apps.
 
