@@ -32,7 +32,7 @@ func Transform(err error) error {
 	}
 
 	for compare, msg := range mapping {
-		if errors.Is(err, compare) {
+		if errors.Is(err, compare) || err == compare {
 			return util.NewReadableError(err, msg)
 		}
 	}
