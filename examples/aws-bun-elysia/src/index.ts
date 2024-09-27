@@ -10,10 +10,8 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const s3 = new S3Client();
 
-new Elysia()
-  .get("/", async () => {
-    return "Hello World!";
-  })
+const app = new Elysia()
+  .get("/", () => "Hello Elysia")
   .post("/", async ({ body: { file } }: { body: { file: File } }) => {
     const params = {
       Bucket: Resource.MyBucket.name,
@@ -46,4 +44,6 @@ new Elysia()
   })
   .listen(3000);
 
-console.log("Listening on http://0.0.0.0:3000");
+console.log(
+  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+);
