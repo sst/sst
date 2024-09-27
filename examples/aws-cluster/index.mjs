@@ -8,7 +8,6 @@ import {
   GetObjectCommand,
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
-import { client } from "sst/aws/client";
 
 const PORT = 80;
 
@@ -16,8 +15,6 @@ const app = express();
 const s3 = new S3Client({});
 const upload = multer({ storage: multer.memoryStorage() });
 
-console.log(process.env);
-console.log(await client());
 app.get("/", async (req, res) => {
   res.send("Hello World!");
 });
