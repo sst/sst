@@ -531,7 +531,7 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
    */
   public route(
     route: string,
-    handler: string | FunctionArgs | FunctionArn,
+    handler: string | FunctionArgs | Input<FunctionArn>,
     args: ApiGatewayWebSocketRouteArgs = {},
   ) {
     const prefix = this.constructorName;

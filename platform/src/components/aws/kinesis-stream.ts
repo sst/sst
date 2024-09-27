@@ -195,7 +195,7 @@ export class KinesisStream extends Component implements Link.Linkable {
    * ```
    */
   public subscribe(
-    subscriber: string | FunctionArgs | FunctionArn,
+    subscriber: string | FunctionArgs | Input<FunctionArn>,
     args?: KinesisStreamLambdaSubscriberArgs,
   ) {
     return KinesisStream._subscribe(
@@ -255,7 +255,7 @@ export class KinesisStream extends Component implements Link.Linkable {
    */
   public static subscribe(
     streamArn: Input<string>,
-    subscriber: string | FunctionArgs | FunctionArn,
+    subscriber: string | FunctionArgs | Input<FunctionArn>,
     args?: KinesisStreamLambdaSubscriberArgs,
   ) {
     return output(streamArn).apply((streamArn) =>
@@ -271,31 +271,33 @@ export class KinesisStream extends Component implements Link.Linkable {
   private static _subscribe(
     name: string,
     streamArn: Input<string>,
-    subscriber: string | FunctionArgs | FunctionArn,
+    subscriber: string | FunctionArgs | Input<FunctionArn>,
     args: KinesisStreamLambdaSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
-    return all([streamArn, args]).apply(([streamArn, args]) => {
-      const suffix = logicalName(
-        hashStringToPrettyString(
-          [
-            streamArn,
-            JSON.stringify(args.filters ?? {}),
-            typeof subscriber === "string" ? subscriber : subscriber.handler,
-          ].join(""),
-          6,
-        ),
-      );
-      return new KinesisStreamLambdaSubscriber(
-        `${name}Subscriber${suffix}`,
-        {
-          stream: { arn: streamArn },
-          subscriber,
-          ...args,
-        },
-        opts,
-      );
-    });
+    return all([streamArn, subscriber, args]).apply(
+      ([streamArn, subscriber, args]) => {
+        const suffix = logicalName(
+          hashStringToPrettyString(
+            [
+              streamArn,
+              JSON.stringify(args.filters ?? {}),
+              typeof subscriber === "string" ? subscriber : subscriber.handler,
+            ].join(""),
+            6,
+          ),
+        );
+        return new KinesisStreamLambdaSubscriber(
+          `${name}Subscriber${suffix}`,
+          {
+            stream: { arn: streamArn },
+            subscriber,
+            ...args,
+          },
+          opts,
+        );
+      },
+    );
   }
 
   public get name() {

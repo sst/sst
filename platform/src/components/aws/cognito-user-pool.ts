@@ -24,7 +24,7 @@ interface Triggers {
    *
    * Takes the handler path, the function args, or a function ARN.
    */
-  createAuthChallenge?: string | FunctionArgs | FunctionArn;
+  createAuthChallenge?: string | FunctionArgs | Input<FunctionArn>;
   /**
    * Triggered during events like user sign-up, password recovery, email/phone number
    * verification, and when an admin creates a user. Use this trigger to customize the
@@ -32,7 +32,7 @@ interface Triggers {
    *
    * Takes the handler path, the function args, or a function ARN.
    */
-  customEmailSender?: string | FunctionArgs | FunctionArn;
+  customEmailSender?: string | FunctionArgs | Input<FunctionArn>;
   /**
    * Triggered during events like user sign-up, password recovery, email/phone number
    * verification, and when an admin creates a user. Use this trigger to customize the
@@ -40,14 +40,14 @@ interface Triggers {
    *
    * Takes the handler path, the function args, or a function ARN.
    */
-  customMessage?: string | FunctionArgs | FunctionArn;
+  customMessage?: string | FunctionArgs | Input<FunctionArn>;
   /**
    * Triggered when an SMS message needs to be sent, such as for MFA or verification codes.
    * Use this trigger to customize the SMS provider.
    *
    * Takes the handler path, the function args, or a function ARN.
    */
-  customSmsSender?: string | FunctionArgs | FunctionArn;
+  customSmsSender?: string | FunctionArgs | Input<FunctionArn>;
   /**
    * Triggered after each challenge response to determine the next action. Evaluates whether the
    * user has completed the authentication process or if additional challenges are needed.
@@ -55,14 +55,14 @@ interface Triggers {
    *
    * Takes the handler path, the function args, or a function ARN.
    */
-  defineAuthChallenge?: string | FunctionArgs | FunctionArn;
+  defineAuthChallenge?: string | FunctionArgs | Input<FunctionArn>;
   /**
    * Triggered after a successful authentication event. Use this to perform custom actions,
    * such as logging or modifying user attributes, after the user is authenticated.
    *
    * Takes the handler path, the function args, or a function ARN.
    */
-  postAuthentication?: string | FunctionArgs | FunctionArn;
+  postAuthentication?: string | FunctionArgs | Input<FunctionArn>;
   /**
    * Triggered after a user is successfully confirmed; sign-up or email/phone number
    * verification. Use this to perform additional actions, like sending a welcome email or
@@ -70,7 +70,7 @@ interface Triggers {
    *
    * Takes the handler path, the function args, or a function ARN.
    */
-  postConfirmation?: string | FunctionArgs | FunctionArn;
+  postConfirmation?: string | FunctionArgs | Input<FunctionArn>;
   /**
    * Triggered before the authentication process begins. Use this to implement custom
    * validation or checks (like checking if the user is banned) before continuing
@@ -78,21 +78,21 @@ interface Triggers {
    *
    * Takes the handler path, the function args, or a function ARN.
    */
-  preAuthentication?: string | FunctionArgs | FunctionArn;
+  preAuthentication?: string | FunctionArgs | Input<FunctionArn>;
   /**
    * Triggered before the user sign-up process completes. Use this to perform custom
    * validation, auto-confirm users, or auto-verify attributes based on custom logic.
    *
    * Takes the handler path, the function args, or a function ARN.
    */
-  preSignUp?: string | FunctionArgs | FunctionArn;
+  preSignUp?: string | FunctionArgs | Input<FunctionArn>;
   /**
    * Triggered before tokens are generated in the authentication process. Use this to
    * customize or add claims to the tokens that will be generated and returned to the user.
    *
    * Takes the handler path, the function args, or a function ARN.
    */
-  preTokenGeneration?: string | FunctionArgs | FunctionArn;
+  preTokenGeneration?: string | FunctionArgs | Input<FunctionArn>;
   /**
    * The version of the preTokenGeneration trigger to use. Higher versions have access to
    * more information that support new features.
@@ -106,7 +106,7 @@ interface Triggers {
    *
    * Takes the handler path, the function args, or a function ARN.
    */
-  userMigration?: string | FunctionArgs | FunctionArn;
+  userMigration?: string | FunctionArgs | Input<FunctionArn>;
   /**
    * Triggered after the user responds to a custom authentication challenge. Use this to
    * verify the user's response to the challenge and determine whether to continue
@@ -114,7 +114,7 @@ interface Triggers {
    *
    * Takes the handler path, the function args, or a function ARN.
    */
-  verifyAuthChallengeResponse?: string | FunctionArgs | FunctionArn;
+  verifyAuthChallengeResponse?: string | FunctionArgs | Input<FunctionArn>;
 }
 
 export interface CognitoUserPoolArgs {
@@ -556,17 +556,17 @@ export class CognitoUserPool extends Component implements Link.Linkable {
                     triggers.customEmailSender === undefined
                       ? undefined
                       : {
-                        lambdaArn: createTrigger("customEmailSender")!,
-                        lambdaVersion: "V1_0",
-                      },
+                          lambdaArn: createTrigger("customEmailSender")!,
+                          lambdaVersion: "V1_0",
+                        },
                   customMessage: createTrigger("customMessage"),
                   customSmsSender:
                     triggers.customSmsSender === undefined
                       ? undefined
                       : {
-                        lambdaArn: createTrigger("customSmsSender")!,
-                        lambdaVersion: "V1_0",
-                      },
+                          lambdaArn: createTrigger("customSmsSender")!,
+                          lambdaVersion: "V1_0",
+                        },
                   defineAuthChallenge: createTrigger("defineAuthChallenge"),
                   postAuthentication: createTrigger("postAuthentication"),
                   postConfirmation: createTrigger("postConfirmation"),
@@ -576,9 +576,9 @@ export class CognitoUserPool extends Component implements Link.Linkable {
                     triggers.preTokenGeneration === undefined
                       ? undefined
                       : {
-                        lambdaArn: createTrigger("preTokenGeneration")!,
-                        lambdaVersion: triggers.preTokenGenerationVersion,
-                      },
+                          lambdaArn: createTrigger("preTokenGeneration")!,
+                          lambdaVersion: triggers.preTokenGenerationVersion,
+                        },
                   userMigration: createTrigger("userMigration"),
                   verifyAuthChallengeResponse: createTrigger(
                     "verifyAuthChallengeResponse",

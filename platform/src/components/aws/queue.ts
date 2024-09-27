@@ -84,16 +84,16 @@ export interface QueueArgs {
   dlq?: Input<
     | string
     | {
-      /**
-       * The ARN of the dead-letter queue.
-       */
-      queue: Input<string>;
-      /**
-       * The number of times the main queue will retry the message before sending it to the dead-letter queue.
-       * @default `3`
-       */
-      retry: Input<number>;
-    }
+        /**
+         * The ARN of the dead-letter queue.
+         */
+        queue: Input<string>;
+        /**
+         * The number of times the main queue will retry the message before sending it to the dead-letter queue.
+         * @default `3`
+         */
+        retry: Input<number>;
+      }
   >;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
@@ -437,7 +437,7 @@ export class Queue extends Component implements Link.Linkable {
    * ```
    */
   public subscribe(
-    subscriber: string | FunctionArgs | FunctionArn,
+    subscriber: string | FunctionArgs | Input<FunctionArn>,
     args?: QueueSubscriberArgs,
     opts?: ComponentResourceOptions,
   ) {
@@ -502,7 +502,7 @@ export class Queue extends Component implements Link.Linkable {
    */
   public static subscribe(
     queueArn: Input<string>,
-    subscriber: string | FunctionArgs | FunctionArn,
+    subscriber: string | FunctionArgs | Input<FunctionArn>,
     args?: QueueSubscriberArgs,
     opts?: ComponentResourceOptions,
   ) {
@@ -520,7 +520,7 @@ export class Queue extends Component implements Link.Linkable {
   private static _subscribeFunction(
     name: string,
     queueArn: Input<string>,
-    subscriber: string | FunctionArgs | FunctionArn,
+    subscriber: string | FunctionArgs | Input<FunctionArn>,
     args: QueueSubscriberArgs = {},
     opts?: ComponentResourceOptions,
   ) {

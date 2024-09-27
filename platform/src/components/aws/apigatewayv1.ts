@@ -813,15 +813,17 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
    */
   public route(
     route: string,
-    handler: string | FunctionArgs | FunctionArn,
+    handler: string | FunctionArgs | Input<FunctionArn>,
     args: ApiGatewayV1RouteArgs = {},
   ) {
     const { method, path } = this.parseRoute(route);
     this.createResource(path);
-    this.triggers[`${method}${path}`] = jsonStringify({
-      handler: typeof handler === "string" ? handler : handler.handler,
-      args,
-    });
+    this.triggers[`${method}${path}`] = output(handler).apply((handler) =>
+      JSON.stringify({
+        handler: typeof handler === "string" ? handler : handler.handler,
+        args,
+      }),
+    );
 
     const transformed = transform(
       this.constructorArgs.transform?.route?.args,

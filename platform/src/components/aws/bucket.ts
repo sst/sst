@@ -606,7 +606,7 @@ export class Bucket extends Component implements Link.Linkable {
    * ```
    */
   public subscribe(
-    subscriber: string | FunctionArgs | FunctionArn,
+    subscriber: string | FunctionArgs | Input<FunctionArn>,
     args?: BucketSubscriberArgs,
   ) {
     this.ensureNotSubscribed();
@@ -669,7 +669,7 @@ export class Bucket extends Component implements Link.Linkable {
    */
   public static subscribe(
     bucketArn: Input<string>,
-    subscriber: string | FunctionArgs | FunctionArn,
+    subscriber: string | FunctionArgs | Input<FunctionArn>,
     args?: BucketSubscriberArgs,
   ) {
     return output(bucketArn).apply((bucketArn) => {
@@ -688,7 +688,7 @@ export class Bucket extends Component implements Link.Linkable {
     name: string,
     bucketName: Input<string>,
     bucketArn: Input<string>,
-    subscriber: string | FunctionArgs | FunctionArn,
+    subscriber: string | FunctionArgs | Input<FunctionArn>,
     args: BucketSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
   ) {
