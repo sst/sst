@@ -6,7 +6,13 @@ import {
   jsonStringify,
   output,
 } from "@pulumi/pulumi";
-import { Component, Prettify, Transform, transform } from "../component";
+import {
+  Component,
+  outputId,
+  Prettify,
+  Transform,
+  transform,
+} from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs, FunctionArn } from "./function";
@@ -946,7 +952,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
 
   private buildRouteId(method: string, path: string) {
     const suffix = logicalName(
-      hashStringToPrettyString([this.api.id, method, path].join(""), 6),
+      hashStringToPrettyString([outputId, method, path].join(""), 6),
     );
     return `${this.constructorName}Route${suffix}`;
   }

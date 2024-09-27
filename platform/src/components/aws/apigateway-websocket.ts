@@ -5,7 +5,13 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import { Component, Prettify, Transform, transform } from "../component";
+import {
+  Component,
+  outputId,
+  Prettify,
+  Transform,
+  transform,
+} from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs, FunctionArn } from "./function";
@@ -425,9 +431,9 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
     //       trailing slash, the API fails with the error {"message":"Not Found"}
     return this.apigDomain && this.apiMapping
       ? all([this.apigDomain.domainName, this.apiMapping.apiMappingKey]).apply(
-        ([domain, key]) =>
-          key ? `wss://${domain}/${key}/` : `wss://${domain}`,
-      )
+          ([domain, key]) =>
+            key ? `wss://${domain}/${key}/` : `wss://${domain}`,
+        )
       : interpolate`${this.api.apiEndpoint}/${this.stage.name}`;
   }
 
@@ -532,7 +538,7 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
     const suffix = logicalName(
       ["$connect", "$disconnect", "$default"].includes(route)
         ? route
-        : hashStringToPrettyString(`${this.api.id}${route}`, 6),
+        : hashStringToPrettyString(`${outputId}${route}`, 6),
     );
 
     const transformed = transform(

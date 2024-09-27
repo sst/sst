@@ -1,5 +1,5 @@
-import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
-import { Component, Transform, transform } from "../component";
+import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
+import { Component, outputId, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs, FunctionArn } from "./function";
@@ -322,7 +322,7 @@ export class SnsTopic extends Component implements Link.Linkable {
 
   private static _subscribeFunction(
     name: string,
-    topicArn: Input<string>,
+    topicArn: string | Output<string>,
     subscriber: string | FunctionArgs | FunctionArn,
     args: SnsTopicSubscriberArgs = {},
     opts: $util.ComponentResourceOptions = {},
@@ -331,7 +331,7 @@ export class SnsTopic extends Component implements Link.Linkable {
       const suffix = logicalName(
         hashStringToPrettyString(
           [
-            topicArn,
+            typeof topicArn === "string" ? topicArn : outputId,
             JSON.stringify(args.filter ?? {}),
             typeof subscriber === "string" ? subscriber : subscriber.handler,
           ].join(""),
@@ -442,14 +442,18 @@ export class SnsTopic extends Component implements Link.Linkable {
 
   private static _subscribeQueue(
     name: string,
-    topicArn: Input<string>,
+    topicArn: string | Output<string>,
     queueArn: Input<string>,
     args: SnsTopicSubscriberArgs = {},
   ) {
     return all([queueArn, args]).apply(([queueArn, args]) => {
       const suffix = logicalName(
         hashStringToPrettyString(
-          [topicArn, JSON.stringify(args.filter ?? {}), queueArn].join(""),
+          [
+            typeof topicArn === "string" ? topicArn : outputId,
+            JSON.stringify(args.filter ?? {}),
+            typeof queueArn === "string" ? queueArn : outputId,
+          ].join(""),
           6,
         ),
       );

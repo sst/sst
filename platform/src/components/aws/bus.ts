@@ -1,5 +1,5 @@
-import { ComponentResourceOptions, all, output } from "@pulumi/pulumi";
-import { Component, Transform, transform } from "../component";
+import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
+import { Component, outputId, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs, FunctionArn } from "./function";
@@ -327,7 +327,7 @@ export class Bus extends Component implements Link.Linkable {
   private static _subscribeFunction(
     name: string,
     busName: Input<string>,
-    busArn: Input<string>,
+    busArn: string | Output<string>,
     subscriber: string | FunctionArgs | FunctionArn,
     args: BusSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
@@ -336,7 +336,7 @@ export class Bus extends Component implements Link.Linkable {
       const suffix = logicalName(
         hashStringToPrettyString(
           [
-            busArn,
+            typeof busArn === "string" ? busArn : outputId,
             JSON.stringify(args.pattern ?? {}),
             typeof subscriber === "string" ? subscriber : subscriber.handler,
           ].join(""),

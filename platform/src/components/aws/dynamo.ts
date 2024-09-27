@@ -5,7 +5,7 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import { Component, Transform, transform } from "../component";
+import { Component, outputId, Transform, transform } from "../component";
 import { Link } from "../link";
 import type { Input } from "../input";
 import { FunctionArgs, FunctionArn } from "./function";
@@ -446,9 +446,9 @@ export class Dynamo extends Component implements Link.Linkable {
                   args.ttl === undefined
                     ? undefined
                     : {
-                      attributeName: args.ttl,
-                      enabled: true,
-                    },
+                        attributeName: args.ttl,
+                        enabled: true,
+                      },
                 globalSecondaryIndexes: Object.entries(globalIndexes ?? {}).map(
                   ([name, index]) => ({
                     name,
@@ -458,9 +458,9 @@ export class Dynamo extends Component implements Link.Linkable {
                       ? { projectionType: "KEYS_ONLY" }
                       : Array.isArray(index.projection)
                         ? {
-                          projectionType: "INCLUDE",
-                          nonKeyAttributes: index.projection,
-                        }
+                            projectionType: "INCLUDE",
+                            nonKeyAttributes: index.projection,
+                          }
                         : { projectionType: "ALL" }),
                   }),
                 ),
@@ -472,9 +472,9 @@ export class Dynamo extends Component implements Link.Linkable {
                       ? { projectionType: "KEYS_ONLY" }
                       : Array.isArray(index.projection)
                         ? {
-                          projectionType: "INCLUDE",
-                          nonKeyAttributes: index.projection,
-                        }
+                            projectionType: "INCLUDE",
+                            nonKeyAttributes: index.projection,
+                          }
                         : { projectionType: "ALL" }),
                   }),
                 ),
@@ -647,7 +647,7 @@ export class Dynamo extends Component implements Link.Linkable {
 
   private static _subscribe(
     name: string,
-    streamArn: Input<string>,
+    streamArn: string | Output<string>,
     subscriber: string | FunctionArgs,
     args: DynamoSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
@@ -656,7 +656,7 @@ export class Dynamo extends Component implements Link.Linkable {
       const suffix = logicalName(
         hashStringToPrettyString(
           [
-            streamArn,
+            typeof streamArn === "string" ? streamArn : outputId,
             JSON.stringify(args.filters ?? {}),
             typeof subscriber === "string" ? subscriber : subscriber.handler,
           ].join(""),
