@@ -9,16 +9,18 @@ export default $config({
     };
   },
   async run() {
-    const bucket = new sst.aws.Bucket("Bucket");
-    const vpc = new sst.aws.Vpc("Vpc");
-    const cluster = new sst.aws.Cluster("Cluster", {
-      vpc,
-    });
-    cluster.addService("Bun", {
-      link: [bucket],
+    const bucket = new sst.aws.Bucket("MyBucket");
+    const vpc = new sst.aws.Vpc("MyVpc");
+
+    const cluster = new sst.aws.Cluster("MyCluster", { vpc });
+    cluster.addService("MyService", {
       public: {
         ports: [{ listen: "80/http", forward: "3000/http" }],
       },
+      dev: {
+        command: "npm run dev",
+      },
+      link: [bucket],
     });
   },
 });

@@ -1,29 +1,37 @@
 import { Elysia } from "elysia";
 import { Resource } from "sst";
 import {
+  S3Client,
   GetObjectCommand,
   ListObjectsV2Command,
-  PutObjectCommand,
-  S3Client,
 } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const s3 = new S3Client();
 
 new Elysia()
   .get("/", async () => {
-    console.log(process.env);
-    const command = new PutObjectCommand({
-      Key: crypto.randomUUID(),
-      Bucket: Resource.Bucket.name,
-    });
-
-    return getSignedUrl(s3, command);
+    return "Hello World!";
   })
-  .get("/latest", async (ctx) => {
+  .post("/", async ({ body: { file } }: { body: { file: File } }) => {
+    const params = {
+      Bucket: Resource.MyBucket.name,
+      Key: file.name,
+      Body: file,
+    };
+    const upload = new Upload({
+      params,
+      client: s3,
+    });
+    await upload.done();
+
+    return "File uploaded successfully.";
+  })
+  .get("/latest", async ({ redirect }) => {
     const objects = await s3.send(
       new ListObjectsV2Command({
-        Bucket: Resource.Bucket.name,
+        Bucket: Resource.MyBucket.name,
       }),
     );
     const latestFile = objects.Contents!.sort(
@@ -32,9 +40,9 @@ new Elysia()
     )[0];
     const command = new GetObjectCommand({
       Key: latestFile.Key,
-      Bucket: Resource.Bucket.name,
+      Bucket: Resource.MyBucket.name,
     });
-    ctx.set.redirect = await getSignedUrl(s3, command);
+    return redirect(await getSignedUrl(s3, command));
   })
   .listen(3000);
 
