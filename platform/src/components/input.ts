@@ -1,2 +1,2 @@
-import pulumi from "@pulumi/pulumi";
-export type Input<T> = pulumi.Input<T>;
+import type { Input as PulumiInput } from "@pulumi/pulumi";
+export type Input<T> = PulumiInput<T>;
