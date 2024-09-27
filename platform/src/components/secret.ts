@@ -23,6 +23,13 @@ export class SecretMissingError extends VisibleError {
  * @example
  *
  * #### Create a secret
+ *
+ * The name of a secret follows the same rules as a component name. It must start with a capital letter and contain only letters and numbers.
+ *
+ * :::note
+ * Secret names must start with a capital letter and contain only letters and numbers.
+ * :::
+ *
  * ```ts title="sst.config.ts"
  * const secret = new sst.Secret("MySecret");
  * ```
