@@ -4,14 +4,14 @@ import crypto from "crypto";
 import archiver from "archiver";
 import type { Loader, BuildOptions } from "esbuild";
 import {
-	Output,
-	ComponentResourceOptions,
-	asset,
-	output,
-	all,
-	interpolate,
-	unsecret,
-	secret,
+  Output,
+  ComponentResourceOptions,
+  asset,
+  output,
+  all,
+  interpolate,
+  unsecret,
+  secret,
 } from "@pulumi/pulumi";
 import { buildNode } from "../../runtime/node.js";
 import { bootstrap } from "./helpers/bootstrap.js";
@@ -30,14 +30,14 @@ import type { Input } from "../input.js";
 import { physicalName } from "../naming.js";
 import { RETENTION } from "./logging.js";
 import {
-	cloudwatch,
-	ecr,
-	getCallerIdentityOutput,
-	getRegionOutput,
-	iam,
-	lambda,
-	s3,
-	types,
+  cloudwatch,
+  ecr,
+  getCallerIdentityOutput,
+  getRegionOutput,
+  iam,
+  lambda,
+  s3,
+  types,
 } from "@pulumi/aws";
 import { Permission, permission } from "./permission.js";
 import { Vpc } from "./vpc.js";
@@ -51,146 +51,146 @@ import { rpc } from "../rpc/rpc.js";
 export type FunctionArn = `arn:${string}` & {};
 
 export type FunctionPermissionArgs = {
-	/**
-	 * The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
-	 * @example
-	 *
-	 * ```js
-	 * {
-	 *   actions: ["s3:*"]
-	 * }
-	 * ```
-	 */
-	actions: string[];
-	/**
-	 * The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
-	 * @example
-	 *
-	 * ```js
-	 * {
-	 *   resources: ["arn:aws:s3:::my-bucket/*"]
-	 * }
-	 * ```
-	 */
-	resources: Input<string>[];
+  /**
+   * The [IAM actions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html#actions_table) that can be performed.
+   * @example
+   *
+   * ```js
+   * {
+   *   actions: ["s3:*"]
+   * }
+   * ```
+   */
+  actions: string[];
+  /**
+   * The resourcess specified using the [IAM ARN format](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
+   * @example
+   *
+   * ```js
+   * {
+   *   resources: ["arn:aws:s3:::my-bucket/*"]
+   * }
+   * ```
+   */
+  resources: Input<string>[];
 };
 
 interface FunctionUrlCorsArgs {
-	/**
-	 * Allow cookies or other credentials in requests to the function URL.
-	 * @default `false`
-	 * @example
-	 * ```js
-	 * {
-	 *   url: {
-	 *     cors: {
-	 *       allowCredentials: true
-	 *     }
-	 *   }
-	 * }
-	 * ```
-	 */
-	allowCredentials?: Input<boolean>;
-	/**
-	 * The HTTP headers that origins can include in requests to the function URL.
-	 * @default `["*"]`
-	 * @example
-	 * ```js
-	 * {
-	 *   url: {
-	 *     cors: {
-	 *       allowHeaders: ["date", "keep-alive", "x-custom-header"]
-	 *     }
-	 *   }
-	 * }
-	 * ```
-	 */
-	allowHeaders?: Input<Input<string>[]>;
-	/**
-	 * The origins that can access the function URL.
-	 * @default `["*"]`
-	 * @example
-	 * ```js
-	 * {
-	 *   url: {
-	 *     cors: {
-	 *       allowOrigins: ["https://www.example.com", "http://localhost:60905"]
-	 *     }
-	 *   }
-	 * }
-	 * ```
-	 * Or the wildcard for all origins.
-	 * ```js
-	 * {
-	 *   url: {
-	 *     cors: {
-	 *       allowOrigins: ["*"]
-	 *     }
-	 *   }
-	 * }
-	 * ```
-	 */
-	allowOrigins?: Input<Input<string>[]>;
-	/**
-	 * The HTTP methods that are allowed when calling the function URL.
-	 * @default `["*"]`
-	 * @example
-	 * ```js
-	 * {
-	 *   url: {
-	 *     cors: {
-	 *       allowMethods: ["GET", "POST", "DELETE"]
-	 *     }
-	 *   }
-	 * }
-	 * ```
-	 * Or the wildcard for all methods.
-	 * ```js
-	 * {
-	 *   url: {
-	 *     cors: {
-	 *       allowMethods: ["*"]
-	 *     }
-	 *   }
-	 * }
-	 * ```
-	 */
-	allowMethods?: Input<
-		Input<
-			"*" | "DELETE" | "GET" | "HEAD" | "OPTIONS" | "PATCH" | "POST" | "PUT"
-		>[]
-	>;
-	/**
-	 * The HTTP headers you want to expose in your function to an origin that calls the function URL.
-	 * @default `[]`
-	 * @example
-	 * ```js
-	 * {
-	 *   url: {
-	 *     cors: {
-	 *       exposeHeaders: ["date", "keep-alive", "x-custom-header"]
-	 *     }
-	 *   }
-	 * }
-	 * ```
-	 */
-	exposeHeaders?: Input<Input<string>[]>;
-	/**
-	 * The maximum amount of time the browser can cache results of a preflight request. By
-	 * default the browser doesn't cache the results. The maximum value is `86400 seconds` or `1 day`.
-	 * @default `"0 seconds"`
-	 * @example
-	 * ```js
-	 * {
-	 *   url: {
-	 *     cors: {
-	 *       maxAge: "1 day"
-	 *     }
-	 *   }
-	 * }
-	 * ```
-	 */
-	maxAge?: Input<Duration>;
+  /**
+   * Allow cookies or other credentials in requests to the function URL.
+   * @default `false`
+   * @example
+   * ```js
+   * {
+   *   url: {
+   *     cors: {
+   *       allowCredentials: true
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  allowCredentials?: Input<boolean>;
+  /**
+   * The HTTP headers that origins can include in requests to the function URL.
+   * @default `["*"]`
+   * @example
+   * ```js
+   * {
+   *   url: {
+   *     cors: {
+   *       allowHeaders: ["date", "keep-alive", "x-custom-header"]
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  allowHeaders?: Input<Input<string>[]>;
+  /**
+   * The origins that can access the function URL.
+   * @default `["*"]`
+   * @example
+   * ```js
+   * {
+   *   url: {
+   *     cors: {
+   *       allowOrigins: ["https://www.example.com", "http://localhost:60905"]
+   *     }
+   *   }
+   * }
+   * ```
+   * Or the wildcard for all origins.
+   * ```js
+   * {
+   *   url: {
+   *     cors: {
+   *       allowOrigins: ["*"]
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  allowOrigins?: Input<Input<string>[]>;
+  /**
+   * The HTTP methods that are allowed when calling the function URL.
+   * @default `["*"]`
+   * @example
+   * ```js
+   * {
+   *   url: {
+   *     cors: {
+   *       allowMethods: ["GET", "POST", "DELETE"]
+   *     }
+   *   }
+   * }
+   * ```
+   * Or the wildcard for all methods.
+   * ```js
+   * {
+   *   url: {
+   *     cors: {
+   *       allowMethods: ["*"]
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  allowMethods?: Input<
+    Input<
+      "*" | "DELETE" | "GET" | "HEAD" | "OPTIONS" | "PATCH" | "POST" | "PUT"
+    >[]
+  >;
+  /**
+   * The HTTP headers you want to expose in your function to an origin that calls the function URL.
+   * @default `[]`
+   * @example
+   * ```js
+   * {
+   *   url: {
+   *     cors: {
+   *       exposeHeaders: ["date", "keep-alive", "x-custom-header"]
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  exposeHeaders?: Input<Input<string>[]>;
+  /**
+   * The maximum amount of time the browser can cache results of a preflight request. By
+   * default the browser doesn't cache the results. The maximum value is `86400 seconds` or `1 day`.
+   * @default `"0 seconds"`
+   * @example
+   * ```js
+   * {
+   *   url: {
+   *     cors: {
+   *       maxAge: "1 day"
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  maxAge?: Input<Duration>;
 }
 
 export interface FunctionArgs {
@@ -265,7 +265,13 @@ export interface FunctionArgs {
    * ```
    */
   runtime?: Input<
-    "nodejs18.x" | "nodejs20.x" | "provided.al2023" | "python3.9" | "python3.10" | "python3.11" | "python3.12"
+    | "nodejs18.x"
+    | "nodejs20.x"
+    | "provided.al2023"
+    | "python3.9"
+    | "python3.10"
+    | "python3.11"
+    | "python3.12"
   >;
   /**
    * Path to the source code directory for the function. By default, the handler is
@@ -1844,9 +1850,18 @@ export class Function extends Component implements Link.Linkable {
         isContainer,
         imageAsset,
         zipAsset,
+        args.concurrency,
         dev,
       ]).apply(
-        ([logging, logGroup, isContainer, imageAsset, zipAsset, dev]) => {
+        ([
+          logging,
+          logGroup,
+          isContainer,
+          imageAsset,
+          zipAsset,
+          concurrency,
+          dev,
+        ]) => {
           const transformed = transform(
             args.transform?.function,
             `${name}Function`,
@@ -1871,6 +1886,7 @@ export class Function extends Component implements Link.Linkable {
               layers: args.layers,
               tags: args.tags,
               publish: output(args.versioning).apply((v) => v ?? false),
+              reservedConcurrentExecutions: concurrency?.reserved,
               ...(isContainer
                 ? {
                     packageType: "Image",
