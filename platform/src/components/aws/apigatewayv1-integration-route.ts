@@ -1,4 +1,9 @@
-import { ComponentResourceOptions, Input, output } from "@pulumi/pulumi";
+import {
+  ComponentResourceOptions,
+  Input,
+  Output,
+  output,
+} from "@pulumi/pulumi";
 import { Component, transform } from "../component";
 import { ApiGatewayV1IntegrationArgs } from "./apigatewayv1";
 import { apigateway } from "@pulumi/aws";
@@ -25,6 +30,7 @@ export interface Args extends ApiGatewayV1BaseRouteArgs {
  * You'll find this component returned by the `routeIntegration` method of the `ApiGatewayV1` component.
  */
 export class ApiGatewayV1IntegrationRoute extends Component {
+  private readonly method: Output<apigateway.Method>;
   private readonly integration: apigateway.Integration;
 
   constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
@@ -36,6 +42,7 @@ export class ApiGatewayV1IntegrationRoute extends Component {
     const method = createMethod(name, args, self);
     const integration = createIntegration();
 
+    this.method = method;
     this.integration = integration;
 
     function createIntegration() {
@@ -72,6 +79,10 @@ export class ApiGatewayV1IntegrationRoute extends Component {
        * The API Gateway REST API integration.
        */
       integration: this.integration,
+      /**
+       * The API Gateway REST API method.
+       */
+      method: this.method,
     };
   }
 }

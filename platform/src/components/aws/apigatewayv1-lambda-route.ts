@@ -38,6 +38,7 @@ export interface Args extends ApiGatewayV1BaseRouteArgs {
 export class ApiGatewayV1LambdaRoute extends Component {
   private readonly fn: FunctionBuilder;
   private readonly permission: lambda.Permission;
+  private readonly method: Output<apigateway.Method>;
   private readonly integration: apigateway.Integration;
 
   constructor(name: string, args: Args, opts?: ComponentResourceOptions) {
@@ -53,6 +54,7 @@ export class ApiGatewayV1LambdaRoute extends Component {
 
     this.fn = fn;
     this.permission = permission;
+    this.method = method;
     this.integration = integration;
 
     function createFunction() {
@@ -118,6 +120,10 @@ export class ApiGatewayV1LambdaRoute extends Component {
        * The API Gateway REST API integration.
        */
       integration: this.integration,
+      /**
+       * The API Gateway REST API method.
+       */
+      method: this.method,
     };
   }
 }

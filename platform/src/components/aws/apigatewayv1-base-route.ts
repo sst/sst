@@ -59,16 +59,19 @@ export function createMethod(
   return authArgs.apply(
     (authArgs) =>
       new apigateway.Method(
-        `${name}Method`,
-        {
-          restApi: output(api).id,
-          resourceId: resourceId,
-          httpMethod: method,
-          authorization: authArgs.authorization,
-          authorizerId: authArgs.authorizerId,
-          authorizationScopes: authArgs.authorizationScopes,
-        },
-        { parent },
+        ...transform(
+          args.transform?.method,
+          `${name}Method`,
+          {
+            restApi: output(api).id,
+            resourceId: resourceId,
+            httpMethod: method,
+            authorization: authArgs.authorization,
+            authorizerId: authArgs.authorizerId,
+            authorizationScopes: authArgs.authorizationScopes,
+          },
+          { parent },
+        ),
       ),
   );
 }

@@ -1,6 +1,7 @@
 import {
   ComponentResourceOptions,
   Output,
+  Resource,
   all,
   interpolate,
   jsonStringify,
@@ -234,6 +235,18 @@ export interface ApiGatewayV1Args {
      */
     vpcEndpointIds?: Input<Input<string>[]>;
   }>;
+  /**
+   * Enable the CORS (Cross-origin resource sharing) settings for your REST API.
+   * @default `true`
+   * @example
+   * Disable CORS.
+   * ```js
+   * {
+   *   cors: false
+   * }
+   * ```
+   */
+  cors?: Input<boolean>;
   /**
    * Configure the [API Gateway logs](https://docs.aws.amazon.com/apigateway/latest/developerguide/view-cloudwatch-log-events-in-cloudwatch-console.html) in CloudWatch. By default, access logs are enabled and kept forever.
    * @default `{retention: "forever"}`
@@ -505,6 +518,10 @@ export interface ApiGatewayV1RouteArgs {
    */
   transform?: {
     /**
+     * Transform the API Gateway REST API method resource.
+     */
+    method?: Transform<apigateway.MethodArgs>;
+    /**
      * Transform the API Gateway REST API integration resource.
      */
     integration?: Transform<apigateway.IntegrationArgs>;
@@ -629,7 +646,6 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
   private apigDomain?: apigateway.DomainName;
   private apiMapping?: Output<apigateway.BasePathMapping>;
   private region: Output<string>;
-  private triggers: Record<string, Output<string>> = {};
   private resources: Record<string, Output<string>> = {};
   private routes: (ApiGatewayV1LambdaRoute | ApiGatewayV1IntegrationRoute)[] =
     [];
@@ -818,12 +834,6 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
   ) {
     const { method, path } = this.parseRoute(route);
     this.createResource(path);
-    this.triggers[`${method}${path}`] = output(handler).apply((handler) =>
-      JSON.stringify({
-        handler: typeof handler === "string" ? handler : handler.handler,
-        args,
-      }),
-    );
 
     const transformed = transform(
       this.constructorArgs.transform?.route?.args,
@@ -890,7 +900,6 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
   ) {
     const { method, path } = this.parseRoute(route);
     this.createResource(path);
-    this.triggers[`${method}${path}`] = jsonStringify({ integration, args });
 
     const transformed = transform(
       this.constructorArgs.transform?.route?.args,
@@ -980,6 +989,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
           },
           { parent: this },
         );
+
         this.resources[subPath] = resource.id;
       }
     }
@@ -1063,11 +1073,12 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     const args = this.constructorArgs;
     const parent = this;
     const api = this.api;
-    const triggers = this.triggers;
     const routes = this.routes;
     const endpointType = this.endpointType;
     const accessLog = normalizeAccessLog();
     const domain = normalizeDomain();
+    const corsRoutes = createCorsRoutes();
+    const corsResponses = createCorsResponses();
     const deployment = createDeployment();
     const logGroup = createLogGroup();
     const stage = createStage();
@@ -1118,16 +1129,148 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
       });
     }
 
+    function createCorsRoutes() {
+      const resourceIds = routes.map(
+        (route) => route.nodes.integration.resourceId,
+      );
+
+      return all([args.cors, resourceIds]).apply(([cors, resourceIds]) => {
+        if (cors === false) return [];
+
+        // filter unique resource ids
+        const uniqueResourceIds = [...new Set(resourceIds)];
+
+        // create cors integrations for the paths
+        return uniqueResourceIds.map((resourceId) => {
+          const method = new apigateway.Method(
+            `${name}CorsMethod${resourceId}`,
+            {
+              restApi: api.id,
+              resourceId,
+              httpMethod: "OPTIONS",
+              authorization: "NONE",
+            },
+            { parent },
+          );
+
+          const methodResponse = new apigateway.MethodResponse(
+            `${name}CorsMethodResponse${resourceId}`,
+            {
+              restApi: api.id,
+              resourceId,
+              httpMethod: method.httpMethod,
+              statusCode: "204",
+              responseParameters: {
+                "method.response.header.Access-Control-Allow-Headers": true,
+                "method.response.header.Access-Control-Allow-Methods": true,
+                "method.response.header.Access-Control-Allow-Origin": true,
+              },
+            },
+            { parent },
+          );
+
+          const integration = new apigateway.Integration(
+            `${name}CorsIntegration${resourceId}`,
+            {
+              restApi: api.id,
+              resourceId,
+              httpMethod: method.httpMethod,
+              type: "MOCK",
+              requestTemplates: {
+                "application/json": "{ statusCode: 200 }",
+              },
+            },
+            { parent },
+          );
+
+          const integrationResponse = new apigateway.IntegrationResponse(
+            `${name}CorsIntegrationResponse${resourceId}`,
+            {
+              restApi: api.id,
+              resourceId,
+              httpMethod: method.httpMethod,
+              statusCode: methodResponse.statusCode,
+              responseParameters: {
+                "method.response.header.Access-Control-Allow-Headers": "'*'",
+                "method.response.header.Access-Control-Allow-Methods":
+                  "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+            },
+            { parent },
+          );
+
+          return { method, methodResponse, integration, integrationResponse };
+        });
+      });
+    }
+
+    function createCorsResponses() {
+      return output(args.cors).apply((cors) => {
+        if (cors === false) return [];
+
+        return ["4XX", "5XX"].map(
+          (type) =>
+            new apigateway.Response(
+              `${name}Cors${type}Response`,
+              {
+                restApiId: api.id,
+                responseType: `DEFAULT_${type}`,
+                responseParameters: {
+                  "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
+                  "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
+                },
+                responseTemplates: {
+                  "application/json":
+                    '{"message":$context.error.messageString}',
+                },
+              },
+              { parent },
+            ),
+        );
+      });
+    }
+
     function createDeployment() {
+      const resources = all([corsRoutes, corsResponses]).apply(
+        ([corsRoutes, corsResponses]) =>
+          [
+            corsRoutes.map((v) => Object.values(v)),
+            corsResponses,
+            routes.map((route) => [
+              route.nodes.integration,
+              route.nodes.method,
+            ]),
+          ].flat(3),
+      );
+
+      // filter serializable output values
+      const resourcesSanitized = all([resources]).apply(([resources]) =>
+        resources.map((resource) =>
+          Object.fromEntries(
+            Object.entries(resource).filter(
+              ([k, v]) => !k.startsWith("_") && typeof v !== "function",
+            ),
+          ),
+        ),
+      );
+
       return new apigateway.Deployment(
         ...transform(
           args.transform?.deployment,
           `${name}Deployment`,
           {
             restApi: api.id,
-            triggers,
+            triggers: all([resourcesSanitized]).apply(([resources]) =>
+              Object.fromEntries(
+                resources.map((resource) => [
+                  resource.urn,
+                  JSON.stringify(resource),
+                ]),
+              ),
+            ),
           },
-          { parent, dependsOn: routes.map((route) => route.nodes.integration) },
+          { parent },
         ),
       );
     }

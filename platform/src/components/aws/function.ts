@@ -17,13 +17,7 @@ import { buildNode } from "../../runtime/node.js";
 import { bootstrap } from "./helpers/bootstrap.js";
 import { Duration, DurationMinutes, toSeconds } from "../duration.js";
 import { Size, toMBs } from "../size.js";
-import {
-  $print,
-  Component,
-  Prettify,
-  Transform,
-  transform,
-} from "../component.js";
+import { Component, Prettify, Transform, transform } from "../component.js";
 import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
 import type { Input } from "../input.js";
