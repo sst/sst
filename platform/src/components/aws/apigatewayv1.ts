@@ -643,7 +643,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
   private constructorArgs: ApiGatewayV1Args;
   private constructorOpts: ComponentResourceOptions;
   private api: apigateway.RestApi;
-  private apigDomain?: apigateway.DomainName;
+  private apigDomain?: Output<apigateway.DomainName>;
   private apiMapping?: Output<apigateway.BasePathMapping>;
   private region: Output<string>;
   private resources: Record<string, Output<string>> = {};
@@ -1349,17 +1349,22 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
     function createDomainName() {
       if (!domain || !certificateArn) return;
 
-      return new apigateway.DomainName(
-        ...transform(
-          args.transform?.domainName,
-          `${name}DomainName`,
-          {
-            domainName: domain?.name,
-            certificateArn,
-            endpointConfiguration: { types: endpointType },
-          },
-          { parent },
-        ),
+      return endpointType.apply(
+        (endpointType) =>
+          new apigateway.DomainName(
+            ...transform(
+              args.transform?.domainName,
+              `${name}DomainName`,
+              {
+                domainName: domain?.name,
+                endpointConfiguration: { types: endpointType },
+                ...(endpointType === "REGIONAL"
+                  ? { regionalCertificateArn: certificateArn }
+                  : { certificateArn }),
+              },
+              { parent },
+            ),
+          ),
       );
     }
 
