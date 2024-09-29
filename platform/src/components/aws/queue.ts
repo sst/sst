@@ -31,8 +31,30 @@ export interface QueueArgs {
    *   fifo: true
    * }
    * ```
+   *
+   * By default, content based deduplication is disabled. You can enable it by configuring
+   * the `fifo` property.
+   *
+   * ```js
+   * {
+   *   fifo: {
+   *     contentBasedDeduplication: true
+   *   }
+   * }
+   * ```
    */
-  fifo?: Input<boolean>;
+  fifo?: Input<
+    | boolean
+    | {
+        /**
+         * Content-based deduplication automatically generates a deduplication ID by hashing
+         * the message body to prevent duplicate message delivery.
+         *
+         * @default `false`
+         */
+        contentBasedDeduplication?: Input<boolean>;
+      }
+  >;
   /**
    * Visibility timeout is a period of time during which a message is temporarily
    * invisible to other consumers after a consumer has retrieved it from the queue.
@@ -331,7 +353,17 @@ export class Queue extends Component implements Link.Linkable {
     this.queue = queue;
 
     function normalizeFifo() {
-      return output(args?.fifo).apply((v) => v ?? false);
+      return output(args?.fifo).apply((v) => {
+        if (!v) return false;
+        if (v === true)
+          return {
+            contentBasedDeduplication: false,
+          };
+
+        return {
+          contentBasedDeduplication: v.contentBasedDeduplication ?? false,
+        };
+      });
     }
 
     function normalizeDlq() {
@@ -352,7 +384,10 @@ export class Queue extends Component implements Link.Linkable {
           args?.transform?.queue,
           `${name}Queue`,
           {
-            fifoQueue: fifo,
+            fifoQueue: fifo.apply((v) => v !== false),
+            contentBasedDeduplication: fifo.apply((v) =>
+              v === false ? false : v.contentBasedDeduplication,
+            ),
             visibilityTimeoutSeconds: visibilityTimeout.apply((v) =>
               toSeconds(v),
             ),
