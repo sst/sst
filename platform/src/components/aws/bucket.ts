@@ -160,6 +160,21 @@ export interface BucketArgs {
    */
   cors?: Input<false | Prettify<BucketCorsArgs>>;
   /**
+   * Enable versioning for the bucket.
+   *
+   * Bucket versioning enables you to store multiple versions of an object, protecting
+   * against accidental deletion or overwriting.
+   *
+   * @default Versioning disabled
+   * @example
+   * ```js
+   * {
+   *   versioning: true
+   * }
+   * ```
+   */
+  versioning?: Input<true>;
+  /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
@@ -176,6 +191,10 @@ export interface BucketArgs {
      * Transform the S3 Bucket Policy resource.
      */
     policy?: Transform<s3.BucketPolicyArgs>;
+    /**
+     * Transform the S3 Bucket versioning resource.
+     */
+    versioning?: Transform<s3.BucketVersioningV2Args>;
     /**
      * Transform the public access block resource that's attached to the Bucket.
      *
@@ -343,6 +362,7 @@ export class Bucket extends Component implements Link.Linkable {
     const access = normalizeAccess();
 
     const bucket = createBucket();
+    createVersioning();
     const publicAccessBlock = createPublicAccess();
     const policy = createBucketPolicy();
     createCorsRule();
@@ -385,6 +405,24 @@ export class Bucket extends Component implements Link.Linkable {
       }
 
       return new s3.BucketV2(...transformed);
+    }
+
+    function createVersioning() {
+      if (!args.versioning) return;
+
+      return new s3.BucketVersioningV2(
+        ...transform(
+          args.transform?.versioning,
+          `${name}Versioning`,
+          {
+            bucket: bucket.bucket,
+            versioningConfiguration: {
+              status: "Enabled",
+            },
+          },
+          { parent },
+        ),
+      );
     }
 
     function createPublicAccess() {

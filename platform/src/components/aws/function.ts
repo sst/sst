@@ -941,8 +941,7 @@ export interface FunctionArgs {
   /**
    * Enable versioning for the function.
    *
-   *
-   * @default false
+   * @default Versioning disabled
    * @example
    * ```js
    * {
