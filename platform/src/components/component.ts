@@ -6,6 +6,7 @@ import {
   output,
   asset as pulumiAsset,
   Input,
+  all,
 } from "@pulumi/pulumi";
 import { physicalName } from "./naming.js";
 import { VisibleError } from "./error.js";
@@ -435,8 +436,8 @@ export function $lazy<T>(fn: () => T) {
     .apply((x) => x);
 }
 
-export function $print(...msg: Input<string>[]) {
-  return output(msg).apply((msg) => console.log(...msg));
+export function $print(...msg: Input<any>[]) {
+  return all(msg).apply((msg) => console.log(...msg));
 }
 
 export class Version extends ComponentResource {

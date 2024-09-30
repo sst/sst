@@ -225,11 +225,15 @@ func CmdMosaic(c *cli.Cli) error {
 							}
 							dir := filepath.Join(cwd, d.Directory)
 							words, _ := shellquote.Split(d.Command)
+							title := d.Title
+							if title == "" {
+								title = d.Name
+							}
 							multi.AddProcess(
 								d.Name,
 								append([]string{currentExecutable, "dev", "--"}, words...),
 								"→",
-								d.Name,
+								title,
 								dir,
 								true,
 								d.Autostart,

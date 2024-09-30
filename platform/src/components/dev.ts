@@ -32,5 +32,10 @@ export interface DevArgs {
      * @default Uses the `path`
      */
     directory?: Input<string>;
+
+    /**
+     * The title of the tab in the multiplexer
+     */
+    title?: Input<string>;
   };
 }
