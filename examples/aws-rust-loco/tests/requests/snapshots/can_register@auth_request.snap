@@ -1,0 +1,25 @@
+---
+source: tests/requests/auth.rs
+expression: saved_user
+---
+Ok(
+    Model {
+        created_at: DATE,
+        updated_at: DATE,
+        id: ID
+        pid: PID,
+        email: "test@loco.com",
+        password: "PASSWORD",
+        api_key: "lo-PID",
+        name: "loco",
+        reset_token: None,
+        reset_sent_at: None,
+        email_verification_token: Some(
+            "PID",
+        ),
+        email_verification_sent_at: Some(
+            DATE,
+        ),
+        email_verified_at: None,
+    },
+)

@@ -1,0 +1,10 @@
+---
+source: tests/requests/auth.rs
+expression: ctx.mailer.unwrap().deliveries()
+---
+Deliveries {
+    count: 1,
+    messages: [
+        "From: System <system@example.com>\r\nTo: test@loco.com\r\nSubject: Welcome =?utf-8?b?bG9jbwo=?=\r\nMIME-Version: 1.0\r\nDate: DATE\r\nContent-Type: multipart/alternative;\r\n boundary=\"IDENTIFIER\"\r\n\r\n--IDENTIFIER\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: 7bit\r\n\r\nWelcome loco, you can now log in.\r\n  Verify your account with the link below:\r\n\r\n  http://localhost/verify#RANDOM_ID\r\n\r\n--IDENTIFIER\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n;<html>\r\n\r\n<body>\r\n  Dear loco,\r\n  Welcome to Loco! You can now log in to your account.\r\n  Before you get started, please verify your account by clicking the link b=\r\nelow:\r\n  <a href=3D\"http://http://localhost:5150/verify#RANDOM_IDNTIFIER--\r\n",
+    ],
+}

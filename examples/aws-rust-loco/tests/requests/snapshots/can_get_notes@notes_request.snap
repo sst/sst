@@ -1,0 +1,8 @@
+---
+source: tests/requests/notes.rs
+expression: "(notes.status_code(), notes.text())"
+---
+(
+    200,
+    "[{\"created_at\":\"DATEZ\",\"updated_at\":\"DATEZ\",\"id\":ID,\"title\":\"Loco note 1\",\"content\":\"Loco note 1 content\"},{\"created_at\":\"DATEZ\",\"updated_at\":\"DATEZ\",\"id\":ID,\"title\":\"Loco note 2\",\"content\":\"Loco note 2 content\"}]",
+)

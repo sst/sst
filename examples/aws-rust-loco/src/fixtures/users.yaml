@@ -1,0 +1,17 @@
+---
+- id: 1
+  pid: 11111111-1111-1111-1111-111111111111
+  email: user1@example.com
+  password: "$argon2id$v=19$m=19456,t=2,p=1$ETQBx4rTgNAZhSaeYZKOZg$eYTdH26CRT6nUJtacLDEboP0li6xUwUF/q5nSlQ8uuc"
+  api_key: lo-95ec80d7-cb60-4b70-9b4b-9ef74cb88758
+  name: user1
+  created_at: "2023-11-12T12:34:56.789Z"
+  updated_at: "2023-11-12T12:34:56.789Z"
+- id: 2
+  pid: 22222222-2222-2222-2222-222222222222
+  email: user2@example.com
+  password: "$argon2id$v=19$m=19456,t=2,p=1$ETQBx4rTgNAZhSaeYZKOZg$eYTdH26CRT6nUJtacLDEboP0li6xUwUF/q5nSlQ8uuc"
+  api_key: lo-153561ca-fa84-4e1b-813a-c62526d0a77e
+  name: user2
+  created_at: "2023-11-12T12:34:56.789Z"
+  updated_at: "2023-11-12T12:34:56.789Z"

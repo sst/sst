@@ -1,0 +1,8 @@
+---
+source: tests/requests/notes.rs
+expression: "(add_note_request.status_code(), add_note_request.text())"
+---
+(
+    200,
+    "{\"created_at\":\"DATEZ\",\"updated_at\":\"DATEZ\",\"id\":ID,\"title\":\"loco\",\"content\":\"loco note test\"}",
+)

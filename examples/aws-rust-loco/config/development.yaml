@@ -1,0 +1,145 @@
+# Loco configuration file documentation
+
+# Application logging configuration
+logger:
+  # Enable or disable logging.
+  enable: true
+  # Enable pretty backtrace (sets RUST_BACKTRACE=1)
+  pretty_backtrace: false
+  # Log level, options: trace, debug, info, warn or error.
+  level: info
+  # Define the logging format. options: compact, pretty or json
+  format: json
+  # By default the logger has filtering only logs that came from your code or logs that came from `loco` framework. to see all third party libraries
+  # Uncomment the line below to override to see all third party libraries you can enable this config and override the logger filters.
+  # override_filter: trace
+
+# Web server configuration
+server:
+  # Port on which the server will listen. the server binding is 0.0.0.0:{PORT}
+  port: 5150
+  binding: 0.0.0.0
+  # The UI hostname or IP address that mailers will point to.
+  host: http://localhost
+  # Out of the box middleware configuration. to disable middleware you can changed the `enable` field to `false` of comment the middleware block
+  middlewares:
+    # Enable Etag cache header middleware
+    etag:
+      enable: true
+    # Allows to limit the payload size request. payload that bigger than this file will blocked the request.
+    limit_payload:
+      # Enable/Disable the middleware.
+      enable: true
+      # the limit size. can be b,kb,kib,mb,mib,gb,gib
+      body_limit: 5mb
+    # set secure headers
+    secure_headers:
+      preset: github
+    # calculate remote IP based on `X-Forwarded-For` when behind a proxy or load balancer
+    # use RemoteIP(..) extractor to get the remote IP.
+    # without this middleware, you'll get the proxy IP instead.
+    # For more: https://github.com/rails/rails/blob/main/actionpack/lib/action_dispatch/middleware/remote_ip.rb
+    #
+    # NOTE! only enable when under a proxy, otherwise this can lead to IP spoofing vulnerabilities
+    # trust me, you'll know if you need this middleware.
+    remote_ip:
+      enable: false
+      # # replace the default trusted proxies:
+      # trusted_proxies:
+      # - ip range 1
+      # - ip range 2 ..
+    # Generating a unique request ID and enhancing logging with additional information such as the start and completion of request processing, latency, status code, and other request details.
+    logger:
+      # Enable/Disable the middleware.
+      enable: true
+    # when your code is panicked, the request still returns 500 status code.
+    catch_panic:
+      # Enable/Disable the middleware.
+      enable: true
+    # Timeout for incoming requests middleware. requests that take more time from the configuration will cute and 408 status code will returned.
+    timeout_request:
+      # Enable/Disable the middleware.
+      enable: false
+      # Duration time in milliseconds.
+      timeout: 5000
+    cors:
+      enable: true
+      # Set the value of the [`Access-Control-Allow-Origin`][mdn] header
+      # allow_origins:
+      #   - https://loco.rs
+      # Set the value of the [`Access-Control-Allow-Headers`][mdn] header
+      # allow_headers:
+      # - Content-Type
+      # Set the value of the [`Access-Control-Allow-Methods`][mdn] header
+      # allow_methods:
+      #   - POST
+      # Set the value of the [`Access-Control-Max-Age`][mdn] header in seconds
+      # max_age: 3600
+
+# Worker Configuration
+workers:
+  # specifies the worker mode. Options:
+  #   - BackgroundQueue - Workers operate asynchronously in the background, processing queued.
+  #   - ForegroundBlocking - Workers operate in the foreground and block until tasks are completed.
+  #   - BackgroundAsync - Workers operate asynchronously in the background, processing tasks with async capabilities.
+  mode: BackgroundQueue
+
+# Mailer Configuration.
+mailer:
+  # SMTP mailer configuration.
+  smtp:
+    # Enable/Disable smtp mailer.
+    enable: false
+    # SMTP server host. e.x localhost, smtp.gmail.com
+    host: {{ get_env(name="MAILER_HOST", default="localhost") }}
+    # SMTP server port
+    port: 1025
+    # Use secure connection (SSL/TLS).
+    secure: false
+    # auth:
+    #   user:
+    #   password:
+
+# Initializers Configuration
+# initializers:
+#  oauth2:
+#    authorization_code: # Authorization code grant type
+#      - client_identifier: google # Identifier for the OAuth2 provider. Replace 'google' with your provider's name if different, must be unique within the oauth2 config.
+#        ... other fields
+
+# Database Configuration
+database:
+  # Database connection URI
+  uri: {{ get_env(name="DATABASE_URL", default="postgres://loco:loco@localhost:5432/server_development") }}
+  # When enabled, the sql query will be logged.
+  enable_logging: false
+  # Set the timeout duration when acquiring a connection.
+  connect_timeout: {{ get_env(name="DB_CONNECT_TIMEOUT", default="500") }}
+  # Set the idle duration before closing a connection.
+  idle_timeout: 500
+  # Minimum number of connections for a pool.
+  min_connections: 1
+  # Maximum number of connections for a pool.
+  max_connections: 1
+  # Run migration up when application loaded
+  auto_migrate: false
+  # Truncate database when application loaded. This is a dangerous operation, make sure that you using this flag only on dev environments or test mode
+  dangerously_truncate: false
+  # Recreating schema when application loaded.  This is a dangerous operation, make sure that you using this flag only on dev environments or test mode
+  dangerously_recreate: false
+
+# Queue Configuration
+queue:
+  # Redis connection URI
+  uri: {{ get_env(name="REDIS_URL", default="redis://127.0.0.1") }}
+  # Dangerously flush all data in Redis on startup. dangerous operation, make sure that you using this flag only on dev environments or test mode
+  dangerously_flush: false
+
+# Authentication Configuration
+auth:
+  # JWT authentication
+  jwt:
+    # Secret key for token generation and verification
+    secret: KRVK4VAddJ3zV8IkOCTh
+    # Token expiration time in seconds
+    expiration: 604800 # 7 days

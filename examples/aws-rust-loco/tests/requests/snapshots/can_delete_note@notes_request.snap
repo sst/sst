@@ -1,0 +1,8 @@
+---
+source: tests/requests/notes.rs
+expression: "(delete_note_request.status_code(), delete_note_request.text())"
+---
+(
+    200,
+    "",
+)

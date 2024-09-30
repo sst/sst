@@ -1,0 +1,24 @@
+# Command to run SST, process SST_RESOURCE_LocoDatabase, and run cargo loco start
+dev stage="production":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Run SST shell and capture its output
+    SST_OUTPUT=$(pnpm sst shell --stage={{stage}} -- env)
+
+    # Extract SST_RESOURCE_LocoDatabase from SST output
+    SST_RESOURCE_LocoDatabase=$(echo "$SST_OUTPUT" | grep SST_RESOURCE_LocoDatabase | cut -d '=' -f2-)
+
+    # Ensure the environment variable exists
+    if [ -z "${SST_RESOURCE_LocoDatabase:-}" ]; then
+        echo "Error: SST_RESOURCE_LocoDatabase is not set" >&2
+        exit 1
+    fi
+
+    # Use jq to parse the JSON and construct the DATABASE_URL
+    export DATABASE_URL=$(echo "$SST_RESOURCE_LocoDatabase" | jq -r '
+        "postgres://\(.username):\(.password | @uri)@\(.host):\(.port)/\(.database)"
+    ')
+
+    # Run cargo loco start with the processed DATABASE_URL
+    pnpm sst shell --stage={{stage}} -- cargo loco start

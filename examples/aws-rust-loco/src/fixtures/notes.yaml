@@ -1,0 +1,11 @@
+---
+- id: 1
+  title: Loco note 1
+  content: Loco note 1 content
+  created_at: "2023-11-12T12:34:56.789Z"
+  updated_at: "2023-11-12T12:34:56.789Z"
+- id: 2
+  title: Loco note 2
+  content: Loco note 2 content
+  created_at: "2023-11-12T12:34:56.789Z"
+  updated_at: "2023-11-12T12:34:56.789Z"
