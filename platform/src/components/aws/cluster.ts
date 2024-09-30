@@ -150,33 +150,33 @@ export interface ClusterArgs {
    * ```
    */
   vpc:
-    | Vpc
-    | Input<{
-        /**
-         * The ID of the VPC.
-         */
-        id: Input<string>;
-        /**
-         * A list of subnet IDs in the VPC to place the load balancer in.
-         */
-        loadBalancerSubnets: Input<Input<string>[]>;
-        /**
-         * A list of private subnet IDs in the VPC to place the services in.
-         */
-        serviceSubnets: Input<Input<string>[]>;
-        /**
-         * A list of VPC security group IDs for the service.
-         */
-        securityGroups: Input<Input<string>[]>;
-        /**
-         * The ID of the Cloud Map namespace to use for the service.
-         */
-        cloudmapNamespaceId: Input<string>;
-        /**
-         * The name of the Cloud Map namespace to use for the service.
-         */
-        cloudmapNamespaceName: Input<string>;
-      }>;
+  | Vpc
+  | Input<{
+    /**
+     * The ID of the VPC.
+     */
+    id: Input<string>;
+    /**
+     * A list of subnet IDs in the VPC to place the load balancer in.
+     */
+    loadBalancerSubnets: Input<Input<string>[]>;
+    /**
+     * A list of private subnet IDs in the VPC to place the services in.
+     */
+    serviceSubnets: Input<Input<string>[]>;
+    /**
+     * A list of VPC security group IDs for the service.
+     */
+    securityGroups: Input<Input<string>[]>;
+    /**
+     * The ID of the Cloud Map namespace to use for the service.
+     */
+    cloudmapNamespaceId: Input<string>;
+    /**
+     * The name of the Cloud Map namespace to use for the service.
+     */
+    cloudmapNamespaceName: Input<string>;
+  }>;
   /**
    * Force upgrade from `Cluster.v1` to the latest `Cluster` version. The only valid value
    * is `v2`, which is the version of the new `Cluster`.
@@ -340,105 +340,105 @@ export interface ClusterServiceArgs {
     domain?: Input<
       | string
       | {
-          /**
-           * The custom domain you want to use.
-           *
-           * @example
-           * ```js
-           * {
-           *   domain: {
-           *     name: "example.com"
-           *   }
-           * }
-           * ```
-           *
-           * Can also include subdomains based on the current stage.
-           *
-           * ```js
-           * {
-           *   domain: {
-           *     name: `${$app.stage}.example.com`
-           *   }
-           * }
-           * ```
-           */
-          name: Input<string>;
-          /**
-           * The ARN of an ACM (AWS Certificate Manager) certificate that proves ownership of the
-           * domain. By default, a certificate is created and validated automatically.
-           *
-           * :::tip
-           * You need to pass in a `cert` for domains that are not hosted on supported `dns` providers.
-           * :::
-           *
-           * To manually set up a domain on an unsupported provider, you'll need to:
-           *
-           * 1. [Validate that you own the domain](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) by creating an ACM certificate. You can either validate it by setting a DNS record or by verifying an email sent to the domain owner.
-           * 2. Once validated, set the certificate ARN as the `cert` and set `dns` to `false`.
-           * 3. Add the DNS records in your provider to point to the load balancer endpoint.
-           *
-           * @example
-           * ```js
-           * {
-           *   domain: {
-           *     name: "example.com",
-           *     dns: false,
-           *     cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
-           *   }
-           * }
-           * ```
-           */
-          cert?: Input<string>;
-          /**
-           * The DNS provider to use for the domain. Defaults to the AWS.
-           *
-           * Takes an adapter that can create the DNS records on the provider. This can automate
-           * validating the domain and setting up the DNS routing.
-           *
-           * Supports Route 53, Cloudflare, and Vercel adapters. For other providers, you'll need
-           * to set `dns` to `false` and pass in a certificate validating ownership via `cert`.
-           *
-           * @default `sst.aws.dns`
-           *
-           * @example
-           *
-           * Specify the hosted zone ID for the Route 53 domain.
-           *
-           * ```js
-           * {
-           *   domain: {
-           *     name: "example.com",
-           *     dns: sst.aws.dns({
-           *       zone: "Z2FDTNDATAQYW2"
-           *     })
-           *   }
-           * }
-           * ```
-           *
-           * Use a domain hosted on Cloudflare, needs the Cloudflare provider.
-           *
-           * ```js
-           * {
-           *   domain: {
-           *     name: "example.com",
-           *     dns: sst.cloudflare.dns()
-           *   }
-           * }
-           * ```
-           *
-           * Use a domain hosted on Vercel, needs the Vercel provider.
-           *
-           * ```js
-           * {
-           *   domain: {
-           *     name: "example.com",
-           *     dns: sst.vercel.dns()
-           *   }
-           * }
-           * ```
-           */
-          dns?: Input<false | (Dns & {})>;
-        }
+        /**
+         * The custom domain you want to use.
+         *
+         * @example
+         * ```js
+         * {
+         *   domain: {
+         *     name: "example.com"
+         *   }
+         * }
+         * ```
+         *
+         * Can also include subdomains based on the current stage.
+         *
+         * ```js
+         * {
+         *   domain: {
+         *     name: `${$app.stage}.example.com`
+         *   }
+         * }
+         * ```
+         */
+        name: Input<string>;
+        /**
+         * The ARN of an ACM (AWS Certificate Manager) certificate that proves ownership of the
+         * domain. By default, a certificate is created and validated automatically.
+         *
+         * :::tip
+         * You need to pass in a `cert` for domains that are not hosted on supported `dns` providers.
+         * :::
+         *
+         * To manually set up a domain on an unsupported provider, you'll need to:
+         *
+         * 1. [Validate that you own the domain](https://docs.aws.amazon.com/acm/latest/userguide/domain-ownership-validation.html) by creating an ACM certificate. You can either validate it by setting a DNS record or by verifying an email sent to the domain owner.
+         * 2. Once validated, set the certificate ARN as the `cert` and set `dns` to `false`.
+         * 3. Add the DNS records in your provider to point to the load balancer endpoint.
+         *
+         * @example
+         * ```js
+         * {
+         *   domain: {
+         *     name: "example.com",
+         *     dns: false,
+         *     cert: "arn:aws:acm:us-east-1:112233445566:certificate/3a958790-8878-4cdc-a396-06d95064cf63"
+         *   }
+         * }
+         * ```
+         */
+        cert?: Input<string>;
+        /**
+         * The DNS provider to use for the domain. Defaults to the AWS.
+         *
+         * Takes an adapter that can create the DNS records on the provider. This can automate
+         * validating the domain and setting up the DNS routing.
+         *
+         * Supports Route 53, Cloudflare, and Vercel adapters. For other providers, you'll need
+         * to set `dns` to `false` and pass in a certificate validating ownership via `cert`.
+         *
+         * @default `sst.aws.dns`
+         *
+         * @example
+         *
+         * Specify the hosted zone ID for the Route 53 domain.
+         *
+         * ```js
+         * {
+         *   domain: {
+         *     name: "example.com",
+         *     dns: sst.aws.dns({
+         *       zone: "Z2FDTNDATAQYW2"
+         *     })
+         *   }
+         * }
+         * ```
+         *
+         * Use a domain hosted on Cloudflare, needs the Cloudflare provider.
+         *
+         * ```js
+         * {
+         *   domain: {
+         *     name: "example.com",
+         *     dns: sst.cloudflare.dns()
+         *   }
+         * }
+         * ```
+         *
+         * Use a domain hosted on Vercel, needs the Vercel provider.
+         *
+         * ```js
+         * {
+         *   domain: {
+         *     name: "example.com",
+         *     dns: sst.vercel.dns()
+         *   }
+         * }
+         * ```
+         */
+        dns?: Input<false | (Dns & {})>;
+      }
     >;
     /**
      * Configure the mapping for the ports the public endpoint listens to and forwards to
@@ -720,12 +720,12 @@ export interface ClusterServiceArgs {
     memoryUtilization?: Input<number>;
   }>;
   /**
-   * Configure the docker build command for building the image or specify a pre-built image.
+   * Configure the Docker build command for building the image or specify a pre-built image.
    *
-   * @default Build a docker image from the Dockerfile in the root directory.
+   * @default Build a Docker image from the Dockerfile in the root directory.
    * @example
    *
-   * Building a docker image.
+   * Building a Docker image.
    *
    * Prior to building the image, SST will automatically add the `.sst` directory
    * to the `.dockerignore` if not already present.
@@ -753,46 +753,46 @@ export interface ClusterServiceArgs {
   image?: Input<
     | string
     | {
-        /**
-         * The path to the [Docker build context](https://docs.docker.com/build/building/context/#local-context). The path is relative to your project's `sst.config.ts`.
-         * @default `"."`
-         * @example
-         *
-         * To change where the docker build context is located.
-         *
-         * ```js
-         * {
-         *   context: "./app"
-         * }
-         * ```
-         */
-        context?: Input<string>;
-        /**
-         * The path to the [Dockerfile](https://docs.docker.com/reference/cli/docker/image/build/#file).
-         * The path is relative to the build `context`.
-         * @default `"Dockerfile"`
-         * @example
-         * To use a different Dockerfile.
-         * ```js
-         * {
-         *   dockerfile: "Dockerfile.prod"
-         * }
-         * ```
-         */
-        dockerfile?: Input<string>;
-        /**
-         * Key-value pairs of [build args](https://docs.docker.com/build/guide/build-args/) to pass to the docker build command.
-         * @example
-         * ```js
-         * {
-         *   args: {
-         *     MY_VAR: "value"
-         *   }
-         * }
-         * ```
-         */
-        args?: Input<Record<string, Input<string>>>;
-      }
+      /**
+       * The path to the [Docker build context](https://docs.docker.com/build/building/context/#local-context). The path is relative to your project's `sst.config.ts`.
+       * @default `"."`
+       * @example
+       *
+       * To change where the Docker build context is located.
+       *
+       * ```js
+       * {
+       *   context: "./app"
+       * }
+       * ```
+       */
+      context?: Input<string>;
+      /**
+       * The path to the [Dockerfile](https://docs.docker.com/reference/cli/docker/image/build/#file).
+       * The path is relative to the build `context`.
+       * @default `"Dockerfile"`
+       * @example
+       * To use a different Dockerfile.
+       * ```js
+       * {
+       *   dockerfile: "Dockerfile.prod"
+       * }
+       * ```
+       */
+      dockerfile?: Input<string>;
+      /**
+       * Key-value pairs of [build args](https://docs.docker.com/build/guide/build-args/) to pass to the Docker build command.
+       * @example
+       * ```js
+       * {
+       *   args: {
+       *     MY_VAR: "value"
+       *   }
+       * }
+       * ```
+       */
+      args?: Input<Record<string, Input<string>>>;
+    }
   >;
   /**
    * The command to override the default command in the container.
@@ -853,170 +853,125 @@ export interface ClusterServiceArgs {
   }>;
   /**
    * The containers to run in the service.
+   *
+   * :::tip
+   * You can optiionally run multiple containers in a service.
+   * :::
+   *
+   * By default this starts a single container. To add multiple containers in the service, pass
+   * in an array of containers args.
+   *
+   * ```ts
+   * {
+   *   containers: [
+   *     {
+   *       name: "app",
+   *       image: "nginxdemos/hello:plain-text"
+   *     },
+   *     {
+   *       name: "admin",
+   *       image: {
+   *         context: "./admin",
+   *         dockerfile: "Dockerfile"
+   *       }
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * If you sepcify `containers`, you cannot list the above args at the top-level. For example,
+   * you **cannot** pass in `image` at the top level.
+   *
+   * ```diff lang="ts"
+   * {
+   * -  image: "nginxdemos/hello:plain-text",
+   *   containers: [
+   *     {
+   *       name: "app",
+   *       image: "nginxdemos/hello:plain-text"
+   *     },
+   *     {
+   *       name: "admin",
+   *       image: "nginxdemos/hello:plain-text"
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * You will need to pass in `image` as a part of the `containers`.
    */
   containers?: Input<{
     /**
      * The name of the container.
+     *
+     * This is used as the `--name` option in the Docker run command.
      */
     name: Input<string>;
     /**
-     * Configure the docker build command for building the image or specify a pre-built image.
-     *
-     * @default Build a docker image from the Dockerfile in the root directory.
-     * @example
-     *
-     * Building a docker image.
-     *
-     * Prior to building the image, SST will automatically add the `.sst` directory
-     * to the `.dockerignore` if not already present.
-     *
-     * ```js
-     * {
-     *   image: {
-     *     context: "./app",
-     *     dockerfile: "Dockerfile",
-     *     args: {
-     *       MY_VAR: "value"
-     *     }
-     *   }
-     * }
-     * ```
-     *
-     * Alternatively, you can pass in a pre-built image.
-     *
-     * ```js
-     * {
-     *   image: "nginxdemos/hello:plain-text"
-     * }
-     * ```
+     * Configure the Docker image for the container. Same as the top-level [`image`](#image).
      */
     image?: Input<
       | string
       | {
-          /**
-           * The path to the [Docker build context](https://docs.docker.com/build/building/context/#local-context). The path is relative to your project's `sst.config.ts`.
-           * @default `"."`
-           * @example
-           *
-           * To change where the docker build context is located.
-           *
-           * ```js
-           * {
-           *   context: "./app"
-           * }
-           * ```
-           */
-          context?: Input<string>;
-          /**
-           * The path to the [Dockerfile](https://docs.docker.com/reference/cli/docker/image/build/#file).
-           * The path is relative to the build `context`.
-           * @default `"Dockerfile"`
-           * @example
-           * To use a different Dockerfile.
-           * ```js
-           * {
-           *   dockerfile: "Dockerfile.prod"
-           * }
-           * ```
-           */
-          dockerfile?: Input<string>;
-          /**
-           * Key-value pairs of [build args](https://docs.docker.com/build/guide/build-args/) to pass to the docker build command.
-           * @example
-           * ```js
-           * {
-           *   args: {
-           *     MY_VAR: "value"
-           *   }
-           * }
-           * ```
-           */
-          args?: Input<Record<string, Input<string>>>;
-        }
+        /**
+         * The path to the Docker build context. Same as the top-level
+         * [`image.context`](#image-context).
+         */
+        context?: Input<string>;
+        /**
+         * The path to the Dockerfile. Same as the top-level
+         * [`image.dockerfile`](#image-dockerfile).
+         */
+        dockerfile?: Input<string>;
+        /**
+         * Key-value pairs of build args. Same as the top-level [`image.args`](#image-args).
+         */
+        args?: Input<Record<string, Input<string>>>;
+      }
     >;
     /**
-     * The command to override the default command in the container.
-     * @example
-     * ```js
-     * {
-     *   command: ["npm", "run", "start"]
-     * }
-     * ```
+     * The command to override the default command in the container. Same as the top-level
+     * [`command`](#command).
      */
     command?: Input<string[]>;
     /**
-     * The entrypoint to override the default entrypoint in the container.
-     * @example
-     * ```js
-     * {
-     *   entrypoint: ["/usr/bin/my-entrypoint"]
-     * }
-     * ```
+     * The entrypoint to override the default entrypoint in the container. Same as the top-level
+     * [`entrypoint`](#entrypoint).
      */
     entrypoint?: Input<string[]>;
     /**
-     * Key-value pairs of values that are set as [container environment variables](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/taskdef-envfiles.html).
-     * The keys need to:
-     * - Start with a letter
-     * - Be at least 2 characters long
-     * - Contain only letters, numbers, or underscores
-     *
-     * @example
-     *
-     * ```js
-     * {
-     *   environment: {
-     *     DEBUG: "true"
-     *   }
-     * }
-     * ```
+     * Key-value pairs of values that are set as container environment variables. Same as the
+     * top-level [`environment`](#environment).
      */
     environment?: FunctionArgs["environment"];
     /**
-     * Configure the service's logs in CloudWatch.
-     * @default `{ retention: "forever" }`
-     * @example
-     * ```js
-     * {
-     *   logging: {
-     *     retention: "1 week"
-     *   }
-     * }
-     * ```
+     * Configure the service's logs in CloudWatch. Same as the top-level [`logging`](#logging).
      */
     logging?: Input<{
       /**
-       * The duration the logs are kept in CloudWatch.
-       * @default `"forever"`
+       * The duration the logs are kept in CloudWatch. Same as the top-level
+       * [`logging.retention`](#logging-retention).
        */
       retention?: Input<keyof typeof RETENTION>;
     }>;
     /**
-     * Configure how this container works in `sst dev`.
-     *
-     * :::note
-     * In `sst dev` your container is run locally; it's not deployed.
-     * :::
-     *
-     * Instead of deploying your service, this starts it locally. It's run
-     * as a separate process in the `sst dev` multiplexer. Read more about
-     * [`sst dev`](/docs/reference/cli/#dev).
+     * Configure how this container works in `sst dev`. Same as the top-level
+     * [`dev`](#dev).
      */
     dev?: {
       /**
-       * The command that `sst dev` runs to start this in dev mode. This is the command you run
-       * when you want to run your service locally.
+       * The command that `sst dev` runs to start this in dev mode. Same as the top-level
+       * [`dev.command`](#dev-command).
        */
       command?: Input<string>;
       /**
-       * Configure if you want to automatically start this when `sst dev` starts. You can still
-       * start it manually later.
-       * @default `true`
+       * Configure if you want to automatically start this when `sst dev` starts. Same as the
+       * top-level [`dev.autostart`](#dev-autostart).
        */
       autostart?: Input<boolean>;
       /**
-       * Change the directory from where the `command` is run.
-       * @default Uses the `image.dockerfile` path
+       * Change the directory from where the `command` is run. Same as the top-level
+       * [`dev.directory`](#dev-directory).
        */
       directory?: Input<string>;
     };
@@ -1199,7 +1154,7 @@ export class Cluster extends Component {
    * cluster.addService("MyService");
    * ```
    *
-   * Set a custom domain for the service.
+   * You can also configure the service. For example, set a custom domain.
    *
    * ```js {2} title="sst.config.ts"
    * cluster.addService("MyService", {
@@ -1207,7 +1162,7 @@ export class Cluster extends Component {
    * });
    * ```
    *
-   * #### Enable auto-scaling
+   * Enable auto-scaling.
    *
    * ```ts title="sst.config.ts"
    * cluster.addService("MyService", {
@@ -1219,6 +1174,29 @@ export class Cluster extends Component {
    *   }
    * });
    * ```
+   *
+   * By default this starts a single container. To add multiple containers in the service, pass in an array of containers args.
+   *
+   * ```ts title="sst.config.ts"
+   * cluster.addService("MyService", {
+   *   architecture: "arm64",
+   *   containers: [
+   *     {
+   *       name: "app",
+   *       image: "nginxdemos/hello:plain-text"
+   *     },
+   *     {
+   *       name: "admin",
+   *       image: {
+   *         context: "./admin",
+   *         dockerfile: "Dockerfile"
+   *       }
+   *     }
+   *   ]
+   * });
+   * ```
+   *
+   * This is useful for running sidecar containers.
    */
   public addService(name: string, args?: ClusterServiceArgs) {
     // Do not prefix the service to allow `Resource.MyService` to work.
