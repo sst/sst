@@ -3,7 +3,7 @@
 export default $config({
   app(input) {
     return {
-      name: "aws-express",
+      name: "aws-bun",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
     };
@@ -15,10 +15,10 @@ export default $config({
     const cluster = new sst.aws.Cluster("MyCluster", { vpc });
     cluster.addService("MyService", {
       public: {
-        ports: [{ listen: "80/http" }],
+        ports: [{ listen: "80/http", forward: "3000/http" }],
       },
       dev: {
-        command: "node --watch index.mjs",
+        command: "bun dev",
       },
       link: [bucket],
     });

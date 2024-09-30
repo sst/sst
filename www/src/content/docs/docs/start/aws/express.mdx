@@ -3,10 +3,10 @@ title: Express on AWS with SST
 description: Create and deploy an Express app to AWS with SST.
 ---
 
-We are going to build Express app in a container, add an S3 Bucket for file uploads, and deploy it to AWS using SST.
+We are going to build an Express app in a container, add an S3 Bucket for file uploads, and deploy it to AWS using SST.
 
 :::tip[View source]
-You can [view the source](https://github.com/sst/ion/tree/dev/examples/aws-cluster) of this example in our repo.
+You can [view the source](https://github.com/sst/ion/tree/dev/examples/aws-express) of this example in our repo.
 :::
 
 Before you get started, make sure to [configure your AWS credentials](/docs/iam-credentials#credentials).
@@ -87,25 +87,6 @@ The `dev.command` tells SST to run our Express app locally in dev mode.
 
 ---
 
-#### Create a Dockerfile
-
-Let's add a `Dockerfile` in the root with the following.
-
-```dockerfile title="Dockerfile"
-FROM node:18-bullseye-slim
-
-WORKDIR /app/
-
-COPY package.json /app
-RUN npm install
-
-COPY index.mjs /app
-
-ENTRYPOINT ["node", "index.mjs"]
-```
-
----
-
 ## 3. Add an S3 Bucket
 
 Let's add an S3 Bucket for file uploads. Update your `sst.config.ts`.
@@ -116,9 +97,11 @@ const bucket = new sst.aws.Bucket("MyBucket");
 
 Add this above the `Vpc` component.
 
+---
+
 #### Link the bucket
 
-Now, link the bucket to the container service.
+Now, link the bucket to the container.
 
 ```ts title="sst.config.ts" {3}
 cluster.addService("MyService", {
@@ -139,7 +122,7 @@ Start your app in dev mode.
 npx sst dev
 ```
 
-Once complete, click on **MyService** in the sidebar for your local Express app.
+Once started, click on **MyService** in the sidebar for your local Express app.
 
 ---
 
@@ -153,7 +136,7 @@ npm install multer @aws-sdk/client-s3 @aws-sdk/lib-storage @aws-sdk/s3-request-p
 
 Add the relevant imports.
 
-```ts title="index.ts"
+```ts title="index.mjs"
 import multer from "multer";
 import { Resource } from "sst";
 import { Upload } from "@aws-sdk/lib-storage";
@@ -232,7 +215,29 @@ Now head over to `http://localhost:80/latest` in your browser and it'll download
 
 ## 6. Deploy your app
 
-Now let's deploy your app.
+To deploy our app we'll first add a `Dockerfile`.
+
+```dockerfile title="Dockerfile"
+FROM node:18-bullseye-slim
+
+WORKDIR /app/
+
+COPY package.json /app
+RUN npm install
+
+COPY index.mjs /app
+
+ENTRYPOINT ["node", "index.mjs"]
+```
+
+Let's also add a `.dockerignore` file in the root.
+
+```bash title=".dockerignore"
+.sst
+node_modules
+```
+
+Now to build our Docker image and deploy we run:
 
 ```bash
 npx sst deploy --stage production
@@ -241,7 +246,7 @@ npx sst deploy --stage production
 You can use any stage name here but it's good to create a new stage for production. This'll give the URL of your Express app deployed as a Fargate service.
 
 ```bash
-+  Complete
+✓  Complete
    MyService: http://jayair-MyServiceLoadBala-592628062.us-east-1.elb.amazonaws.com
 ```
 

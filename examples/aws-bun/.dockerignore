@@ -1,0 +1,6 @@
+.sst
+node_modules
+.git
+.gitignore
+README.md
+Dockerfile*
