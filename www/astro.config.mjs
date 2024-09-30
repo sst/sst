@@ -29,8 +29,8 @@ const sidebar = [
       { label: "Next.js", slug: "docs/start/aws/nextjs" },
       { label: "Analog", slug: "docs/start/aws/analog" },
       { label: "Angular", slug: "docs/start/aws/angular" },
+      { label: "Express", slug: "docs/start/aws/express" },
       { label: "Realtime", slug: "docs/start/aws/realtime" },
-      { label: "Container", slug: "docs/start/aws/container" },
       {
         label: "Cloudflare",
         items: [
@@ -194,6 +194,7 @@ export default defineConfig({
     "/install": "https://raw.githubusercontent.com/sst/ion/dev/install",
     "/discord": "https://discord.gg/sst",
     "/guide": "https://guide.sst.dev",
+    "/docs/start/aws/container": "/docs/start/aws/express",
   },
   integrations: [
     sitemap({

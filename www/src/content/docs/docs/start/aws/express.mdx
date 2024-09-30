@@ -1,6 +1,6 @@
 ---
-title: Containers on AWS with SST
-description: Create and deploy a container to AWS with SST.
+title: Express on AWS with SST
+description: Create and deploy an Express app to AWS with SST.
 ---
 
 We are going to build Express app in a container, add an S3 Bucket for file uploads, and deploy it to AWS using SST.
@@ -108,12 +108,10 @@ ENTRYPOINT ["node", "index.mjs"]
 
 ## 3. Add an S3 Bucket
 
-Let's allow public `access` to our S3 Bucket for file uploads. Update your `sst.config.ts`.
+Let's add an S3 Bucket for file uploads. Update your `sst.config.ts`.
 
 ```js title="sst.config.ts"
-const bucket = new sst.aws.Bucket("MyBucket", {
-  access: "public"
-});
+const bucket = new sst.aws.Bucket("MyBucket");
 ```
 
 Add this above the `Vpc` component.
@@ -256,5 +254,3 @@ As a next step, you can setup the [SST Console](/docs/console/) to _**git push t
 ![SST Console Autodeploy](../../../../../assets/docs/start/sst-console-autodeploy.png)
 
 You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
-
-

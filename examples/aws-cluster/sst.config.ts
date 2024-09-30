@@ -9,10 +9,7 @@ export default $config({
     };
   },
   async run() {
-    const bucket = new sst.aws.Bucket("MyBucket", {
-      access: "public",
-    });
-
+    const bucket = new sst.aws.Bucket("MyBucket");
     const vpc = new sst.aws.Vpc("MyVpc");
 
     const cluster = new sst.aws.Cluster("MyCluster", { vpc });

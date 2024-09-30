@@ -1,4 +1,4 @@
-# From https://elysiajs.com/patterns/deployment.html#docker
+# https://elysiajs.com/patterns/deployment.html#docker
 
 FROM oven/bun AS build
 
