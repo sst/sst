@@ -1526,7 +1526,7 @@ export class Function extends Component implements Link.Linkable {
           const linkInjection = hasLinkInjections
             ? linkData
                 .map((item) => [
-                  `process.env.SST_RESOURCE_${item.name} = ${JSON.stringify(
+                  `process.env["SST_RESOURCE_${item.name}"] = ${JSON.stringify(
                     JSON.stringify(item.properties),
                   )};\n`,
                 ])
