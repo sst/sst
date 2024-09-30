@@ -1076,6 +1076,7 @@ var root = &cli.Command{
 			},
 		},
 		CmdCert,
+		CmdTunnel,
 		CmdDiagnostic,
 	},
 }
