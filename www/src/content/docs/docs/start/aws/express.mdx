@@ -230,6 +230,12 @@ COPY index.mjs /app
 ENTRYPOINT ["node", "index.mjs"]
 ```
 
+This just builds our Express app in a Docker image.
+
+:::tip
+You need to be running [Docker Desktop](https://www.docker.com/products/docker-desktop/) to deploy your app.
+:::
+
 Let's also add a `.dockerignore` file in the root.
 
 ```bash title=".dockerignore"
