@@ -38,29 +38,31 @@ export default $config({
     // Redirect /examples to guide.sst.dev/examples
     // Redirect /chapters to guide.sst.dev/chapters
     // Redirect /archives to guide.sst.dev/archives
-    const cfFunction = new aws.cloudfront.Function("AstroRedirect", {
-      runtime: "cloudfront-js-2.0",
-      code: [
-        `async function handler(event) {`,
-        `  const request = event.request;`,
-        // ie. request.uri is /examples/foo
-        `  return {`,
-        `    statusCode: 302,`,
-        `    statusDescription: 'Found',`,
-        `    headers: {`,
-        `      location: { value: "https://guide.sst.dev" + request.uri }`,
-        `    },`,
-        `  };`,
-        `}`,
-      ].join("\n"),
-    });
-    const behaviorConfig = {
+    const redirectToGuideBehavior = {
       targetOriginId: "redirect",
       viewerProtocolPolicy: "redirect-to-https",
       allowedMethods: ["GET", "HEAD", "OPTIONS"],
       cachedMethods: ["GET", "HEAD"],
       functionAssociations: [
-        { eventType: "viewer-request", functionArn: cfFunction.arn },
+        {
+          eventType: "viewer-request",
+          functionArn: new aws.cloudfront.Function("AstroRedirect", {
+            runtime: "cloudfront-js-2.0",
+            code: [
+              `async function handler(event) {`,
+              `  const request = event.request;`,
+              // ie. request.uri is /examples/foo
+              `  return {`,
+              `    statusCode: 302,`,
+              `    statusDescription: 'Found',`,
+              `    headers: {`,
+              `      location: { value: "https://guide.sst.dev" + request.uri }`,
+              `    },`,
+              `  };`,
+              `}`,
+            ].join("\n"),
+          }).arn,
+        },
       ],
       forwardedValues: {
         queryString: true,
@@ -68,6 +70,38 @@ export default $config({
         cookies: { forward: "none" },
       },
     };
+
+    // Stripe .html from /blog
+    const stripHtmlBehavior = {
+      targetOriginId: "redirect",
+      viewerProtocolPolicy: "redirect-to-https",
+      allowedMethods: ["GET", "HEAD", "OPTIONS"],
+      cachedMethods: ["GET", "HEAD"],
+      functionAssociations: [
+        {
+          eventType: "viewer-request",
+          functionArn: new aws.cloudfront.Function("StripHtml", {
+            runtime: "cloudfront-js-2.0",
+            code: [
+              `async function handler(event) {`,
+              `  return {`,
+              `    statusCode: 308,`,
+              `    headers: {`,
+              `      location: { value: event.request.uri.replace(/\.html$/, "") }`,
+              `    },`,
+              `  };`,
+              `}`,
+            ].join("\n"),
+          }).arn,
+        },
+      ],
+      forwardedValues: {
+        queryString: true,
+        headers: ["Origin"],
+        cookies: { forward: "none" },
+      },
+    };
+
     new sst.aws.Astro("Astro", {
       domain:
         $app.stage === "production"
@@ -101,9 +135,10 @@ export default $config({
             args.orderedCacheBehaviors
           ).apply((cacheBehaviors) => [
             ...(cacheBehaviors || []),
-            { pathPattern: "/examples*", ...behaviorConfig },
-            { pathPattern: "/chapters*", ...behaviorConfig },
-            { pathPattern: "/archives*", ...behaviorConfig },
+            { pathPattern: "/blog/*.html", ...stripHtmlBehavior },
+            { pathPattern: "/examples*", ...redirectToGuideBehavior },
+            { pathPattern: "/chapters*", ...redirectToGuideBehavior },
+            { pathPattern: "/archives*", ...redirectToGuideBehavior },
           ]);
         },
       },
