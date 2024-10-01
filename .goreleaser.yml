@@ -73,4 +73,5 @@ changelog:
       - '^test:'
       - '^ci:'
       - '^ignore:'
+      - '^wip:'
 

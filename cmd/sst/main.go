@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"os/user"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -93,23 +94,30 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-	spin.Suffix = "  Updating dependencies..."
-	if global.NeedsPulumi() {
-		spin.Start()
-		err := global.InstallPulumi()
-		if err != nil {
-			return err
-		}
+	currentUser, err := user.Current()
+	if err != nil {
+		return err
 	}
-	if global.NeedsBun() {
-		spin.Start()
-		err := global.InstallBun()
-		if err != nil {
-			return err
+
+	if currentUser.Uid != "0" {
+		spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+		spin.Suffix = "  Updating dependencies..."
+		if global.NeedsPulumi() {
+			spin.Start()
+			err := global.InstallPulumi()
+			if err != nil {
+				return err
+			}
 		}
+		if global.NeedsBun() {
+			spin.Start()
+			err := global.InstallBun()
+			if err != nil {
+				return err
+			}
+		}
+		spin.Stop()
 	}
-	spin.Stop()
 	return c.Run()
 }
 
@@ -1076,7 +1084,7 @@ var root = &cli.Command{
 			},
 		},
 		CmdCert,
-		// CmdTunnel,
+		CmdTunnel,
 		CmdDiagnostic,
 	},
 }
