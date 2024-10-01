@@ -562,7 +562,7 @@ export class Dynamo extends Component implements Link.Linkable {
    * ```
    */
   public subscribe(
-    subscriber: string | FunctionArgs | Input<FunctionArn>,
+    subscriber: Input<string | FunctionArgs | FunctionArn>,
     args?: DynamoSubscriberArgs,
   ) {
     const sourceName = this.constructorName;
@@ -632,7 +632,7 @@ export class Dynamo extends Component implements Link.Linkable {
    */
   public static subscribe(
     streamArn: Input<string>,
-    subscriber: string | FunctionArgs | Input<FunctionArn>,
+    subscriber: Input<string | FunctionArgs | FunctionArn>,
     args?: DynamoSubscriberArgs,
   ) {
     return output(streamArn).apply((streamArn) =>
@@ -648,7 +648,7 @@ export class Dynamo extends Component implements Link.Linkable {
   private static _subscribe(
     name: string,
     streamArn: string | Output<string>,
-    subscriber: string | FunctionArgs | Input<FunctionArn>,
+    subscriber: Input<string | FunctionArgs | FunctionArn>,
     args: DynamoSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
   ) {

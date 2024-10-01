@@ -254,7 +254,7 @@ export class Bus extends Component implements Link.Linkable {
    * ```
    */
   public subscribe(
-    subscriber: string | FunctionArgs | Input<FunctionArn>,
+    subscriber: Input<string | FunctionArgs | FunctionArn>,
     args: BusSubscriberArgs = {},
   ) {
     return Bus._subscribeFunction(
@@ -309,7 +309,7 @@ export class Bus extends Component implements Link.Linkable {
    */
   public static subscribe(
     busArn: Input<string>,
-    subscriber: string | FunctionArgs | Input<FunctionArn>,
+    subscriber: Input<string | FunctionArgs | FunctionArn>,
     args?: BusSubscriberArgs,
   ) {
     return output(busArn).apply((busArn) => {
@@ -328,7 +328,7 @@ export class Bus extends Component implements Link.Linkable {
     name: string,
     busName: Input<string>,
     busArn: string | Output<string>,
-    subscriber: string | FunctionArgs | Input<FunctionArn>,
+    subscriber: Input<string | FunctionArgs | FunctionArn>,
     args: BusSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
   ) {

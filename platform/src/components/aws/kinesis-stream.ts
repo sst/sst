@@ -195,7 +195,7 @@ export class KinesisStream extends Component implements Link.Linkable {
    * ```
    */
   public subscribe(
-    subscriber: string | FunctionArgs | Input<FunctionArn>,
+    subscriber: Input<string | FunctionArgs | FunctionArn>,
     args?: KinesisStreamLambdaSubscriberArgs,
   ) {
     return KinesisStream._subscribe(
@@ -255,7 +255,7 @@ export class KinesisStream extends Component implements Link.Linkable {
    */
   public static subscribe(
     streamArn: Input<string>,
-    subscriber: string | FunctionArgs | Input<FunctionArn>,
+    subscriber: Input<string | FunctionArgs | FunctionArn>,
     args?: KinesisStreamLambdaSubscriberArgs,
   ) {
     return output(streamArn).apply((streamArn) =>
@@ -271,7 +271,7 @@ export class KinesisStream extends Component implements Link.Linkable {
   private static _subscribe(
     name: string,
     streamArn: Input<string>,
-    subscriber: string | FunctionArgs | Input<FunctionArn>,
+    subscriber: Input<string | FunctionArgs | FunctionArn>,
     args: KinesisStreamLambdaSubscriberArgs = {},
     opts: ComponentResourceOptions = {},
   ) {

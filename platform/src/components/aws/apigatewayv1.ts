@@ -829,7 +829,7 @@ export class ApiGatewayV1 extends Component implements Link.Linkable {
    */
   public route(
     route: string,
-    handler: string | FunctionArgs | Input<FunctionArn>,
+    handler: Input<string | FunctionArgs | FunctionArn>,
     args: ApiGatewayV1RouteArgs = {},
   ) {
     const { method, path } = this.parseRoute(route);

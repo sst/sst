@@ -253,7 +253,7 @@ export class SnsTopic extends Component implements Link.Linkable {
    * ```
    */
   public subscribe(
-    subscriber: string | FunctionArgs | Input<FunctionArn>,
+    subscriber: Input<string | FunctionArgs | FunctionArn>,
     args: SnsTopicSubscriberArgs = {},
   ) {
     return SnsTopic._subscribeFunction(
@@ -307,7 +307,7 @@ export class SnsTopic extends Component implements Link.Linkable {
    */
   public static subscribe(
     topicArn: Input<string>,
-    subscriber: string | FunctionArgs | Input<FunctionArn>,
+    subscriber: Input<string | FunctionArgs | FunctionArn>,
     args?: SnsTopicSubscriberArgs,
   ) {
     return output(topicArn).apply((topicArn) =>
@@ -323,7 +323,7 @@ export class SnsTopic extends Component implements Link.Linkable {
   private static _subscribeFunction(
     name: string,
     topicArn: string | Output<string>,
-    subscriber: string | FunctionArgs | Input<FunctionArn>,
+    subscriber: Input<string | FunctionArgs | FunctionArn>,
     args: SnsTopicSubscriberArgs = {},
     opts: $util.ComponentResourceOptions = {},
   ) {

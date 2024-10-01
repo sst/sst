@@ -1,13 +1,12 @@
 import {
   ComponentResourceOptions,
   Input,
-  Output,
   all,
   interpolate,
   output,
 } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
-import { Function, FunctionArgs } from "./function";
+import { FunctionArgs } from "./function";
 import { ApiGatewayWebSocketRouteArgs } from "./apigateway-websocket";
 import { apigatewayv2, lambda } from "@pulumi/aws";
 import { FunctionBuilder, functionBuilder } from "./helpers/function-builder";
