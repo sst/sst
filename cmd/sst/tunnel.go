@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"context"
 	"fmt"
@@ -240,3 +241,4 @@ var CmdTunnel = &cli.Command{
 		},
 	},
 }
+*/
