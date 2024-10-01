@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"os/user"
 	"strings"
 	"sync"
 	"syscall"
@@ -15,6 +16,8 @@ import (
 	"github.com/armon/go-socks5"
 	"github.com/songgao/water"
 	"github.com/sst/ion/cmd/sst/cli"
+	"github.com/sst/ion/cmd/sst/mosaic/ui"
+	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/tunnel"
 	"golang.org/x/crypto/ssh"
@@ -53,10 +56,6 @@ var CmdTunnel = &cli.Command{
 		Long:  strings.Join([]string{}, "\n"),
 	},
 	Run: func(c *cli.Cli) error {
-		err := global.EnsureTun2Socks()
-		if err != nil {
-			return err
-		}
 		// run as root
 		tunnelCmd := exec.Command("sudo", "/opt/sst/sst", "tunnel", "start", "--print-logs")
 		tunnelCmd.Stdout = os.Stdout
@@ -81,7 +80,19 @@ var CmdTunnel = &cli.Command{
 				}, "\n"),
 			},
 			Run: func(c *cli.Cli) error {
-				return tunnel.Install()
+				currentUser, err := user.Current()
+				if err != nil {
+					return err
+				}
+				if currentUser.Uid != "0" {
+					return util.NewReadableError(nil, "You need to run this command as root")
+				}
+				err = tunnel.Install()
+				if err != nil {
+					return err
+				}
+				ui.Success("Tunnel installed successfully.")
+				return nil
 			},
 		},
 		{
@@ -96,9 +107,23 @@ var CmdTunnel = &cli.Command{
 					"This is required for the tunnel to work.",
 				}, "\n"),
 			},
+			Flags: []cli.Flag{
+				{
+					Name: "print-logs",
+					Type: "bool",
+					Description: cli.Description{
+						Short: "Print logs to stderr",
+						Long:  "Print the logs to the screen. These are logs that are written to the `.sst/log/tun2socks.log` file.",
+					},
+				},
+			},
 			Run: func(c *cli.Cli) error {
+				err := global.EnsureTun2Socks()
+				if err != nil {
+					return err
+				}
 				slog.Info("creating interface")
-				err := tunnel.CreateInterface(
+				err = tunnel.CreateInterface(
 					"10.0.4.0/22",
 					"10.0.12.0/22",
 					"10.0.0.0/22",

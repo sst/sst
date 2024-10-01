@@ -2,15 +2,13 @@ package tunnel
 
 import (
 	"fmt"
+	"github.com/sst/ion/internal/util"
 	"io"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
 	"runtime"
-
-	"github.com/sst/ion/cmd/sst/mosaic/ui"
-	"github.com/sst/ion/internal/util"
 )
 
 var permissionedBinary = "/opt/sst/sst"
@@ -59,6 +57,5 @@ func Install() error {
 		return util.NewReadableError(err, "Error validating sudoers file")
 	}
 
-	ui.Success("Sudoers entry added successfully.")
 	return nil
 }
