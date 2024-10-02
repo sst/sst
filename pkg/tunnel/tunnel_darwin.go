@@ -21,11 +21,11 @@ func Start(ctx context.Context, routes ...string) error {
 		{"ifconfig", "utun69", "172.16.0.1", "172.16.0.1", "netmask", "255.255.0.0", "up"},
 		// {"ip", "link", "set", "dev", name, "up"},
 	}
-	// for _, route := range routes {
-	// 	cmds = append(cmds, []string{
-	// 		"route", "add", "-net", route, "172.16.0.1",
-	// 	})
-	// }
+	for _, route := range routes {
+		cmds = append(cmds, []string{
+			"route", "add", "-net", route, "-interface", name,
+		})
+	}
 	err := runCommands(cmds)
 	if err != nil {
 		return err

@@ -130,7 +130,8 @@ var CmdTunnel = &cli.Command{
 					return tunnel.Start(c.Context, subnet)
 				})
 				slog.Info("tunnel started")
-				return wg.Wait()
+				wg.Wait()
+				return nil
 			},
 		},
 	},
