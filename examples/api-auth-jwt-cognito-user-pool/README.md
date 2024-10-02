@@ -9,7 +9,7 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/api-auth-jwt-cognito-user-pool
+$ npx create-sst@two --template=examples/api-auth-jwt-cognito-user-pool
 # Or with Yarn
 $ yarn create sst --template=examples/api-auth-jwt-cognito-user-pool
 # Or with PNPM

@@ -9,7 +9,7 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/websocket
+$ npx create-sst@two --template=examples/websocket
 # Or with Yarn
 $ yarn create sst --template=examples/websocket
 # Or with PNPM

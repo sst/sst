@@ -9,7 +9,7 @@ An example full-stack serverless Expo app created with SST.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/expo-app
+$ npx create-sst@two --template=examples/expo-app
 # Or with Yarn
 $ yarn create sst --template=examples/expo-app
 # Or with PNPM

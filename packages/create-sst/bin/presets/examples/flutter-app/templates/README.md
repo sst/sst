@@ -9,7 +9,7 @@ An example full-stack serverless Flutter app created with SST.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/flutter-app
+$ npx create-sst@two --template=examples/flutter-app
 # Or with Yarn
 $ yarn create sst --template=examples/flutter-app
 # Or with PNPM

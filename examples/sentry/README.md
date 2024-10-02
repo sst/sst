@@ -9,7 +9,7 @@ An example SST serverless app monitored with [Sentry](https://www.sentry.io).
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/sentry
+$ npx create-sst@two --template=examples/sentry
 # Or with Yarn
 $ yarn create sst --template=examples/sentry
 # Or with PNPM

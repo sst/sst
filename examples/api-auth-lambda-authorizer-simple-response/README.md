@@ -9,7 +9,7 @@ This example creates an Api endpoint with a `/private` route and a `/public` rou
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/api-auth-lambda-authorizer-simple-response
+$ npx create-sst@two --template=examples/api-auth-lambda-authorizer-simple-response
 # Or with Yarn
 $ yarn create sst --template=examples/api-auth-lambda-authorizer-simple-response
 # Or with PNPM

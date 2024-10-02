@@ -9,7 +9,7 @@ An example serverless API created with SST talking to a PlanetScale Database.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/planetscale
+$ npx create-sst@two --template=examples/planetscale
 # Or with Yarn
 $ yarn create sst --template=examples/planetscale
 # Or with PNPM

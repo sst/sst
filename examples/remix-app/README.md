@@ -7,7 +7,7 @@ An example full-stack serverless Remix app created with SST.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/remix-app
+$ npx create-sst@two --template=examples/remix-app
 # Or with Yarn
 $ yarn create sst --template=examples/remix-app
 # Or with PNPM

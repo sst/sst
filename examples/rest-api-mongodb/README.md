@@ -9,7 +9,7 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/rest-api-mongodb
+$ npx create-sst@two --template=examples/rest-api-mongodb
 # Or with Yarn
 $ yarn create sst --template=examples/rest-api-mongodb
 # Or with PNPM

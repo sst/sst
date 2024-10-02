@@ -9,7 +9,7 @@ An example full-stack serverless Svelte app created with SST.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/svelte-app
+$ npx create-sst@two --template=examples/svelte-app
 # Or with Yarn
 $ yarn create sst --template=examples/svelte-app
 # Or with PNPM
