@@ -255,7 +255,7 @@ func Create(templateName string, home string) ([]string, error) {
 					Home: home,
 				}
 
-				if _, err := os.Stat(name); os.IsExist(err) {
+				if _, err := os.Stat(name); err == nil {
 					return nil
 				}
 				output, err := os.Create(name)
