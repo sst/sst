@@ -62,7 +62,7 @@ export default [
     path: "packages/web",
   }),
   install({
-    packages: ["sst"],
+    packages: ["sst@^2"],
     path: "packages/web",
     dev: true,
   }),

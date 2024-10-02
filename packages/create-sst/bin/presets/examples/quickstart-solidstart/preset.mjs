@@ -10,7 +10,7 @@ export default [
       "postcss",
       "solid-start-node",
       "solid-start-sst",
-      "sst",
+      "sst@^2",
       "typescript",
       "vite@4.5.0",
     ],
