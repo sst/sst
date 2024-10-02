@@ -1,6 +1,7 @@
 import {
   ComponentResourceOptions,
   Input,
+  jsonStringify,
   Output,
   output,
 } from "@pulumi/pulumi";
@@ -88,7 +89,7 @@ export class SnsTopicLambdaSubscriber extends Component {
             topic: topic.arn,
             protocol: "lambda",
             endpoint: fn.arn,
-            filterPolicy: JSON.stringify(args.filter ?? {}),
+            filterPolicy: args.filter && jsonStringify(args.filter),
           },
           { parent: self, dependsOn: [permission] },
         ),

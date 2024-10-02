@@ -452,7 +452,7 @@ export class SnsTopic extends Component implements Link.Linkable {
           [
             typeof topicArn === "string" ? topicArn : outputId,
             JSON.stringify(args.filter ?? {}),
-            typeof queueArn === "string" ? queueArn : outputId,
+            queueArn,
           ].join(""),
           6,
         ),

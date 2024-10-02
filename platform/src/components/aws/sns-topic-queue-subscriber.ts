@@ -1,4 +1,9 @@
-import { ComponentResourceOptions, Input, output } from "@pulumi/pulumi";
+import {
+  ComponentResourceOptions,
+  Input,
+  jsonStringify,
+  output,
+} from "@pulumi/pulumi";
 import { Component, transform } from "../component";
 import { SnsTopicSubscriberArgs } from "./sns-topic";
 import { parseQueueArn } from "./helpers/arn";
@@ -81,7 +86,7 @@ export class SnsTopicQueueSubscriber extends Component {
             topic: topic.arn,
             protocol: "sqs",
             endpoint: queueArn,
-            filterPolicy: JSON.stringify(args.filter ?? {}),
+            filterPolicy: args.filter && jsonStringify(args.filter),
           },
           {},
         ),
