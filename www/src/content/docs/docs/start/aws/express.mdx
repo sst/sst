@@ -18,7 +18,7 @@ Before you get started, make sure to [configure your AWS credentials](/docs/iam-
 Let's start by creating our Express app.
 
 ```bash
-mkdir my-express-app && cd my-express-app
+mkdir aws-express && cd aws-express
 npm init -y
 npm install express
 ```
@@ -64,10 +64,9 @@ This'll create a `sst.config.ts` file in your project root.
 
 To deploy our Express app, let's add an [AWS Fargate](https://aws.amazon.com/fargate/) container with [Amazon ECS](https://aws.amazon.com/ecs/). Update your `sst.config.ts`.
 
-```js title="sst.config.ts" {10-12}
+```js title="sst.config.ts" {9-11}
 async run() {
   const vpc = new sst.aws.Vpc("MyVpc");
-
   const cluster = new sst.aws.Cluster("MyCluster", { vpc });
 
   cluster.addService("MyService", {
