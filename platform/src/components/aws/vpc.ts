@@ -1,5 +1,11 @@
-import { ComponentResourceOptions, Output, all, output } from "@pulumi/pulumi";
-import { Component, Transform, transform } from "../component";
+import {
+  ComponentResourceOptions,
+  Output,
+  all,
+  interpolate,
+  output,
+} from "@pulumi/pulumi";
+import { $print, Component, Transform, transform } from "../component";
 import { Input } from "../input";
 import {
   autoscaling,
@@ -7,10 +13,12 @@ import {
   getAvailabilityZonesOutput,
   iam,
   servicediscovery,
+  ssm,
 } from "@pulumi/aws";
 import { Vpc as VpcV1 } from "./vpc-v1";
 import { Link } from "../link";
 import { VisibleError } from "../error";
+import { PrivateKey } from "@pulumi/tls";
 export type { VpcArgs as VpcV1Args } from "./vpc-v1";
 
 export interface VpcArgs {
@@ -136,6 +144,7 @@ interface VpcRef {
   elasticIps: Output<ec2.Eip[]>;
   bastionInstance: Output<ec2.Instance | undefined>;
   cloudmapNamespace: servicediscovery.PrivateDnsNamespace;
+  privateKeyValue: Output<string | undefined>;
 }
 
 /**
@@ -193,6 +202,7 @@ export class Vpc extends Component implements Link.Linkable {
   private privateRouteTables: Output<ec2.RouteTable[]>;
   private bastionInstance: Output<ec2.Instance | undefined>;
   private cloudmapNamespace: servicediscovery.PrivateDnsNamespace;
+  private privateKeyValue: Output<string | undefined>;
   public static v1 = VpcV1;
 
   constructor(name: string, args?: VpcArgs, opts?: ComponentResourceOptions) {
@@ -201,6 +211,8 @@ export class Vpc extends Component implements Link.Linkable {
       _version,
       _message: `To continue using the previous version, rename "Vpc" to "Vpc.v${$cli.state.version[name]}". Or recreate this component to update - https://sst.dev/docs/component/aws/cluster#forceupgrade`,
     });
+
+    const parent = this;
 
     if (args && "ref" in args) {
       const ref = args as VpcRef;
@@ -216,14 +228,16 @@ export class Vpc extends Component implements Link.Linkable {
       this.elasticIps = ref.elasticIps;
       this.bastionInstance = ref.bastionInstance;
       this.cloudmapNamespace = ref.cloudmapNamespace;
+      this.privateKeyValue = ref.privateKeyValue;
+      registerOutputs();
       return;
     }
-    const parent = this;
 
     const zones = normalizeAz();
     const nat = normalizeNat();
 
     const vpc = createVpc();
+    const { keyPair, privateKeyValue } = createKeyPair();
     const internetGateway = createInternetGateway();
     const securityGroup = createSecurityGroup();
     const { publicSubnets, publicRouteTables } = createPublicSubnets();
@@ -245,6 +259,23 @@ export class Vpc extends Component implements Link.Linkable {
     this.privateRouteTables = privateRouteTables;
     this.bastionInstance = output(bastionInstance);
     this.cloudmapNamespace = cloudmapNamespace;
+    this.privateKeyValue = output(privateKeyValue);
+    registerOutputs();
+
+    function registerOutputs() {
+      parent.registerOutputs({
+        _tunnel: all([parent.bastionInstance, parent.privateKeyValue]).apply(
+          ([bastion, privateKeyValue]) => {
+            if (!bastion) return;
+            return {
+              ip: bastion.publicIp,
+              username: "ec2-user",
+              privateKey: privateKeyValue!,
+            };
+          },
+        ),
+      });
+    }
 
     function normalizeAz() {
       const zones = getAvailabilityZonesOutput(
@@ -277,6 +308,35 @@ export class Vpc extends Component implements Link.Linkable {
           { parent },
         ),
       );
+    }
+
+    function createKeyPair() {
+      if (!args?.bastion) return {};
+
+      const tlsPrivateKey = new PrivateKey(
+        `${name}TlsPrivateKey`,
+        {
+          algorithm: "RSA",
+          rsaBits: 4096,
+        },
+        { parent },
+      );
+
+      new ssm.Parameter(`${name}PrivateKey`, {
+        name: interpolate`/sst/vpc/${vpc.id}/private-key`,
+        type: ssm.ParameterType.SecureString,
+        value: tlsPrivateKey.privateKeyOpenssh,
+      });
+
+      const keyPair = new ec2.KeyPair(
+        `${name}KeyPair`,
+        {
+          publicKey: tlsPrivateKey.publicKeyOpenssh,
+        },
+        { parent },
+      );
+
+      return { keyPair, privateKeyValue: tlsPrivateKey.privateKeyOpenssh };
     }
 
     function createInternetGateway() {
@@ -446,6 +506,7 @@ export class Vpc extends Component implements Link.Linkable {
                 vpcSecurityGroupIds: [sg.id],
                 iamInstanceProfile: instanceProfile.name,
                 sourceDestCheck: false,
+                keyName: keyPair?.keyName,
                 tags: {
                   Name: `${name} NAT Instance`,
                   "sst:lookup-type": "nat",
@@ -579,7 +640,7 @@ export class Vpc extends Component implements Link.Linkable {
     }
 
     function createBastion() {
-      if (!args?.bastion) return output(undefined);
+      if (!args?.bastion) return undefined;
 
       return natInstances.apply((natInstances) => {
         if (natInstances.length) return natInstances[0];
@@ -663,6 +724,7 @@ export class Vpc extends Component implements Link.Linkable {
               subnetId: publicSubnets.apply((v) => v[0].id),
               vpcSecurityGroupIds: [sg.id],
               iamInstanceProfile: instanceProfile.name,
+              keyName: keyPair?.keyName,
               tags: {
                 "sst:lookup-type": "bastion",
               },
@@ -934,6 +996,15 @@ export class Vpc extends Component implements Link.Linkable {
       { vpc: vpcID },
     );
 
+    const privateKeyValue = bastionInstance.apply((v) => {
+      if (!v) return;
+      const param = ssm.Parameter.get(
+        `${name}PrivateKey`,
+        interpolate`/sst/vpc/${vpc.id}/private-key`,
+      );
+      return param.value;
+    });
+
     return new Vpc(name, {
       ref: true,
       vpc,
@@ -948,6 +1019,7 @@ export class Vpc extends Component implements Link.Linkable {
       elasticIps,
       bastionInstance,
       cloudmapNamespace,
+      privateKeyValue: output(privateKeyValue),
     } satisfies VpcRef as VpcArgs);
   }
 

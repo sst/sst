@@ -93,6 +93,7 @@ export class Component extends ComponentResource {
             args.type === "pulumi-nodejs:dynamic:Resource" ||
             args.type === "random:index/randomId:RandomId" ||
             args.type === "random:index/randomPassword:RandomPassword" ||
+            args.type === "tls:index/privateKey:PrivateKey" ||
             // resources manually named
             [
               "aws:appsync/dataSource:DataSource",
@@ -255,6 +256,11 @@ export class Component extends ComponentResource {
               ],
               field: "name",
               cb: () => physicalName(255, args.name).toLowerCase(),
+            },
+            {
+              types: ["aws:ec2/keyPair:KeyPair"],
+              field: "keyName",
+              cb: () => physicalName(255, args.name),
             },
             {
               types: [
