@@ -49,7 +49,11 @@ var CmdTunnel = &cli.Command{
 			"--host", tun.IP,
 			"--user", tun.Username,
 		)
-		tunnelCmd.Env = append(os.Environ(), "SSH_PRIVATE_KEY="+tun.PrivateKey)
+		tunnelCmd.Env = append(
+			os.Environ(),
+			"SST_SKIP_LOCAL=true",
+			"SSH_PRIVATE_KEY="+tun.PrivateKey,
+		)
 		tunnelCmd.Stdout = os.Stdout
 		tunnelCmd.Stderr = os.Stderr
 		util.SetProcessGroupID(tunnelCmd)
