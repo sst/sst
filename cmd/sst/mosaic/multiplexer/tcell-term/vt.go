@@ -16,7 +16,6 @@ import (
 	"github.com/creack/pty"
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
-	"github.com/sst/ion/internal/util"
 )
 
 type (
@@ -463,9 +462,7 @@ func (vt *VT) Close() {
 	defer vt.mu.Unlock()
 	if vt.cmd != nil && vt.cmd.Process != nil {
 		slog.Info("killing process", "pid", vt.cmd.Process.Pid)
-		util.TerminateProcess(vt.cmd.Process.Pid)
-		vt.cmd.Process.Kill()
-		vt.cmd.Wait()
+		vt.cmd.Process.Signal(syscall.SIGTERM)
 		slog.Info("process killed")
 	}
 	vt.pty.Close()
