@@ -106,10 +106,7 @@ func (r *Runtime) Run(ctx context.Context, input *runtime.RunInput) (runtime.Wor
 		input.WorkerID,
 	)
 	util.SetProcessGroupID(cmd)
-	cmd.Cancel = func() error {
-		return util.TerminateProcess(cmd.Process.Pid)
-	}
-
+	util.SetProcessCancel(cmd)
 	cmd.Env = input.Env
 	cmd.Env = append(cmd.Env, "NODE_OPTIONS="+os.Getenv("NODE_OPTIONS"))
 	cmd.Env = append(cmd.Env, "VSCODE_INSPECTOR_OPTIONS="+os.Getenv("VSCODE_INSPECTOR_OPTIONS"))

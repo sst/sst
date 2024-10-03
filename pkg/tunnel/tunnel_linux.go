@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"os/exec"
 	"runtime"
+
+	"github.com/sst/ion/internal/util"
 )
 
 func Start(ctx context.Context, routes ...string) error {
@@ -27,7 +29,15 @@ func Start(ctx context.Context, routes ...string) error {
 	}
 	defer destroy()
 	socksCmd := exec.CommandContext(ctx, "tun2socks", "-device", name, "-proxy", "socks5://127.0.0.1:1080")
-	return socksCmd.Run()
+	util.SetProcessGroupID(socksCmd)
+	util.SetProcessCancel(socksCmd)
+	slog.Info("running tun2socks", "cmd", socksCmd.Args)
+	err = socksCmd.Run()
+	if err != nil {
+		slog.Error("failed to run tun2socks", "error", err)
+		return err
+	}
+	return nil
 }
 
 func destroy() error {

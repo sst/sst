@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"os/user"
 	"strings"
-	"time"
 
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
@@ -42,7 +41,8 @@ var CmdTunnel = &cli.Command{
 		}
 		subnets := strings.Join(tun.Subnets, ",")
 		// run as root
-		tunnelCmd := exec.Command(
+		tunnelCmd := exec.CommandContext(
+			c.Context,
 			"sudo", "-n", "-E",
 			tunnel.BINARY_PATH, "tunnel", "start",
 			"--subnets", subnets,
@@ -53,16 +53,13 @@ var CmdTunnel = &cli.Command{
 		tunnelCmd.Stdout = os.Stdout
 		tunnelCmd.Stderr = os.Stderr
 		util.SetProcessGroupID(tunnelCmd)
+		util.SetProcessCancel(tunnelCmd)
 		slog.Info("starting tunnel", "cmd", tunnelCmd.Args)
-		err = tunnelCmd.Start()
-		time.Sleep(time.Second * 1)
 		fmt.Println("tunneling through", tun.IP, "for")
 		for _, subnet := range tun.Subnets {
 			fmt.Println("-", subnet)
 		}
-		<-c.Context.Done()
-		util.TerminateProcess(tunnelCmd.Process.Pid)
-		tunnelCmd.Wait()
+		err = tunnelCmd.Run()
 		return nil
 	},
 	Children: []*cli.Command{
@@ -169,7 +166,10 @@ var CmdTunnel = &cli.Command{
 					return tunnel.Start(c.Context, subnets...)
 				})
 				slog.Info("tunnel started")
-				wg.Wait()
+				err = wg.Wait()
+				if err != nil {
+					slog.Error("failed to start tunnel", "error", err)
+				}
 				return nil
 			},
 		},

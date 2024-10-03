@@ -15,6 +15,7 @@ import (
 	"github.com/creack/pty"
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
+	"github.com/sst/ion/internal/util"
 )
 
 type (
@@ -460,7 +461,7 @@ func (vt *VT) Close() {
 	vt.mu.Lock()
 	defer vt.mu.Unlock()
 	if vt.cmd != nil && vt.cmd.Process != nil {
-		vt.cmd.Process.Kill()
+		util.TerminateProcess(vt.cmd.Process.Pid)
 		vt.cmd.Wait()
 	}
 	vt.pty.Close()

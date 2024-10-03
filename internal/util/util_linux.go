@@ -20,3 +20,9 @@ func SetProcessGroupID(cmd *exec.Cmd) {
 	// without killing this process (i.e. this code here).
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 }
+
+func SetProcessCancel(cmd *exec.Cmd) {
+	cmd.Cancel = func() error {
+		return TerminateProcess(cmd.Process.Pid)
+	}
+}
