@@ -36,9 +36,9 @@ func Install() error {
 	}
 	err = os.Chmod(BINARY_PATH, 0755)
 	user := os.Getenv("SUDO_USER")
-	sudoersPath := "/etc/sudoers.d/sst." + user
-	command := BINARY_PATH + " tunnel start"
-	sudoersEntry := fmt.Sprintf("%s ALL=(ALL) NOPASSWD: %s\n", user, command)
+	sudoersPath := "/etc/sudoers.d/sst-" + user
+	command := BINARY_PATH + " tunnel start *"
+	sudoersEntry := fmt.Sprintf("%s ALL=(ALL) NOPASSWD:SETENV: %s\n", user, command)
 	err = os.WriteFile(sudoersPath, []byte(sudoersEntry), 0440)
 	if err != nil {
 		return err

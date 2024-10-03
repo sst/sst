@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"os/user"
 	"strings"
+	"time"
 
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
@@ -39,14 +40,10 @@ var CmdTunnel = &cli.Command{
 		for _, item := range state.Tunnels {
 			tun = item
 		}
-		fmt.Println("tunneling through", tun.IP, "for")
-		for _, subnet := range tun.Subnets {
-			fmt.Println("-", subnet)
-		}
 		subnets := strings.Join(tun.Subnets, ",")
 		// run as root
 		tunnelCmd := exec.Command(
-			"sudo", "-E",
+			"sudo", "-n", "-E",
 			tunnel.BINARY_PATH, "tunnel", "start",
 			"--subnets", subnets,
 			"--host", tun.IP,
@@ -56,7 +53,13 @@ var CmdTunnel = &cli.Command{
 		tunnelCmd.Env = append(os.Environ(), "SSH_PRIVATE_KEY="+tun.PrivateKey)
 		tunnelCmd.Stdout = os.Stdout
 		tunnelCmd.Stderr = os.Stderr
-		tunnelCmd.Start()
+		slog.Info("starting tunnel", "cmd", tunnelCmd.Args)
+		err = tunnelCmd.Start()
+		time.Sleep(time.Second * 1)
+		fmt.Println("tunneling through", tun.IP, "for")
+		for _, subnet := range tun.Subnets {
+			fmt.Println("-", subnet)
+		}
 		<-c.Context.Done()
 		util.TerminateProcess(tunnelCmd.Process.Pid)
 		tunnelCmd.Wait()
