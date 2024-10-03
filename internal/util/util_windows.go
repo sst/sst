@@ -19,3 +19,9 @@ func TerminateProcess(pid int) error {
 func SetProcessGroupID(cmd *exec.Cmd) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{}
 }
+
+func SetProcessCancel(cmd *exec.Cmd) {
+	cmd.Cancel = func() error {
+		return TerminateProcess(cmd.Process.Pid)
+	}
+}
