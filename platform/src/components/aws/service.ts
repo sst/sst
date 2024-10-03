@@ -862,6 +862,9 @@ export class Service extends Component implements Link.Linkable {
               ...container.environment,
               AWS_REGION: region,
             },
+            aws: {
+              role: taskRole.arn,
+            },
           });
         }
       });

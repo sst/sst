@@ -8,6 +8,9 @@ interface DevCommandArgs {
   dev?: DevArgs["dev"];
   link?: Input<any[]>;
   environment?: Input<Record<string, Input<string>>>;
+  aws?: {
+    role: Input<string>;
+  };
 }
 export class DevCommand extends Component {
   constructor(
@@ -26,6 +29,9 @@ export class DevCommand extends Component {
         directory: args.dev?.directory,
         autostart: args.dev?.autostart,
         command: args.dev?.command,
+        aws: {
+          role: args.aws?.role,
+        },
       },
     });
   }
