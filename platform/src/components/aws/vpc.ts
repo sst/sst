@@ -37,18 +37,28 @@ export interface VpcArgs {
   /**
    * Configures NAT. Enabling NAT allows resources in private subnets to connect to the internet.
    *
-   * If `"managed"` is specified, a NAT Gateway is created in each AZ. All the traffic from
+   * There are two NAT options:
+   * 1. `"managed"` creates a [NAT Gateway](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html)
+   * 2. `"ec2"` creates an [EC2 instance](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html)
+   *    with the [fck-nat](https://github.com/AndrewGuenther/fck-nat) AMI
+   *
+   * For `"managed"`, a NAT Gateway is created in each AZ. All the traffic from
    * the private subnets are routed to the NAT Gateway in the same AZ.
    *
    * NAT Gateways are billed per hour and per gigabyte of data processed. Each NAT Gateway
    * roughly costs $33 per month. Make sure to [review the pricing](https://aws.amazon.com/vpc/pricing/).
    *
-   * If `"ec2"` is specified, an EC2 instance of type `t4g.nano` will be launched in each AZ
+   * For `"ec2"`, an EC2 instance of type `t4g.nano` will be launched in each AZ
    * with the [fck-nat](https://github.com/AndrewGuenther/fck-nat) AMI. All the traffic from
    * the private subnets are routed to the Elastic Network Interface (ENI) of the EC2 instance
    * in the same AZ.
    *
-   * NAT instances are much cheaper than NAT Gateways, but they need to be managed manually.
+   * :::tip
+   * The `"ec2"` option uses fck-nat and is 10x cheaper than the `"managed"` NAT Gateway.
+   * :::
+   *
+   * NAT EC2 instances are much cheaper than NAT Gateways, the `t4g.nano` instance type is around
+   * $3 per month. But you'll need to scale it up manually if you need more bandwidth.
    *
    * @default NAT is disabled
    * @example
@@ -64,10 +74,21 @@ export interface VpcArgs {
    *
    * When enabled, an EC2 instance of type `t4g.nano` with the bastion AMI will be launched
    * in a public subnet. The instance will have AWS SSM (AWS Session Manager) enabled for
-   * secure access without the need for SSH key management.
+   * secure access without the need for SSH key.
    *
-   * However if `nat` is enabled and `"ec2"` is specified, a NAT instance will be used
-   * as the bastion host. No additional bastion instance will be created.
+   * It costs roughly $3 per month to run the `t4g.nano` instance.
+   *
+   * :::note
+   * If `nat: "ec2"` is enabled, the bastion host will reuse the NAT EC2 instance.
+   * :::
+   *
+   * However if `nat: "ec2"` is enabled, the EC2 instance that NAT creates will be used
+   * as the bastion host. No additional EC2 instance will be created.
+   *
+   * If you are running `sst dev`, a tunnel will be automatically created to the bastion host.
+   * This uses a network interface to forward traffic from your local machine to the bastion host.
+   *
+   * You can learn more about [`sst tunnel`](/docs/reference/cli#tunnel).
    *
    * @default Bastion is not created
    * @example
@@ -606,20 +627,20 @@ export class Vpc extends Component implements Link.Linkable {
                   ([natGateways, natInstances]) => [
                     ...(natGateways[i]
                       ? [
-                          {
-                            cidrBlock: "0.0.0.0/0",
-                            natGatewayId: natGateways[i].id,
-                          },
-                        ]
+                        {
+                          cidrBlock: "0.0.0.0/0",
+                          natGatewayId: natGateways[i].id,
+                        },
+                      ]
                       : []),
                     ...(natInstances[i]
                       ? [
-                          {
-                            cidrBlock: "0.0.0.0/0",
-                            networkInterfaceId:
-                              natInstances[i].primaryNetworkInterfaceId,
-                          },
-                        ]
+                        {
+                          cidrBlock: "0.0.0.0/0",
+                          networkInterfaceId:
+                            natInstances[i].primaryNetworkInterfaceId,
+                        },
+                      ]
                       : []),
                   ],
                 ),
@@ -788,7 +809,7 @@ export class Vpc extends Component implements Link.Linkable {
   }
 
   /**
-   * The bastion instance id.
+   * The bastion instance ID.
    */
   public get bastion() {
     return this.bastionInstance.apply((v) => {
