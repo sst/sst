@@ -87,7 +87,7 @@ func run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	interruptChannel := make(chan os.Signal, 1)
-	signal.Notify(interruptChannel, syscall.SIGINT)
+	signal.Notify(interruptChannel, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-interruptChannel
 		slog.Info("interrupted")

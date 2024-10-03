@@ -6,12 +6,19 @@ import (
 	"os/exec"
 	"runtime"
 	"time"
+
+	"github.com/sst/ion/internal/util"
 )
 
 func Start(ctx context.Context, routes ...string) error {
 	name := "utun69"
 	slog.Info("creating interface", "name", name, "os", runtime.GOOS)
 	socksCmd := exec.CommandContext(ctx, "tun2socks", "-device", name, "-proxy", "socks5://127.0.0.1:1080")
+	util.SetProcessGroupID(socksCmd)
+	socksCmd.Cancel = func() error {
+		util.TerminateProcess(socksCmd.Process.Pid)
+		return nil
+	}
 	socksCmd.Start()
 	time.Sleep(time.Second * 1)
 	cmds := [][]string{
