@@ -9,6 +9,15 @@ export interface SvelteKitSiteProps extends SsrSiteProps {
    * @default false
    */
   edge?: boolean;
+
+  /**
+   * This specifies where your app is served from and allows the app to live on a non-root path.
+   * @example
+   * ```js
+   * basePath: '/onboarding'
+   * ```
+   */
+  basePath?: "" | `/${string}`;
 }
 
 type SvelteKitSiteNormalizedProps = SvelteKitSiteProps & SsrSiteNormalizedProps;
@@ -35,7 +44,8 @@ export class SvelteKitSite extends SsrSite {
   }
 
   protected plan() {
-    const { path: sitePath, edge } = this.props;
+    const { path: sitePath, edge, basePath: maybeBasePath = "" } = this.props;
+    const basePath = maybeBasePath ? `${maybeBasePath}/` : "";
     const serverDir = ".svelte-kit/svelte-kit-sst/server";
     const clientDir = ".svelte-kit/svelte-kit-sst/client";
     const prerenderedDir = ".svelte-kit/svelte-kit-sst/prerendered";
@@ -114,13 +124,13 @@ export class SvelteKitSite extends SsrSite {
           copy: [
             {
               from: clientDir,
-              to: "",
+              to: basePath,
               cached: true,
               versionedSubDir: "_app",
             },
             {
               from: prerenderedDir,
-              to: "",
+              to: basePath,
               cached: false,
             },
           ],
@@ -147,8 +157,8 @@ export class SvelteKitSite extends SsrSite {
               pattern: fs
                 .statSync(path.join(sitePath, clientDir, item))
                 .isDirectory()
-                ? `${item}/*`
-                : item,
+                ? `${basePath}${item}/*`
+                : `${basePath}${item}`,
               origin: "s3",
             } as const)
         ),
