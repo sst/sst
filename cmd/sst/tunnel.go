@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -55,15 +56,25 @@ var CmdTunnel = &cli.Command{
 			"SSH_PRIVATE_KEY="+tun.PrivateKey,
 		)
 		tunnelCmd.Stdout = os.Stdout
-		tunnelCmd.Stderr = os.Stderr
 		util.SetProcessGroupID(tunnelCmd)
 		util.SetProcessCancel(tunnelCmd)
 		slog.Info("starting tunnel", "cmd", tunnelCmd.Args)
-		fmt.Println("tunneling through", tun.IP, "for")
+		fmt.Println(ui.TEXT_HIGHLIGHT_BOLD.Render("Tunnel"))
+		fmt.Println()
+		fmt.Print(ui.TEXT_HIGHLIGHT_BOLD.Render("➜"))
+		fmt.Println(ui.TEXT_NORMAL.Render("  Forwarding ranges"))
 		for _, subnet := range tun.Subnets {
-			fmt.Println("-", subnet)
+			fmt.Println(ui.TEXT_DIM.Render("   " + subnet))
 		}
-		err = tunnelCmd.Run()
+		fmt.Println()
+		fmt.Println(ui.TEXT_DIM.Render("Waiting for connections..."))
+		fmt.Println()
+		stderr, _ := tunnelCmd.StderrPipe()
+		tunnelCmd.Start()
+		output, _ := io.ReadAll(stderr)
+		if strings.Contains(string(output), "password is required") {
+			return util.NewReadableError(nil, "Make sure you have installed the tunnel with `sudo sst tunnel install`")
+		}
 		return nil
 	},
 	Children: []*cli.Command{

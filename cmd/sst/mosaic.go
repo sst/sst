@@ -241,7 +241,7 @@ func CmdMosaic(c *cli.Cli) error {
 							)
 						}
 						for range evt.Tunnels {
-							multi.AddProcess("tunnel", []string{currentExecutable, "tunnel", "--stage", p.App().Stage}, "⇄", "Tunnel", "", true, true, os.Environ()...)
+							multi.AddProcess("tunnel", []string{currentExecutable, "tunnel", "--stage", p.App().Stage}, "⇌", "Tunnel", "", true, true, os.Environ()...)
 						}
 						break
 					}

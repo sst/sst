@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/armon/go-socks5"
+	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -28,7 +29,7 @@ func StartProxy(ctx context.Context, username string, host string, key []byte) e
 	defer sshClient.Close()
 	server, err := socks5.New(&socks5.Config{
 		Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			fmt.Println("dialing", network, addr)
+			fmt.Println(ui.TEXT_INFO_BOLD.Render(("| "), ui.TEXT_NORMAL.Render("Tunneling", network, addr)))
 			return sshClient.Dial(network, addr)
 			// return net.Dial(network, addr)
 		},

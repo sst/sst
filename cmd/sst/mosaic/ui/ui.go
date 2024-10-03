@@ -416,7 +416,9 @@ func (u *UI) Event(unknown interface{}) {
 					u.println(TEXT_NORMAL.Render("   " + line))
 				}
 				for i, line := range status.Help {
-					if i == 0 { u.println() }
+					if i == 0 {
+						u.println()
+					}
 					u.println(TEXT_NORMAL.Render("   " + line))
 				}
 				importDiffs, ok := evt.ImportDiffs[status.URN]
