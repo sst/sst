@@ -3,6 +3,22 @@ import { Dns } from "../../dns";
 
 export interface ApiGatewayV2DomainArgs {
   /**
+   * Use an existing API Gateway domain name.
+   *
+   * By default, a new API Gateway domain name is created. If you'd like to use an existing
+   * domain name, set the `nameId` to the ID of the domain name and **do not** pass in `name`.
+   *
+   * @example
+   * ```js
+   * {
+   *   domain: {
+   *     nameId: "example.com"
+   *   }
+   * }
+   * ```
+   */
+  nameId?: Input<string>;
+  /**
    * The custom domain you want to use.
    *
    * @example
@@ -24,7 +40,7 @@ export interface ApiGatewayV2DomainArgs {
    * }
    * ```
    */
-  name: Input<string>;
+  name?: Input<string>;
   /**
    * The base mapping for the custom domain. This adds a suffix to the URL of the API.
    *

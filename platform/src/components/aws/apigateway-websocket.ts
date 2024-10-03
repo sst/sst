@@ -24,6 +24,7 @@ import { ApiGatewayWebSocketRoute } from "./apigateway-websocket-route";
 import { setupApiGatewayAccount } from "./helpers/apigateway-account";
 import { apigatewayv2, cloudwatch } from "@pulumi/aws";
 import { permission } from "./permission";
+import { VisibleError } from "../error";
 
 export interface ApiGatewayWebSocketArgs {
   /**
@@ -206,7 +207,7 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
   private constructorOpts: ComponentResourceOptions;
   private api: apigatewayv2.Api;
   private stage: apigatewayv2.Stage;
-  private apigDomain?: apigatewayv2.DomainName;
+  private apigDomain?: Output<apigatewayv2.DomainName>;
   private apiMapping?: Output<apigatewayv2.ApiMapping>;
   private logGroup: cloudwatch.LogGroup;
 
@@ -255,21 +256,28 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
     function normalizeDomain() {
       if (!args.domain) return;
 
-      // validate
-      output(args.domain).apply((domain) => {
-        if (typeof domain === "string") return;
-
-        if (!domain.name) throw new Error(`Missing "name" for domain.`);
-        if (domain.dns === false && !domain.cert)
-          throw new Error(`No "cert" provided for domain with disabled DNS.`);
-      });
-
-      // normalize
       return output(args.domain).apply((domain) => {
-        const norm = typeof domain === "string" ? { name: domain } : domain;
+        // validate
+        if (typeof domain !== "string") {
+          if (domain.name && domain.nameId)
+            throw new VisibleError(
+              `Cannot configure both domain "name" and "nameId" for the "${name}" API.`,
+            );
+          if (!domain.name && !domain.nameId)
+            throw new VisibleError(
+              `Either domain "name" or "nameId" is required for the "${name}" API.`,
+            );
+          if (domain.dns === false && !domain.cert)
+            throw new VisibleError(
+              `Domain "cert" is required when "dns" is disabled for the "${name}" API.`,
+            );
+        }
 
+        // normalize
+        const norm = typeof domain === "string" ? { name: domain } : domain;
         return {
           name: norm.name,
+          nameId: norm.nameId,
           path: norm.path,
           dns: norm.dns === false ? undefined : norm.dns ?? awsDns(),
           cert: norm.cert,
@@ -345,15 +353,16 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
     }
 
     function createSsl() {
-      if (!domain) return;
+      if (!domain) return output(undefined);
 
       return domain.apply((domain) => {
         if (domain.cert) return output(domain.cert);
+        if (domain.nameId) return output(undefined);
 
         return new DnsValidatedCertificate(
           `${name}Ssl`,
           {
-            domainName: domain.name,
+            domainName: domain.name!,
             dns: domain.dns!,
           },
           { parent },
@@ -364,35 +373,43 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
     function createDomainName() {
       if (!domain || !certificateArn) return;
 
-      return new apigatewayv2.DomainName(
-        ...transform(
-          args.transform?.domainName,
-          `${name}DomainName`,
-          {
-            domainName: domain?.name,
-            domainNameConfiguration: {
-              certificateArn,
-              endpointType: "REGIONAL",
-              securityPolicy: "TLS_1_2",
-            },
-          },
-          { parent },
-        ),
-      );
+      return all([domain, certificateArn]).apply(([domain, certificateArn]) => {
+        return domain.nameId
+          ? apigatewayv2.DomainName.get(
+              `${name}DomainName`,
+              domain.nameId,
+              {},
+              { parent },
+            )
+          : new apigatewayv2.DomainName(
+              ...transform(
+                args.transform?.domainName,
+                `${name}DomainName`,
+                {
+                  domainName: domain.name!,
+                  domainNameConfiguration: {
+                    certificateArn: certificateArn!,
+                    endpointType: "REGIONAL",
+                    securityPolicy: "TLS_1_2",
+                  },
+                },
+                { parent },
+              ),
+            );
+      });
     }
 
     function createDnsRecords(): void {
-      if (!domain || !apigDomain) {
-        return;
-      }
+      if (!domain || !apigDomain) return;
 
-      domain.dns.apply((dns) => {
-        if (!dns) return;
+      domain.apply((domain) => {
+        if (!domain.dns) return;
+        if (domain.nameId) return;
 
-        dns.createAlias(
+        domain.dns.createAlias(
           name,
           {
-            name: domain.name,
+            name: domain.name!,
             aliasName: apigDomain.domainNameConfiguration.targetDomainName,
             aliasZone: apigDomain.domainNameConfiguration.hostedZoneId,
           },
@@ -463,11 +480,22 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
+    const self = this;
     return {
       /**
        * The Amazon API Gateway V2 API.
        */
       api: this.api,
+      /**
+       * The API Gateway HTTP API domain name.
+       */
+      get domainName() {
+        if (!self.apigDomain)
+          throw new VisibleError(
+            `"nodes.domainName" is not available when domain is not configured for the "${self.constructorName}" API.`,
+          );
+        return self.apigDomain;
+      },
       /**
        * The CloudWatch LogGroup for the access logs.
        */
@@ -531,7 +559,7 @@ export class ApiGatewayWebSocket extends Component implements Link.Linkable {
    */
   public route(
     route: string,
-    handler:  Input<string | FunctionArgs | FunctionArn>,
+    handler: Input<string | FunctionArgs | FunctionArn>,
     args: ApiGatewayWebSocketRouteArgs = {},
   ) {
     const prefix = this.constructorName;
