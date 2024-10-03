@@ -18,6 +18,7 @@ import (
 	"github.com/sst/ion/cmd/sst/mosaic/dev"
 	"github.com/sst/ion/cmd/sst/mosaic/multiplexer"
 	"github.com/sst/ion/cmd/sst/mosaic/socket"
+	"github.com/sst/ion/cmd/sst/mosaic/tunnel"
 	"github.com/sst/ion/cmd/sst/mosaic/watcher"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/bus"
@@ -153,6 +154,11 @@ func CmdMosaic(c *cli.Cli) error {
 	wg.Go(func() error {
 		defer c.Cancel()
 		return socket.Start(c.Context, p, server)
+	})
+
+	wg.Go(func() error {
+		defer c.Cancel()
+		return tunnel.Start(c.Context, p)
 	})
 
 	wg.Go(func() error {

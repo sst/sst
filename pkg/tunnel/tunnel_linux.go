@@ -3,7 +3,6 @@ package tunnel
 import (
 	"context"
 	"log/slog"
-	"os"
 	"os/exec"
 	"runtime"
 )
@@ -14,7 +13,7 @@ func Start(ctx context.Context, routes ...string) error {
 	destroy()
 	cmds := [][]string{
 		{"ip", "tuntap", "add", name, "mode", "tun"},
-		{"ip", "addr", "add", "172.16.0.1/12", "dev", name},
+		{"ip", "addr", "add", "172.16.0.1", "dev", name},
 		{"ip", "link", "set", "dev", name, "up"},
 	}
 	for _, route := range routes {
@@ -28,8 +27,6 @@ func Start(ctx context.Context, routes ...string) error {
 	}
 	defer destroy()
 	socksCmd := exec.CommandContext(ctx, "tun2socks", "-device", name, "-proxy", "socks5://127.0.0.1:1080")
-	socksCmd.Stdout = os.Stdout
-	socksCmd.Stderr = os.Stderr
 	return socksCmd.Run()
 }
 

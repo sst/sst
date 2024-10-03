@@ -264,13 +264,21 @@ export class Vpc extends Component implements Link.Linkable {
 
     function registerOutputs() {
       parent.registerOutputs({
-        _tunnel: all([parent.bastionInstance, parent.privateKeyValue]).apply(
-          ([bastion, privateKeyValue]) => {
+        _tunnel: all([
+          parent.bastionInstance,
+          parent.privateKeyValue,
+          parent._privateSubnets,
+          parent._publicSubnets,
+        ]).apply(
+          ([bastion, privateKeyValue, privateSubnets, publicSubnets]) => {
             if (!bastion) return;
             return {
               ip: bastion.publicIp,
               username: "ec2-user",
               privateKey: privateKeyValue!,
+              subnets: [...privateSubnets, ...publicSubnets].map(
+                (s) => s.cidrBlock,
+              ),
             };
           },
         ),

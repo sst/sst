@@ -12,20 +12,20 @@ import (
 	"github.com/sst/ion/internal/util"
 )
 
-var permissionedBinary = "/opt/sst/sst"
+var BINARY_PATH = "/opt/sst/sst"
 
 func Install() error {
 	sourcePath, err := os.Executable()
 	if err != nil {
 		return err
 	}
-	os.MkdirAll(filepath.Dir(permissionedBinary), 0755)
+	os.MkdirAll(filepath.Dir(BINARY_PATH), 0755)
 	sourceFile, err := os.Open(sourcePath)
 	if err != nil {
 		return err
 	}
 	defer sourceFile.Close()
-	destFile, err := os.Create(permissionedBinary)
+	destFile, err := os.Create(BINARY_PATH)
 	if err != nil {
 		return err
 	}
@@ -34,10 +34,10 @@ func Install() error {
 	if err != nil {
 		return err
 	}
-	err = os.Chmod(permissionedBinary, 0755)
+	err = os.Chmod(BINARY_PATH, 0755)
 	user := os.Getenv("SUDO_USER")
 	sudoersPath := "/etc/sudoers.d/sst." + user
-	command := permissionedBinary + " tunnel start"
+	command := BINARY_PATH + " tunnel start"
 	sudoersEntry := fmt.Sprintf("%s ALL=(ALL) NOPASSWD: %s\n", user, command)
 	err = os.WriteFile(sudoersPath, []byte(sudoersEntry), 0440)
 	if err != nil {

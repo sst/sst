@@ -1,17 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
 	"os/user"
 	"strings"
-	"syscall"
 
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/global"
+	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/tunnel"
 	"golang.org/x/sync/errgroup"
 )
@@ -27,17 +28,37 @@ var CmdTunnel = &cli.Command{
 		if err != nil {
 			return err
 		}
-		_, err = proj.GetCompleted(c.Context)
+		state, err := proj.GetCompleted(c.Context)
 		if err != nil {
 			return err
 		}
+		if len(state.Tunnels) == 0 {
+			return util.NewReadableError(nil, "No tunnels found for stage "+proj.App().Stage)
+		}
+		var tun project.Tunnel
+		for _, item := range state.Tunnels {
+			tun = item
+		}
+		fmt.Println("tunneling through", tun.IP, "for")
+		for _, subnet := range tun.Subnets {
+			fmt.Println("-", subnet)
+		}
+		subnets := strings.Join(tun.Subnets, ",")
 		// run as root
-		tunnelCmd := exec.Command("sudo", "/opt/sst/sst", "tunnel", "start")
+		tunnelCmd := exec.Command(
+			"sudo", "-E",
+			tunnel.BINARY_PATH, "tunnel", "start",
+			"--subnets", subnets,
+			"--host", tun.IP,
+			"--user", tun.Username,
+		)
+		util.SetProcessGroupID(tunnelCmd)
+		tunnelCmd.Env = append(os.Environ(), "SSH_PRIVATE_KEY="+tun.PrivateKey)
 		tunnelCmd.Stdout = os.Stdout
 		tunnelCmd.Stderr = os.Stderr
 		tunnelCmd.Start()
 		<-c.Context.Done()
-		tunnelCmd.Process.Signal(syscall.SIGINT)
+		util.TerminateProcess(tunnelCmd.Process.Pid)
 		tunnelCmd.Wait()
 		return nil
 	},
@@ -83,28 +104,37 @@ var CmdTunnel = &cli.Command{
 				}, "\n"),
 			},
 			Hidden: true,
-			Args: []cli.Argument{
+			Flags: []cli.Flag{
 				{
-					Name: "subnet",
+					Name: "subnets",
+					Type: "string",
 					Description: cli.Description{
 						Short: "The subnet to use for the tunnel",
 						Long:  "The subnet to use for the tunnel",
 					},
-					Required: true,
 				},
 				{
 					Name: "host",
+					Type: "string",
 					Description: cli.Description{
 						Short: "The host to use for the tunnel",
 						Long:  "The host to use for the tunnel",
 					},
-					Required: true,
 				},
 				{
 					Name: "port",
+					Type: "string",
 					Description: cli.Description{
 						Short: "The port to use for the tunnel",
 						Long:  "The port to use for the tunnel",
+					},
+				},
+				{
+					Name: "user",
+					Type: "string",
+					Description: cli.Description{
+						Short: "The user to use for the tunnel",
+						Long:  "The user to use for the tunnel",
 					},
 				},
 			},
@@ -113,21 +143,27 @@ var CmdTunnel = &cli.Command{
 				if err != nil {
 					return err
 				}
-				subnet := c.Positional(0)
-				host := c.Positional(1)
-				port := c.Positional(2)
-				slog.Info("starting tunnel", "subnet", subnet, "host", host, "port", port)
+				subnets := strings.Split(c.String("subnets"), ",")
+				host := c.String("host")
+				port := c.String("port")
+				user := c.String("user")
 				if port == "" {
 					port = "22"
 				}
+				slog.Info("starting tunnel", "subnet", subnets, "host", host, "port", port)
 				var wg errgroup.Group
 				wg.Go(func() error {
 					defer c.Cancel()
-					return tunnel.StartProxy(c.Context, host+":"+port, []byte(os.Getenv("SSH_PRIVATE_KEY")))
+					return tunnel.StartProxy(
+						c.Context,
+						user,
+						host+":"+port,
+						[]byte(os.Getenv("SSH_PRIVATE_KEY")),
+					)
 				})
 				wg.Go(func() error {
 					defer c.Cancel()
-					return tunnel.Start(c.Context, subnet)
+					return tunnel.Start(c.Context, subnets...)
 				})
 				slog.Info("tunnel started")
 				wg.Wait()

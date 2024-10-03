@@ -106,6 +106,14 @@ type CompleteEvent struct {
 	Old         bool
 	Resources   []apitype.ResourceV3
 	ImportDiffs map[string][]ImportDiff
+	Tunnels     map[string]Tunnel
+}
+
+type Tunnel struct {
+	IP         string   `json:"ip"`
+	Username   string   `json:"username"`
+	PrivateKey string   `json:"privateKey"`
+	Subnets    []string `json:"subnets"`
 }
 
 type ImportDiff struct {
@@ -814,6 +822,7 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 		ImportDiffs: map[string][]ImportDiff{},
 		Receivers:   Receivers{},
 		Devs:        Devs{},
+		Tunnels:     map[string]Tunnel{},
 		Hints:       map[string]string{},
 		Outputs:     map[string]interface{}{},
 		Errors:      []Error{},
@@ -856,6 +865,19 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 			json.Unmarshal(data, &entry)
 			entry.Name = resource.URN.Name()
 			complete.Devs[entry.Name] = entry
+		}
+
+		if match, ok := outputs["_tunnel"].(map[string]interface{}); ok {
+			tunnel := Tunnel{
+				IP:         match["ip"].(string),
+				Username:   match["username"].(string),
+				PrivateKey: match["privateKey"].(string),
+				Subnets:    []string{},
+			}
+			for _, subnet := range match["subnets"].([]interface{}) {
+				tunnel.Subnets = append(tunnel.Subnets, subnet.(string))
+			}
+			complete.Tunnels[resource.URN.Name()] = tunnel
 		}
 
 		if hint, ok := outputs["_hint"].(string); ok {
