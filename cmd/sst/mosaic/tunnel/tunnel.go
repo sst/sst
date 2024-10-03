@@ -41,8 +41,8 @@ func Start(ctx context.Context, proj *project.Project) error {
 				if cmd != nil && tun.IP == next.IP && tun.Username == next.Username && tun.PrivateKey == next.PrivateKey {
 					continue
 				}
-				if cmd != nil {
-					cmd.Process.Signal(os.Interrupt)
+				if cmd != nil && cmd.Process != nil {
+					util.TerminateProcess(cmd.Process.Pid)
 					cmd.Wait()
 				}
 				tun = next
