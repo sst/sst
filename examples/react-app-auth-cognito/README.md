@@ -9,7 +9,7 @@ An example full-stack serverless React.js app created with SST. It connects to a
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/react-app-auth-cognito
+$ npx create-sst@two --template=examples/react-app-auth-cognito
 # Or with Yarn
 $ yarn create sst --template=examples/react-app-auth-cognito
 # Or with PNPM

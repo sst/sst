@@ -9,7 +9,7 @@ An example SST serverless app monitored with [Lumigo](https://www.lumigo.io).
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/lumigo
+$ npx create-sst@two --template=examples/lumigo
 # Or with Yarn
 $ yarn create sst --template=examples/lumigo
 # Or with PNPM

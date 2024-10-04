@@ -9,7 +9,7 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/bucket-image-resize
+$ npx create-sst@two --template=examples/bucket-image-resize
 # Or with Yarn
 $ yarn create sst --template=examples/bucket-image-resize
 # Or with PNPM

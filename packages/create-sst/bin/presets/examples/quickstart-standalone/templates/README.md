@@ -9,7 +9,7 @@ Take SST for a spin and create your first project.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/quickstart-standalone
+$ npx create-sst@two --template=examples/quickstart-standalone
 ```
 
 ## Commands

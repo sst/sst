@@ -9,7 +9,7 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/api-oauth-facebook
+$ npx create-sst@two --template=examples/api-oauth-facebook
 # Or with Yarn
 $ yarn create sst --template=examples/api-oauth-facebook
 # Or with PNPM

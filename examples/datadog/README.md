@@ -9,7 +9,7 @@ An example SST serverless app monitored with [Datadog](https://www.datadoghq.com
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/datadog
+$ npx create-sst@two --template=examples/datadog
 # Or with Yarn
 $ yarn create sst --template=examples/datadog
 # Or with PNPM

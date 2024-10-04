@@ -15,7 +15,7 @@ export default [
   }),
   extract(),
   install({
-    packages: ["sst"],
+    packages: ["sst@^2"],
     path: "packages/web",
     dev: true,
   }),

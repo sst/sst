@@ -9,7 +9,7 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/kinesisstream
+$ npx create-sst@two --template=examples/kinesisstream
 # Or with Yarn
 $ yarn create sst --template=examples/kinesisstream
 # Or with PNPM

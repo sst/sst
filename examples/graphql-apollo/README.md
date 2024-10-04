@@ -9,7 +9,7 @@ An example serverless app created with SST.
 Install the example.
 
 ```bash
-$ npx create-sst@latest --template=examples/graphql-apollo
+$ npx create-sst@two --template=examples/graphql-apollo
 # Or with Yarn
 $ yarn create sst --template=examples/graphql-apollo
 # Or with PNPM

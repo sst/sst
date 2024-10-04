@@ -18,7 +18,7 @@ There's no need install this CLI. Just use it directly to create your projects.
 With npx.
 
 ```bash
-npx create-sst@latest
+npx create-sst@two
 ```
 
 Or with npm 6+
@@ -50,7 +50,7 @@ Pass in the following (optional) options.
 Instead of the standard starter, you can choose to use one of our minimal setups or examples as the template to bootstrap.
 
 ```bash
-npx create-sst@latest --template=other/go
+npx create-sst@two --template=other/go
 ```
 
 ---
@@ -63,7 +63,7 @@ Specify a project name, instead of typing it into the interactive prompt.
 
 
 ```bash
-npx create-sst@latest my-sst-app
+npx create-sst@two my-sst-app
 ```
 
 For more details, [head over to our docs](https://docs.sst.dev).

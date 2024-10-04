@@ -4,7 +4,7 @@ export default [
   extract(),
   install({
     packages: [
-      "sst",
+      "sst@^2",
       "aws-cdk-lib@2.142.1",
       "constructs@10.3.0",
       "solid-start-sst",

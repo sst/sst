@@ -10,7 +10,7 @@ export default [
       "aws-cdk-lib@2.91.0",
       "constructs@10.2.69",
       "eslint@^8.57.0",
-      "sst",
+      "sst@^2",
       "typescript",
       "vite"
     ],
