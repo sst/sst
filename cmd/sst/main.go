@@ -22,6 +22,7 @@ import (
 	"github.com/sst/ion/cmd/sst/mosaic/errors"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/internal/util"
+	"github.com/sst/ion/pkg/flag"
 	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
@@ -102,23 +103,25 @@ func run() error {
 		return err
 	}
 
-	spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-	spin.Suffix = "  Updating dependencies..."
-	if global.NeedsPulumi() {
-		spin.Start()
-		err := global.InstallPulumi()
-		if err != nil {
-			return err
+	if !flag.SST_SKIP_DEPENDENCY_CHECK {
+		spin := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+		spin.Suffix = "  Updating dependencies..."
+		if global.NeedsPulumi() {
+			spin.Start()
+			err := global.InstallPulumi()
+			if err != nil {
+				return err
+			}
 		}
-	}
-	if global.NeedsBun() {
-		spin.Start()
-		err := global.InstallBun()
-		if err != nil {
-			return err
+		if global.NeedsBun() {
+			spin.Start()
+			err := global.InstallBun()
+			if err != nil {
+				return err
+			}
 		}
+		spin.Stop()
 	}
-	spin.Stop()
 	return c.Run()
 }
 

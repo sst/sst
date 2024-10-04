@@ -88,6 +88,7 @@ var CmdTunnel = &cli.Command{
 		tunnelCmd.Env = append(
 			os.Environ(),
 			"SST_SKIP_LOCAL=true",
+			"SST_SKIP_DEPENDENCY_CHECK=true",
 			"SSH_PRIVATE_KEY="+tun.PrivateKey,
 		)
 		tunnelCmd.Stdout = os.Stdout
