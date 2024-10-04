@@ -76,7 +76,7 @@ func InstallPulumi() error {
 	case "arm64":
 		osArch += "-arm64"
 	default:
-		return fmt.Errorf("unsupported architecture")
+		return fmt.Errorf("unsupported architecture: " + runtime.GOARCH)
 	}
 
 	fileExtension := ".tar.gz"
