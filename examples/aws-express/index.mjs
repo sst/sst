@@ -11,7 +11,7 @@ const redis = new Cluster(
   {
     dnsLookup: (address, callback) => callback(null, address),
     redisOptions: {
-      tls: true,
+      tls: {},
       username: Resource.MyRedis.username,
       password: Resource.MyRedis.password,
     },

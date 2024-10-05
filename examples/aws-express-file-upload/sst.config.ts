@@ -8,7 +8,7 @@
  * You can get started by running.
  *
  * ```bash
- * mkdir aws-express && cd aws-express
+ * mkdir aws-express-file-upload && cd aws-express-file-upload
  * npm init -y
  * npm install express
  * npx sst@latest init
@@ -36,8 +36,8 @@
  * This example lets you upload a file to S3 and then download it.
  *
  * ```bash
- * curl --F file=@elysia.png http://localhost:3000/
- * curl http://localhost:3000/latest
+ * curl -F file=@package.json http://localhost:80/
+ * curl http://localhost:80/latest
  * ```
  *
  * Finally, you can deploy it using `npx sst deploy --stage production`.
@@ -45,7 +45,7 @@
 export default $config({
   app(input) {
     return {
-      name: "aws-express",
+      name: "aws-express-file-upload",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
     };

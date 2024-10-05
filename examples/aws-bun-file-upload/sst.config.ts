@@ -1,15 +1,15 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
 /**
- * ## AWS Bun Elysia container
+ * ## AWS Bun file upload
  *
- * Deploys a Bun [Elysia](https://elysiajs.com/) API to AWS.
+ * Deploys an Bun app to AWS.
  *
  * You can get started by running.
  *
  * ```bash
- * bun create elysia aws-bun-elysia
- * cd aws-bun-elysia
+ * mkdir aws-bun-file-upload && cd aws-bun-file-upload
+ * bun init -y
  * bunx sst init
  * ```
  *
@@ -23,6 +23,7 @@
  *   dev: {
  *     command: "bun dev",
  *   },
+ *   link: [bucket],
  * });
  * ```
  *
@@ -35,7 +36,7 @@
  * This example lets you upload a file to S3 and then download it.
  *
  * ```bash
- * curl -F file=@elysia.png http://localhost:3000/
+ * curl -F file=@package.json http://localhost:3000/
  * curl http://localhost:3000/latest
  * ```
  *
@@ -44,7 +45,7 @@
 export default $config({
   app(input) {
     return {
-      name: "aws-bun-elysia",
+      name: "aws-bun-file-upload",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
     };

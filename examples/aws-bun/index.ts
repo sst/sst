@@ -1,54 +1,25 @@
 import { Resource } from "sst";
-import {
-  S3Client,
-  GetObjectCommand,
-  ListObjectsV2Command,
-} from "@aws-sdk/client-s3";
-import { Upload } from "@aws-sdk/lib-storage";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { Cluster } from "ioredis";
 
-const s3 = new S3Client();
+const redis = new Cluster(
+  [{ host: Resource.MyRedis.host, port: Resource.MyRedis.port }],
+  {
+    dnsLookup: (address, callback) => callback(null, address),
+    redisOptions: {
+      tls: {},
+      username: Resource.MyRedis.username,
+      password: Resource.MyRedis.password,
+    },
+  }
+);
 
 const server = Bun.serve({
   async fetch(req) {
     const url = new URL(req.url);
 
     if (url.pathname === "/" && req.method === "GET") {
-      return new Response("Hello World!");
-    }
-
-    if (url.pathname === "/" && req.method === "POST") {
-      const formData = await req.formData();
-      const file = formData.get("file")! as File;
-      const params = {
-        Bucket: Resource.MyBucket.name,
-        Key: file.name,
-        Body: file,
-      };
-      const upload = new Upload({
-        params,
-        client: s3,
-      });
-      await upload.done();
-
-      return new Response("File uploaded successfully.");
-    }
-
-    if (url.pathname === "/latest" && req.method === "GET") {
-      const objects = await s3.send(
-        new ListObjectsV2Command({
-          Bucket: Resource.MyBucket.name,
-        }),
-      );
-      const latestFile = objects.Contents!.sort(
-        (a, b) =>
-          (b.LastModified?.getTime() ?? 0) - (a.LastModified?.getTime() ?? 0),
-      )[0];
-      const command = new GetObjectCommand({
-        Key: latestFile.Key,
-        Bucket: Resource.MyBucket.name,
-      });
-      return Response.redirect(await getSignedUrl(s3, command));
+      const counter = await redis.incr("counter");
+      return new Response(`Hit counter: ${counter}`);
     }
 
     return new Response("404!");

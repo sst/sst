@@ -121,7 +121,7 @@ Since our Redis cluster is in a VPC, we'll need a tunnel to connect to it from o
 sudo npx sst tunnel install
 ```
 
-This needs _sudo_ to create a network interface on your machine.
+This needs _sudo_ to create a network interface on your machine. You'll only need to do this once on your machine.
 
 ---
 
@@ -156,7 +156,7 @@ const redis = new Cluster(
   {
     dnsLookup: (address, callback) => callback(null, address),
     redisOptions: {
-      tls: true,
+      tls: {},
       username: Resource.MyRedis.username,
       password: Resource.MyRedis.password,
     },
