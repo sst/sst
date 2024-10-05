@@ -1855,6 +1855,10 @@ export class Function extends Component implements Link.Linkable {
           concurrency,
           dev,
         ]) => {
+          // This is a hack to avoid handler being marked as having propertyDependencies.
+          // There is an unresolved bug in pulumi that causes issues when it does
+          // @ts-expect-error
+          handler.allResources = () => Promise.resolve(new Set());
           const transformed = transform(
             args.transform?.function,
             `${name}Function`,
