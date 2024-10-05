@@ -251,7 +251,7 @@ curl --F file=@elysia.png http://localhost:3000/
 curl http://localhost:3000/latest
 ```
 
-Finally, you can deploy it using `bun sst deploy`.
+Finally, you can deploy it using `bun sst deploy --stage production`.
 ```ts title="sst.config.ts"
 const bucket = new sst.aws.Bucket("MyBucket");
 const vpc = new sst.aws.Vpc("MyVpc");
@@ -341,6 +341,66 @@ return {
 ```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-dynamo).
+
+
+---
+## AWS Express file upload
+
+Deploys an Express app to AWS.
+
+You can get started by running.
+
+```bash
+mkdir aws-express && cd aws-express
+npm init -y
+npm install express
+npx sst@latest init
+```
+
+Now you can add a service.
+
+```ts title="sst.config.ts"
+cluster.addService("MyService", {
+  public: {
+    ports: [{ listen: "80/http", forward: "3000/http" }],
+  },
+  dev: {
+    command: "node --watch index.mjs",
+  },
+});
+```
+
+Start your app locally.
+
+```bash
+npx sst dev
+```
+
+This example lets you upload a file to S3 and then download it.
+
+```bash
+curl --F file=@elysia.png http://localhost:3000/
+curl http://localhost:3000/latest
+```
+
+Finally, you can deploy it using `npx sst deploy --stage production`.
+```ts title="sst.config.ts"
+const bucket = new sst.aws.Bucket("MyBucket");
+const vpc = new sst.aws.Vpc("MyVpc");
+
+const cluster = new sst.aws.Cluster("MyCluster", { vpc });
+cluster.addService("MyService", {
+  public: {
+    ports: [{ listen: "80/http" }],
+  },
+  dev: {
+    command: "node --watch index.mjs",
+  },
+  link: [bucket],
+});
+```
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-express-file-upload).
 
 
 ---

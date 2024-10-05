@@ -1,16 +1,17 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
 /**
- * ## AWS Bun Elysia container
+ * ## AWS Express file upload
  *
- * Deploys a Bun [Elysia](https://elysiajs.com/) API to AWS.
+ * Deploys an Express app to AWS.
  *
  * You can get started by running.
  *
  * ```bash
- * bun create elysia aws-bun-elysia
- * cd aws-bun-elysia
- * bunx sst init
+ * mkdir aws-express && cd aws-express
+ * npm init -y
+ * npm install express
+ * npx sst@latest init
  * ```
  *
  * Now you can add a service.
@@ -21,7 +22,7 @@
  *     ports: [{ listen: "80/http", forward: "3000/http" }],
  *   },
  *   dev: {
- *     command: "bun dev",
+ *     command: "node --watch index.mjs",
  *   },
  * });
  * ```
@@ -29,7 +30,7 @@
  * Start your app locally.
  *
  * ```bash
- * bun sst dev
+ * npx sst dev
  * ```
  *
  * This example lets you upload a file to S3 and then download it.
@@ -39,12 +40,12 @@
  * curl http://localhost:3000/latest
  * ```
  *
- * Finally, you can deploy it using `bun sst deploy --stage production`.
+ * Finally, you can deploy it using `npx sst deploy --stage production`.
  */
 export default $config({
   app(input) {
     return {
-      name: "aws-bun-elysia",
+      name: "aws-express",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
     };
@@ -56,10 +57,10 @@ export default $config({
     const cluster = new sst.aws.Cluster("MyCluster", { vpc });
     cluster.addService("MyService", {
       public: {
-        ports: [{ listen: "80/http", forward: "3000/http" }],
+        ports: [{ listen: "80/http" }],
       },
       dev: {
-        command: "bun dev",
+        command: "node --watch index.mjs",
       },
       link: [bucket],
     });
