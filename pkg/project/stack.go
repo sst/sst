@@ -874,10 +874,13 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 				PrivateKey: match["privateKey"].(string),
 				Subnets:    []string{},
 			}
-			for _, subnet := range match["subnets"].([]interface{}) {
-				tunnel.Subnets = append(tunnel.Subnets, subnet.(string))
+			subnets, ok := match["subnets"].([]interface{})
+			if ok {
+				for _, subnet := range subnets {
+					tunnel.Subnets = append(tunnel.Subnets, subnet.(string))
+				}
+				complete.Tunnels[resource.URN.Name()] = tunnel
 			}
-			complete.Tunnels[resource.URN.Name()] = tunnel
 		}
 
 		if hint, ok := outputs["_hint"].(string); ok {
