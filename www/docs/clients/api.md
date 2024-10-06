@@ -163,11 +163,11 @@ const cookies = useCookies();
 
 ### useHeader
 
-This hook returns a request header.
+This hook returns a request header. Header names are parsed to lowercase.
 
 ```ts
 import { useHeader } from "sst/node/api";
-const header = useHeader("Authorization");
+const header = useHeader("authorization");
 ```
 
 ---
