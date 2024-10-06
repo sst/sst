@@ -856,6 +856,12 @@ export class Service extends Component implements Link.Linkable {
             dev: {
               title,
               autostart: true,
+              directory: output(args.image).apply((image) => {
+                if (!image) return "";
+                if (typeof image === "string") return "";
+                if (image.context) return path.dirname(image.context);
+                return "";
+              }),
               ...container.dev,
             },
             environment: {
