@@ -123,8 +123,8 @@ program
       if (destination !== cwd) {
         console.log(`- cd ${name}`);
       }
-      console.log(`- npm install (or pnpm install, or yarn)`);
-      console.log(`- npm run dev`);
+      console.log(`- pnpm install (or npm install, or yarn)`);
+      console.log(`- npx sst dev`);
     } catch (e) {
       spinner.fail("Failed");
       console.error(e);
