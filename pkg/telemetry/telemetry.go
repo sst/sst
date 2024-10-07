@@ -12,6 +12,7 @@ import (
 	"github.com/posthog/posthog-go"
 	"github.com/sst/ion/internal/fs"
 	"github.com/sst/ion/internal/util"
+	"github.com/sst/ion/pkg/flag"
 	"github.com/sst/ion/pkg/global"
 )
 
@@ -38,7 +39,7 @@ func Enable() error {
 func IsEnabled() bool {
 	path := filepath.Join(global.ConfigDir(), TELEMETRY_DISABLED_KEY)
 	_, err := os.Stat(path)
-	return os.IsNotExist(err)
+	return os.IsNotExist(err) && !flag.SST_TELEMETRY_DISABLED
 }
 
 // detectCI attempts to detect the CI environment and returns its name if detected, empty string otherwise.
