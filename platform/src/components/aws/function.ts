@@ -1182,41 +1182,25 @@ export class Function extends Component implements Link.Linkable {
     this.logGroup = logGroup;
     this.fnUrl = fnUrl;
 
-    all([
-      dev,
-      name,
-      linkData,
-      args.handler,
-      args.bundle,
+    const buildInput = output({
+      functionID: name,
+      handler: args.handler,
+      bundle: args.bundle,
       runtime,
-      args.nodejs,
+      links: linkData.apply((input) =>
+        Object.fromEntries(input.map((item) => [item.name, item.properties])),
+      ),
       copyFiles,
-    ]).apply(
-      async ([
-        dev,
-        name,
-        links,
-        handler,
-        bundle,
-        runtime,
-        nodejs,
-        copyFiles,
-      ]) => {
-        if (!dev) return;
-        await rpc.call("Runtime.AddTarget", {
-          functionID: name,
-          handler: handler,
-          bundle: bundle,
-          runtime: runtime,
-          links: Object.fromEntries(
-            links.map((link) => [link.name, link.properties]),
-          ),
-          copyFiles: copyFiles,
-          properties: nodejs,
-          dev: true,
-        });
-      },
-    );
+      properties: output({ nodejs: args.nodejs, python: args.python }).apply(
+        (val) => val.nodejs || val.python,
+      ),
+      dev,
+    });
+
+    buildInput.apply(async (input) => {
+      if (!input.dev) return;
+      await rpc.call("Runtime.AddTarget", input);
+    });
 
     this.registerOutputs({
       _live: unsecret(
@@ -1462,6 +1446,21 @@ export class Function extends Component implements Link.Linkable {
             handler: buildResult.handler,
             bundle: buildResult.out,
           };
+        }
+
+        if (false) {
+          const buildResult = buildInput.apply(async (input) => {
+            const result = await rpc.call<{
+              handler: string;
+              out: string;
+              errors: string[];
+            }>("Runtime.Build", input);
+            if (result.errors.length > 0) {
+              throw new Error(result.errors.join("\n"));
+            }
+            return result;
+          });
+          return buildResult;
         }
 
         if (args.bundle) {
