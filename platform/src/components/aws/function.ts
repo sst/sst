@@ -1546,7 +1546,7 @@ export class Function extends Component implements Link.Linkable {
           // Validate handler file exists
           const newHandlerFileExt = [".js", ".mjs", ".cjs"].find((ext) =>
             fs.existsSync(
-              path.join(bundle, handlerDir, oldHandlerFileName + ext),
+              path.join(bundle!, handlerDir, oldHandlerFileName + ext),
             ),
           );
           if (!newHandlerFileExt)
