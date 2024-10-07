@@ -166,6 +166,7 @@ export class Component extends ComponentResource {
               "cloudflare:index/workerDomain:WorkerDomain",
               "docker-build:index:Image",
               "vercel:index/dnsRecord:DnsRecord",
+              "cloudflare:index/workerCronTrigger:WorkerCronTrigger",
             ].includes(args.type)
           )
             return;
