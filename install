@@ -16,7 +16,7 @@ if [[ "$os" == "darwin" ]]; then
 fi
 arch=$(uname -m)
 
-if [[ "$arch" == "aarch64" ]]; then 
+if [[ "$arch" == "aarch64" ]]; then
   arch="arm64"
 fi
 
@@ -128,6 +128,9 @@ case $current_shell in
     ash)
         config_files="$HOME/.ashrc $HOME/.profile /etc/profile"
     ;;
+    sh)
+        config_files="$HOME/.ashrc $HOME/.profile /etc/profile"
+    ;;
     *)
         # Default case if none of the above matches
         config_files="$HOME/.bashrc $HOME/.bash_profile $XDG_CONFIG_HOME/bash/.bashrc $XDG_CONFIG_HOME/bash/.bash_profile"
@@ -159,6 +162,9 @@ if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
             add_to_path "$config_file" "export PATH=$INSTALL_DIR:\$PATH"
         ;;
         ash)
+            add_to_path "$config_file" "export PATH=$INSTALL_DIR:\$PATH"
+        ;;
+        sh)
             add_to_path "$config_file" "export PATH=$INSTALL_DIR:\$PATH"
         ;;
         *)
