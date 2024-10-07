@@ -1187,7 +1187,7 @@ export class Function extends Component implements Link.Linkable {
       handler: args.handler,
       bundle: args.bundle,
       runtime,
-      links: linkData.apply((input) =>
+      links: output(linkData).apply((input) =>
         Object.fromEntries(input.map((item) => [item.name, item.properties])),
       ),
       copyFiles,
@@ -1199,6 +1199,7 @@ export class Function extends Component implements Link.Linkable {
 
     buildInput.apply(async (input) => {
       if (!input.dev) return;
+      console.log(input);
       await rpc.call("Runtime.AddTarget", input);
     });
 
@@ -1460,7 +1461,10 @@ export class Function extends Component implements Link.Linkable {
             }
             return result;
           });
-          return buildResult;
+          return {
+            handler: buildResult.handler,
+            out: buildResult.out,
+          };
         }
 
         if (args.bundle) {
