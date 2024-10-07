@@ -1,0 +1,10 @@
+[package]
+name = "aws_rust_cluster"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.86"
+axum = "0.7.5"
+serde = { version = "1.0.209", features = ["derive"] }
+tokio = { version = "1.40.0", features = ["rt-multi-thread", "macros", "net"] }

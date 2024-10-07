@@ -1,0 +1,24 @@
+# rust
+/target
+
+# dotfiles
+*.env
+.git
+.gitignore
+.dockerignore
+.build
+
+# misc
+Dockerfile
+docker-compose.yml
+README.md
+
+# node
+node_modules
+package.json
+package-lock.json
+tsconfig.json
+
+# sst
+sst.config.ts
+.sst

@@ -1,0 +1,19 @@
+{
+  "name": "aws-rust-cluster",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.145",
+    "sst": "^3.0.80",
+    "sst-linux-x64": "^3.0.80"
+  },
+  "dependencies": {
+    "sst": "3.0.80"
+  }
+}
