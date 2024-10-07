@@ -272,13 +272,6 @@ export class StaticSite extends Component implements Link.Linkable {
         directory: sitePath,
         autostart: true,
       },
-      _receiver: all([sitePath, environment]).apply(
-        ([sitePath, environment]) => ({
-          directory: sitePath,
-          links: [],
-          environment,
-        }),
-      ),
       _metadata: {
         path: sitePath,
         environment,

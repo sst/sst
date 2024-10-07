@@ -280,17 +280,6 @@ export class Worker extends Component implements Link.Linkable {
       },
     );
     this.registerOutputs({
-      _receiver: {
-        directory: args.handler,
-        links: all([bindings]).apply(([links]) =>
-          Object.values(links)
-            .flat()
-            .filter((l) => l.name.startsWith("SST_RESOURCE_") === false)
-            .map((l) => l.name),
-        ),
-        environment: args.environment,
-        cloudflare: {},
-      },
       _live: all([name, args.handler, args.build, dev]).apply(
         ([name, handler, build, dev]) => {
           if (!dev) return undefined;

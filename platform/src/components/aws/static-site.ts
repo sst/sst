@@ -634,13 +634,6 @@ export class StaticSite extends Component implements Link.Linkable {
           environment,
           url: this.url,
         },
-        _receiver: all([sitePath, environment]).apply(
-          ([sitePath, environment]) => ({
-            directory: sitePath,
-            links: [],
-            environment,
-          }),
-        ),
         _dev: {
           environment,
           command: dev.command,
@@ -670,13 +663,6 @@ export class StaticSite extends Component implements Link.Linkable {
 
     this.registerOutputs({
       _hint: this.url,
-      _receiver: all([sitePath, environment]).apply(
-        ([sitePath, environment]) => ({
-          directory: sitePath,
-          links: [],
-          environment,
-        }),
-      ),
       _metadata: {
         mode: "deployed",
         path: sitePath,
