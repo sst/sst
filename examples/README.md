@@ -1,6 +1,6 @@
 # Examples
 
-A collection of example SST apps. You can also [view these in our docs](https://ion.sst.dev/docs/examples/).
+A collection of example SST apps. You can also [view these in our docs](https://sst.dev/docs/examples/).
 
 ## Generated Docs
 

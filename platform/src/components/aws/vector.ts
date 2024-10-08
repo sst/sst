@@ -1,7 +1,7 @@
 import path from "path";
 import { ComponentResourceOptions } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component.js";
-import { Postgres, PostgresArgs } from "./postgres.js";
+import { Postgres, PostgresArgs } from "./postgres-v1.js";
 import { VectorTable } from "./providers/vector-table.js";
 import { Function } from "./function.js";
 import { Link } from "../link.js";

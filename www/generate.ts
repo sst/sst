@@ -2080,6 +2080,7 @@ async function buildComponents() {
       "../platform/src/components/aws/email.ts",
       "../platform/src/components/aws/function.ts",
       "../platform/src/components/aws/postgres.ts",
+      "../platform/src/components/aws/postgres-v1.ts",
       "../platform/src/components/aws/vector.ts",
       "../platform/src/components/aws/astro.ts",
       "../platform/src/components/aws/nextjs.ts",

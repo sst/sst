@@ -125,7 +125,7 @@ func CmdMosaic(c *cli.Cli) error {
 	}
 
 	if os.Getenv("SST_SERVER") != "" {
-		return util.NewReadableError(nil, "The dev command for this process does not look right. Check your dev script in package.json to make sure it is simply starting your process and not running `sst dev`. More info here: https://ion.sst.dev/docs/reference/cli/#dev")
+		return util.NewReadableError(nil, "The dev command for this process does not look right. Check your dev script in package.json to make sure it is simply starting your process and not running `sst dev`. More info here: https://sst.dev/docs/reference/cli/#dev")
 	}
 
 	p, err := c.InitProject()

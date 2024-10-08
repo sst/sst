@@ -170,6 +170,7 @@ const sidebar = [
     items: [
       { label: "Vpc.v1", slug: "docs/component/aws/vpc-v1" },
       { label: "Cluster.v1", slug: "docs/component/aws/cluster-v1" },
+      { label: "Postgres.v1", slug: "docs/component/aws/postgres-v1" },
     ],
   },
 ];

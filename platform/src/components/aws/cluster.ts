@@ -1102,6 +1102,7 @@ export class Cluster extends Component {
     super(__pulumiType, name, args, opts, {
       _version,
       _message: [
+        `There is a new version of "Cluster" that has breaking changes.`,
         ``,
         `What changed:`,
         `  - In the old version, load balancers were deployed in public subnets, and services were deployed in private subnets. The VPC was required to have NAT gateways.`,
@@ -1111,7 +1112,7 @@ export class Cluster extends Component {
         `  - Set \`forceUpgrade: "v${_version}"\` on the "Cluster" component. Learn more https://sst.dev/docs/component/aws/cluster#forceupgrade`,
         ``,
         `To continue using v${$cli.state.version[name]}:`,
-        `  - Rename "Cluster" to "Cluster.v${$cli.state.version[name]}". Learn more about versioning - https://ion.sst.dev/docs/components/#versioning`,
+        `  - Rename "Cluster" to "Cluster.v${$cli.state.version[name]}". Learn more about versioning - https://sst.dev/docs/components/#versioning`,
       ].join("\n"),
       _forceUpgrade: args.forceUpgrade,
     });

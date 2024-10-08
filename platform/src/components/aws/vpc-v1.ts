@@ -81,7 +81,7 @@ interface VpcRef {
  * the latest [`Vpc`](/docs/component/aws/vpc) component instead.
  *
  * :::caution
- * This component has been deprecated .
+ * This component has been deprecated.
  * :::
  *
  * This creates a VPC with 2 Availability Zones by default. It also creates the following

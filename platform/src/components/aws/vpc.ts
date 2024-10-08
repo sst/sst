@@ -230,7 +230,11 @@ export class Vpc extends Component implements Link.Linkable {
     const _version = 2;
     super(__pulumiType, name, args, opts, {
       _version,
-      _message: `To continue using the previous version, rename "Vpc" to "Vpc.v${$cli.state.version[name]}". Or recreate this component to update - https://sst.dev/docs/component/aws/cluster#forceupgrade`,
+      _message: [
+        `There is a new version of "Vpc" that has breaking changes.`,
+        ``,
+        `To continue using the previous version, rename "Vpc" to "Vpc.v${$cli.state.version[name]}". Or recreate this component to update - https://sst.dev/docs/components/#versioning`,
+      ].join("\n"),
     });
 
     const parent = this;
@@ -627,20 +631,20 @@ export class Vpc extends Component implements Link.Linkable {
                   ([natGateways, natInstances]) => [
                     ...(natGateways[i]
                       ? [
-                        {
-                          cidrBlock: "0.0.0.0/0",
-                          natGatewayId: natGateways[i].id,
-                        },
-                      ]
+                          {
+                            cidrBlock: "0.0.0.0/0",
+                            natGatewayId: natGateways[i].id,
+                          },
+                        ]
                       : []),
                     ...(natInstances[i]
                       ? [
-                        {
-                          cidrBlock: "0.0.0.0/0",
-                          networkInterfaceId:
-                            natInstances[i].primaryNetworkInterfaceId,
-                        },
-                      ]
+                          {
+                            cidrBlock: "0.0.0.0/0",
+                            networkInterfaceId:
+                              natInstances[i].primaryNetworkInterfaceId,
+                          },
+                        ]
                       : []),
                   ],
                 ),
