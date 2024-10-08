@@ -121,6 +121,54 @@ export module Link {
       });
   }
 
+  export function getProperties(links?: Input<any[]>) {
+    const linkProperties = output(links ?? []).apply((links) =>
+      links
+        .map((link) => {
+          if (!link)
+            throw new VisibleError(
+              "An undefined link was passed into a `link` array.",
+            );
+          return link;
+        })
+        .filter((l) => isLinkable(l))
+        .map((l: Linkable) => ({
+          urn: l.urn,
+          properties: l.getSSTLink().properties,
+        })),
+    );
+
+    return output(linkProperties).apply((e) =>
+      Object.fromEntries(
+        e.map(({ urn, properties }) => {
+          const name = urn.split("::").at(-1)!;
+          const data = {
+            ...properties,
+            type: urn.split("::").at(-2),
+          };
+          return [name, data];
+        }),
+      ),
+    );
+  }
+
+  export function propertiesToEnv(
+    properties: ReturnType<typeof getProperties>,
+  ) {
+    return output(properties).apply((properties) => {
+      const env = Object.fromEntries(
+        Object.entries(properties).map(([key, value]) => {
+          return [`SST_RESOURCE_${key}`, JSON.stringify(value)];
+        }),
+      );
+      env["SST_RESOURCE_App"] = JSON.stringify({
+        name: $app.name,
+        stage: $app.stage,
+      });
+      return env;
+    });
+  }
+
   export function getInclude<T>(
     type: string,
     input?: Input<any[]>,

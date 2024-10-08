@@ -104,9 +104,6 @@ export class Service extends Component implements Link.Linkable {
     const containers = normalizeContainers();
     const pub = normalizePublic();
 
-    const linkData = buildLinkData();
-    const linkPermissions = buildLinkPermissions();
-
     const taskRole = createTaskRole();
 
     this.cloudmapNamespace = vpc.cloudmapNamespaceName;
@@ -356,14 +353,6 @@ export class Service extends Component implements Link.Linkable {
       return { ports, domain };
     }
 
-    function buildLinkData() {
-      return output(args.link || []).apply((links) => Link.build(links));
-    }
-
-    function buildLinkPermissions() {
-      return Link.getInclude<Permission>("aws.permission", args.link);
-    }
-
     function createLoadBalancer() {
       if (!pub) return {};
 
@@ -501,26 +490,28 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function createTaskRole() {
-      const policy = all([args.permissions || [], linkPermissions]).apply(
-        ([argsPermissions, linkPermissions]) =>
-          iam.getPolicyDocumentOutput({
-            statements: [
-              ...argsPermissions,
-              ...linkPermissions.map((item) => ({
-                actions: item.actions,
-                resources: item.resources,
-              })),
-              {
-                actions: [
-                  "ssmmessages:CreateControlChannel",
-                  "ssmmessages:CreateDataChannel",
-                  "ssmmessages:OpenControlChannel",
-                  "ssmmessages:OpenDataChannel",
-                ],
-                resources: ["*"],
-              },
-            ],
-          }),
+      const policy = all([
+        args.permissions || [],
+        Link.getInclude<Permission>("aws.permission", args.link),
+      ]).apply(([argsPermissions, linkPermissions]) =>
+        iam.getPolicyDocumentOutput({
+          statements: [
+            ...argsPermissions,
+            ...linkPermissions.map((item) => ({
+              actions: item.actions,
+              resources: item.resources,
+            })),
+            {
+              actions: [
+                "ssmmessages:CreateControlChannel",
+                "ssmmessages:CreateDataChannel",
+                "ssmmessages:OpenControlChannel",
+                "ssmmessages:OpenDataChannel",
+              ],
+              resources: ["*"],
+            },
+          ],
+        }),
       );
 
       return new iam.Role(
@@ -583,7 +574,11 @@ export class Service extends Component implements Link.Linkable {
             executionRoleArn: executionRole.arn,
             taskRoleArn: taskRole.arn,
             containerDefinitions: $jsonStringify(
-              containers.apply((containers) =>
+              all([
+                containers,
+                args.environment ?? [],
+                Link.propertiesToEnv(Link.getProperties(args.link)),
+              ]).apply(([containers, env, linkEnvs]) =>
                 containers.map((container) => {
                   return {
                     name: container.name,
@@ -600,24 +595,8 @@ export class Service extends Component implements Link.Linkable {
                         "awslogs-stream-prefix": "/service",
                       },
                     },
-                    environment: all([args.environment ?? [], linkData]).apply(
-                      ([env, linkData]) => [
-                        ...Object.entries(env).map(([name, value]) => ({
-                          name,
-                          value,
-                        })),
-                        ...linkData.map((d) => ({
-                          name: `SST_RESOURCE_${d.name}`,
-                          value: JSON.stringify(d.properties),
-                        })),
-                        {
-                          name: "SST_RESOURCE_App",
-                          value: JSON.stringify({
-                            name: $app.name,
-                            stage: $app.stage,
-                          }),
-                        },
-                      ],
+                    environment: Object.entries({ ...env, ...linkEnvs }).map(
+                      ([name, value]) => ({ name, value }),
                     ),
                     linuxParameters: {
                       initProcessEnabled: true,
@@ -625,74 +604,73 @@ export class Service extends Component implements Link.Linkable {
                   };
 
                   function createImage() {
-                    return container.image.apply((imageArgs) => {
-                      if (typeof imageArgs === "string")
-                        return output(imageArgs);
+                    if (typeof container.image === "string")
+                      return output(container.image);
 
-                      const contextPath = path.join(
-                        $cli.paths.root,
-                        imageArgs.context,
-                      );
-                      const dockerfile = imageArgs.dockerfile ?? "Dockerfile";
-                      const dockerfilePath = imageArgs.dockerfile
-                        ? path.join($cli.paths.root, imageArgs.dockerfile)
-                        : path.join(
-                            $cli.paths.root,
-                            imageArgs.context,
-                            "Dockerfile",
-                          );
-                      const dockerIgnorePath = fs.existsSync(
-                        path.join(contextPath, `${dockerfile}.dockerignore`),
-                      )
-                        ? path.join(contextPath, `${dockerfile}.dockerignore`)
-                        : path.join(contextPath, ".dockerignore");
-
-                      // add .sst to .dockerignore if not exist
-                      const lines = fs.existsSync(dockerIgnorePath)
-                        ? fs
-                            .readFileSync(dockerIgnorePath)
-                            .toString()
-                            .split("\n")
-                        : [];
-                      if (!lines.find((line) => line === ".sst")) {
-                        fs.writeFileSync(
-                          dockerIgnorePath,
-                          [...lines, "", "# sst", ".sst"].join("\n"),
+                    const contextPath = path.join(
+                      $cli.paths.root,
+                      container.image.context,
+                    );
+                    const dockerfile =
+                      container.image.dockerfile ?? "Dockerfile";
+                    const dockerfilePath = container.image.dockerfile
+                      ? path.join($cli.paths.root, container.image.dockerfile)
+                      : path.join(
+                          $cli.paths.root,
+                          container.image.context,
+                          "Dockerfile",
                         );
-                      }
+                    const dockerIgnorePath = fs.existsSync(
+                      path.join(contextPath, `${dockerfile}.dockerignore`),
+                    )
+                      ? path.join(contextPath, `${dockerfile}.dockerignore`)
+                      : path.join(contextPath, ".dockerignore");
 
-                      // Build image
-                      const image = new Image(
-                        ...transform(
-                          args.transform?.image,
-                          `${name}Image${container.name}`,
-                          {
-                            context: { location: contextPath },
-                            dockerfile: { location: dockerfilePath },
-                            buildArgs: imageArgs.args ?? {},
-                            platforms: [imageArgs.platform],
-                            tags: [
-                              interpolate`${bootstrapData.assetEcrUrl}:${container.name}`,
-                            ],
-                            registries: [
-                              ecr
-                                .getAuthorizationTokenOutput({
-                                  registryId: bootstrapData.assetEcrRegistryId,
-                                })
-                                .apply((authToken) => ({
-                                  address: authToken.proxyEndpoint,
-                                  password: secret(authToken.password),
-                                  username: authToken.userName,
-                                })),
-                            ],
-                            push: true,
-                          },
-                          { parent: self },
-                        ),
+                    // add .sst to .dockerignore if not exist
+                    const lines = fs.existsSync(dockerIgnorePath)
+                      ? fs.readFileSync(dockerIgnorePath).toString().split("\n")
+                      : [];
+                    if (!lines.find((line) => line === ".sst")) {
+                      fs.writeFileSync(
+                        dockerIgnorePath,
+                        [...lines, "", "# sst", ".sst"].join("\n"),
                       );
+                    }
 
-                      return interpolate`${bootstrapData.assetEcrUrl}@${image.digest}`;
-                    });
+                    // Build image
+                    const image = new Image(
+                      ...transform(
+                        args.transform?.image,
+                        `${name}Image${container.name}`,
+                        {
+                          context: { location: contextPath },
+                          dockerfile: { location: dockerfilePath },
+                          buildArgs: {
+                            ...container.image.args,
+                            ...linkEnvs,
+                          },
+                          platforms: [container.image.platform],
+                          tags: [
+                            interpolate`${bootstrapData.assetEcrUrl}:${container.name}`,
+                          ],
+                          registries: [
+                            ecr
+                              .getAuthorizationTokenOutput({
+                                registryId: bootstrapData.assetEcrRegistryId,
+                              })
+                              .apply((authToken) => ({
+                                address: authToken.proxyEndpoint,
+                                password: secret(authToken.password),
+                                username: authToken.userName,
+                              })),
+                          ],
+                          push: true,
+                        },
+                        { parent: self },
+                      ),
+                    );
+
+                    return interpolate`${bootstrapData.assetEcrUrl}@${image.digest}`;
                   }
 
                   function createLogGroup() {
@@ -702,9 +680,8 @@ export class Service extends Component implements Link.Linkable {
                         `${name}LogGroup${container.name}`,
                         {
                           name: interpolate`/sst/cluster/${cluster.name}/${name}/${container.name}`,
-                          retentionInDays: container.logging.apply(
-                            (logging) => RETENTION[logging.retention],
-                          ),
+                          retentionInDays:
+                            RETENTION[container.logging.retention],
                         },
                         { parent: self },
                       ),
