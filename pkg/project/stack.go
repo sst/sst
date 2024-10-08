@@ -252,7 +252,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	env["PULUMI_SKIP_UPDATE_CHECK"] = "true"
 	// env["PULUMI_DISABLE_AUTOMATIC_PLUGIN_ACQUISITION"] = "true"
 	env["NODE_OPTIONS"] = "--enable-source-maps --no-deprecation"
-	env["TMPDIR"] = p.PathLog("")
+	// env["TMPDIR"] = p.PathLog("")
 	if input.ServerPort != 0 {
 		env["SST_SERVER"] = fmt.Sprintf("http://localhost:%v", input.ServerPort)
 	}

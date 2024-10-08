@@ -414,7 +414,7 @@ export class Worker extends Component implements Link.Linkable {
                   await fs.readFile(path.join(build.out, build.handler))
                 ).toString(),
                 module: true,
-                compatibilityDate: "2024-04-04",
+                compatibilityDate: "2024-09-23",
                 compatibilityFlags: ["nodejs_compat"],
                 ...bindings,
                 plainTextBindings: [
