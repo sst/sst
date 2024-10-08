@@ -6,6 +6,7 @@ import (
 	"github.com/sst/ion/pkg/project/common"
 	"github.com/sst/ion/pkg/project/path"
 	"github.com/sst/ion/pkg/types/python"
+	"github.com/sst/ion/pkg/types/rails"
 	"github.com/sst/ion/pkg/types/typescript"
 )
 
@@ -30,4 +31,5 @@ func Generate(cfgPath string, complete common.Links) error {
 var All = []Generator{
 	typescript.Generate,
 	python.Generate,
+	rails.Generate,
 }

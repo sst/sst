@@ -1,0 +1,17 @@
+{
+  "name": "cloudflare-worker",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20240403.0",
+    "sst": "latest"
+  }
+}
