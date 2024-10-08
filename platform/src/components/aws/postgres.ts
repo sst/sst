@@ -41,11 +41,11 @@ export interface PostgresArgs {
    * @example
    * ```js
    * {
-   *   databaseName: "acme"
+   *   database: "acme"
    * }
    * ```
    */
-  databaseName?: Input<string>;
+  database?: Input<string>;
   /**
    * The type of instance to use for the database. Check out the [supported instance types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.Types.html).
    *
@@ -239,7 +239,7 @@ export class Postgres extends Component implements Link.Linkable {
     const engineVersion = output(args.version).apply((v) => v ?? "16.4");
     const instanceType = output(args.instance).apply((v) => v ?? "t4g.micro");
     const storage = normalizeStorage();
-    const dbName = output(args.databaseName).apply(
+    const dbName = output(args.database).apply(
       (v) => v ?? $app.name.replaceAll("-", "_"),
     );
     const vpc = normalizeVpc();
