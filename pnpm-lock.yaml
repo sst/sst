@@ -292,17 +292,17 @@ importers:
   packages/sst:
     dependencies:
       '@aws-cdk/aws-lambda-python-alpha':
-        specifier: 2.142.1-alpha.0
-        version: 2.142.1-alpha.0(aws-cdk-lib@2.142.1)(constructs@10.3.0)
+        specifier: 2.161.1-alpha.0
+        version: 2.161.1-alpha.0(aws-cdk-lib@2.161.1)(constructs@10.3.0)
       '@aws-cdk/cloud-assembly-schema':
-        specifier: 2.142.1
-        version: 2.142.1
+        specifier: 38.0.1
+        version: 38.0.1
       '@aws-cdk/cloudformation-diff':
-        specifier: 2.142.1
-        version: 2.142.1
+        specifier: 2.161.1
+        version: 2.161.1
       '@aws-cdk/cx-api':
-        specifier: 2.142.1
-        version: 2.142.1(@aws-cdk/cloud-assembly-schema@2.142.1)
+        specifier: 2.161.1
+        version: 2.161.1(@aws-cdk/cloud-assembly-schema@38.0.1)
       '@aws-crypto/sha256-js':
         specifier: ^5.2.0
         version: 5.2.0
@@ -376,8 +376,8 @@ importers:
         specifier: ^0.5.10
         version: 0.5.10
       aws-cdk-lib:
-        specifier: 2.142.1
-        version: 2.142.1(constructs@10.3.0)
+        specifier: 2.161.1
+        version: 2.161.1(constructs@10.3.0)
       aws-iot-device-sdk:
         specifier: ^2.2.13
         version: 2.2.13
@@ -388,8 +388,8 @@ importers:
         specifier: 3.2.0
         version: 3.2.0
       cdk-assets:
-        specifier: 2.142.1
-        version: 2.142.1
+        specifier: 2.155.6
+        version: 2.155.6
       chalk:
         specifier: ^5.2.0
         version: 5.2.0
@@ -472,8 +472,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0
       sst-aws-cdk:
-        specifier: 2.142.1
-        version: 2.142.1
+        specifier: 2.161.1-2
+        version: 2.161.1-2
       tree-kill:
         specifier: ^1.2.2
         version: 1.2.2
@@ -566,7 +566,7 @@ importers:
         specifier: ^5.3.1
         version: 5.3.1
       astro-sst:
-        specifier: 2.42.0
+        specifier: 2.43.8
         version: link:../astro-sst
       async:
         specifier: ^3.2.4
@@ -862,45 +862,44 @@ packages:
     resolution: {integrity: sha512-3M2tELJOxQv0apCIiuKQ4pAbncz9GuLwnKFqxifWfe77wuMxyTRPmxssYHs42ePqzap1LT6GDcPygGs+hHstLg==}
     dev: false
 
-  /@aws-cdk/asset-node-proxy-agent-v6@2.0.3:
-    resolution: {integrity: sha512-twhuEG+JPOYCYPx/xy5uH2+VUsIEhPTzDY0F1KuB+ocjWWB/KEDiOVL19nHvbPCB6fhWnkykXEMJ4HHcKvjtvg==}
+  /@aws-cdk/asset-node-proxy-agent-v6@2.1.0:
+    resolution: {integrity: sha512-7bY3J8GCVxLupn/kNmpPc5VJz8grx+4RKfnnJiO1LG+uxkZfANZG3RMHhE+qQxxwkyQ9/MfPtTpf748UhR425A==}
     dev: false
 
-  /@aws-cdk/aws-lambda-python-alpha@2.142.1-alpha.0(aws-cdk-lib@2.142.1)(constructs@10.3.0):
-    resolution: {integrity: sha512-XknR1To5RJbMWR92h3VCOA+DaKnjLDgKSNrWVAdbqkrnlpB1zygWFSXQQeV38f8ySkCwbt8NaUw2Mhi3Z6w+Eg==}
+  /@aws-cdk/aws-lambda-python-alpha@2.161.1-alpha.0(aws-cdk-lib@2.161.1)(constructs@10.3.0):
+    resolution: {integrity: sha512-87D1EGtpTxSe6IqYFaS110xXNoq1mN4xJ8f9c2g25zRIEm5raEW4dQTXpu0RK2NEzIw6p0V4HaQ3qhSPWN9G6g==}
     engines: {node: '>= 14.15.0'}
     peerDependencies:
-      aws-cdk-lib: ^2.142.1
+      aws-cdk-lib: ^2.161.1
       constructs: ^10.0.0
     dependencies:
-      aws-cdk-lib: 2.142.1(constructs@10.3.0)
+      aws-cdk-lib: 2.161.1(constructs@10.3.0)
       constructs: 10.3.0
     dev: false
 
-  /@aws-cdk/aws-service-spec@0.1.2:
-    resolution: {integrity: sha512-FJ53m99YypZgb3zRIxf4b6mGy4HRrdUFWEaMHsmAjdB7exdkgl0TS+DIJ7+64e0RQerS8oQiv7ypuCT32c1xvw==}
+  /@aws-cdk/aws-service-spec@0.1.26:
+    resolution: {integrity: sha512-VXkCdPB2cIKiDXpKK94EYd91Rh1V8SljA5B+GIOQOV5KtHkssqh1hTr5lL6TXYSE79kols/A5GX9pFVdw4fhVw==}
     dependencies:
-      '@aws-cdk/service-spec-types': 0.0.70
+      '@aws-cdk/service-spec-types': 0.0.93
       '@cdklabs/tskb': 0.0.3
     dev: false
 
-  /@aws-cdk/cloud-assembly-schema@2.142.1:
-    resolution: {integrity: sha512-qXPblguf9+24YFZz8vECeB5NIXoghiokeQjSXYvZNS5VS+YhqvFSoN+YIu/aoJFfAiMsbamI2CW2Z8xs3qUtiQ==}
-    engines: {node: '>= 14.15.0'}
+  /@aws-cdk/cloud-assembly-schema@38.0.1:
+    resolution: {integrity: sha512-KvPe+NMWAulfNVwY7jenFhzhuLhLqJ/OPy5jx7wUstbjnYnjRVLpUHPU3yCjXFE0J8cuJVdx95BJ4rOs66Pi9w==}
     dependencies:
       jsonschema: 1.4.1
-      semver: 7.6.0
+      semver: 7.6.3
     dev: false
     bundledDependencies:
       - jsonschema
       - semver
 
-  /@aws-cdk/cloudformation-diff@2.142.1:
-    resolution: {integrity: sha512-32tadRx2vzSLUk/5XDpHAxlXCDay0IpnrorTGk2svZDUgySSQoQjv5MA5B0P/1rQJ2ZOpurOIuneBwl6GLlUUg==}
+  /@aws-cdk/cloudformation-diff@2.161.1:
+    resolution: {integrity: sha512-/G7u3zmjdf/4gpxYn5O8zhfl+sPwrLiCaUOuXkfz2CCPqiXF9K9Mh6HxGTrDsx+7/Kga8+J9ybaViJKeunhUTw==}
     engines: {node: '>= 14.15.0'}
     dependencies:
-      '@aws-cdk/aws-service-spec': 0.1.2
-      '@aws-cdk/service-spec-types': 0.0.69
+      '@aws-cdk/aws-service-spec': 0.1.26
+      '@aws-cdk/service-spec-types': 0.0.92
       chalk: 4.1.2
       diff: 5.2.0
       fast-deep-equal: 3.1.3
@@ -908,26 +907,26 @@ packages:
       table: 6.8.2
     dev: false
 
-  /@aws-cdk/cx-api@2.142.1(@aws-cdk/cloud-assembly-schema@2.142.1):
-    resolution: {integrity: sha512-bj9cF8dkikv0LzH+aq0yan0BYDOrUsnTTTjSorC0oCJTzTfxo2hXGNGlP6nEfZr09Ws7tUemqPoHASgItzPHUA==}
+  /@aws-cdk/cx-api@2.161.1(@aws-cdk/cloud-assembly-schema@38.0.1):
+    resolution: {integrity: sha512-8HDxSQCIX7OOHqY7JmZzC6BKjVm2cgS7kiX8V6MNyE/1MbqJ+2Eztixfn0GBpXOUfEx8xV9USB1JMuLZcB6LCA==}
     engines: {node: '>= 14.15.0'}
     peerDependencies:
-      '@aws-cdk/cloud-assembly-schema': 2.142.1
+      '@aws-cdk/cloud-assembly-schema': ^38.0.0
     dependencies:
-      '@aws-cdk/cloud-assembly-schema': 2.142.1
-      semver: 7.6.0
+      '@aws-cdk/cloud-assembly-schema': 38.0.1
+      semver: 7.6.3
     dev: false
     bundledDependencies:
       - semver
 
-  /@aws-cdk/service-spec-types@0.0.69:
-    resolution: {integrity: sha512-bYCdtU5ZGfYJyKsh25ILzdtXyC4poB64k9oQ1p8EeRngnh6TlxObO/J+sI1CDvOpGoa+BUzCdAhewIkdMjzl5A==}
+  /@aws-cdk/service-spec-types@0.0.92:
+    resolution: {integrity: sha512-lqZa2/ieUB4ujqEsWl4+f0CFO60aabT1+5/F9z748Jgo7Q+zmv1G0awZuvjUWijkEM4VShg4aSl9s/WkMBbVXA==}
     dependencies:
       '@cdklabs/tskb': 0.0.3
     dev: false
 
-  /@aws-cdk/service-spec-types@0.0.70:
-    resolution: {integrity: sha512-MyxFn3CWC4d3aNwMigr6SKjudjg/AEwQWYKFF4aRlMcqJkys8KIRg5BaaZRFPYCO8pFW8AcrzGNutZt0O3cwWg==}
+  /@aws-cdk/service-spec-types@0.0.93:
+    resolution: {integrity: sha512-nLT07w8q/of+8X5QGgNtS1tu68CQSGJHL0xQcLsRKgaxoIddZnUUf2d6WS+Yp0aZCXu2UZaacUxPYwU+qmNhpw==}
     dependencies:
       '@cdklabs/tskb': 0.0.3
     dev: false
@@ -7295,7 +7294,7 @@ packages:
       react-router-config: 5.1.1(react-router@5.3.4)(react@17.0.2)
       react-router-dom: 5.3.4(react@17.0.2)
       rtl-detect: 1.0.4
-      semver: 7.5.4
+      semver: 7.6.3
       serve-handler: 6.1.5
       shelljs: 0.8.5
       terser-webpack-plugin: 5.3.6(webpack@5.75.0)
@@ -8875,7 +8874,7 @@ packages:
       nopt: 5.0.0
       npmlog: 5.0.1
       rimraf: 3.0.2
-      semver: 7.5.4
+      semver: 7.6.3
       tar: 6.1.15
     transitivePeerDependencies:
       - encoding
@@ -12433,15 +12432,16 @@ packages:
     resolution: {integrity: sha512-DMD0KiN46eipeziST1LPP/STfDU0sufISXmjSgvVsoU2tqxctQeASejWcfNtxYKqETM1UxQ8sp2OrSBWpHY6sw==}
     engines: {node: '>= 0.4'}
 
-  /aws-cdk-lib@2.142.1(constructs@10.3.0):
-    resolution: {integrity: sha512-xs4NRoml5/Zh30YHSk/Wwmr7VcZOZHyIInuBye3gC/BYwCh1lsUe9/ChWIeLUCRhUrELd5npyoBOJiHb3ql7Rg==}
+  /aws-cdk-lib@2.161.1(constructs@10.3.0):
+    resolution: {integrity: sha512-siVuWLRXD9AcQ2vkTPYbp/oH5KeXmx23voOkk/BcFmM9Sw+0kb1wgFWYCF2LMeFWDa+k5TuWMB0QtChN8/uz9A==}
     engines: {node: '>= 14.15.0'}
     peerDependencies:
       constructs: ^10.0.0
     dependencies:
       '@aws-cdk/asset-awscli-v1': 2.2.202
       '@aws-cdk/asset-kubectl-v20': 2.1.2
-      '@aws-cdk/asset-node-proxy-agent-v6': 2.0.3
+      '@aws-cdk/asset-node-proxy-agent-v6': 2.1.0
+      '@aws-cdk/cloud-assembly-schema': 38.0.1
       constructs: 10.3.0
     dev: false
     bundledDependencies:
@@ -12504,8 +12504,8 @@ packages:
       xml2js: 0.5.0
     dev: false
 
-  /aws-sdk@2.1623.0:
-    resolution: {integrity: sha512-SFPc+QJqoghsE0nn6YSmrDDDPpWc3m4rcDQYg6W3GQek+f1v6kycxM5+N58pMZ2iWhRSOTf9NQRcZj0ZU3PklQ==}
+  /aws-sdk@2.1691.0:
+    resolution: {integrity: sha512-/F2YC+DlsY3UBM2Bdnh5RLHOPNibS/+IcjUuhP8XuctyrN+MlL+fWDAiela32LTDk7hMy4rx8MTgvbJ+0blO5g==}
     engines: {node: '>= 10.0.0'}
     requiresBuild: true
     dependencies:
@@ -13165,15 +13165,14 @@ packages:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
     dev: true
 
-  /cdk-assets@2.142.1:
-    resolution: {integrity: sha512-zNQMXRWl9gp8KJHZyPk0agh9p180Ec/rW9ZrDk7rITnR5qMgFcaNO6on8BiQVGMALpv1A6UTp45FIiWkqGYf6A==}
-    engines: {node: '>= 14.15.0'}
+  /cdk-assets@2.155.6:
+    resolution: {integrity: sha512-xAWNft0r8oGVOIWBR2tcTICTwq11rZzkRXNjsILx0iEjRT4Qo0ue0FmONSyr7O++B0RBmxQYM1xkiyTN0xkFMQ==}
     hasBin: true
     dependencies:
-      '@aws-cdk/cloud-assembly-schema': 2.142.1
-      '@aws-cdk/cx-api': 2.142.1(@aws-cdk/cloud-assembly-schema@2.142.1)
+      '@aws-cdk/cloud-assembly-schema': 38.0.1
+      '@aws-cdk/cx-api': 2.161.1(@aws-cdk/cloud-assembly-schema@38.0.1)
       archiver: 5.3.2
-      aws-sdk: 2.1623.0
+      aws-sdk: 2.1691.0
       glob: 7.2.3
       mime: 2.6.0
       yargs: 16.2.0
@@ -13969,7 +13968,7 @@ packages:
       postcss-modules-scope: 3.0.0(postcss@8.4.21)
       postcss-modules-values: 4.0.0(postcss@8.4.21)
       postcss-value-parser: 4.2.0
-      semver: 7.5.4
+      semver: 7.6.3
       webpack: 5.75.0
     dev: false
 
@@ -15917,7 +15916,7 @@ packages:
       memfs: 3.4.12
       minimatch: 3.1.2
       schema-utils: 2.7.0
-      semver: 7.5.4
+      semver: 7.6.3
       tapable: 1.1.3
       typescript: 5.2.2
       webpack: 5.75.0
@@ -16190,6 +16189,7 @@ packages:
 
   /glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
+    deprecated: Glob versions prior to v9 are no longer supported
     dependencies:
       fs.realpath: 1.0.0
       inflight: 1.0.6
@@ -16939,6 +16939,7 @@ packages:
 
   /inflight@1.0.6:
     resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
+    deprecated: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
     dependencies:
       once: 1.4.0
       wrappy: 1.0.2
@@ -19063,7 +19064,7 @@ packages:
     engines: {node: '>=10'}
     requiresBuild: true
     dependencies:
-      semver: 7.5.4
+      semver: 7.6.3
     dev: true
     optional: true
 
@@ -20036,7 +20037,7 @@ packages:
       cosmiconfig: 7.0.1
       klona: 2.0.5
       postcss: 8.4.19
-      semver: 7.5.4
+      semver: 7.6.3
       webpack: 5.75.0
     dev: false
 
@@ -20050,7 +20051,7 @@ packages:
       cosmiconfig: 8.2.0
       jiti: 1.18.2
       postcss: 8.4.21
-      semver: 7.5.4
+      semver: 7.6.3
       webpack: 5.75.0
     dev: false
 
@@ -22103,13 +22104,10 @@ packages:
     dependencies:
       lru-cache: 6.0.0
 
-  /semver@7.6.0:
-    resolution: {integrity: sha512-EnwXhrlwXMk9gKu5/flx5sv/an57AkRplG3hTK68W7FRDN+k+OWBj65M7719OkA82XLBxrcX0KSHj+X5COhOVg==}
+  /semver@7.6.3:
+    resolution: {integrity: sha512-oVekP1cKtI+CTDvHWYFUcMtsK/00wmAEfyqKfNdARm8u1wNVhSgaX7A8d4UuIlUI5e84iEwOhs7ZPYRmzU9U6A==}
     engines: {node: '>=10'}
     hasBin: true
-    dependencies:
-      lru-cache: 6.0.0
-    dev: false
 
   /send@0.17.2:
     resolution: {integrity: sha512-UJYB6wFSJE3G00nEivR5rgWp8c2xXvJ3OPWPhmuteU0IKj8nKbG3DrjiOmLwpnHGYWAVwA69zmTm++YG0Hmwww==}
@@ -22257,7 +22255,7 @@ packages:
       detect-libc: 1.0.3
       node-addon-api: 4.3.0
       prebuild-install: 6.1.4
-      semver: 7.5.4
+      semver: 7.6.3
       simple-get: 3.1.1
       tar-fs: 2.1.1
       tunnel-agent: 0.6.0
@@ -22272,7 +22270,7 @@ packages:
       detect-libc: 2.0.2
       node-addon-api: 6.1.0
       prebuild-install: 7.1.1
-      semver: 7.5.4
+      semver: 7.6.3
       simple-get: 4.0.1
       tar-fs: 3.0.4
       tunnel-agent: 0.6.0
@@ -22645,8 +22643,8 @@ packages:
   /sprintf-js@1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
 
-  /sst-aws-cdk@2.142.1:
-    resolution: {integrity: sha512-zrw3VpTfS6fEgpTo0J0lpkZg3nvuVsVzV3zcPswRx7EKIgBFndrAMBE38Wmvk2FBHYDp6OygdzbK8Gul/DJW+g==}
+  /sst-aws-cdk@2.161.1-2:
+    resolution: {integrity: sha512-guzlFzIhAXaW0dUwftoJw/H7o3OhPIaF5/NyQes+tuxC0f1gDi0SJEnIFB++c8XlwOHRPhnvoGqZfQFb0+7nJA==}
     engines: {node: '>= 14.15.0'}
     hasBin: true
     dependencies:
@@ -22654,6 +22652,7 @@ packages:
       chalk: 4.1.2
       fs-extra: 9.1.0
       promptly: 3.2.0
+      strip-ansi: 6.0.1
       yaml: 1.10.2
     optionalDependencies:
       fsevents: 2.3.2
@@ -23867,7 +23866,7 @@ packages:
       is-yarn-global: 0.3.0
       latest-version: 5.1.0
       pupa: 2.1.1
-      semver: 7.5.4
+      semver: 7.6.3
       semver-diff: 3.1.1
       xdg-basedir: 4.0.0
     dev: false

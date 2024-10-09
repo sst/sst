@@ -16,7 +16,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.x
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
 
       - name: Set up Git and GitHub credentials
         env:
@@ -42,7 +42,7 @@ jobs:
           PACKAGE_JSON=./package/package.json
           VERSION=$(jq -r .version $PACKAGE_JSON)-1
           jq '
-            .dependencies += {chalk: .devDependencies.chalk, yaml: .devDependencies.yaml, promptly: .devDependencies.promptly, archiver: .devDependencies.archiver, "fs-extra": .devDependencies["fs-extra"] } |
+            .dependencies += {chalk: .devDependencies.chalk, yaml: .devDependencies.yaml, promptly: .devDependencies.promptly, archiver: .devDependencies.archiver, "fs-extra": .devDependencies["fs-extra"], "strip-ansi": .devDependencies["strip-ansi"] } |
             .name = "sst-aws-cdk"
           ' $PACKAGE_JSON > tmp.json
           mv tmp.json $PACKAGE_JSON
@@ -67,5 +67,3 @@ jobs:
           git push origin HEAD
 
           gh pr create --title "Update sst-aws-cdk to $VERSION" --fill
-
-

@@ -43,7 +43,8 @@ import {
 } from "sst-aws-cdk/lib/api/util/cloudformation.js";
 import { StackActivityProgress } from "sst-aws-cdk/lib/api/util/cloudformation/stack-activity-monitor.js";
 import { replaceEnvPlaceholders } from "sst-aws-cdk/lib/api/util/placeholders.js";
-import { makeBodyParameterAndUpload } from "sst-aws-cdk/lib/api/util/template-body-parameter.js";
+import { makeBodyParameter } from "sst-aws-cdk/lib/api/util/template-body-parameter.js";
+import { AssetManifestBuilder } from "sst-aws-cdk/lib/util/asset-manifest-builder.js";
 import { callWithRetry } from "./util.js";
 import { HotswapMode } from "sst-aws-cdk/lib/api/hotswap/common.js";
 
@@ -398,11 +399,11 @@ export class Deployments {
     const cfn = stackSdk.cloudFormation();
 
     // Upload the template, if necessary, before passing it to CFN
-    const cfnParam = await makeBodyParameterAndUpload(
+    const cfnParam = await makeBodyParameter(
       stackArtifact,
       resolvedEnvironment,
+      new AssetManifestBuilder(),
       envResources,
-      this.sdkProvider,
       stackSdk
     );
 
@@ -587,6 +588,7 @@ export class Deployments {
       {
         assumeRoleArn: arns.assumeRoleArn,
         assumeRoleExternalId: stack.assumeRoleExternalId,
+        assumeRoleAdditionalOptions: stack.assumeRoleAdditionalOptions,
       }
     );
 
@@ -645,6 +647,8 @@ export class Deployments {
         {
           assumeRoleArn: arns.lookupRoleArn,
           assumeRoleExternalId: stack.lookupRole?.assumeRoleExternalId,
+          assumeRoleAdditionalOptions:
+            stack.lookupRole?.assumeRoleAdditionalOptions,
         }
       );
 
@@ -858,13 +862,21 @@ export class Deployments {
     mode: Mode,
     options?: CredentialsOptions
   ) {
-    const cacheKey = [
+    const cacheKeyElements = [
       environment.account,
       environment.region,
       `${mode}`,
       options?.assumeRoleArn ?? "",
       options?.assumeRoleExternalId ?? "",
-    ].join(":");
+    ];
+
+    if (options?.assumeRoleAdditionalOptions) {
+      cacheKeyElements.push(
+        JSON.stringify(options.assumeRoleAdditionalOptions)
+      );
+    }
+
+    const cacheKey = cacheKeyElements.join(":");
     const existing = this.sdkCache.get(cacheKey);
     if (existing) {
       return existing;
@@ -915,7 +927,7 @@ class ParallelSafeAssetProgress implements cdk_assets.IPublishProgressListener {
   ): void {
     const handler =
       this.quiet && type !== "fail" ? debug : EVENT_TO_LOGGER[type];
-    handler(`${this.prefix} ${type}: ${event.message}`);
+    handler(`${this.prefix}${type}: ${event.message}`);
   }
 }
 
