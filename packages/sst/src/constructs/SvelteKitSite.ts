@@ -11,13 +11,15 @@ export interface SvelteKitSiteProps extends SsrSiteProps {
   edge?: boolean;
 
   /**
-   * This specifies where your app is served from and allows the app to live on a non-root path.
+   * Configures the base path for the SvelteKit app.
+   * Base path allows the app to live on a non-root path. The base path must start, but not end with /.
+   * @default No base path
    * @example
    * ```js
-   * basePath: '/onboarding'
+   * basePath: '/docs'
    * ```
    */
-  basePath?: "" | `/${string}`;
+  basePath?: `/${string}`;
 }
 
 type SvelteKitSiteNormalizedProps = SvelteKitSiteProps & SsrSiteNormalizedProps;
@@ -44,8 +46,8 @@ export class SvelteKitSite extends SsrSite {
   }
 
   protected plan() {
-    const { path: sitePath, edge, basePath: maybeBasePath = "" } = this.props;
-    const basePath = maybeBasePath ? `${maybeBasePath}/` : "";
+    const { path: sitePath, edge, basePath: rawBasePath } = this.props;
+    const basePath = rawBasePath ? `/${rawBasePath}` : "";
     const serverDir = ".svelte-kit/svelte-kit-sst/server";
     const clientDir = ".svelte-kit/svelte-kit-sst/client";
     const prerenderedDir = ".svelte-kit/svelte-kit-sst/prerendered";
