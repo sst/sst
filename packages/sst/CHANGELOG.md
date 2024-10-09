@@ -1,5 +1,15 @@
 # @serverless-stack/cli2
 
+## 2.43.8
+
+### Patch Changes
+
+- [#3859](https://github.com/sst/sst/pull/3859) [`8aecc9307`](https://github.com/sst/sst/commit/8aecc930758a7e656e79083638fdc968b12ae4ef) Thanks [@kopertop](https://github.com/kopertop)! - Function: use --omit=optional to skip installing optional deps
+
+- [#3864](https://github.com/sst/sst/pull/3864) [`2ef7ddec0`](https://github.com/sst/sst/commit/2ef7ddec0bcd8b4e0a8d51a68764c66462630b55) Thanks [@JQuezada0](https://github.com/JQuezada0)! - Fix warming + streaming enabled at the same time causing user handler to lose lambda context
+
+- [#3866](https://github.com/sst/sst/pull/3866) [`882225940`](https://github.com/sst/sst/commit/8822259406bb48e2bbc02655b58b01b3040ab75d) Thanks [@chronotc](https://github.com/chronotc)! - SvelteKitSite: add basePath support
+
 ## 2.43.7
 
 ### Patch Changes
