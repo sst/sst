@@ -560,6 +560,15 @@ Note that the certificate needs be created in the `us-east-1`(N. Virginia) regio
 
 Also note that you can also migrate externally hosted domains to Route 53 by [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
 
+### Configuring base path
+
+```js {3}
+new SvelteKitSite(stack, "Site", {
+  path: "my-svelte-app/",
+  basePath: "/docs"
+});
+```
+
 ### Configuring server function
 
 ```js {3-4}
