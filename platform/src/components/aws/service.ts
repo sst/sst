@@ -83,6 +83,7 @@ export class Service extends Component implements Link.Linkable {
   private readonly domain?: Output<string | undefined>;
   private readonly _url?: Output<string>;
   private readonly devUrl?: Output<string>;
+  private readonly dev: boolean;
 
   constructor(
     name: string,
@@ -93,6 +94,7 @@ export class Service extends Component implements Link.Linkable {
 
     const self = this;
 
+    const dev = normalizeDev();
     const cluster = output(args.cluster);
     const { isSstVpc, vpc } = normalizeVpc();
     const region = normalizeRegion();
@@ -106,11 +108,12 @@ export class Service extends Component implements Link.Linkable {
 
     const taskRole = createTaskRole();
 
+    this.dev = !!dev;
     this.cloudmapNamespace = vpc.cloudmapNamespaceName;
     this.taskRole = taskRole;
 
-    if ($dev) {
-      this.devUrl = !pub ? undefined : output(args.dev?.url ?? URL_UNAVAILABLE);
+    if (dev) {
+      this.devUrl = !pub ? undefined : dev.url;
       registerReceiver();
       return;
     }
@@ -139,8 +142,17 @@ export class Service extends Component implements Link.Linkable {
             domain ? `https://${domain}/` : `http://${loadBalancer}`,
         );
 
-    registerHint();
+    this.registerOutputs({ _hint: this._url });
     registerReceiver();
+
+    function normalizeDev() {
+      if (!$dev) return undefined;
+      if (args.dev === false) return undefined;
+
+      return {
+        url: output(args.dev?.url ?? URL_UNAVAILABLE),
+      };
+    }
 
     function normalizeVpc() {
       // "vpc" is a Vpc.v1 component
@@ -519,7 +531,7 @@ export class Service extends Component implements Link.Linkable {
           args.transform?.taskRole,
           `${name}TaskRole`,
           {
-            assumeRolePolicy: !$dev
+            assumeRolePolicy: !dev
               ? iam.assumeRolePolicyForPrincipal({
                   Service: "ecs-tasks.amazonaws.com",
                 })
@@ -820,10 +832,6 @@ export class Service extends Component implements Link.Linkable {
       });
     }
 
-    function registerHint() {
-      self.registerOutputs({ _hint: self._url });
-    }
-
     function registerReceiver() {
       containers.apply((val) => {
         for (const container of val) {
@@ -863,7 +871,7 @@ export class Service extends Component implements Link.Linkable {
   public get url() {
     const errorMessage =
       "Cannot access the URL because no public ports are exposed.";
-    if ($dev) {
+    if (this.dev) {
       if (!this.devUrl) throw new VisibleError(errorMessage);
       return this.devUrl;
     }
@@ -876,8 +884,9 @@ export class Service extends Component implements Link.Linkable {
    * The name of the Cloud Map service.
    */
   public get service() {
-    if ($dev) return interpolate`dev.${this.cloudmapNamespace}`;
-    return interpolate`${this.cloudmapService!.name}.${this.cloudmapNamespace}`;
+    return this.dev
+      ? interpolate`dev.${this.cloudmapNamespace}`
+      : interpolate`${this.cloudmapService!.name}.${this.cloudmapNamespace}`;
   }
 
   /**
@@ -890,7 +899,7 @@ export class Service extends Component implements Link.Linkable {
        * The Amazon ECS Service.
        */
       get service() {
-        if ($dev)
+        if (self.dev)
           throw new VisibleError("Cannot access `nodes.service` in dev mode.");
         return self.service!;
       },
@@ -904,7 +913,7 @@ export class Service extends Component implements Link.Linkable {
        * The Amazon ECS Task Definition.
        */
       get taskDefinition() {
-        if ($dev)
+        if (self.dev)
           throw new VisibleError(
             "Cannot access `nodes.taskDefinition` in dev mode.",
           );
@@ -914,7 +923,7 @@ export class Service extends Component implements Link.Linkable {
        * The Amazon Elastic Load Balancer.
        */
       get loadBalancer() {
-        if ($dev)
+        if (self.dev)
           throw new VisibleError(
             "Cannot access `nodes.loadBalancer` in dev mode.",
           );
@@ -931,7 +940,7 @@ export class Service extends Component implements Link.Linkable {
   public getSSTLink() {
     return {
       properties: {
-        url: $dev ? this.devUrl : this._url,
+        url: this.dev ? this.devUrl : this._url,
         service: this.service,
       },
     };
