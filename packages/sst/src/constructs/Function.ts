@@ -918,13 +918,12 @@ export class Function extends CDKFunction implements SSTConstruct {
         code: Code.fromInline("export function placeholder() {}"),
         handler: "index.placeholder",
         functionName,
-        runtime: supportedRuntimes[props.runtime as keyof typeof supportedRuntimes],
+        runtime: CDKRuntime.NODEJS_18_X,
         memorySize,
         ephemeralStorageSize: diskSize,
         timeout,
         tracing,
         environment: props.environment,
-        layers: Function.buildLayers(scope, id, props),
         logRetention,
         logRetentionRetryOptions: logRetention && { maxRetries: 100 },
       });
@@ -1026,7 +1025,7 @@ export class Function extends CDKFunction implements SSTConstruct {
           : {
               code: Code.fromInline("export function placeholder() {}"),
               handler: "index.placeholder",
-              runtime: supportedRuntimes[props.runtime as keyof typeof supportedRuntimes],
+              runtime: CDKRuntime.NODEJS_18_X,
               layers: Function.buildLayers(scope, id, props),
             }),
         architecture,
