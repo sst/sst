@@ -1,5 +1,11 @@
 # @serverless-stack/docs
 
+## 2.11.5
+
+### Patch Changes
+
+- [#3866](https://github.com/sst/sst/pull/3866) [`882225940`](https://github.com/sst/sst/commit/8822259406bb48e2bbc02655b58b01b3040ab75d) Thanks [@chronotc](https://github.com/chronotc)! - SvelteKitSite: add basePath support
+
 ## 2.11.4
 
 ### Patch Changes
