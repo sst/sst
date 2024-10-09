@@ -14,7 +14,7 @@ export default $config({
     const vpc = addVpc();
     const bucket = addBucket();
     //const app = addFunction();
-    const service = addService();
+    //const service = addService();
 
     return ret;
 
