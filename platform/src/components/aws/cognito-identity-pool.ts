@@ -6,7 +6,7 @@ import { Link } from "../link";
 import { physicalName } from "../naming";
 import { cognito, getRegionOutput, iam } from "@pulumi/aws";
 import { permission } from "./permission";
-import { parseIamRoleArn } from "./helpers/arn";
+import { parseRoleArn } from "./helpers/arn";
 
 export interface CognitoIdentityPoolArgs {
   /**
@@ -399,14 +399,12 @@ export class CognitoIdentityPool extends Component implements Link.Linkable {
     );
     const authRole = iam.Role.get(
       `${name}AuthRole`,
-      attachment.roles.authenticated.apply(
-        (arn) => parseIamRoleArn(arn).roleName,
-      ),
+      attachment.roles.authenticated.apply((arn) => parseRoleArn(arn).roleName),
     );
     const unauthRole = iam.Role.get(
       `${name}UnauthRole`,
       attachment.roles.unauthenticated.apply(
-        (arn) => parseIamRoleArn(arn).roleName,
+        (arn) => parseRoleArn(arn).roleName,
       ),
     );
     return new CognitoIdentityPool(name, {

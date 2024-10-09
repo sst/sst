@@ -84,7 +84,7 @@ export function parseEventBusArn(arn: string) {
   return { busName };
 }
 
-export function parseIamRoleArn(arn: string) {
+export function parseRoleArn(arn: string) {
   // arn:aws:iam::123456789012:role/MyRole
   const roleName = arn.split("/")[1];
   if (!arn.startsWith("arn:") || !roleName)
