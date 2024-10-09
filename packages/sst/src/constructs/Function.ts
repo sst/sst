@@ -924,7 +924,6 @@ export class Function extends CDKFunction implements SSTConstruct {
         timeout,
         tracing,
         environment: props.environment,
-        layers: Function.buildLayers(scope, id, props),
         logRetention,
         logRetentionRetryOptions: logRetention && { maxRetries: 100 },
       });
