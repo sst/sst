@@ -114,7 +114,7 @@ func (r *PythonRuntime) Build(ctx context.Context, input *runtime.BuildInput) (*
 		// Copy the file to the target directory
 		err = copyFile(file, destPath)
 		if err != nil {
-			slog.Error("Error copying file %s to %s: %v", file, destPath, err)
+			slog.Error("Error copying file", "from", file, "to", destPath, "err", err)
 			continue
 		}
 
@@ -275,7 +275,7 @@ func (r *PythonRuntime) Run(ctx context.Context, input *runtime.RunInput) (runti
 	// Decode the TOML file
 	var pyProject PyProject
 	if _, err := toml.DecodeFile(pyprojectFile, &pyProject); err != nil {
-		slog.Error("Error decoding TOML file: %v", err)
+		slog.Error("Error decoding TOML file", "err", err)
 	}
 
 	// Extract the dependencies
@@ -507,4 +507,3 @@ func writeResourcesFile(resourcesFile string, links map[string]json.RawMessage) 
 
 	return nil
 }
-
