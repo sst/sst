@@ -1200,7 +1200,6 @@ export class Function extends Component implements Link.Linkable {
 
     buildInput.apply(async (input) => {
       if (!input.dev) return;
-      console.log(input);
       await rpc.call("Runtime.AddTarget", input);
     });
 
