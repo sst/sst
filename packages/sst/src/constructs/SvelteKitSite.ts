@@ -159,8 +159,8 @@ export class SvelteKitSite extends SsrSite {
               pattern: fs
                 .statSync(path.join(sitePath, clientDir, item))
                 .isDirectory()
-                ? `${basePath}${item}/*`
-                : `${basePath}${item}`,
+                ? path.join(basePath, item, "*")
+                : path.join(basePath, item),
               origin: "s3",
             } as const)
         ),
