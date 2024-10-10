@@ -74,7 +74,7 @@ func main() {
 			slog.Error("exited with error", "err", err)
 			// check if context cancelled error
 			if err != context.Canceled {
-				ui.Error("Unexpected error occurred. Please check the logs in .sst/log/sst.log")
+				ui.Error("Unexpected error occurred. Please run with --print-logs or check .sst/log/sst.log if available.")
 			}
 		}
 		telemetry.Close()
