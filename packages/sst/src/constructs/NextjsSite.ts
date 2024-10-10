@@ -214,6 +214,9 @@ export class NextjsSite extends SsrSite {
     routes: Record<string, unknown>;
   };
   private openNextOutput?: OpenNextOutput;
+  private revalidationTable?: Table;
+  private revalidationQueue?: Queue;
+  private revalidationFunction?: CdkFunction;
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps = {}) {
     super(scope, id, {
@@ -238,11 +241,29 @@ export class NextjsSite extends SsrSite {
     }
 
     if (!disableIncrementalCache) {
-      this.createRevalidationQueue();
+      const { queue, consumer } = this.createRevalidationQueue();
+      this.revalidationQueue = queue;
+      this.revalidationFunction = consumer;
+
       if (!disableTagCache) {
-        this.createRevalidationTable();
+        const { table } = this.createRevalidationTable();
+        this.revalidationTable = table;
       }
     }
+  }
+
+  /**
+   * The internally created CDK resources.
+   */
+  public get cdk() {
+    if (this.doNotDeploy) return;
+
+    return {
+      ...super.cdk!,
+      revalidationQueue: this.revalidationQueue,
+      revalidationTable: this.revalidationTable,
+      revalidationFunction: this.revalidationFunction,
+    };
   }
 
   private createFunctionOrigin(
@@ -447,7 +468,7 @@ export class NextjsSite extends SsrSite {
   }
 
   private createRevalidationQueue() {
-    if (!this.serverFunction) return;
+    if (!this.serverFunction) return {};
 
     const { cdk } = this.props;
 
@@ -473,10 +494,12 @@ export class NextjsSite extends SsrSite {
       server.addEnvironment("REVALIDATION_QUEUE_REGION", Stack.of(this).region);
       queue.grantSendMessages(server.role!);
     });
+
+    return { queue, consumer };
   }
 
   private createRevalidationTable() {
-    if (!this.serverFunction) return;
+    if (!this.serverFunction) return {};
 
     const { path: sitePath } = this.props;
 
@@ -551,6 +574,8 @@ export class NextjsSite extends SsrSite {
         },
       });
     }
+
+    return { table };
   }
 
   public getConstructMetadata() {
