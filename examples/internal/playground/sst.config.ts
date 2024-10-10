@@ -15,6 +15,7 @@ export default $config({
     const bucket = addBucket();
     //const app = addFunction();
     //const service = addService();
+    //const cron = addCron();
 
     return ret;
 
@@ -26,6 +27,18 @@ export default $config({
       const bucket = new sst.aws.Bucket("MyBucket");
       ret.bucket = bucket.name;
       return bucket;
+    }
+
+    function addCron() {
+      const cron = new sst.aws.Cron("MyCron", {
+        schedule: "rate(1 minute)",
+        job: {
+          handler: "functions/handler-example/index.handler",
+          link: [bucket],
+        },
+      });
+      ret.cron = cron.nodes.job.name;
+      return cron;
     }
 
     function addFunction() {
