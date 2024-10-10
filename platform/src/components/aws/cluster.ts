@@ -981,7 +981,7 @@ export interface ClusterServiceArgs {
     };
   }>[];
   /**
-   * Assigns the given IAM role name to the service. This allows you to pass in a previously created role.
+   * Assigns the given IAM role name to the containers running in the service. This allows you to pass in a previously created role.
    *
    * :::caution
    * When you pass in a role, the service will not update it if you add `permissions` or `link` resources.
@@ -995,11 +995,25 @@ export interface ClusterServiceArgs {
    * @example
    * ```js
    * {
-   *   taskRole: "my-role"
+   *   taskRole: "my-task-role"
    * }
    * ```
    */
   taskRole?: Input<string>;
+  /**
+   * Assigns the given IAM role name to AWS ECS to launch and manage the containers in the service. This allows you to pass in a previously created role.
+   *
+   * By default, the service creates a new IAM role when it's created.
+   *
+   * @default Creates a new role
+   * @example
+   * ```js
+   * {
+   *   executionRole: "my-execution-role"
+   * }
+   * ```
+   */
+  executionRole?: Input<string>;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -1013,6 +1027,10 @@ export interface ClusterServiceArgs {
      * Transform the ECS Service resource.
      */
     service?: Transform<ecs.ServiceArgs>;
+    /**
+     * Transform the ECS Execution IAM Role resource.
+     */
+    executionRole?: Transform<iam.RoleArgs>;
     /**
      * Transform the ECS Task IAM Role resource.
      */

@@ -77,6 +77,7 @@ export class Service extends Component implements Link.Linkable {
   private readonly _service?: ecs.Service;
   private readonly cloudmapNamespace?: Output<string>;
   private readonly cloudmapService?: servicediscovery.Service;
+  private readonly executionRole?: iam.Role;
   private readonly taskRole: iam.Role;
   private readonly taskDefinition?: ecs.TaskDefinition;
   private readonly loadBalancer?: lb.LoadBalancer;
@@ -130,6 +131,7 @@ export class Service extends Component implements Link.Linkable {
 
     this._service = service;
     this.cloudmapService = cloudmapService;
+    this.executionRole = executionRole;
     this.taskDefinition = taskDefinition;
     this.loadBalancer = loadBalancer;
     this.domain = pub?.domain
@@ -558,17 +560,28 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function createExecutionRole() {
+      if (args.executionRole)
+        return iam.Role.get(
+          `${name}ExecutionRole`,
+          args.executionRole,
+          {},
+          { parent: self },
+        );
+
       return new iam.Role(
-        `${name}ExecutionRole`,
-        {
-          assumeRolePolicy: iam.assumeRolePolicyForPrincipal({
-            Service: "ecs-tasks.amazonaws.com",
-          }),
-          managedPolicyArns: [
-            "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
-          ],
-        },
-        { parent: self },
+        ...transform(
+          args.transform?.executionRole,
+          `${name}ExecutionRole`,
+          {
+            assumeRolePolicy: iam.assumeRolePolicyForPrincipal({
+              Service: "ecs-tasks.amazonaws.com",
+            }),
+            managedPolicyArns: [
+              "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+            ],
+          },
+          { parent: self },
+        ),
       );
     }
 
@@ -911,6 +924,10 @@ export class Service extends Component implements Link.Linkable {
           throw new VisibleError("Cannot access `nodes.service` in dev mode.");
         return self.service!;
       },
+      /**
+       * The Amazon ECS Execution Role.
+       */
+      executionRole: this.executionRole,
       /**
        * The Amazon ECS Task Role.
        */
