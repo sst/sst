@@ -59,6 +59,32 @@ pnpm create sst my-sst-app
 </TabItem>
 </MultiPackagerCode>
 
+Install the SST app.
+
+<MultiPackagerCode>
+<TabItem value="npm">
+
+```bash
+npm install
+```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn install
+```
+
+</TabItem>
+<TabItem value="pnpm">
+
+```bash
+pnpm install
+```
+
+</TabItem>
+</MultiPackagerCode>
+
 Start your [local dev environment](live-lambda-development.md).
 
 <MultiPackagerCode>
