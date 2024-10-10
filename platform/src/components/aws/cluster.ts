@@ -981,6 +981,26 @@ export interface ClusterServiceArgs {
     };
   }>[];
   /**
+   * Assigns the given IAM role name to the service. This allows you to pass in a previously created role.
+   *
+   * :::caution
+   * When you pass in a role, the service will not update it if you add `permissions` or `link` resources.
+   * :::
+   *
+   * By default, the service creates a new IAM role when it's created. It'll update this role if you add `permissions` or `link` resources.
+   *
+   * However, if you pass in a role, you'll need to update it manually if you add `permissions` or `link` resources.
+   *
+   * @default Creates a new role
+   * @example
+   * ```js
+   * {
+   *   taskRole: "my-role"
+   * }
+   * ```
+   */
+  taskRole?: Input<string>;
+  /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */

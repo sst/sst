@@ -502,6 +502,14 @@ export class Service extends Component implements Link.Linkable {
     }
 
     function createTaskRole() {
+      if (args.taskRole)
+        return iam.Role.get(
+          `${name}TaskRole`,
+          args.taskRole,
+          {},
+          { parent: self },
+        );
+
       const policy = all([
         args.permissions || [],
         Link.getInclude<Permission>("aws.permission", args.link),
@@ -906,9 +914,7 @@ export class Service extends Component implements Link.Linkable {
       /**
        * The Amazon ECS Task Role.
        */
-      get taskRole() {
-        return self.taskRole;
-      },
+      taskRole: this.taskRole,
       /**
        * The Amazon ECS Task Definition.
        */
