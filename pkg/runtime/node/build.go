@@ -43,8 +43,12 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 	if err != nil {
 		return nil, err
 	}
-	target := filepath.Join(input.Out(), strings.ReplaceAll(rel, filepath.Ext(rel), extension))
 
+	fileName := strings.TrimSuffix(filepath.Base(rel), filepath.Ext(rel))
+	// Lambda handler can only contain 1 dot separating the file name and function name
+	fileName = strings.ReplaceAll(fileName, ".", "-")
+	handler := fileName + filepath.Ext(input.Handler)
+	target := filepath.Join(input.Out(), fileName+extension)
 	slog.Info("loader info", "loader", properties.Loader)
 
 	loader := map[string]esbuild.Loader{}
@@ -229,7 +233,7 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 	}
 
 	return &runtime.BuildOutput{
-		Handler: input.Handler,
+		Handler: handler,
 		Errors:  errors,
 	}, nil
 }
