@@ -14,6 +14,7 @@ type Runtime struct {
 }
 
 func (r *Runtime) Build(input *runtime.BuildInput, output *runtime.BuildOutput) error {
+	input.CfgPath = r.project.PathConfig()
 	result, err := r.project.Runtime.Build(context.Background(), input)
 	if err != nil {
 		return err

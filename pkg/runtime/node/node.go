@@ -163,7 +163,10 @@ func (r *Runtime) getFile(input *runtime.BuildInput) (string, bool) {
 	fileSplit := strings.Split(filepath.Base(input.Handler), ".")
 	base := strings.Join(fileSplit[:len(fileSplit)-1], ".")
 	for _, ext := range NODE_EXTENSIONS {
-		file := filepath.Join(path.ResolveRootDir(input.CfgPath), dir, base+ext)
+		file := filepath.Join(dir, base+ext)
+		if !filepath.IsAbs(file) {
+			file = filepath.Join(path.ResolveRootDir(input.CfgPath), file)
+		}
 		if _, err := os.Stat(file); err == nil {
 			return file, true
 		}
