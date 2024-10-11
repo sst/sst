@@ -23,6 +23,8 @@ var forceExternal = []string{
 }
 
 func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtime.BuildOutput, error) {
+	r.lock.Acquire(ctx, 1)
+	defer r.lock.Release(1)
 	var properties NodeProperties
 	json.Unmarshal(input.Properties, &properties)
 

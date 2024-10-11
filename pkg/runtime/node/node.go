@@ -8,14 +8,17 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/evanw/esbuild/pkg/api"
 	esbuild "github.com/evanw/esbuild/pkg/api"
 	"github.com/sst/ion/internal/util"
+	"github.com/sst/ion/pkg/flag"
 	"github.com/sst/ion/pkg/project/path"
 	"github.com/sst/ion/pkg/runtime"
+	"golang.org/x/sync/semaphore"
 )
 
 var loaderMap = map[string]api.Loader{
@@ -58,12 +61,18 @@ type Runtime struct {
 	cfgPath  string
 	contexts map[string]esbuild.BuildContext
 	results  map[string]esbuild.BuildResult
+	lock     *semaphore.Weighted
 }
 
 func New() *Runtime {
+	weight := int64(4)
+	if flag.SST_BUILD_CONCURRENCY != "" {
+		weight, _ = strconv.ParseInt(flag.SST_BUILD_CONCURRENCY, 10, 64)
+	}
 	return &Runtime{
 		contexts: map[string]esbuild.BuildContext{},
 		results:  map[string]esbuild.BuildResult{},
+		lock:     semaphore.NewWeighted(weight),
 	}
 }
 
