@@ -58,10 +58,10 @@ var LoaderToString = []string{
 }
 
 type Runtime struct {
-	cfgPath  string
-	contexts map[string]esbuild.BuildContext
-	results  map[string]esbuild.BuildResult
-	lock     *semaphore.Weighted
+	cfgPath     string
+	contexts    sync.Map
+	results     sync.Map
+	concurrency *semaphore.Weighted
 }
 
 func New() *Runtime {
@@ -70,9 +70,9 @@ func New() *Runtime {
 		weight, _ = strconv.ParseInt(flag.SST_BUILD_CONCURRENCY, 10, 64)
 	}
 	return &Runtime{
-		contexts: map[string]esbuild.BuildContext{},
-		results:  map[string]esbuild.BuildResult{},
-		lock:     semaphore.NewWeighted(weight),
+		contexts:    sync.Map{},
+		results:     sync.Map{},
+		concurrency: semaphore.NewWeighted(weight),
 	}
 }
 

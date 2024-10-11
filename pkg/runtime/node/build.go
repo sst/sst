@@ -23,8 +23,8 @@ var forceExternal = []string{
 }
 
 func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtime.BuildOutput, error) {
-	r.lock.Acquire(ctx, 1)
-	defer r.lock.Release(1)
+	r.concurrency.Acquire(ctx, 1)
+	defer r.concurrency.Release(1)
 	var properties NodeProperties
 	json.Unmarshal(input.Properties, &properties)
 
@@ -132,14 +132,14 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 		options.Target = properties.ESBuild.Target
 	}
 
-	buildContext, ok := r.contexts[input.FunctionID]
+	buildContext, ok := r.contexts.Load(input.FunctionID)
 	if !ok {
 		buildContext, _ = esbuild.Context(options)
-		r.contexts[input.FunctionID] = buildContext
+		r.contexts.Store(input.FunctionID, buildContext)
 	}
 
-	result := buildContext.Rebuild()
-	r.results[input.FunctionID] = result
+	result := buildContext.(esbuild.BuildContext).Rebuild()
+	r.results.Store(input.FunctionID, result)
 	errors := []string{}
 	for _, error := range result.Errors {
 		text := error.Text
