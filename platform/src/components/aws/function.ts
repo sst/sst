@@ -652,7 +652,7 @@ export interface FunctionArgs {
    * cold starts.
    */
   nodejs?: Input<{
-    plugins: Input<string>;
+    plugins?: Input<string>;
     /**
      * Configure additional esbuild loaders for other file extensions. This is useful
      * when your code is importing non-JS files like `.png`, `.css`, etc.
