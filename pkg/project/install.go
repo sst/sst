@@ -235,8 +235,9 @@ func FindProvider(name string, version string) (*ProviderLockEntry, error) {
 			continue
 		}
 		alias := pkg.Pulumi.Name
-		if alias == "" {
+		if alias == "" || alias == "terraform-provider" {
 			alias = pkg.Name
+			alias = strings.ReplaceAll(alias, "@sst-provider", "")
 			alias = strings.ReplaceAll(alias, "/", "")
 			alias = strings.ReplaceAll(alias, "@", "")
 			alias = strings.ReplaceAll(alias, "pulumi", "")

@@ -97,6 +97,11 @@ func InstallPulumi() error {
 		return fmt.Errorf("failed to download pulumi: HTTP status %d", resp.StatusCode)
 	}
 
+	tmp := filepath.Join(BinPath(), ".tmp")
+	err = os.MkdirAll(tmp, 0755)
+	if err != nil {
+		return err
+	}
 	switch fileExtension {
 	case ".tar.gz":
 		gzr, err := gzip.NewReader(resp.Body)
@@ -104,7 +109,7 @@ func InstallPulumi() error {
 			return err
 		}
 		defer gzr.Close()
-		err = untar(gzr, BinPath())
+		err = untar(gzr, tmp)
 		if err != nil {
 			return err
 		}
@@ -112,6 +117,18 @@ func InstallPulumi() error {
 	default:
 		panic("cannot extract zip file for pulumi")
 	}
+
+	entries, err := os.ReadDir(tmp)
+	if err != nil {
+		return err
+	}
+	for _, file := range entries {
+		err = os.Rename(filepath.Join(tmp, file.Name()), filepath.Join(BinPath(), file.Name()))
+		if err != nil {
+			return err
+		}
+	}
+	os.RemoveAll(tmp)
 
 	return nil
 }
