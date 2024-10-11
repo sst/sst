@@ -822,13 +822,13 @@ export class Bucket extends Component implements Link.Linkable {
    * You can subscribe to the bucket with the queue.
    *
    * ```js title="sst.config.ts"
-   * sst.aws.Bucket.subscribe(bucketArn, queueArn);
+   * sst.aws.Bucket.subscribeQueue(bucketArn, queueArn);
    * ```
    *
    * Subscribe to specific S3 events.
    *
    * ```js title="sst.config.ts"
-   * sst.aws.Bucket.subscribe(bucketArn, queueArn, {
+   * sst.aws.Bucket.subscribeQueue(bucketArn, queueArn, {
    *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
    * });
    * ```
@@ -836,7 +836,7 @@ export class Bucket extends Component implements Link.Linkable {
    * Subscribe to specific S3 events from a specific folder.
    *
    * ```js title="sst.config.ts" {2}
-   * sst.aws.Bucket.subscribe(bucketArn, queueArn, {
+   * sst.aws.Bucket.subscribeQueue(bucketArn, queueArn, {
    *   filterPrefix: "images/",
    *   events: ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
    * });
