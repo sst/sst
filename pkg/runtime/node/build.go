@@ -229,7 +229,11 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 			if slices.Contains(installPackages, "sharp") {
 				cmd = append(cmd, "--libc=glibc")
 			}
-			err = exec.Command("npm", cmd...).Run()
+			proc := exec.Command("npm", cmd...)
+			proc.Stdout = os.Stdout
+			proc.Stderr = os.Stderr
+			proc.Dir = input.Out()
+			err = proc.Run()
 			if err != nil {
 				return nil, err
 			}
