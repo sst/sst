@@ -230,8 +230,6 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 				cmd = append(cmd, "--libc=glibc")
 			}
 			proc := exec.Command("npm", cmd...)
-			proc.Stdout = os.Stdout
-			proc.Stderr = os.Stderr
 			proc.Dir = input.Out()
 			err = proc.Run()
 			if err != nil {
