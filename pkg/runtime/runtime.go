@@ -129,7 +129,7 @@ func (c *Collection) Build(ctx context.Context, input *BuildInput) (*BuildOutput
 					return nil, err
 				}
 			}
-			if !input.Dev {
+			if !input.Dev && false {
 				sourceFile, err := os.Open(from)
 				if err != nil {
 					return nil, err
