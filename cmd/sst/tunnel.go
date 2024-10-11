@@ -30,7 +30,7 @@ var CmdTunnel = &cli.Command{
 			"```",
 			"",
 			"If your app has a VPC with `bastion` enabled, you can use this to connect to it.",
-			"This will forward traffic from the followig ranges over SSH:",
+			"This will forward traffic from the following ranges over SSH:",
 			"- `10.0.4.0/22`",
 			"- `10.0.12.0/22`",
 			"- `10.0.0.0/22`",
