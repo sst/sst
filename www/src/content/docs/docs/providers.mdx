@@ -229,7 +229,15 @@ Here the function is created in your default region, `us-west-1`. While the cert
 
 Below is the full list of providers that SST supports.
 
-Install any of the following using `sst add <name>`, where `name` is the package name. For example, `sst add auth0`.
+```bash
+sst add <provider>
+```
+
+Install any of the following using the package name as the `provider`. For example, `sst add auth0`.
+
+If you want SST to support a Terraform provider or update a version, you can **submit a PR** to the [sst/provider](https://github.com/sst/provider) repo.
+
+---
 
 | Provider                         | Package                                                    |
 |----------------------------------|------------------------------------------------------------|
