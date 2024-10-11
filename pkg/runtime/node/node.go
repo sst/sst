@@ -172,13 +172,13 @@ func (r *Runtime) getFile(input *runtime.BuildInput) (string, bool) {
 }
 
 func (r *Runtime) ShouldRebuild(functionID string, file string) bool {
-	result, ok := r.results[functionID]
+	result, ok := r.results.Load(functionID)
 	if !ok {
 		return false
 	}
 
 	var meta = map[string]interface{}{}
-	err := json.Unmarshal([]byte(result.Metafile), &meta)
+	err := json.Unmarshal([]byte(result.(esbuild.BuildResult).Metafile), &meta)
 	if err != nil {
 		return false
 	}
