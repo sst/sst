@@ -338,7 +338,9 @@ export class Postgres extends Component implements Link.Linkable {
 
       const secret = new secretsmanager.Secret(
         `${name}ProxySecret`,
-        {},
+        {
+          recoveryWindowInDays: 0,
+        },
         { parent },
       );
       new secretsmanager.SecretVersion(
