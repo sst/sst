@@ -57,13 +57,14 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 	}
 
 	plugins := []esbuild.Plugin{}
+	if properties.Plugins != "" {
+		plugins = append(plugins, plugin(properties.Plugins))
+	}
 	external := append(forceExternal, properties.Install...)
 	external = append(external, properties.ESBuild.External...)
-	serializedLinks, err := json.Marshal(input.Links)
 	if err != nil {
 		return nil, err
 	}
-	slog.Info("serialized links", "links", string(serializedLinks))
 	options := esbuild.BuildOptions{
 		EntryPoints: []string{file},
 		Platform:    esbuild.PlatformNode,
@@ -87,7 +88,6 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 				`import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"`,
 				`const __filename = topLevelFileUrlToPath(import.meta.url)`,
 				`const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))`,
-				`globalThis.$SST_LINKS = ` + string(serializedLinks) + `;`,
 				properties.Banner,
 			}, "\n"),
 		},
@@ -97,12 +97,10 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 		options.Format = esbuild.FormatCommonJS
 		options.Target = esbuild.ESNext
 		options.MainFields = []string{"main"}
-		options.Banner = map[string]string{
-			"js": strings.Join([]string{
-				`globalThis.$SST_LINKS = ` + string(serializedLinks) + `;`,
-				properties.Banner,
-			}, "\n"),
-		}
+	}
+
+	if properties.ESBuild.Target != 0 {
+		options.Target = properties.ESBuild.Target
 	}
 
 	if properties.Splitting {

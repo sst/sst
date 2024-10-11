@@ -2,6 +2,9 @@ package runtime
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -25,14 +28,15 @@ type Worker interface {
 }
 
 type BuildInput struct {
-	CfgPath    string
-	Dev        bool                       `json:"dev"`
-	FunctionID string                     `json:"functionID"`
-	Handler    string                     `json:"handler"`
-	Runtime    string                     `json:"runtime"`
-	Properties json.RawMessage            `json:"properties"`
-	Links      map[string]json.RawMessage `json:"links"`
-	CopyFiles  []struct {
+	CfgPath       string
+	Dev           bool                       `json:"dev"`
+	FunctionID    string                     `json:"functionID"`
+	Handler       string                     `json:"handler"`
+	Runtime       string                     `json:"runtime"`
+	Properties    json.RawMessage            `json:"properties"`
+	Links         map[string]json.RawMessage `json:"links"`
+	EncryptionKey string                     `json:"encryptionKey"`
+	CopyFiles     []struct {
 		From string `json:"from"`
 		To   string `json:"to"`
 	} `json:"copyFiles"`
@@ -141,6 +145,31 @@ func (c *Collection) Build(ctx context.Context, input *BuildInput) (*BuildOutput
 					return nil, err
 				}
 			}
+		}
+	}
+
+	if input.EncryptionKey != "" {
+		key, err := base64.StdEncoding.DecodeString(input.EncryptionKey)
+		if err != nil {
+			return nil, err
+		}
+		json, err := json.Marshal(input.Links)
+		if err != nil {
+			return nil, err
+		}
+		block, err := aes.NewCipher(key)
+		if err != nil {
+			return nil, err
+		}
+		gcm, err := cipher.NewGCM(block)
+		if err != nil {
+			return nil, err
+		}
+		ciphertext := gcm.Seal(nil, make([]byte, 12), json, nil)
+		err = os.WriteFile(filepath.Join(result.Out, "resource.enc"), ciphertext, 0644)
+		os.WriteFile(filepath.Join(result.Out, input.EncryptionKey), ciphertext, 0644)
+		if err != nil {
+			return nil, err
 		}
 	}
 

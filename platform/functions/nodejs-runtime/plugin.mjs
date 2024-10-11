@@ -1,15 +1,33 @@
 import { createInterface } from "readline";
 import { stdin as input, stdout as output } from "process";
-import fs from "fs/promises";
-// open file and append to it
 
-// create file and open it for writing
-const file = await fs.open("out", "w");
+const loaderToString = [
+  "none",
+  "base64",
+  "binary",
+  "copy",
+  "css",
+  "dataurl",
+  "default",
+  "empty",
+  "file",
+  "global-css",
+  "js",
+  "json",
+  "json",
+  "jsx",
+  "local-css",
+  "text",
+  "ts",
+  "ts",
+  "tsx",
+];
 
 const plugins = await import(process.argv[2]);
 
 const onResolve = [];
 const onLoad = [];
+const onEnd = [];
 
 const stubAPI = {
   onResolve(options, callback) {
@@ -17,6 +35,9 @@ const stubAPI = {
   },
   onLoad(options, callback) {
     onLoad.push({ options, callback });
+  },
+  onEnd(callback) {
+    onEnd.push(callback);
   },
 };
 
@@ -27,28 +48,40 @@ for (const plugin of plugins.default) {
 const rl = createInterface({ input, output, terminal: false });
 
 rl.on("line", async (line) => {
-  const request = JSON.parse(line);
-  await file.write("request: " + JSON.stringify(request) + "\n");
-  let result;
+  const msg = JSON.parse(line);
 
-  if (request.type === "resolve") {
-    for (const { options, callback } of onResolve) {
-      if (new RegExp(options.filter).test(request.path)) {
-        result = callback(request);
-        if (result) break;
+  new Promise(async () => {
+    let reply;
+
+    if (msg.command === "resolve") {
+      for (const { options, callback } of onResolve) {
+        if (new RegExp(options.filter).test(msg.path)) {
+          reply = await callback(msg.value);
+          if (reply) break;
+        }
       }
     }
-  }
 
-  if (request.type === "load") {
-    for (const { options, callback } of onLoad) {
-      if (new RegExp(options.filter).test(request.path)) {
-        result = callback(request);
-        if (result) break;
+    if (msg.command === "load") {
+      for (const { options, callback } of onLoad) {
+        if (new RegExp(options.filter).test(msg.path)) {
+          reply = await callback(msg.value);
+          if (reply) break;
+        }
       }
     }
-  }
+    if (msg.command === "end") {
+      for (const callback of onEnd) {
+        reply = await callback(msg.value);
+      }
+    }
 
-  await file.write("result: " + JSON.stringify(result) + "\n");
-  output.write(JSON.stringify(result || {}) + "\n");
+    reply = reply || {};
+    output.write(
+      JSON.stringify({
+        id: msg.id,
+        value: reply,
+      }) + "\n",
+    );
+  });
 });

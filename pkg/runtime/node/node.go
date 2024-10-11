@@ -32,6 +32,28 @@ var loaderMap = map[string]api.Loader{
 	"binary":  api.LoaderBinary,
 }
 
+var LoaderToString = []string{
+	"none",
+	"base64",
+	"binary",
+	"copy",
+	"css",
+	"dataurl",
+	"default",
+	"empty",
+	"file",
+	"global-css",
+	"js",
+	"json",
+	"json",
+	"jsx",
+	"local-css",
+	"text",
+	"ts",
+	"ts",
+	"tsx",
+}
+
 type Runtime struct {
 	cfgPath  string
 	contexts map[string]esbuild.BuildContext

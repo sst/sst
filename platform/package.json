@@ -28,7 +28,7 @@
     "@pulumi/cloudflare": "5.37.1",
     "@pulumi/docker-build": "0.0.6",
     "@pulumi/pulumi": "3.134.1",
-    "@pulumi/random": "4.15.0",
+    "@pulumi/random": "^4.16.6",
     "@pulumi/tls": "5.0.1",
     "@smithy/smithy-client": "2.1.18",
     "@tsconfig/node18": "18.2.2",

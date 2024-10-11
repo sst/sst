@@ -13,7 +13,6 @@ import {
   unsecret,
   secret,
 } from "@pulumi/pulumi";
-import { buildNode } from "../../runtime/node.js";
 import { bootstrap } from "./helpers/bootstrap.js";
 import { Duration, DurationMinutes, toSeconds } from "../duration.js";
 import { Size, toMBs } from "../size.js";
@@ -39,6 +38,8 @@ import { buildPython, buildPythonContainer } from "../../runtime/python.js";
 import { Image } from "@pulumi/docker-build";
 import { rpc } from "../rpc/rpc.js";
 import { parseRoleArn } from "./helpers/arn.js";
+import { RandomBytes } from "@pulumi/random";
+import { lazy } from "../../util/lazy.js";
 
 /**
  * Helper type to define function ARN type
@@ -651,6 +652,7 @@ export interface FunctionArgs {
    * cold starts.
    */
   nodejs?: Input<{
+    plugins: Input<string>;
     /**
      * Configure additional esbuild loaders for other file extensions. This is useful
      * when your code is importing non-JS files like `.png`, `.css`, etc.
@@ -1138,6 +1140,13 @@ export class Function extends Component implements Link.Linkable {
   private fnUrl: Output<lambda.FunctionUrl | undefined>;
   private missingSourcemap?: boolean;
 
+  private static readonly encryptionKey = lazy(
+    () =>
+      new RandomBytes("LambdaEncryptionKey", {
+        length: 32,
+      }),
+  );
+
   constructor(
     name: string,
     args: FunctionArgs,
@@ -1187,6 +1196,7 @@ export class Function extends Component implements Link.Linkable {
       functionID: name,
       handler: args.handler,
       bundle: args.bundle,
+      encryptionKey: Function.encryptionKey().base64,
       runtime,
       links: output(linkData).apply((input) =>
         Object.fromEntries(input.map((item) => [item.name, item.properties])),
@@ -1269,25 +1279,30 @@ export class Function extends Component implements Link.Linkable {
     }
 
     function normalizeEnvironment() {
-      return all([args.environment, dev, bootstrapData]).apply(
-        ([environment, dev, bootstrap]) => {
-          const result = environment ?? {};
-          result.SST_RESOURCE_App = JSON.stringify({
-            name: $app.name,
-            stage: $app.stage,
-          });
-          if (dev) {
-            result.SST_REGION = process.env.SST_AWS_REGION!;
-            result.SST_FUNCTION_ID = name;
-            result.SST_APP = $app.name;
-            result.SST_STAGE = $app.stage;
-            result.SST_ASSET_BUCKET = bootstrap.asset;
-            if (process.env.SST_FUNCTION_TIMEOUT)
-              result.SST_FUNCTION_TIMEOUT = process.env.SST_FUNCTION_TIMEOUT;
-          }
-          return result;
-        },
-      );
+      return all([
+        args.environment,
+        dev,
+        bootstrapData,
+        Function.encryptionKey().base64,
+      ]).apply(([environment, dev, bootstrap, key]) => {
+        const result = environment ?? {};
+        result.SST_RESOURCE_App = JSON.stringify({
+          name: $app.name,
+          stage: $app.stage,
+        });
+        result.SST_KEY = key;
+        result.SST_KEY_FILE = "resource.enc";
+        if (dev) {
+          result.SST_REGION = process.env.SST_AWS_REGION!;
+          result.SST_FUNCTION_ID = name;
+          result.SST_APP = $app.name;
+          result.SST_STAGE = $app.stage;
+          result.SST_ASSET_BUCKET = bootstrap.asset;
+          if (process.env.SST_FUNCTION_TIMEOUT)
+            result.SST_FUNCTION_TIMEOUT = process.env.SST_FUNCTION_TIMEOUT;
+        }
+        return result;
+      });
     }
 
     function normalizeStreaming() {
@@ -1449,24 +1464,6 @@ export class Function extends Component implements Link.Linkable {
           };
         }
 
-        if (false) {
-          const buildResult = buildInput.apply(async (input) => {
-            const result = await rpc.call<{
-              handler: string;
-              out: string;
-              errors: string[];
-            }>("Runtime.Build", input);
-            if (result.errors.length > 0) {
-              throw new Error(result.errors.join("\n"));
-            }
-            return result;
-          });
-          return {
-            handler: buildResult.handler,
-            out: buildResult.out,
-          };
-        }
-
         if (args.bundle) {
           return {
             bundle: output(args.bundle),
@@ -1474,21 +1471,17 @@ export class Function extends Component implements Link.Linkable {
           };
         }
 
-        const buildResult = all([args, linkData]).apply(
-          async ([args, linkData]) => {
-            const result = await buildNode(name, {
-              ...args,
-              links: linkData,
-            });
-            if (result.type === "error") {
-              throw new VisibleError(
-                `Failed to build function "${args.handler}": ` +
-                  result.errors.join("\n").trim(),
-              );
-            }
-            return result;
-          },
-        );
+        const buildResult = buildInput.apply(async (input) => {
+          const result = await rpc.call<{
+            handler: string;
+            out: string;
+            errors: string[];
+          }>("Runtime.Build", input);
+          if (result.errors.length > 0) {
+            throw new Error(result.errors.join("\n"));
+          }
+          return result;
+        });
         return {
           handler: buildResult.handler,
           bundle: buildResult.out,
