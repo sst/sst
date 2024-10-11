@@ -652,6 +652,26 @@ export interface FunctionArgs {
    * cold starts.
    */
   nodejs?: Input<{
+    /**
+     * Point to a plugins.mjs file with a list of esbuild plugins.
+     *
+     * @example
+     * ```js
+     * {
+     *   nodejs: {
+     *     plugins: "./plugins.mjs"
+     *   }
+     * }
+     * ```
+     *
+     * @example
+     * ```js
+     * import { somePlugin } from "some-plugin"
+     * export default [
+     *   somePlugin()
+     * ]
+     * ```
+     */
     plugins?: Input<string>;
     /**
      * Configure additional esbuild loaders for other file extensions. This is useful
