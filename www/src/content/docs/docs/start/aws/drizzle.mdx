@@ -62,12 +62,12 @@ SST will pass the credentials to Drizzle Kit and allow it to connect to your dat
 
 ## 2. Add a Postgres db
 
-Let's add a Postgres database using [Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html). The `sst.aws.Postgres` resource also configures an RDS Proxy behind the scenes making it ideal for serverless applications. Update your `sst.config.ts`. 
+Let's add a Postgres database using [Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html). The `proxy` option configures an RDS Proxy behind the scenes making it ideal for serverless applications. Update your `sst.config.ts`. 
 
 ```ts title="sst.config.ts"
 async run() {
   const vpc = new sst.aws.Vpc("MyVpc");
-  const rds = new sst.aws.Postgres("MyPostgres", { vpc });
+  const rds = new sst.aws.Postgres("MyPostgres", { vpc, proxy: true });
 },
 ```
 
@@ -118,12 +118,22 @@ Let's define our Drizzle config. Add a `drizzle.config.ts` in your project root 
 import { Resource } from "sst";
 import { defineConfig } from "drizzle-kit";
 
+const cfg = Resource.MyPostgres;
+
 export default defineConfig({
   dialect: "postgresql",
   // Pick up all our schema files
   schema: ["./src/**/*.sql.ts"],
   out: "./migrations",
+  dbCredentials: {
+    host: cfg.host,
+    port: cfg.port,
+    user: cfg.username,
+    password: cfg.password,
+    database: cfg.database,
+  },
 });
+
 ```
 
 Here we are telling Drizzle that we'll be specifying your database schema in `.sql.ts` files in our `src/` directory.
@@ -167,6 +177,16 @@ npm run db migrate
 ```
 
 This should create our new schema.
+
+:::tip
+Your RDS instance will be in a VPC, so remember to start the VPC tunnel by running `npx sst tunnel`. You can install the tunnel on your machine as shown below:
+:::
+
+```bash "sudo"
+sudo npx sst tunnel install
+```
+
+This needs _sudo_ to create a network interface on your machine. You'll only need to do this once on your machine.
 
 ---
 
