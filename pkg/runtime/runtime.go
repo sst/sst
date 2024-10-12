@@ -43,7 +43,7 @@ type BuildInput struct {
 }
 
 func (input *BuildInput) Out() string {
-	suffix := ""
+	suffix := "-src"
 	if input.Dev {
 		suffix = "-dev"
 	}
@@ -129,7 +129,7 @@ func (c *Collection) Build(ctx context.Context, input *BuildInput) (*BuildOutput
 					return nil, err
 				}
 			}
-			if !input.Dev && false {
+			if !input.Dev {
 				sourceFile, err := os.Open(from)
 				if err != nil {
 					return nil, err
