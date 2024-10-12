@@ -7,10 +7,10 @@
     "db:studio": "sst shell drizzle-kit studio"
   },
   "dependencies": {
-    "@aws-sdk/client-rds-data": "^3.616.0",
     "@types/aws-lambda": "^8.10.142",
     "drizzle-kit": "0.23.0",
     "drizzle-orm": "^0.32.1",
-    "sst": "latest"
+    "sst": "latest",
+    "pg": "^8.13.0"
   }
 }

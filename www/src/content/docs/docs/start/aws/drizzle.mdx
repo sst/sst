@@ -39,17 +39,13 @@ Select the defaults and pick **AWS**. This'll create a `sst.config.ts` file in y
 
 #### Init Drizzle
 
-Add Drizzle to your project. We're also adding the RDS client that Drizzle will use.
+Add Drizzle to your project. We're also adding the `pg` client that Drizzle will use.
 
 ```bash
-npm install @aws-sdk/client-rds-data drizzle-orm drizzle-kit
+npm install pg @types/pg drizzle-orm drizzle-kit
 ```
 
-Drizzle ORM is will be used to query our database, while Drizzle Kit will allow us to run migrations. It also comes with Drizzle Studio, a query browser.
-
-:::note
-Data API for Aurora Postgres Serverless v2 is still being [rolled out in all regions](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.Aurora_Fea_Regions_DB-eng.Feature.ServerlessV2.html#Concepts.Aurora_Fea_Regions_DB-eng.Feature.ServerlessV2.apg).
-:::
+Drizzle ORM is what will be used to query our database, while Drizzle Kit will allow us to run migrations. It also comes with Drizzle Studio, a query browser.
 
 Let's add the following to the `scripts` in the `package.json`.
 
@@ -66,7 +62,7 @@ SST will pass the credentials to Drizzle Kit and allow it to connect to your dat
 
 ## 2. Add a Postgres db
 
-Let's add a Postgres database using [Amazon Aurora Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html). Update your `sst.config.ts`.
+Let's add a Postgres database using [Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html). The `sst.aws.Postgres` resource also configures an RDS Proxy behind the scenes making it ideal for serverless applications. Update your `sst.config.ts`. 
 
 ```ts title="sst.config.ts"
 async run() {
@@ -123,13 +119,7 @@ import { Resource } from "sst";
 import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
-  driver: "aws-data-api",
   dialect: "postgresql",
-  dbCredentials: {
-    database: Resource.MyPostgres.database,
-    secretArn: Resource.MyPostgres.secretArn,
-    resourceArn: Resource.MyPostgres.clusterArn,
-  },
   // Pick up all our schema files
   schema: ["./src/**/*.sql.ts"],
   out: "./migrations",
@@ -200,17 +190,21 @@ This will run `sst shell drizzle-kit studio` and direct you to opening `https://
 To use Drizzle ORM to query our database, create a new `src/drizzle.ts` config file with the following.
 
 ```ts title="src/drizzle.ts"
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { Resource } from "sst";
-import { drizzle } from "drizzle-orm/aws-data-api/pg";
-import { RDSDataClient } from "@aws-sdk/client-rds-data";
+import * as schema from "./todo.sql";
 
-const client = new RDSDataClient({});
-
-export const db = drizzle(client, {
-  database: Resource.MyPostgres.database,
-  secretArn: Resource.MyPostgres.secretArn,
-  resourceArn: Resource.MyPostgres.clusterArn,
+const cfg = Resource.MyPostgres;
+const pool = new Pool({
+  host: cfg.host,
+  port: cfg.port,
+  user: cfg.username,
+  password: cfg.password,
+  database: cfg.database,
 });
+
+export const db = drizzle(pool, { schema });
 ```
 
 Now we can use that in the API. Create our API handler in `src/api.ts`.
