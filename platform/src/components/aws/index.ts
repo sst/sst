@@ -34,6 +34,7 @@ export * from "./vpc.js";
 export * from "./react.js";
 export { linkable } from "./linkable.js";
 export { permission } from "./permission.js";
+export { iamEdit } from "./iam-edit.js";
 
 // internal components
 export * from "./cdn.js";

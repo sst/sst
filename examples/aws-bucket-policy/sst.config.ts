@@ -17,16 +17,15 @@ export default $config({
     const bucket = new sst.aws.Bucket("MyBucket", {
       transform: {
         policy: (args) => {
-          // use $jsonParse and $jsonStringify helper functions to manipulate JSON strings
+          // use sst.aws.iamEdit helper function to manipulate IAM policy
           // containing Output values from components
-          args.policy = $jsonParse(args.policy).apply((policy) => {
+          args.policy = sst.aws.iamEdit(args.policy, (policy) => {
             policy.Statement.push({
               Effect: "Allow",
               Principal: { Service: "ses.amazonaws.com" },
               Action: "s3:PutObject",
               Resource: $interpolate`arn:aws:s3:::${args.bucket}/*`,
             });
-            return $jsonStringify(policy);
           });
         },
       },
