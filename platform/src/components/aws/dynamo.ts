@@ -203,6 +203,17 @@ export interface DynamoArgs {
    */
   ttl?: Input<string>;
   /**
+   * Enable deletion protection for the table. When enabled, the table cannot be deleted.
+   *
+   * @example
+   * ```js
+   * {
+   *   deletionProtection: true,
+   * }
+   * ```
+   */
+  deletionProtection?: Input<true>;
+  /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
@@ -421,8 +432,16 @@ export class Dynamo extends Component implements Link.Linkable {
         args.globalIndexes,
         args.localIndexes,
         args.stream,
+        args.deletionProtection,
       ]).apply(
-        ([fields, primaryIndex, globalIndexes, localIndexes, stream]) =>
+        ([
+          fields,
+          primaryIndex,
+          globalIndexes,
+          localIndexes,
+          stream,
+          deletionProtection,
+        ]) =>
           new dynamodb.Table(
             ...transform(
               args.transform?.table,
@@ -478,6 +497,7 @@ export class Dynamo extends Component implements Link.Linkable {
                         : { projectionType: "ALL" }),
                   }),
                 ),
+                deletionProtectionEnabled: deletionProtection,
               },
               { parent },
             ),
