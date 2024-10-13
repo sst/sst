@@ -32,13 +32,14 @@ import {
   SsrSiteProps,
 } from "./SsrSite.js";
 import { Size, toCdkSize } from "./util/size.js";
+import { compareSemver } from "./util/compareSemver.js";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { VisibleError } from "../error.js";
-import { CachePolicyProps } from "aws-cdk-lib/aws-cloudfront";
 import { SsrFunction } from "./SsrFunction.js";
 import { Logger } from "../logger.js";
+
 type BaseFunction = {
   handler: string;
   bundle: string;
@@ -177,7 +178,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   };
 }
 
-const DEFAULT_OPEN_NEXT_VERSION = "3.0.2";
+const DEFAULT_OPEN_NEXT_VERSION = "3.1.4";
 
 type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
 
@@ -216,11 +217,13 @@ export class NextjsSite extends SsrSite {
   private openNextOutput?: OpenNextOutput;
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps = {}) {
+    const openNextVersion = props.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION;
+    const openNextPackage = compareSemver(openNextVersion, "3.1.13") <= 0 ? "open-next" : "@opennextjs/aws";
     super(scope, id, {
       buildCommand: [
         "npx",
         "--yes",
-        `open-next@${props?.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION}`,
+        `${openNextPackage}@${openNextVersion}`,
         "build",
       ].join(" "),
       ...props,
@@ -415,11 +418,11 @@ export class NextjsSite extends SsrSite {
       buildId: this.getBuildId(),
       warmer: openNextOutput.additionalProps?.warmer
         ? {
-            function: path.join(
-              sitePath,
-              openNextOutput.additionalProps.warmer.bundle
-            ),
-          }
+          function: path.join(
+            sitePath,
+            openNextOutput.additionalProps.warmer.bundle
+          ),
+        }
         : undefined,
       serverCachePolicy: {
         allowedHeaders: ["x-open-next-cache-key"],
@@ -880,4 +883,6 @@ if(request.headers["cloudfront-viewer-longitude"]) {
   public static _test = {
     buildCloudWatchRouteName: NextjsSite.buildCloudWatchRouteName,
   };
+
 }
+
