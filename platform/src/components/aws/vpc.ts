@@ -5,10 +5,9 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import { $print, Component, Transform, transform } from "../component";
+import { Component, Transform, transform } from "../component";
 import { Input } from "../input";
 import {
-  autoscaling,
   ec2,
   getAvailabilityZonesOutput,
   iam,
@@ -68,7 +67,34 @@ export interface VpcArgs {
    * }
    * ```
    */
-  nat?: Input<"ec2" | "managed">;
+  nat?: Input<
+    | "ec2"
+    | "managed"
+    | {
+        /**
+         * Configures the NAT EC2 instance.
+         * @default `{instance: "t4g.nano"}`
+         * @example
+         * ```ts
+         * {
+         *   nat: {
+         *     ec2: {
+         *       instance: "t4g.large"
+         *     }
+         *   }
+         * }
+         * ```
+         */
+        ec2: Input<{
+          /**
+           * The type of instance to use for the NAT.
+           *
+           * @default `"t4g.nano"`
+           */
+          instance: Input<string>;
+        }>;
+      }
+  >;
   /**
    * Configures a bastion host that can be used to connect to resources in the VPC.
    *
@@ -325,7 +351,13 @@ export class Vpc extends Component implements Link.Linkable {
     }
 
     function normalizeNat() {
-      return output(args?.nat).apply((nat) => nat);
+      return output(args?.nat).apply((nat) => {
+        if (nat === "managed") return { type: "managed" as const };
+        if (nat === "ec2")
+          return { type: "ec2" as const, ec2: { instance: "t4g.nano" } };
+        if (nat) return { type: "ec2" as const, ec2: nat.ec2 };
+        return undefined;
+      });
     }
 
     function createVpc() {
@@ -417,7 +449,7 @@ export class Vpc extends Component implements Link.Linkable {
 
     function createNatGateways() {
       const ret = all([nat, publicSubnets]).apply(([nat, subnets]) => {
-        if (nat !== "managed") return [];
+        if (nat?.type !== "managed") return [];
 
         return subnets.map((subnet, i) => {
           const elasticIp = new ec2.Eip(
@@ -454,7 +486,7 @@ export class Vpc extends Component implements Link.Linkable {
 
     function createNatInstances() {
       return nat.apply((nat) => {
-        if (nat !== "ec2") return output([]);
+        if (nat?.type !== "ec2") return output([]);
 
         const sg = new ec2.SecurityGroup(
           `${name}NatInstanceSecurityGroup`,
@@ -533,7 +565,7 @@ export class Vpc extends Component implements Link.Linkable {
             return new ec2.Instance(
               `${name}NatInstance${i + 1}`,
               {
-                instanceType: "t4g.nano",
+                instanceType: nat.ec2.instance,
                 ami: ami.id,
                 subnetId: publicSubnets[i].id,
                 vpcSecurityGroupIds: [sg.id],
