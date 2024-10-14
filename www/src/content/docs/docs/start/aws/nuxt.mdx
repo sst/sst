@@ -3,7 +3,18 @@ title: Nuxt on AWS with SST
 description: Create and deploy a Nuxt app to AWS with SST.
 ---
 
-We are going to create a Nuxt app, add an S3 Bucket for file uploads, and deploy it to AWS using SST.
+There are two ways to deploy a Nuxt app to AWS with SST.
+
+1. [Serverless](#serverless)
+2. [Containers](#containers)
+
+We'll use both to build a couple of simple apps below.
+
+---
+
+## Serverless
+
+We are going to create a Nuxt app, add an S3 Bucket for file uploads, and deploy it using the `Nuxt` component.
 
 :::tip[View source]
 You can [view the source](https://github.com/sst/ion/tree/dev/examples/aws-nuxt) of this example in our repo.
@@ -13,20 +24,20 @@ Before you get started, make sure to [configure your AWS credentials](/docs/iam-
 
 ---
 
-## 1. Create a project
+### 1. Create a project
 
 Let's start by creating our project.
 
 ```bash
-npx nuxi@latest init my-nuxt-app
-cd my-nuxt-app
+npx nuxi@latest init aws-nuxt
+cd aws-nuxt
 ```
 
 We are picking the **npm** as the package manager.
 
 ---
 
-#### Init SST
+##### Init SST
 
 Now let's initialize SST in our app.
 
@@ -51,7 +62,7 @@ export default defineNuxtConfig({
 
 ---
 
-#### Start dev mode
+##### Start dev mode
 
 Run the following to start dev mode. This'll start SST and your Nuxt app.
 
@@ -63,7 +74,7 @@ Once complete, click on **MyWeb** in the sidebar and open your Nuxt app in your 
 
 ---
 
-## 2. Add an S3 Bucket
+### 2. Add an S3 Bucket
 
 Let's allow public `access` to our S3 Bucket for file uploads. Update your `sst.config.ts`.
 
@@ -75,7 +86,7 @@ const bucket = new sst.aws.Bucket("MyBucket", {
 
 Add this above the `Nuxt` component.
 
-#### Link the bucket
+##### Link the bucket
 
 Now, link the bucket to our Nuxt app.
 
@@ -87,7 +98,7 @@ new sst.aws.Nuxt("MyWeb", {
 
 ---
 
-## 3. Generate a pre-signed URL
+### 3. Generate a pre-signed URL
 
 When our app loads, we'll call an API that'll generate a pre-signed URL for the file upload. Create a new `server/api/presigned.ts` with the following.
 
@@ -122,7 +133,7 @@ npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 
 ---
 
-## 4. Create an upload form
+### 4. Create an upload form
 
 Add a form to upload files to the presigned URL. Replace our `app.vue` with:
 
@@ -157,7 +168,7 @@ Head over to the local app in your browser, `http://localhost:3000` and try **up
 
 ---
 
-## 5. Deploy your app
+### 5. Deploy your app
 
 Now let's deploy your app to AWS.
 
@@ -173,6 +184,246 @@ Congrats! Your site should now be live!
 
 ---
 
+## Containers
+
+We are going to build a hit counter Nuxt app with Redis. We'll deploy it to AWS in a container using the `Cluster` component.
+
+:::tip[View source]
+You can [view the source](https://github.com/sst/ion/tree/dev/examples/aws-nuxt-container) of this example in our repo.
+:::
+
+Before you get started, make sure to [configure your AWS credentials](/docs/iam-credentials#credentials).
+
+---
+
+### 1. Create a project
+
+Let's start by creating our project.
+
+```bash
+npx nuxi@latest init aws-nuxt-container
+cd aws-nuxt-container
+```
+
+We are picking the **npm** as the package manager.
+
+---
+
+##### Init SST
+
+Now let's initialize SST in our app.
+
+```bash
+npx sst@latest init
+npm install
+```
+
+Select the defaults and pick **AWS**. This'll create a `sst.config.ts` file in your project root.
+
+It'll also ask you to update your `nuxt.config.ts`. But instead we'll use the **default Node preset**.
+
+```ts title="nuxt.config.ts"
+export default defineNuxtConfig({
+  compatibilityDate: '2024-04-03',
+  devtools: { enabled: true }
+})
+```
+
+---
+
+### 2. Add a Cluster
+
+To deploy our Nuxt app in a container, we'll use [AWS Fargate](https://aws.amazon.com/fargate/) with [Amazon ECS](https://aws.amazon.com/ecs/). Replace the `run` function in your `sst.config.ts`.
+
+```js title="sst.config.ts" {9-11}
+async run() {
+  const vpc = new sst.aws.Vpc("MyVpc", { bastion: true });
+  const cluster = new sst.aws.Cluster("MyCluster", { vpc });
+
+  cluster.addService("MyService", {
+    public: {
+      ports: [{ listen: "80/http", forward: "3000/http" }],
+    },
+    dev: {
+      command: "npm run dev",
+    },
+  });
+}
+```
+
+This creates a VPC with a bastion host, an ECS Cluster, and adds a Fargate service to it.
+
+The `dev.command` tells SST to run our Nuxt app locally in dev mode.
+
+---
+
+### 3. Add Redis
+
+Let's add an [Amazon ElastiCache](https://aws.amazon.com/elasticache/) Redis cluster. Add this below the `Vpc` component in your `sst.config.ts`.
+
+```js title="sst.config.ts"
+const redis = new sst.aws.Redis("MyRedis", { vpc });
+```
+
+This shares the same VPC as our ECS cluster.
+
+---
+
+#### Link Redis
+
+Now, link the Redis cluster to the container.
+
+```ts title="sst.config.ts" {3}
+cluster.addService("MyService", {
+  // ...
+  link: [redis],
+});
+```
+
+This will allow us to reference the Redis cluster in our Nuxt app.
+
+---
+
+#### Install a tunnel
+
+Since our Redis cluster is in a VPC, we'll need a tunnel to connect to it from our local machine.
+
+```bash "sudo"
+sudo npx sst tunnel install
+```
+
+This needs _sudo_ to create a network interface on your machine. You'll only need to do this once on your machine.
+
+---
+
+#### Start dev mode
+
+Start your app in dev mode.
+
+```bash
+npx sst dev
+```
+
+This will deploy your app, start a tunnel in the **Tunnel** tab, and run your Nuxt app locally in the **MyServiceDev** tab.
+
+---
+
+### 4. Connect to Redis
+
+We want the `/` route to increment a counter in our Redis cluster. Let's start by installing the npm package we'll use.
+
+```bash
+npm install ioredis
+```
+
+We'll call an API that'll increment the counter when the app loads. Create a new `server/api/counter.ts` with the following.
+
+```ts title="server/api/counter.ts" {5}
+import { Resource } from "sst";
+import { Cluster } from "ioredis";
+
+const redis = new Cluster(
+  [{ host: Resource.MyRedis.host, port: Resource.MyRedis.port }],
+  {
+    dnsLookup: (address, callback) => callback(null, address),
+    redisOptions: {
+      tls: {},
+      username: Resource.MyRedis.username,
+      password: Resource.MyRedis.password,
+    },
+  }
+);
+
+export default defineEventHandler(async () => {
+  return await redis.incr("counter");
+})
+```
+
+:::tip
+We are directly accessing our Redis cluster with `Resource.MyRedis.*`.
+:::
+
+Let's update our component to show the counter. Replace our `app.vue` with:
+
+```vue title="app.vue"
+<script setup lang="ts">
+const { data: counter } = await useFetch("/api/counter")
+</script>
+
+<template>
+  <p>Hit counter: {{ counter }}</p>
+</template>
+```
+
+---
+
+#### Test your app
+
+Let's head over to `http://localhost:3000` in your browser and it'll show the current hit counter.
+
+You should see it increment every time you **refresh the page**.
+
+---
+
+### 5. Deploy your app
+
+To deploy our app we'll add a `Dockerfile`.
+
+<details>
+<summary>View Dockerfile</summary>
+
+```Dockerfile title="Dockerfile"
+FROM node:lts AS base
+
+WORKDIR /src
+
+# Build
+FROM base as build
+
+COPY --link package.json package-lock.json ./
+RUN npm install
+
+COPY --link . .
+
+RUN npm run build
+
+# Run
+FROM base
+
+ENV PORT=3000
+ENV NODE_ENV=production
+
+COPY --from=build /src/.output /src/.output
+
+CMD [ "node", ".output/server/index.mjs" ]
+```
+
+</details>
+
+:::tip
+You need to be running [Docker Desktop](https://www.docker.com/products/docker-desktop/) to deploy your app.
+:::
+
+Let's also add a `.dockerignore` file in the root.
+
+```bash title=".dockerignore"
+node_modules
+```
+
+Now to build our Docker image and deploy we run:
+
+```bash
+npx sst deploy --stage production
+```
+
+You can use any stage name here but it's good to create a new stage for production.
+
+Congrats! Your app should now be live!
+
+![SST Nuxt container app](../../../../../assets/docs/start/start-nuxt-container.png)
+
+---
+
 ## Connect the console
 
 As a next step, you can setup the [SST Console](/docs/console/) to _**git push to deploy**_ your app and monitor it for any issues. 
@@ -180,4 +431,3 @@ As a next step, you can setup the [SST Console](/docs/console/) to _**git push t
 ![SST Console Autodeploy](../../../../../assets/docs/start/sst-console-autodeploy.png)
 
 You can [create a free account](https://console.sst.dev) and connect it to your AWS account.
-

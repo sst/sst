@@ -1,0 +1,22 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "postinstall": "nuxt prepare",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "ioredis": "^5.4.1",
+    "nuxt": "^3.13.0",
+    "sst": "latest",
+    "vue": "latest",
+    "vue-router": "latest"
+  },
+  "overrides": {
+    "nitropack": "npm:nitropack-nightly@latest"
+  }
+}
