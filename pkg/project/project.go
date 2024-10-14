@@ -107,7 +107,7 @@ func New(input *ProjectConfig) (*Project, error) {
 		env:     map[string]string{},
 		Runtime: runtime.NewCollection(
 			input.Config,
-			node.New(),
+			node.New(input.Version),
 			worker.New(),
 			python.New(),
 		),
