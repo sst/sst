@@ -108,18 +108,32 @@ interface OpenNextOutput<
 export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   /**
    * OpenNext version for building the Next.js site.
-   * @default Latest OpenNext version
+   * Support only V3 and above.
+   * @default 3.0.6
    * @example
    * ```js
-   * openNextVersion: "2.2.4",
+   * openNextVersion: "3.0.6",
    * ```
    */
   openNextVersion?: string;
   /**
    * The server function is deployed to Lambda in a single region. Alternatively, you can enable this option to deploy to Lambda@Edge.
    * @default false
+   * @deprecated Use `open-next.config.ts` to deploy to Lambda@Edge. See https://open-next.js.org/config/simple_example#running-in-lambdaedge
    */
   edge?: boolean;
+
+  /**
+   * **USE AT YOUR OWN RISK**
+   * Enable RSC deduplication for the cache key.
+   * 
+   * **BE CAREFUL**: This will increase the cache hit ratio but can also break interception routes.
+   * 
+   * Future updates of Next could also break this feature.
+   * @default false
+   */
+  dedupRscRequest?: boolean;
+
   imageOptimization?: {
     /**
      * The amount of memory in MB allocated for image optimization function.
@@ -177,7 +191,7 @@ export interface NextjsSiteProps extends Omit<SsrSiteProps, "nodejs"> {
   };
 }
 
-const DEFAULT_OPEN_NEXT_VERSION = "3.0.2";
+const DEFAULT_OPEN_NEXT_VERSION = "3.0.6";
 
 type NextjsSiteNormalizedProps = NextjsSiteProps & SsrSiteNormalizedProps;
 
@@ -359,7 +373,7 @@ export class NextjsSite extends SsrSite {
           constructId: "CloudFrontFunction",
           injections: [
             this.useCloudFrontFunctionHostHeaderInjection(),
-            this.useCloudFrontFunctionCacheHeaderKey(),
+            this.useCloudFrontFunctionCacheHeaderKey(this.props.dedupRscRequest),
             this.useCloudfrontGeoHeadersInjection(),
           ],
         },
@@ -725,7 +739,7 @@ export class NextjsSite extends SsrSite {
 
   // This function is used to improve cache hit ratio by setting the cache key based on the request headers and the path
   // next/image only need the accept header, and this header is not useful for the rest of the query
-  private useCloudFrontFunctionCacheHeaderKey() {
+  private useCloudFrontFunctionCacheHeaderKey(dedupRscRequest = false) {
     return `
 function getHeader(key) {
   var header = request.headers[key];
@@ -743,7 +757,10 @@ function getHeader(key) {
   if(request.uri.startsWith("/_next/image")) {
     cacheKey = getHeader("accept");
   }else {
-    cacheKey = getHeader("rsc") + getHeader("next-router-prefetch") + getHeader("next-router-state-tree") + getHeader("next-url") + getHeader("x-prerender-revalidate");
+    cacheKey = getHeader("x-prerender-revalidate");
+    if(${!dedupRscRequest}){
+      cacheKey += getHeader("rsc") + getHeader("next-router-prefetch") + getHeader("next-router-state-tree") + getHeader("next-url");
+    }
   }
   if(request.cookies["__prerender_bypass"]) {
     cacheKey += request.cookies["__prerender_bypass"] ? request.cookies["__prerender_bypass"].value : "";
@@ -752,6 +769,10 @@ function getHeader(key) {
   
   var hashedKey = crypto.createHash('md5').update(cacheKey).digest('hex');
   request.headers["x-open-next-cache-key"] = {value: hashedKey};
+
+  if(request.querystring['_rsc']){
+    request.querystring['_rsc'] = {value: '1'};
+  }
   `;
   }
 
