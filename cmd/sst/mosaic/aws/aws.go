@@ -13,6 +13,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -224,6 +225,37 @@ func Start(
 	}
 
 	slog.Info("connected to iot")
+
+	go func() {
+		evts := bus.Subscribe(&FunctionLogEvent{}, &FunctionInvokedEvent{}, &FunctionResponseEvent{}, &FunctionErrorEvent{}, &FunctionBuildEvent{})
+		logs := map[string]*os.File{}
+
+		getLog := func(functionID string) *os.File {
+			log, ok := logs[functionID]
+			if !ok {
+				log, _ = os.Create(p.PathLog("lambda-" + functionID))
+				logs[functionID] = log
+			}
+			return log
+		}
+
+		for range evts {
+			for evt := range evts {
+				switch evt := evt.(type) {
+				case *FunctionInvokedEvent:
+					getLog(evt.FunctionID).WriteString("invocation " + evt.RequestID + "\n")
+				case *FunctionLogEvent:
+					getLog(evt.FunctionID).WriteString(evt.Line + "\n")
+				case *FunctionResponseEvent:
+					getLog(evt.FunctionID).WriteString("response " + evt.RequestID + "\n")
+				case *FunctionErrorEvent:
+					getLog(evt.FunctionID).WriteString(evt.ErrorType + ": " + evt.ErrorMessage + "\n")
+				case *FunctionBuildEvent:
+					getLog(evt.FunctionID).WriteString(evt.Errors[0] + "\n")
+				}
+			}
+		}
+	}()
 
 	go func() {
 		workers := map[string]*WorkerInfo{}
