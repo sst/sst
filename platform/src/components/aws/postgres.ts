@@ -31,6 +31,33 @@ export interface PostgresArgs {
    */
   version?: Input<string>;
   /**
+   * The username of the master user.
+   *
+   * :::caution
+   * Changing the username will cause the database to be destroyed and recreated.
+   * :::
+   *
+   * @default `"postgres"`
+   * @example
+   * ```js
+   * {
+   *   username: "admin"
+   * }
+   * ```
+   */
+  username?: Input<string>;
+  /**
+   * The password of the master user.
+   * @default A random password is generated.
+   * @example
+   * ```js
+   * {
+   *   password: "Passw0rd!"
+   * }
+   * ```
+   */
+  password?: Input<string>;
+  /**
    * Name of a database that is automatically created.
    *
    * The name must begin with a letter and contain only lowercase letters, numbers, or
@@ -243,7 +270,7 @@ export class Postgres extends Component implements Link.Linkable {
       (v) => v ?? $app.name.replaceAll("-", "_"),
     );
     const vpc = normalizeVpc();
-    const username = "postgres";
+    const username = output(args.username).apply((v) => v ?? "postgres");
     const { password, secret } = createPassword();
     const subnetGroup = createSubnetGroup();
     const parameterGroup = createParameterGroup();
@@ -252,7 +279,7 @@ export class Postgres extends Component implements Link.Linkable {
     const proxy = createProxy();
 
     this.instance = instance;
-    this._password = password.result;
+    this._password = password;
     this.proxy = proxy;
 
     function normalizeStorage() {
@@ -327,14 +354,16 @@ export class Postgres extends Component implements Link.Linkable {
     }
 
     function createPassword() {
-      const password = new RandomPassword(
-        `${name}Password`,
-        {
-          length: 32,
-          special: false,
-        },
-        { parent },
-      );
+      const password = args.password
+        ? output(args.password)
+        : new RandomPassword(
+            `${name}Password`,
+            {
+              length: 32,
+              special: false,
+            },
+            { parent },
+          ).result;
 
       const secret = new secretsmanager.Secret(
         `${name}ProxySecret`,
@@ -343,13 +372,14 @@ export class Postgres extends Component implements Link.Linkable {
         },
         { parent },
       );
+
       new secretsmanager.SecretVersion(
         `${name}ProxySecretVersion`,
         {
           secretId: secret.id,
           secretString: jsonStringify({
             username,
-            password: password.result,
+            password,
           }),
         },
         { parent },
@@ -369,8 +399,8 @@ export class Postgres extends Component implements Link.Linkable {
             engine: "postgres",
             engineVersion,
             instanceClass: interpolate`db.${instanceType}`,
-            username: "postgres",
-            password: password.result,
+            username,
+            password,
             parameterGroupName: parameterGroup.name,
             skipFinalSnapshot: true,
             storageEncrypted: true,
@@ -383,7 +413,7 @@ export class Postgres extends Component implements Link.Linkable {
               "sst:lookup:password": secret.id,
             },
           },
-          { parent },
+          { parent, deleteBeforeReplace: true },
         ),
       );
     }
