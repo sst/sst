@@ -10,6 +10,15 @@ import (
 	"github.com/sst/ion/pkg/project/provider"
 )
 
+type ReadInput[T any] struct {
+	ID   string `json:"id"`
+}
+
+type ReadResult[T any] struct {
+	ID   string `json:"id"`
+	Outs T      `json:"outs"`
+}
+
 type CreateResult[T any] struct {
 	ID   string `json:"id"`
 	Outs T      `json:"outs"`
