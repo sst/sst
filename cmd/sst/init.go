@@ -75,6 +75,7 @@ func CmdInit(cli *cli.Cli) error {
 	case slices.ContainsFunc(hints, func(s string) bool { return strings.HasPrefix(s, "astro.config") }):
 		fmt.Println("  Astro detected. This will...")
 		fmt.Println("   - create an sst.config.ts")
+		fmt.Println("   - modify the tsconfig.json")
 		fmt.Println("   - add sst to package.json")
 		template = "astro"
 		break
@@ -110,7 +111,9 @@ func CmdInit(cli *cli.Cli) error {
 		template = "remix"
 		break
 
-	case slices.ContainsFunc(hints, func(s string) bool { return (strings.HasPrefix(s, "vite.config") && fileContains(s, "@analogjs/platform")) }):
+	case slices.ContainsFunc(hints, func(s string) bool {
+		return (strings.HasPrefix(s, "vite.config") && fileContains(s, "@analogjs/platform"))
+	}):
 		fmt.Println("  Analog detected. This will...")
 		fmt.Println("   - create an sst.config.ts")
 		fmt.Println("   - add sst to package.json")

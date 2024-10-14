@@ -185,11 +185,22 @@ func Create(templateName string, home string) ([]string, error) {
 				for _, patch := range patches {
 					if patch.Op == "add" {
 						splits := strings.Split(patch.Path, "/")
-						for i := range splits {
-							path := strings.Join(splits[:i], "/")
+						for i := range splits[:len(splits)-1] { // Exclude the last element
+							path := strings.Join(splits[:i+1], "/")
 							match := value.Find(path)
 							if match == nil {
-								fill := `[{"op":"add","path":"` + path + `","value":{}}]`
+								// Determine if we should add an array or object
+								nextSegment := splits[i+1]
+								var fillValue string
+								if nextSegment == "-" {
+									// Next segment is "-", so we should create an array
+									fillValue = "[]"
+								} else {
+									// Otherwise, create an object
+									fillValue = "{}"
+								}
+
+								fill := fmt.Sprintf(`[{"op":"add","path":"%s","value":%s}]`, path, fillValue)
 								err := value.Patch([]byte(fill))
 								if err != nil {
 									return nil, err
