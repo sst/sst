@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/evanw/esbuild/pkg/api"
 	esbuild "github.com/evanw/esbuild/pkg/api"
 	"github.com/sst/ion/internal/fs"
 	"github.com/sst/ion/pkg/js"
@@ -64,7 +65,48 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 		loader[key] = mapped
 	}
 
-	plugins := []esbuild.Plugin{}
+	plugins := []esbuild.Plugin{
+		{
+			Name: "sst-version-check",
+			Setup: func(build esbuild.PluginBuild) {
+				skipResolve := struct{}{}
+				build.OnResolve(api.OnResolveOptions{Filter: `^sst$`}, func(args api.OnResolveArgs) (api.OnResolveResult, error) {
+					// avoid recursion
+					if args.PluginData == skipResolve {
+						return api.OnResolveResult{}, nil
+					}
+					pkg := build.Resolve("sst", esbuild.ResolveOptions{
+						ResolveDir: args.ResolveDir,
+						Importer:   args.Importer,
+						Kind:       args.Kind,
+						With:       args.With,
+						PluginName: "sst-version-check",
+						PluginData: skipResolve,
+						Namespace:  args.Namespace,
+					})
+					if pkg.Path != "" {
+						path, err := fs.FindUp(pkg.Path, "package.json")
+						if err != nil {
+							return api.OnResolveResult{}, err
+						}
+						var pkgjson js.PackageJson
+						data, err := os.Open(path)
+						if err != nil {
+							return api.OnResolveResult{}, err
+						}
+						err = json.NewDecoder(data).Decode(&pkgjson)
+						if err != nil {
+							return api.OnResolveResult{}, err
+						}
+						if r.version != "dev" && pkgjson.Version != r.version {
+							return api.OnResolveResult{}, fmt.Errorf("The sst package your application is importing (%v) does not match the sst cli version (%v). Make sure the version of sst in package.json is correct across your entire repo.", pkgjson.Version, r.version)
+						}
+					}
+					return api.OnResolveResult{Path: pkg.Path}, nil
+				})
+			},
+		},
+	}
 	if properties.Plugins != "" {
 		plugins = append(plugins, plugin(properties.Plugins))
 	}

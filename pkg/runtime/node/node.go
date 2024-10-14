@@ -58,13 +58,13 @@ var LoaderToString = []string{
 }
 
 type Runtime struct {
-	cfgPath     string
+	version     string
 	contexts    sync.Map
 	results     sync.Map
 	concurrency *semaphore.Weighted
 }
 
-func New() *Runtime {
+func New(version string) *Runtime {
 	weight := int64(4)
 	if flag.SST_BUILD_CONCURRENCY != "" {
 		weight, _ = strconv.ParseInt(flag.SST_BUILD_CONCURRENCY, 10, 64)
@@ -72,6 +72,7 @@ func New() *Runtime {
 	return &Runtime{
 		contexts:    sync.Map{},
 		results:     sync.Map{},
+		version:     version,
 		concurrency: semaphore.NewWeighted(weight),
 	}
 }
