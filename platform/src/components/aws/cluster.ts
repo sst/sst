@@ -1131,14 +1131,15 @@ export interface ClusterServiceArgs {
  * ```
  */
 export class Cluster extends Component {
-  private args: ClusterArgs;
+  private constructorArgs: ClusterArgs;
+  private constructorOpts: ComponentResourceOptions;
   private cluster: ecs.Cluster;
   public static v1 = ClusterV1;
 
   constructor(
     name: string,
     args: ClusterArgs,
-    opts?: ComponentResourceOptions,
+    opts: ComponentResourceOptions = {},
   ) {
     const _version = 2;
     super(__pulumiType, name, args, opts, {
@@ -1163,7 +1164,8 @@ export class Cluster extends Component {
 
     const cluster = createCluster();
 
-    this.args = args;
+    this.constructorArgs = args;
+    this.constructorOpts = opts;
     this.cluster = cluster;
 
     function createCluster() {
@@ -1243,14 +1245,18 @@ export class Cluster extends Component {
    */
   public addService(name: string, args?: ClusterServiceArgs) {
     // Do not prefix the service to allow `Resource.MyService` to work.
-    return new Service(name, {
-      cluster: {
-        name: this.cluster.name,
-        arn: this.cluster.arn,
+    return new Service(
+      name,
+      {
+        cluster: {
+          name: this.cluster.name,
+          arn: this.cluster.arn,
+        },
+        vpc: this.constructorArgs.vpc,
+        ...args,
       },
-      vpc: this.args.vpc,
-      ...args,
-    });
+      { provider: this.constructorOpts.provider },
+    );
   }
 }
 
