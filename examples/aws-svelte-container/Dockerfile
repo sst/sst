@@ -1,4 +1,4 @@
-FROM node:18.18.0-alpine AS builder
+FROM node:lts-alpine AS builder
 
 # Add linked resources to the environment
 ARG SST_RESOURCE_MyRedis
