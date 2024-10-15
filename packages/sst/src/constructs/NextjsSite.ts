@@ -218,7 +218,7 @@ export class NextjsSite extends SsrSite {
 
   constructor(scope: Construct, id: string, props: NextjsSiteProps = {}) {
     const openNextVersion = props.openNextVersion ?? DEFAULT_OPEN_NEXT_VERSION;
-    const openNextPackage = compareSemver(openNextVersion, "3.1.13") <= 0 ? "open-next" : "@opennextjs/aws";
+    const openNextPackage = compareSemver(openNextVersion, "3.1.3") <= 0 ? "open-next" : "@opennextjs/aws";
     super(scope, id, {
       buildCommand: [
         "npx",
