@@ -15,5 +15,5 @@ export function compareSemver(v1: string, v2: string): number {
 }
 
 export function getOpenNextPackage(openNextVersion: string): string {
-  return compareSemver(openNextVersion, "3.1.13") <= 0 ? "open-next" : "@opennextjs/aws";
+  return compareSemver(openNextVersion, "3.1.3") <= 0 ? "open-next" : "@opennextjs/aws";
 }
