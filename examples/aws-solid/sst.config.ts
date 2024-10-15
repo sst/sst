@@ -3,12 +3,17 @@
 export default $config({
   app(input) {
     return {
-      name: "aws-solid-start",
+      name: "aws-solid",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
     };
   },
   async run() {
-    new sst.aws.SolidStart("MyWeb");
+    const bucket = new sst.aws.Bucket("MyBucket", {
+      access: "public"
+    });
+    new sst.aws.SolidStart("MyWeb", {
+      link: [bucket],
+    });
   },
 });

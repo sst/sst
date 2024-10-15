@@ -2,7 +2,6 @@ import { Resource } from "sst";
 import { createAsync } from "@solidjs/router";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import "./app.css";
 
 async function presignedUrl() {
   "use server";
@@ -17,7 +16,7 @@ export const route = {
   load: () => presignedUrl(),
 };
 
-export default function App() {
+export default function Home() {
   const url = createAsync(() => presignedUrl());
 
   return (

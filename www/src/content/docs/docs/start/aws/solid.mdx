@@ -17,7 +17,7 @@ We'll use both to build a couple of simple apps below.
 We are going to create a SolidStart app, add an S3 Bucket for file uploads, and deploy it using the `SolidStart` component.
 
 :::tip[View source]
-You can [view the source](https://github.com/sst/ion/tree/dev/examples/aws-solid-start) of this example in our repo.
+You can [view the source](https://github.com/sst/ion/tree/dev/examples/aws-solid) of this example in our repo.
 :::
 
 Before you get started, make sure to [configure your AWS credentials](/docs/iam-credentials#credentials).
@@ -33,7 +33,7 @@ npm init solid@latest aws-solid-start
 cd aws-solid-start
 ```
 
-We are picking the **_bare_**, and **_TypeScript_** options.
+We are picking the **SolidStart**, **_basic_**, and **_TypeScript_** options.
 
 ---
 
@@ -98,9 +98,9 @@ new sst.aws.SolidStart("MyWeb", {
 
 ### 3. Generate a pre-signed URL
 
-When our app loads, we'll generate a pre-signed URL for the file upload and use it in our form. Add this below the imports in `src/app.tsx`.
+When our app loads, we'll generate a pre-signed URL for the file upload and use it in our form. Add this below the imports in `src/routes/index.tsx`.
 
-```tsx title="src/app.tsx" {5}
+```ts title="src/routes/index.tsx" {5}
 async function presignedUrl() {
   "use server";
   const command = new PutObjectCommand({
@@ -138,10 +138,10 @@ npm install @solidjs/router @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 
 ### 4. Create an upload form
 
-Add a form to upload files to the presigned URL. Replace the `App()` component in `src/app.tsx` with:
+Add a form to upload files to the presigned URL. Replace the `Home` component in `src/routes/index.tsx` with:
 
-```tsx title="src/app.tsx"
-export default function App() {
+```tsx title="src/routes/index.tsx"
+export default function Home() {
   const url = createAsync(() => presignedUrl());
 
   return (
@@ -214,7 +214,7 @@ npm init solid@latest aws-solid-start
 cd aws-solid-start
 ```
 
-We are picking the **_basic_**, and **_TypeScript_** options.
+We are picking the **SolidStart**, **_basic_**, and **_TypeScript_** options.
 
 ---
 
@@ -384,7 +384,7 @@ To deploy our app we'll add a `Dockerfile`.
 <details>
 <summary>View Dockerfile</summary>
 
-```Dockerfile title="Dockerfile"
+```dockerfile title="Dockerfile"
 FROM node:lts AS base
 
 WORKDIR /src
