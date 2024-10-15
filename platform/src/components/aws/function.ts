@@ -1304,14 +1304,17 @@ export class Function extends Component implements Link.Linkable {
         dev,
         bootstrapData,
         Function.encryptionKey().base64,
-      ]).apply(([environment, dev, bootstrap, key]) => {
+        args.bundle,
+      ]).apply(([environment, dev, bootstrap, key, bundle]) => {
         const result = environment ?? {};
         result.SST_RESOURCE_App = JSON.stringify({
           name: $app.name,
           stage: $app.stage,
         });
-        result.SST_KEY = key;
-        result.SST_KEY_FILE = "resource.enc";
+        if (!bundle) {
+          result.SST_KEY = key;
+          result.SST_KEY_FILE = "resource.enc";
+        }
         if (dev) {
           result.SST_REGION = process.env.SST_AWS_REGION!;
           result.SST_FUNCTION_ID = name;
