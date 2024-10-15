@@ -16,6 +16,7 @@ export default $config({
     //const apiv2 = addApiV2();
     //const app = addFunction();
     //const service = addService();
+    //const postgres = addPostgres();
     //const cron = addCron();
 
     return ret;
@@ -76,6 +77,17 @@ export default $config({
       ret.service = service.url;
 
       return service;
+    }
+
+    function addPostgres() {
+      const postgres = new sst.aws.Postgres("MyPostgres", {
+        vpc,
+      });
+      ret.pgHost = postgres.host;
+      ret.pgPort = postgres.port;
+      ret.pgUsername = postgres.username;
+      ret.pgPassword = postgres.password;
+      return postgres;
     }
   },
 });

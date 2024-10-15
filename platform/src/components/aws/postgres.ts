@@ -565,7 +565,7 @@ export class Postgres extends Component implements Link.Linkable {
    */
   public get host() {
     return all([this.instance.endpoint, this.proxy]).apply(
-      ([endpoint, proxy]) => proxy?.endpoint ?? endpoint.split(":")[0],
+      ([endpoint, proxy]) => proxy?.endpoint ?? output(endpoint.split(":")[0]),
     );
   }
 
