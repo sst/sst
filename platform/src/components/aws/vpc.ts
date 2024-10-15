@@ -11,6 +11,7 @@ import {
   ec2,
   getAvailabilityZonesOutput,
   iam,
+  route53,
   servicediscovery,
   ssm,
 } from "@pulumi/aws";
@@ -923,7 +924,7 @@ export class Vpc extends Component implements Link.Linkable {
    * :::
    *
    * @param name The name of the component.
-   * @param vpcID The ID of the existing VPC.
+   * @param vpcId The ID of the existing VPC.
    *
    * @example
    * Imagine you create a VPC in the `dev` stage. And in your personal stage `frank`,
@@ -944,8 +945,8 @@ export class Vpc extends Component implements Link.Linkable {
    * };
    * ```
    */
-  public static get(name: string, vpcID: Input<string>) {
-    const vpc = ec2.Vpc.get(`${name}Vpc`, vpcID);
+  public static get(name: string, vpcId: Input<string>) {
+    const vpc = ec2.Vpc.get(`${name}Vpc`, vpcId);
     const internetGateway = ec2.InternetGateway.get(
       `${name}InstanceGateway`,
       ec2.getInternetGatewayOutput({
@@ -963,7 +964,7 @@ export class Vpc extends Component implements Link.Linkable {
         })
         .ids.apply((ids) => {
           if (!ids.length)
-            throw new VisibleError(`Security group not found in VPC ${vpcID}`);
+            throw new VisibleError(`Security group not found in VPC ${vpcId}`);
           return ids[0];
         }),
     );
@@ -1051,14 +1052,35 @@ export class Vpc extends Component implements Link.Linkable {
           : undefined,
       );
 
-    const namespaceId = servicediscovery.getDnsNamespaceOutput({
-      name: "sst",
-      type: "DNS_PRIVATE",
-    }).id;
+    // Note: can also use servicediscovery.getDnsNamespaceOutput() here, ie.
+    // ```ts
+    // const namespaceId = servicediscovery.getDnsNamespaceOutput({
+    //   name: "sst",
+    //   type: "DNS_PRIVATE",
+    // }).id;
+    // ```
+    // but if user deployed multiple VPCs into the same account. This will error because
+    // there are multiple results. Even though `getDnsNamespaceOutput()` takes tags in args,
+    // the tags are not used for lookup.
+    const zone = output(vpcId).apply((vpcId) =>
+      route53.getZone({
+        name: "sst",
+        privateZone: true,
+        vpcId,
+      }),
+    );
+    const namespaceId = zone.linkedServiceDescription.apply((description) => {
+      const match = description.match(/:namespace\/(ns-[a-z1-9]*)/)?.[1];
+      if (!match)
+        throw new VisibleError(
+          `Cloud Map namespace not found for VPC ${vpcId}`,
+        );
+      return match;
+    });
     const cloudmapNamespace = servicediscovery.PrivateDnsNamespace.get(
       `${name}CloudmapNamespace`,
       namespaceId,
-      { vpc: vpcID },
+      { vpc: vpcId },
     );
 
     const privateKeyValue = bastionInstance.apply((v) => {
