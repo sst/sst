@@ -127,16 +127,15 @@ Create an S3 bucket and transform its bucket policy.
 const bucket = new sst.aws.Bucket("MyBucket", {
   transform: {
     policy: (args) => {
-      // use $jsonParse and $jsonStringify helper functions to manipulate JSON strings
+      // use sst.aws.iamEdit helper function to manipulate IAM policy
       // containing Output values from components
-      args.policy = $jsonParse(args.policy).apply((policy) => {
+      args.policy = sst.aws.iamEdit(args.policy, (policy) => {
         policy.Statement.push({
           Effect: "Allow",
           Principal: { Service: "ses.amazonaws.com" },
           Action: "s3:PutObject",
           Resource: $interpolate`arn:aws:s3:::${args.bucket}/*`,
         });
-        return $jsonStringify(policy);
       });
     },
   },
@@ -401,6 +400,75 @@ return {
 ```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-dynamo).
+
+
+---
+## EC2 with Pulumi
+
+Use raw Pulumi resources to create an EC2 instance.
+```ts title="sst.config.ts"
+<reference path="./.sst/platform/config.d.ts" />
+
+
+# EC2 with Pulumi
+
+se raw Pulumi resources to create an EC2 instance.
+
+rt default $config({
+(input) {
+turn {
+ame: "aws-ec2-pulumi",
+ome: "aws",
+emoval: input?.stage === "production" ? "retain" : "remove",
+
+
+nc run() {
+ Notice you don't need to import pulumi, it is already part of sst.
+nst securityGroup = new aws.ec2.SecurityGroup("web-secgrp", {
+ngress: [
+{
+	protocol: "tcp",
+	fromPort: 80,
+	toPort: 80,
+	cidrBlocks: ["0.0.0.0/0"],
+},
+,
+;
+
+ Find the latest Ubuntu AMI
+nst ami = aws.ec2.getAmi({
+ilters: [
+{
+	name: "name",
+	values: ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"],
+},
+,
+ostRecent: true,
+wners: ["099720109477"], // Canonical
+;
+
+ User data to set up a simple web server
+nst userData = `#!/bin/bash
+ho "Hello, World!" > index.html
+hup python3 -m http.server 80 &`;
+
+ Create an EC2 instance
+nst server = new aws.ec2.Instance("web-server", {
+nstanceType: "t2.micro",
+mi: ami.then((ami) => ami.id),
+serData: userData,
+pcSecurityGroupIds: [securityGroup.id],
+ssociatePublicIpAddress: true,
+;
+
+turn {
+pp: server.publicIp,
+
+
+
+```
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-ec2-pulumi).
 
 
 ---
@@ -813,7 +881,7 @@ This needs _sudo_ to create the network interface on your machine. You'll only n
 this once.
 
 Now you can run `sst dev`, your function can access resources in the VPC. For example, here
-we're connecting to a Redis cluster.
+we are connecting to a Redis cluster.
 
 ```ts title="index.ts"
 const redis = new Cluster(
@@ -1378,6 +1446,48 @@ return {
 ```
 
 View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-sharp).
+
+
+---
+## AWS SolidStart WebSocket endpoint
+
+Deploys a SolidStart app with a [WebSocket endpoint](https://docs.solidjs.com/solid-start/advanced/websocket)
+in a container to AWS.
+
+Uses the experimental WebSocket support in Nitro.
+
+```ts title="app.config.ts" {4}
+export default defineConfig({
+  server: {
+    experimental: {
+      websocket: true,
+    },
+  },
+}).addRouter({
+  name: "ws",
+  type: "http",
+  handler: "./src/ws.ts",
+  target: "server",
+  base: "/ws",
+});
+```
+
+Once deployed you can test the `/ws` endpoint and it'll send a message back after a 3s delay.
+```ts title="sst.config.ts"
+const vpc = new sst.aws.Vpc("MyVpc", { bastion: true });
+const cluster = new sst.aws.Cluster("MyCluster", { vpc });
+
+cluster.addService("MyService", {
+  public: {
+    ports: [{ listen: "80/http", forward: "3000/http" }],
+  },
+  dev: {
+    command: "npm run dev",
+  },
+});
+```
+
+View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-solid-container-ws).
 
 
 ---

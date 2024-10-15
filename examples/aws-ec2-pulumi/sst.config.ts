@@ -1,21 +1,21 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
 /**
- * ## EC2 (using Pulumi) example
+ * ## EC2 with Pulumi
  *
- * Use raw pulumi code to create an EC2 instance.
+ * Use raw Pulumi resources to create an EC2 instance.
  */
 export default $config({
-  app(input) {
-    return {
-      name: "aws-ec2-pulumi",
-      home: "aws",
-      removal: input?.stage === "production" ? "retain" : "remove",
-    };
-  },
-  async run() {
-    // Notice you don't need to import pulumi, it is already part of sst.
-    const securityGroup = new aws.ec2.SecurityGroup("web-secgrp", {
+	app(input) {
+		return {
+			name: "aws-ec2-pulumi",
+			home: "aws",
+			removal: input?.stage === "production" ? "retain" : "remove",
+		};
+	},
+	async run() {
+		// Notice you don't need to import pulumi, it is already part of sst.
+		const securityGroup = new aws.ec2.SecurityGroup("web-secgrp", {
 			ingress: [
 				{
 					protocol: "tcp",
@@ -52,8 +52,8 @@ export default $config({
 			associatePublicIpAddress: true,
 		});
 
-    return {
-      app: server.publicIp,
-    };
-  },
+		return {
+			app: server.publicIp,
+		};
+	},
 });

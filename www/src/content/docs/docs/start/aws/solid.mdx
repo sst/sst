@@ -12,6 +12,14 @@ We'll use both to build a couple of simple apps below.
 
 ---
 
+#### Examples
+
+We also have a few other SolidStart examples that you can refer to.
+
+- [Adding a WebSocket endpoint to SolidStart](/docs/examples/#aws-solidstart-websocket-endpoint)
+
+---
+
 ## Serverless
 
 We are going to create a SolidStart app, add an S3 Bucket for file uploads, and deploy it using the `SolidStart` component.
@@ -250,7 +258,7 @@ async run() {
 
   cluster.addService("MyService", {
     public: {
-      ports: [{ listen: "80/http", forward: "4321/http" }],
+      ports: [{ listen: "80/http", forward: "3000/http" }],
     },
     dev: {
       command: "npm run dev",
