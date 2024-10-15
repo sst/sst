@@ -25,7 +25,8 @@ for (const [key, value] of Object.entries(environment)) {
   }
 }
 
-if (env.SST_KEY_FILE && env.SST_KEY) {
+// @ts-expect-error
+if (env.SST_KEY_FILE && env.SST_KEY && !globalThis.SST_KEY_FILE_DATA) {
   const key = Buffer.from(env.SST_KEY, "base64");
   const encryptedData = readFileSync(env.SST_KEY_FILE);
   const nonce = Buffer.alloc(12, 0);
@@ -39,6 +40,11 @@ if (env.SST_KEY_FILE && env.SST_KEY) {
   Object.assign(raw, decryptedData);
 }
 
+// @ts-expect-error
+if (globalThis.SST_KEY_FILE_DATA) {
+  // @ts-expect-error
+  Object.assign(raw, globalThis.SST_KEY_FILE_DATA);
+}
 export function fromCloudflareEnv(input: any) {
   for (let [key, value] of Object.entries(input)) {
     if (typeof value === "string") {

@@ -32,6 +32,7 @@ type BuildInput struct {
 	Dev           bool                       `json:"dev"`
 	FunctionID    string                     `json:"functionID"`
 	Handler       string                     `json:"handler"`
+	Bundle        string                     `json:"bundle"`
 	Runtime       string                     `json:"runtime"`
 	Properties    json.RawMessage            `json:"properties"`
 	Links         map[string]json.RawMessage `json:"links"`
@@ -97,16 +98,31 @@ func (c *Collection) Build(ctx context.Context, input *BuildInput) (*BuildOutput
 		return nil, fmt.Errorf("Runtime not found: %v", input.Runtime)
 	}
 	out := input.Out()
-	if err := os.RemoveAll(out); err != nil {
-		return nil, err
+	var result *BuildOutput
+
+	if input.Bundle != "" {
+		out = input.Bundle
+		result = &BuildOutput{
+			Handler: input.Handler,
+			Errors:  []string{},
+		}
 	}
-	if err := os.MkdirAll(out, 0755); err != nil {
-		return nil, err
+
+	if input.Bundle == "" {
+		err := os.RemoveAll(out)
+		if err != nil {
+			return nil, err
+		}
+		err = os.MkdirAll(out, 0755)
+		if err != nil {
+			return nil, err
+		}
+		result, err = runtime.Build(ctx, input)
+		if err != nil {
+			return nil, err
+		}
 	}
-	result, err := runtime.Build(ctx, input)
-	if err != nil {
-		return nil, err
-	}
+
 	result.Out = out
 
 	if len(input.CopyFiles) > 0 {

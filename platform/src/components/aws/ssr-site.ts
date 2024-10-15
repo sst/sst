@@ -750,9 +750,12 @@ export function createServersAndDistribution(
               ...(permissions ?? []),
               ...(props.function.permissions ?? []),
             ]),
-            injections: args.warm
-              ? [useServerFunctionWarmingInjection(props.function.streaming)]
-              : [],
+            injections: [
+              ...(args.warm
+                ? [useServerFunctionWarmingInjection(props.function.streaming)]
+                : []),
+              ...(props.function.injections || []),
+            ],
             link: output(args.link).apply((link) => [
               ...(props.function.link ?? []),
               ...(link ?? []),
