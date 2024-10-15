@@ -10,7 +10,7 @@ import {
   secret,
 } from "@pulumi/pulumi";
 import { Image, Platform } from "@pulumi/docker-build";
-import { $print, Component, transform } from "../component.js";
+import { Component, transform } from "../component.js";
 import { toGBs, toMBs } from "../size.js";
 import { toNumber } from "../cpu.js";
 import { dns as awsDns } from "./dns.js";
@@ -688,9 +688,12 @@ export class Service extends Component implements Link.Linkable {
                           ],
                           registries: [
                             ecr
-                              .getAuthorizationTokenOutput({
-                                registryId: bootstrapData.assetEcrRegistryId,
-                              })
+                              .getAuthorizationTokenOutput(
+                                {
+                                  registryId: bootstrapData.assetEcrRegistryId,
+                                },
+                                { parent: self },
+                              )
                               .apply((authToken) => ({
                                 address: authToken.proxyEndpoint,
                                 password: secret(authToken.password),
