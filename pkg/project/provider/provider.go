@@ -57,7 +57,7 @@ type DevSession interface {
 
 const SSM_NAME_BOOTSTRAP = "/sst/bootstrap"
 
-var ErrLockExists = fmt.Errorf("Concurrent update detected, run `sst unlock` to delete lock file and retry.")
+var ErrLockExists = fmt.Errorf("Concurrent update detected, run `sst unlock --stage=<stage>` to delete lock file and retry.")
 
 var passphraseCache = map[Home]map[string]string{}
 
