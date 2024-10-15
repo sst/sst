@@ -131,6 +131,22 @@ interface ApiGatewayV2CorsArgs {
 
 export interface ApiGatewayV2Args {
   /**
+   * [Link resources](/docs/linking/) to all your API Gateway routes.
+   *
+   * Linked resources will be merged with the resources linked to each route.
+   *
+   * @example
+   *
+   * Takes a list of resources to link to all the routes.
+   *
+   * ```js
+   * {
+   *   link: [bucket, stripeKey]
+   * }
+   * ```
+   */
+  link?: FunctionArgs["link"];
+  /**
    * Set a custom domain for your HTTP API.
    *
    * Automatically manages domains hosted on AWS Route 53, Cloudflare, and Vercel. For other
@@ -1061,6 +1077,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
         },
         route,
         handler,
+        handlerLink: this.constructorArgs.link,
         handlerTransform: this.constructorArgs.transform?.route?.handler,
         ...transformed[1],
       },

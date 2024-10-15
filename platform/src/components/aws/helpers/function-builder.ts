@@ -18,7 +18,7 @@ export type FunctionBuilder = Output<{
 export function functionBuilder(
   name: string,
   definition: Input<string | FunctionArn | FunctionArgs>,
-  override: Pick<FunctionArgs, "description" | "permissions">,
+  override: Pick<FunctionArgs, "description" | "link" | "permissions">,
   argsTransform?: Transform<FunctionArgs>,
   opts?: ComponentResourceOptions,
 ): FunctionBuilder {
@@ -64,6 +64,12 @@ export function functionBuilder(
           {
             ...definition,
             ...override,
+            link: all([definition.link, override?.link]).apply(
+              ([link, overrideLink]) => [
+                ...(link ?? []),
+                ...(overrideLink ?? []),
+              ],
+            ),
             permissions: all([
               definition.permissions,
               override?.permissions,

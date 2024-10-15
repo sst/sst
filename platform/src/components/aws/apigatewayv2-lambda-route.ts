@@ -22,6 +22,10 @@ export interface Args extends ApiGatewayV2BaseRouteArgs {
    */
   handler: Input<string | FunctionArgs | FunctionArn>;
   /**
+   * The resources to link to the route function.
+   */
+  handlerLink?: FunctionArgs["link"];
+  /**
    * @internal
    */
   handlerTransform?: Transform<FunctionArgs>;
@@ -66,6 +70,7 @@ export class ApiGatewayV2LambdaRoute extends Component {
         args.handler,
         {
           description: interpolate`${api.name} route ${route}`,
+          link: args.handlerLink,
         },
         args.handlerTransform,
         { parent: self },
