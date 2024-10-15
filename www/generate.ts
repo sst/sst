@@ -60,9 +60,14 @@ if (!cmd || cmd === "components") {
 
   for (const component of components) {
     const sourceFile = component.sources![0].fileName;
-    if (sourceFile === "platform/src/global-config.d.ts")
-      await generateGlobalConfigDoc(component);
-    else if (sourceFile === "platform/src/config.ts")
+    // Skip - generated into the global-config doc
+    if (sourceFile.endsWith("/aws/iam-edit.ts")) continue;
+    else if (sourceFile === "platform/src/global-config.d.ts") {
+      const iamEditComponent = components.find((c) =>
+        c.sources![0].fileName.endsWith("/aws/iam-edit.ts")
+      );
+      await generateGlobalConfigDoc(component, iamEditComponent!);
+    } else if (sourceFile === "platform/src/config.ts")
       await generateConfigDoc(component);
     else if (sourceFile.endsWith("/dns.ts")) await generateDnsDoc(component);
     else if (
@@ -462,7 +467,10 @@ async function generateExamplesDocs() {
   }
 }
 
-async function generateGlobalConfigDoc(module: TypeDoc.DeclarationReflection) {
+async function generateGlobalConfigDoc(
+  module: TypeDoc.DeclarationReflection,
+  iamEditComponent: TypeDoc.DeclarationReflection
+) {
   console.info(`Generating Global...`);
   const outputFilePath = `src/content/docs/docs/reference/global.mdx`;
   fs.writeFileSync(
@@ -476,6 +484,9 @@ async function generateGlobalConfigDoc(module: TypeDoc.DeclarationReflection) {
       renderVariables(module),
       renderFunctions(module, useModuleFunctions(module), {
         title: "Functions",
+      }),
+      renderFunctions(module, useModuleFunctions(iamEditComponent), {
+        title: "AWS",
       }),
       renderBodyEnd(),
     ]
@@ -2112,6 +2123,7 @@ async function buildComponents() {
       "../platform/src/components/cloudflare/dns.ts",
       "../platform/src/components/vercel/dns.ts",
       "../platform/src/components/aws/cdn.ts",
+      "../platform/src/components/aws/iam-edit.ts",
       "../platform/src/components/aws/permission.ts",
       "../platform/src/components/cloudflare/binding.ts",
     ],
