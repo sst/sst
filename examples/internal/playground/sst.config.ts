@@ -13,6 +13,7 @@ export default $config({
 
     const vpc = addVpc();
     const bucket = addBucket();
+    //const apiv1 = addApiV1();
     //const apiv2 = addApiV2();
     //const app = addFunction();
     //const service = addService();
@@ -41,6 +42,16 @@ export default $config({
       });
       ret.cron = cron.nodes.job.name;
       return cron;
+    }
+
+    function addApiV1() {
+      const api = new sst.aws.ApiGatewayV1("MyApiV1");
+      api.route("GET /", {
+        handler: "functions/apiv2/index.handler",
+        link: [bucket],
+      });
+      api.deploy();
+      return api;
     }
 
     function addApiV2() {
