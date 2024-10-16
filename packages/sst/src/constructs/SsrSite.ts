@@ -285,6 +285,16 @@ export interface SsrSiteProps {
      * ```
      */
     url?: string;
+    /**
+     * The command for running the development server.
+     * @example
+     * ```js
+     * dev: {
+     *   command: "yarn run dev"
+     * }
+     * ```
+     */
+    command?: string;
   };
   assets?: {
     /**
