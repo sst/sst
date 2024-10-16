@@ -42,9 +42,9 @@ export function isChild(parent: string, child: string) {
   );
 }
 
-export async function existsAsync(input: string) {
+export async function existsAsync(path: string) {
   return fs
-    .access(input)
+    .access(path)
     .then(() => true)
     .catch(() => false);
 }
