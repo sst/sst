@@ -146,7 +146,7 @@ new Service(stack, "MyService", {
     maxContainers: 16,
     cpuUtilization: 50,
     memoryUtilization: 50,
-    requestsPerContainers: 1000,
+    requestsPerContainer: 1000,
   }
 });
 ```
@@ -319,7 +319,7 @@ new Service(stack, "MyService", {
     maxContainers: 16,
     cpuUtilization: 50,
     memoryUtilization: 50,
-    requestsPerContainers: 1000,
+    requestsPerContainer: 1000,
   },
   config: [STRIPE_KEY, API_URL],
   permissions: ["ses", bucket],
