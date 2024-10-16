@@ -37,8 +37,10 @@ func Install() error {
 	err = os.Chmod(BINARY_PATH, 0755)
 	user := os.Getenv("SUDO_USER")
 	sudoersPath := "/etc/sudoers.d/sst-" + user
+	slog.Info("creating sudoers file", "path", sudoersPath)
 	command := BINARY_PATH + " tunnel start *"
 	sudoersEntry := fmt.Sprintf("%s ALL=(ALL) NOPASSWD:SETENV: %s\n", user, command)
+	slog.Info("sudoers entry", "entry", sudoersEntry)
 	err = os.WriteFile(sudoersPath, []byte(sudoersEntry), 0440)
 	if err != nil {
 		return err
@@ -49,8 +51,10 @@ func Install() error {
 	} else {
 		cmd = exec.Command("visudo", "-c", "-f", sudoersPath)
 	}
+	slog.Info("running visudo", "cmd", cmd.Args)
 	err = cmd.Run()
 	if err != nil {
+		slog.Error("failed to run visudo", "error", err)
 		os.Remove(sudoersPath)
 		return util.NewReadableError(err, "Error validating sudoers file")
 	}
