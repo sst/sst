@@ -609,9 +609,8 @@ export class Service extends Component implements Link.Linkable {
             containerDefinitions: $jsonStringify(
               all([
                 containers,
-                args.environment ?? [],
                 Link.propertiesToEnv(Link.getProperties(args.link)),
-              ]).apply(([containers, env, linkEnvs]) =>
+              ]).apply(([containers, linkEnvs]) =>
                 containers.map((container) => {
                   return {
                     name: container.name,
@@ -628,9 +627,10 @@ export class Service extends Component implements Link.Linkable {
                         "awslogs-stream-prefix": "/service",
                       },
                     },
-                    environment: Object.entries({ ...env, ...linkEnvs }).map(
-                      ([name, value]) => ({ name, value }),
-                    ),
+                    environment: Object.entries({
+                      ...container.environment,
+                      ...linkEnvs,
+                    }).map(([name, value]) => ({ name, value })),
                     linuxParameters: {
                       initProcessEnabled: true,
                     },
