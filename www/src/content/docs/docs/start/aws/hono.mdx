@@ -75,12 +75,10 @@ This will give you the URL of your API.
 
 ## 3. Add an S3 Bucket
 
-Let's allow public `access` to our S3 Bucket for file uploads. Update your `sst.config.ts`.
+Let's add an S3 Bucket for file uploads. Update your `sst.config.ts`.
 
 ```js title="sst.config.ts"
-const bucket = new sst.aws.Bucket("MyBucket", {
-  access: "public"
-});
+const bucket = new sst.aws.Bucket("MyBucket");
 ```
 
 #### Link the bucket

@@ -9,9 +9,7 @@ export default $config({
     };
   },
   async run() {
-    const bucket = new sst.aws.Bucket("MyBucket", {
-      access: "public",
-    });
+    const bucket = new sst.aws.Bucket("MyBucket");
     const api = new sst.aws.ApiGatewayV2("MyApi");
     api.route("GET /", {
       link: [bucket],
