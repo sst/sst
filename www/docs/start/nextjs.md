@@ -169,6 +169,9 @@ const site = new NextjsSite(stack, "site", {
 + bind: [bucket],
 });
 ```
+:::info
+Make sure to run ``npx sst dev`` in a separate console at least once every time a change to sst.config.ts is made, like we just did.
+:::
 
 ---
 
