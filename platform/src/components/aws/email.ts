@@ -5,13 +5,48 @@ import {
   interpolate,
   output,
 } from "@pulumi/pulumi";
-import { Component, Transform, transform } from "../component";
+import { Component, Prettify, Transform, transform } from "../component";
 import { Link } from "../link";
 import { Input } from "../input";
 import { Dns } from "../dns";
 import { dns as awsDns } from "./dns.js";
 import { ses, sesv2 } from "@pulumi/aws";
 import { permission } from "./permission";
+import { RandomId } from "@pulumi/random";
+import { hashNumberToPrettyString, physicalName } from "../naming";
+import { VisibleError } from "../error";
+
+interface Events {
+  /**
+   * The name of the event.
+   */
+  name: Input<string>;
+  /**
+   * The types of events to send.
+   */
+  types: Input<
+    Input<
+      | "send"
+      | "reject"
+      | "bounce"
+      | "complaint"
+      | "delivery"
+      | "delivery-delay"
+      | "rendering-failure"
+      | "subscription"
+      | "open"
+      | "click"
+    >[]
+  >;
+  /**
+   * The ARN of the SNS topic to send events to.
+   */
+  topic?: Input<string>;
+  /**
+   * The ARN of the EventBridge bus to send events to.
+   */
+  bus?: Input<string>;
+}
 
 export interface EmailArgs {
   /**
@@ -106,6 +141,27 @@ export interface EmailArgs {
    */
   dmarc?: Input<string>;
   /**
+   * Configure event notifications for this Email component.
+   *
+   * :::tip
+   * You don't need to use a Lambda layer to use FFmpeg.
+   * :::
+   *
+   * @default No event notifications
+   * @example
+   *
+   * ```js
+   * {
+   *   events: {
+   *     name: "OnBounce",
+   *     types: ["bounce"],
+   *     topic: "arn:aws:sns:us-east-1:123456789012:MyTopic"
+   *   }
+   * }
+   * ```
+   */
+  events?: Input<Prettify<Events>[]>;
+  /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
    */
@@ -114,12 +170,17 @@ export interface EmailArgs {
      * Transform the SES identity resource.
      */
     identity?: Transform<sesv2.EmailIdentityArgs>;
+    /**
+     * Transform the SES configuration set resource.
+     */
+    configurationSet?: Transform<sesv2.ConfigurationSetArgs>;
   };
 }
 
 interface EmailRef {
   ref: boolean;
   identity: sesv2.EmailIdentity;
+  configurationSet: sesv2.ConfigurationSet;
 }
 
 /**
@@ -204,6 +265,7 @@ interface EmailRef {
 export class Email extends Component implements Link.Linkable {
   private _sender: Output<string>;
   private identity: sesv2.EmailIdentity;
+  private configurationSet: sesv2.ConfigurationSet;
 
   constructor(name: string, args: EmailArgs, opts?: ComponentResourceOptions) {
     super(__pulumiType, name, args, opts);
@@ -212,6 +274,7 @@ export class Email extends Component implements Link.Linkable {
       const ref = args as unknown as EmailRef;
       this._sender = ref.identity.emailIdentity;
       this.identity = ref.identity;
+      this.configurationSet = ref.configurationSet;
       return;
     }
 
@@ -219,7 +282,9 @@ export class Email extends Component implements Link.Linkable {
     const isDomain = checkIsDomain();
     const dns = normalizeDns();
     const dmarc = normalizeDmarc();
+    const configurationSet = createConfigurationSet();
     const identity = createIdentity();
+    createEvents();
     isDomain.apply((isDomain) => {
       if (!isDomain) return;
       createDkimRecords();
@@ -229,6 +294,7 @@ export class Email extends Component implements Link.Linkable {
 
     this._sender = output(args.sender);
     this.identity = identity;
+    this.configurationSet = configurationSet;
 
     function checkIsDomain() {
       return output(args.sender).apply((sender) => !sender.includes("@"));
@@ -256,14 +322,70 @@ export class Email extends Component implements Link.Linkable {
       return args.dmarc ?? `v=DMARC1; p=none;`;
     }
 
+    function createConfigurationSet() {
+      const transformed = transform(
+        args.transform?.configurationSet,
+        `${name}Config`,
+        {} as sesv2.ConfigurationSetArgs,
+        { parent },
+      );
+
+      if (!transformed[1].configurationSetName) {
+        const randomId = new RandomId(
+          `${name}Id`,
+          { byteLength: 6 },
+          { parent },
+        );
+        transformed[1].configurationSetName = randomId.dec.apply((dec) =>
+          physicalName(
+            64,
+            name,
+            `-${hashNumberToPrettyString(parseInt(dec), 8)}`,
+          ).toLowerCase(),
+        );
+      }
+
+      return new sesv2.ConfigurationSet(...transformed);
+    }
+
     function createIdentity() {
       return new sesv2.EmailIdentity(
         ...transform(
           args.transform?.identity,
           `${name}Identity`,
-          { emailIdentity: args.sender },
+          {
+            emailIdentity: args.sender,
+            configurationSetName: configurationSet.configurationSetName,
+          },
           { parent },
         ),
+      );
+    }
+
+    function createEvents() {
+      output(args.events ?? []).apply((events) =>
+        events.forEach((event) => {
+          new sesv2.ConfigurationSetEventDestination(
+            `${name}Event${event.name}`,
+            {
+              configurationSetName: configurationSet.configurationSetName,
+              eventDestinationName: event.name,
+              eventDestination: {
+                matchingEventTypes: event.types.map((t) =>
+                  t.toUpperCase().replaceAll("-", "_"),
+                ),
+                ...(event.bus
+                  ? { eventBridgeDestination: { eventBusArn: event.bus } }
+                  : {}),
+                ...(event.topic
+                  ? { snsDestination: { topicArn: event.topic } }
+                  : {}),
+                enabled: true,
+              },
+            },
+            { parent },
+          );
+        }),
       );
     }
 
@@ -322,6 +444,13 @@ export class Email extends Component implements Link.Linkable {
   }
 
   /**
+   * The name of the configuration set.
+   */
+  public get configSet() {
+    return this.configurationSet.configurationSetName;
+  }
+
+  /**
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
@@ -330,6 +459,10 @@ export class Email extends Component implements Link.Linkable {
        * The Amazon SES identity.
        */
       identity: this.identity,
+      /**
+       * The Amazon SES configuration set.
+       */
+      configurationSet: this.configurationSet,
     };
   }
 
@@ -338,11 +471,12 @@ export class Email extends Component implements Link.Linkable {
     return {
       properties: {
         sender: this._sender,
+        configSet: this.configSet,
       },
       include: [
         permission({
           actions: ["ses:*"],
-          resources: [this.identity.arn],
+          resources: [this.identity.arn, this.configurationSet.arn],
         }),
       ],
     };
@@ -370,7 +504,16 @@ export class Email extends Component implements Link.Linkable {
    */
   public static get(name: string, sender: Input<string>) {
     const identity = sesv2.EmailIdentity.get(`${name}Identity`, sender);
-    return new Email(name, { ref: true, identity } as unknown as EmailArgs);
+    const configSet = sesv2.ConfigurationSet.get(
+      `${name}Config`,
+      identity.configurationSetName.apply((v) => v!),
+    );
+
+    return new Email(name, {
+      ref: true,
+      identity,
+      configurationSet: configSet,
+    } as unknown as EmailArgs);
   }
 }
 

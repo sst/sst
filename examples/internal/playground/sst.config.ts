@@ -13,6 +13,7 @@ export default $config({
 
     const vpc = addVpc();
     const bucket = addBucket();
+    //const email = addEmail();
     //const apiv1 = addApiV1();
     //const apiv2 = addApiV2();
     //const app = addFunction();
@@ -30,6 +31,33 @@ export default $config({
       const bucket = new sst.aws.Bucket("MyBucket");
       ret.bucket = bucket.name;
       return bucket;
+    }
+
+    function addEmail() {
+      const topic = new sst.aws.SnsTopic("MyTopic");
+      topic.subscribe("functions/email/index.notification");
+
+      const email = new sst.aws.Email("MyEmail", {
+        sender: "wangfanjie@gmail.com",
+        events: [
+          {
+            name: "notif",
+            types: ["delivery"],
+            topic: topic.arn,
+          },
+        ],
+      });
+
+      const sender = new sst.aws.Function("MyApi", {
+        handler: "functions/email/index.sender",
+        link: [email],
+        url: true,
+      });
+
+      ret.emailSend = sender.url;
+      ret.email = email.sender;
+      ret.emailConfig = email.configSet;
+      return ret;
     }
 
     function addCron() {
