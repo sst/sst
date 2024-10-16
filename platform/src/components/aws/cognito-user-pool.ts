@@ -17,7 +17,7 @@ interface Triggers {
    * When `customEmailSender` or `customSmsSender` are configured, Cognito encrypts the
    * verification code and temporary passwords before sending them to your Lambda functions.
    */
-  kmsKey?: string;
+  kmsKey?: Input<string>;
   /**
    * Triggered after the user successfully responds to the previous challenge, and a new
    * challenge needs to be created.
