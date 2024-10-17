@@ -17,7 +17,6 @@ import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "./../component.js";
 import { Link } from "../link.js";
-import { DevArgs } from "../dev.js";
 import { buildApp } from "../base/base-ssr-site.js";
 import { URL_UNAVAILABLE } from "./linkable.js";
 
@@ -35,7 +34,7 @@ export interface AstroArgs extends SsrSiteArgs {
    *
    * To disable dev mode, pass in `false`.
    */
-  dev?: false | DevArgs["dev"];
+  dev?: SsrSiteArgs["dev"];
   /**
    * Permissions and the resources that the [server function](#nodes-server) in your Astro site needs to access. These permissions are used to create the function's IAM role.
    *
@@ -675,11 +674,10 @@ function useCloudFrontRoutingInjection(buildMetadata: BuildMetaConfig) {
     var matchedRoute = findFirstMatch(findMatches(event.request.uri, routeData));
     if (matchedRoute[0]) {
       if (!matchedRoute[1] && !/^.*\\.[^\\/]+$/.test(event.request.uri)) {
-        ${
-          buildMetadata.pageResolution === "file"
-            ? `event.request.uri = event.request.uri === "/" ? "/index.html" : event.request.uri.replace(/\\/?$/, ".html");`
-            : `event.request.uri = event.request.uri.replace(/\\/?$/, "/index.html");`
-        }
+        ${buildMetadata.pageResolution === "file"
+      ? `event.request.uri = event.request.uri === "/" ? "/index.html" : event.request.uri.replace(/\\/?$/, ".html");`
+      : `event.request.uri = event.request.uri.replace(/\\/?$/, "/index.html");`
+    }
       } else if (matchedRoute[1] === 2) {
         var redirectPath = matchedRoute[2];
         matchedRoute[0].exec(event.request.uri).forEach((match, index) => {

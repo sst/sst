@@ -16,9 +16,8 @@ import { Kv } from "./kv.js";
 import { buildApp } from "../base/base-ssr-site.js";
 import { Worker } from "./worker.js";
 import { Plugin } from "esbuild";
-import { DevArgs } from "../dev.js";
 
-export interface RemixArgs extends SsrSiteArgs, DevArgs {
+export interface RemixArgs extends SsrSiteArgs {
   /**
    * Configure how the Remix app assets are uploaded to S3.
    *

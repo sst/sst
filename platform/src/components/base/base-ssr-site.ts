@@ -6,10 +6,11 @@ import { Prettify } from "../component";
 import { Input } from "../input";
 import { Link } from "../link.js";
 import { VisibleError } from "../error.js";
-import { BaseSiteFileOptions, limiter } from "./base-site";
+import { BaseSiteDev, BaseSiteFileOptions, limiter } from "./base-site";
 import { Run } from "../providers/run";
 
 export interface BaseSsrSiteArgs {
+  dev?: false | Prettify<BaseSiteDev>;
   assets?: Input<{
     /**
      * Character encoding for text based assets, like HTML, CSS, JS. This is

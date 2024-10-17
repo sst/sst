@@ -19,7 +19,6 @@ import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "../component.js";
 import { Link } from "../link.js";
-import { DevArgs } from "../dev.js";
 import { VisibleError } from "../error.js";
 import type { Input } from "../input.js";
 import { Queue } from "./queue.js";
@@ -105,7 +104,7 @@ export interface NextjsArgs extends SsrSiteArgs {
    *
    * To disable dev mode, pass in `false`.
    */
-  dev?: false | DevArgs["dev"];
+  dev?: SsrSiteArgs["dev"];
   /**
    * Permissions and the resources that the [server function](#nodes-server) in your Next.js app needs to access. These permissions are used to create the function's IAM role.
    *
@@ -788,39 +787,39 @@ export class Nextjs extends Component implements Link.Linkable {
               },
               ...(revalidationQueueArn
                 ? [
-                    {
-                      actions: [
-                        "sqs:SendMessage",
-                        "sqs:GetQueueAttributes",
-                        "sqs:GetQueueUrl",
-                      ],
-                      resources: [revalidationQueueArn],
-                    },
-                  ]
+                  {
+                    actions: [
+                      "sqs:SendMessage",
+                      "sqs:GetQueueAttributes",
+                      "sqs:GetQueueUrl",
+                    ],
+                    resources: [revalidationQueueArn],
+                  },
+                ]
                 : []),
               ...(revalidationTableArn
                 ? [
-                    {
-                      actions: [
-                        "dynamodb:BatchGetItem",
-                        "dynamodb:GetRecords",
-                        "dynamodb:GetShardIterator",
-                        "dynamodb:Query",
-                        "dynamodb:GetItem",
-                        "dynamodb:Scan",
-                        "dynamodb:ConditionCheckItem",
-                        "dynamodb:BatchWriteItem",
-                        "dynamodb:PutItem",
-                        "dynamodb:UpdateItem",
-                        "dynamodb:DeleteItem",
-                        "dynamodb:DescribeTable",
-                      ],
-                      resources: [
-                        revalidationTableArn,
-                        `${revalidationTableArn}/*`,
-                      ],
-                    },
-                  ]
+                  {
+                    actions: [
+                      "dynamodb:BatchGetItem",
+                      "dynamodb:GetRecords",
+                      "dynamodb:GetShardIterator",
+                      "dynamodb:Query",
+                      "dynamodb:GetItem",
+                      "dynamodb:Scan",
+                      "dynamodb:ConditionCheckItem",
+                      "dynamodb:BatchWriteItem",
+                      "dynamodb:PutItem",
+                      "dynamodb:UpdateItem",
+                      "dynamodb:DeleteItem",
+                      "dynamodb:DescribeTable",
+                    ],
+                    resources: [
+                      revalidationTableArn,
+                      `${revalidationTableArn}/*`,
+                    ],
+                  },
+                ]
                 : []),
             ],
             injections: [

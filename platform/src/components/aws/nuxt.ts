@@ -15,7 +15,6 @@ import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "../component.js";
 import { Link } from "../link.js";
-import { DevArgs } from "../dev.js";
 import { buildApp } from "../base/base-ssr-site.js";
 import { URL_UNAVAILABLE } from "./linkable.js";
 
@@ -33,7 +32,7 @@ export interface NuxtArgs extends SsrSiteArgs {
    *
    * To disable dev mode, pass in `false`.
    */
-  dev?: false | DevArgs["dev"];
+  dev?: SsrSiteArgs["dev"];
   /**
    * Permissions and the resources that the [server function](#nodes-server) in your Nuxt app needs to access. These permissions are used to create the function's IAM role.
    *

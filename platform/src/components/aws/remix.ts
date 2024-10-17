@@ -15,7 +15,6 @@ import { Cdn } from "./cdn.js";
 import { Bucket } from "./bucket.js";
 import { Component } from "../component.js";
 import { Link } from "../link.js";
-import { DevArgs } from "../dev.js";
 import type { Input } from "../input.js";
 import { buildApp } from "../base/base-ssr-site.js";
 import { URL_UNAVAILABLE } from "./linkable.js";
@@ -35,7 +34,7 @@ export interface RemixArgs extends SsrSiteArgs {
    *
    * To disable dev mode, pass in `false`.
    */
-  dev?: false | DevArgs["dev"];
+  dev?: SsrSiteArgs["dev"];
   /**
    * Permissions and the resources that the [server function](#nodes-server) in your Remix app needs to access. These permissions are used to create the function's IAM role.
    *
@@ -554,21 +553,21 @@ export class Remix extends Component implements Link.Linkable {
             },
             edgeFunctions: edge
               ? {
-                  server: {
-                    function: serverConfig,
-                  },
-                }
+                server: {
+                  function: serverConfig,
+                },
+              }
               : undefined,
             origins: {
               ...(edge
                 ? {}
                 : {
+                  server: {
                     server: {
-                      server: {
-                        function: serverConfig,
-                      },
+                      function: serverConfig,
                     },
-                  }),
+                  },
+                }),
               s3: {
                 s3: {
                   copy: [
@@ -585,16 +584,16 @@ export class Remix extends Component implements Link.Linkable {
             behaviors: [
               edge
                 ? {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    edgeFunction: "server",
-                    origin: "s3",
-                  }
+                  cacheType: "server",
+                  cfFunction: "serverCfFunction",
+                  edgeFunction: "server",
+                  origin: "s3",
+                }
                 : {
-                    cacheType: "server",
-                    cfFunction: "serverCfFunction",
-                    origin: "server",
-                  },
+                  cacheType: "server",
+                  cfFunction: "serverCfFunction",
+                  origin: "server",
+                },
               ...buildMeta.staticRoutes.map(
                 (route) =>
                   ({
