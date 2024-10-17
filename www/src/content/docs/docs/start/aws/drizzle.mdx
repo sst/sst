@@ -49,36 +49,72 @@ Drizzle ORM is what will be used to query our database, while Drizzle Kit will a
 
 Let's add the following to the `scripts` in the `package.json`.
 
-```json title="package.json"
+```json title="package.json" "sst shell"
 "scripts": {
-  "db": "sst shell drizzle-kit",
-  "db:studio": "sst shell drizzle-kit studio"
+  "db": "sst shell drizzle-kit"
 },
 ```
 
-SST will pass the credentials to Drizzle Kit and allow it to connect to your database.
+The `sst shell` CLI will pass the credentials to Drizzle Kit and allow it to connect to your database.
+
+Let's also update our `tsconfig.json`.
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "strict": true
+  }
+}
+```
 
 ---
 
 ## 2. Add a Postgres db
 
-Let's add a Postgres database using [Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html). The `proxy` option configures an RDS Proxy behind the scenes making it ideal for serverless applications. Update your `sst.config.ts`. 
+Let's add a Postgres database using [Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html). This needs a VPC.
 
 ```ts title="sst.config.ts"
 async run() {
-  const vpc = new sst.aws.Vpc("MyVpc");
+  const vpc = new sst.aws.Vpc("MyVpc", { bastion: true, nat: "ec2" });
   const rds = new sst.aws.Postgres("MyPostgres", { vpc, proxy: true });
 },
 ```
+
+The `proxy` option configures an RDS Proxy behind the scenes making it ideal for serverless applications. Update your `sst.config.ts`.
+
+:::tip
+The RDS Proxy allows serverless environments to reliably connect to RDS.
+:::
+
+While the `bastion` option will let us connect to the VPC from our local machine. We also need the NAT gateway for this example since we'll be using a Lambda function, and this allows a Lambda function that's in a VPC to access the internet.
+
+---
+
+#### Start Drizzle Studio
+
+When you run SST in dev it can start other dev processes for you. In this case we want to start Drizzle Studio. Add this below the `Postgres` component.
+
+```ts title="sst.config.ts"
+new sst.x.DevCommand("Studio", {
+  link: [rds],
+  dev: {
+    autostart: true,
+    command: "npx drizzle-kit studio",
+  },
+});
+```
+
+This will run the given command in dev.
 
 ---
 
 #### Add an API
 
-We'll also add an API to query our database. Add the following to your `sst.config.ts` below the database config.
+We'll use a Lambda function as an API to query our database. Add the following to your `sst.config.ts` below the database config.
 
-```ts title="sst.config.ts" {3}
+```ts title="sst.config.ts" {4}
 const api = new sst.aws.Function("MyApi", {
+  vpc,
   url: true,
   link: [rds],
   handler: "src/api.handler",
@@ -93,6 +129,18 @@ We are linking our database to the API.
 
 ---
 
+#### Install a tunnel
+
+Since our database cluster is in a VPC, we'll need a tunnel to connect to it from our local machine.
+
+```bash "sudo"
+sudo npx sst tunnel install
+```
+
+This needs _sudo_ to create a network interface on your machine. You'll only need to do this once on your machine.
+
+---
+
 #### Start dev mode
 
 Start your app in dev mode. This runs your functions [_Live_](/docs/live/).
@@ -104,9 +152,11 @@ npx sst dev
 It'll take a few minutes to create your database. Once complete, you'll see this.
 
 ```bash frame="none"
-+  Complete
+✓  Complete
    api: https://ouu5vovpxllyn5b6ot2nn6vdsa0hvcuj.lambda-url.us-east-1.on.aws
 ```
+
+You'll see Drizzle Studio started in a tab called **Studio**. And a tunnel in the **Tunnel** tab.
 
 ---
 
@@ -114,11 +164,9 @@ It'll take a few minutes to create your database. Once complete, you'll see this
 
 Let's define our Drizzle config. Add a `drizzle.config.ts` in your project root with this.
 
-```ts title="drizzle.config.ts" {8-10}
+```ts title="drizzle.config.ts" {6-8}
 import { Resource } from "sst";
 import { defineConfig } from "drizzle-kit";
-
-const cfg = Resource.MyPostgres;
 
 export default defineConfig({
   dialect: "postgresql",
@@ -126,14 +174,13 @@ export default defineConfig({
   schema: ["./src/**/*.sql.ts"],
   out: "./migrations",
   dbCredentials: {
-    host: cfg.host,
-    port: cfg.port,
-    user: cfg.username,
-    password: cfg.password,
-    database: cfg.database,
+    host: Resource.MyPostgres.host,
+    port: Resource.MyPostgres.port,
+    user: Resource.MyPostgres.username,
+    password: Resource.MyPostgres.password,
+    database: Resource.MyPostgres.database,
   },
 });
-
 ```
 
 Here we are telling Drizzle that we'll be specifying your database schema in `.sql.ts` files in our `src/` directory.
@@ -179,26 +226,24 @@ npm run db migrate
 This should create our new schema.
 
 :::tip
-Your RDS instance will be in a VPC, so remember to start the VPC tunnel by running `npx sst tunnel`. You can install the tunnel on your machine as shown below:
+You need a tunnel to connect to your database.
 :::
 
+This needs the tunnel to connect to the database. So you should have `sst dev` in a separate terminal.
+
 ```bash "sudo"
-sudo npx sst tunnel install
+npx sst tunnel
 ```
 
-This needs _sudo_ to create a network interface on your machine. You'll only need to do this once on your machine.
+Alternatively, you can just run the tunnel using the above command.
 
 ---
 
 #### Drizzle Studio
 
-To see our schema in action we can open the Drizzle Studio.
+To see our schema in action we can open the Drizzle Studio. Head over to the **Studio** tab in your `sst dev` session and go to the link.
 
-```bash
-npm run db:studio
-```
-
-This will run `sst shell drizzle-kit studio` and direct you to opening `https://local.drizzle.studio`.
+Or head over to `https://local.drizzle.studio` in your browser.
 
 ![Initial Drizzle Studio with SST](../../../../../assets/docs/start/initial-drizzle-studio-with-sst.png)
 
@@ -215,13 +260,12 @@ import { Pool } from "pg";
 import { Resource } from "sst";
 import * as schema from "./todo.sql";
 
-const cfg = Resource.MyPostgres;
 const pool = new Pool({
-  host: cfg.host,
-  port: cfg.port,
-  user: cfg.username,
-  password: cfg.password,
-  database: cfg.database,
+  host: Resource.MyPostgres.host,
+  port: Resource.MyPostgres.port,
+  user: Resource.MyPostgres.username,
+  password: Resource.MyPostgres.password,
+  database: Resource.MyPostgres.database,
 });
 
 export const db = drizzle(pool, { schema });
@@ -232,9 +276,9 @@ Now we can use that in the API. Create our API handler in `src/api.ts`.
 ```ts title="src/api.ts"
 import { db } from "./drizzle";
 import { todo } from "./todo.sql";
-import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import { APIGatewayProxyEventV2 } from "aws-lambda";
 
-export const handler: APIGatewayProxyHandlerV2 = async (evt) => {
+export const handler = async (evt: APIGatewayProxyEventV2) => {
   if (evt.requestContext.http.method === "GET") {
     const result = await db.select().from(todo).execute();
 

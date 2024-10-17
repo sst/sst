@@ -1,8 +1,8 @@
 import { db } from "./drizzle";
 import { todo } from "./todo.sql";
-import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import { APIGatewayProxyEventV2 } from "aws-lambda";
 
-export const handler: APIGatewayProxyHandlerV2 = async (evt) => {
+export const handler = async (evt: APIGatewayProxyEventV2) => {
   if (evt.requestContext.http.method === "GET") {
     const result = await db.select().from(todo).execute();
 
@@ -15,7 +15,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (evt) => {
   if (evt.requestContext.http.method === "POST") {
     const result = await db
       .insert(todo)
-      .values({ title: "Todo", id: crypto.randomUUID() })
+      .values({ title: "Todo", description: crypto.randomUUID() })
       .returning()
       .execute();
 

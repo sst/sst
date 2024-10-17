@@ -1,7 +1,7 @@
 {
-  "id": "97498b16-7727-4cbb-aede-eeb61e37722d",
+  "id": "89cd0e0e-59a6-42ec-a876-c44671efc130",
   "prevId": "00000000-0000-0000-0000-000000000000",
-  "version": "6",
+  "version": "7",
   "dialect": "postgresql",
   "tables": {
     "public.todo": {
@@ -35,6 +35,7 @@
   },
   "enums": {},
   "schemas": {},
+  "sequences": {},
   "_meta": {
     "columns": {},
     "schemas": {},

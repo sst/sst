@@ -3,13 +3,12 @@ import { Pool } from "pg";
 import { Resource } from "sst";
 import * as schema from "./todo.sql";
 
-const cfg = Resource.MyPostgres;
 const pool = new Pool({
-  host: cfg.host,
-  port: cfg.port,
-  user: cfg.username,
-  password: cfg.password,
-  database: cfg.database,
+  host: Resource.MyPostgres.host,
+  port: Resource.MyPostgres.port,
+  user: Resource.MyPostgres.username,
+  password: Resource.MyPostgres.password,
+  database: Resource.MyPostgres.database,
 });
 
 export const db = drizzle(pool, { schema });

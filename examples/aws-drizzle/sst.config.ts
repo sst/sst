@@ -9,13 +9,22 @@ export default $config({
     };
   },
   async run() {
-    const vpc = new sst.aws.Vpc("MyVpc");
-    const rds = new sst.aws.Postgres("MyPostgres", { vpc });
+    const vpc = new sst.aws.Vpc("MyVpc", { bastion: true, nat: "ec2" });
+    const rds = new sst.aws.Postgres("MyPostgres", { vpc, proxy: true });
 
     const api = new sst.aws.Function("MyApi", {
+      vpc,
       url: true,
       link: [rds],
       handler: "src/api.handler",
+    });
+
+    new sst.x.DevCommand("Studio", {
+      link: [rds],
+      dev: {
+        autostart: true,
+        command: "npx drizzle-kit studio",
+      },
     });
 
     return {
