@@ -119,6 +119,7 @@ const sidebar = [
       "docs/reference/config",
       "docs/component/secret",
       "docs/component/linkable",
+      "docs/component/experimental/dev-command",
     ],
   },
   {

@@ -2057,6 +2057,7 @@ async function buildComponents() {
     entryPoints: [
       "../platform/src/config.ts",
       "../platform/src/global-config.d.ts",
+      "../platform/src/components/experimental/dev-command.ts",
       "../platform/src/components/linkable.ts",
       "../platform/src/components/secret.ts",
       "../platform/src/components/aws/analog.ts",

@@ -4,7 +4,7 @@ import { DevArgs } from "../dev.js";
 import { Link } from "../link.js";
 import { Input } from "../input";
 
-interface DevCommandArgs {
+export interface DevCommandArgs {
   dev?: DevArgs["dev"];
   link?: Input<any[]>;
   environment?: Input<Record<string, Input<string>>>;
@@ -12,6 +12,10 @@ interface DevCommandArgs {
     role: Input<string>;
   };
 }
+
+/**
+ * The `DevCommand` lets you run a command when you run `sst dev`.
+ */
 export class DevCommand extends Component {
   constructor(
     name: string,
