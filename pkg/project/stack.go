@@ -833,7 +833,6 @@ func getCompletedEvent(ctx context.Context, stack auto.Stack) (*CompleteEvent, e
 		}
 
 		if resource.Type == "sst:sst:LinkRef" && outputs["target"] != nil && outputs["properties"] != nil {
-			slog.Info("link", "outputs", outputs)
 			link := common.Link{
 				Properties: outputs["properties"].(map[string]interface{}),
 				Include:    []common.LinkInclude{},
