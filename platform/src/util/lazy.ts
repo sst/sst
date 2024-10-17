@@ -4,8 +4,8 @@ export function lazy<T>(callback: () => T) {
 
   return () => {
     if (!loaded) {
-      result = callback();
       loaded = true;
+      result = callback();
     }
     return result;
   };
