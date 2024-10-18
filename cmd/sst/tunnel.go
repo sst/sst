@@ -12,7 +12,6 @@ import (
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/internal/util"
-	"github.com/sst/ion/pkg/global"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/tunnel"
 	"golang.org/x/sync/errgroup"
@@ -60,6 +59,9 @@ var CmdTunnel = &cli.Command{
 		}, "\n"),
 	},
 	Run: func(c *cli.Cli) error {
+		if tunnel.NeedsInstall() {
+			return util.NewReadableError(nil, "The sst tunnel needs to be installed or upgraded. Run `sudo sst tunnel install`")
+		}
 		proj, err := c.InitProject()
 		if err != nil {
 			return err
@@ -84,6 +86,7 @@ var CmdTunnel = &cli.Command{
 			"--subnets", subnets,
 			"--host", tun.IP,
 			"--user", tun.Username,
+			"--print-logs",
 		)
 		tunnelCmd.Env = append(
 			os.Environ(),
@@ -195,10 +198,6 @@ var CmdTunnel = &cli.Command{
 				},
 			},
 			Run: func(c *cli.Cli) error {
-				err := global.EnsureTun2Socks()
-				if err != nil {
-					return err
-				}
 				subnets := strings.Split(c.String("subnets"), ",")
 				host := c.String("host")
 				port := c.String("port")
@@ -217,11 +216,13 @@ var CmdTunnel = &cli.Command{
 						[]byte(os.Getenv("SSH_PRIVATE_KEY")),
 					)
 				})
-				wg.Go(func() error {
-					defer c.Cancel()
-					return tunnel.Start(c.Context, subnets...)
-				})
+				err := tunnel.Start(subnets...)
+				if err != nil {
+					return err
+				}
 				slog.Info("tunnel started")
+				<-c.Context.Done()
+				tunnel.Stop()
 				err = wg.Wait()
 				if err != nil {
 					slog.Error("failed to start tunnel", "error", err)

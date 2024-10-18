@@ -1,18 +1,13 @@
 package tunnel
 
 import (
-	"context"
 	"log/slog"
-	"os/exec"
 	"runtime"
-
-	"github.com/sst/ion/internal/util"
 )
 
-func Start(ctx context.Context, routes ...string) error {
+func Start(routes ...string) error {
 	name := resolveInterface()
 	slog.Info("creating interface", "name", name, "os", runtime.GOOS)
-	destroy()
 	cmds := [][]string{
 		{"ip", "tuntap", "add", name, "mode", "tun"},
 		{"ip", "addr", "add", "172.16.0.1", "dev", name},
@@ -27,16 +22,7 @@ func Start(ctx context.Context, routes ...string) error {
 	if err != nil {
 		return err
 	}
-	defer destroy()
-	socksCmd := exec.CommandContext(ctx, "tun2socks", "-device", name, "-proxy", "socks5://127.0.0.1:1080")
-	util.SetProcessGroupID(socksCmd)
-	util.SetProcessCancel(socksCmd)
-	slog.Info("running tun2socks", "cmd", socksCmd.Args)
-	err = socksCmd.Run()
-	if err != nil {
-		slog.Error("failed to run tun2socks", "error", err)
-		return err
-	}
+	tun2socks(name)
 	return nil
 }
 

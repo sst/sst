@@ -11,6 +11,7 @@ import (
 )
 
 func Generate(root string, links common.Links) error {
+	return nil
 	projects := fs.FindDown(root, "config.ru")
 	files := []io.Writer{}
 	for _, project := range projects {
