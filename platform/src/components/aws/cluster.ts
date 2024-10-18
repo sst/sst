@@ -9,6 +9,7 @@ import { cloudwatch, ec2, ecs, iam, lb } from "@pulumi/aws";
 import { ImageArgs } from "@pulumi/docker-build";
 import { Cluster as ClusterV1 } from "./cluster-v1";
 import { Vpc } from "./vpc";
+import { Efs } from "./efs";
 export type { ClusterArgs as ClusterV1Args } from "./cluster-v1";
 
 export const supportedCpus = {
@@ -569,7 +570,7 @@ export interface ClusterServiceArgs {
    */
   memory?: `${number} GB`;
   /**
-   * The amount of ephemeral storage (in GB) allocated to a container in this service.
+   * The amount of ephemeral storage (in GB) allocated to the container in this service.
    *
    * @default `"21 GB"`
    *
@@ -856,6 +857,52 @@ export interface ClusterServiceArgs {
     retention?: Input<keyof typeof RETENTION>;
   }>;
   /**
+   * Mount Amazon EFS file systems into the container.
+   *
+   * @example
+   * Create an EFS file system.
+   *
+   * ```js
+   * const fileSystem = new sst.aws.Efs("MyFileSystem", { vpc });
+   * ```
+   *
+   * And pass it in.
+   *
+   * ```js
+   * {
+   *   volumes: [
+   *     {
+   *       efs: fileSystem,
+   *       path: "/mnt/efs"
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * Or pass in a the EFS file system ID.
+   *
+   * ```js
+   * {
+   *   volumes: [
+   *     {
+   *       efs: "fs-12345678",
+   *       path: "/mnt/efs"
+   *     }
+   *   ]
+   * }
+   * ```
+   */
+  volumes?: Input<{
+    /**
+     * The Amazon EFS file system to mount.
+     */
+    efs: Input<Efs | string>;
+    /**
+     * The path to mount the volumne.
+     */
+    path: Input<string>;
+  }>[];
+  /**
    * The containers to run in the service.
    *
    * :::tip
@@ -958,6 +1005,11 @@ export interface ClusterServiceArgs {
        */
       retention?: Input<keyof typeof RETENTION>;
     }>;
+    /**
+     * Mount Amazon EFS file systems into the container. Same as the top-level
+     * [`efs`](#efs).
+     */
+    volumes?: ClusterServiceArgs["volumes"];
     /**
      * Configure how this container works in `sst dev`. Same as the top-level
      * [`dev`](#dev).

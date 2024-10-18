@@ -40,6 +40,7 @@ import { rpc } from "../rpc/rpc.js";
 import { parseRoleArn } from "./helpers/arn.js";
 import { RandomBytes } from "@pulumi/random";
 import { lazy } from "../../util/lazy.js";
+import { Efs } from "./efs.js";
 
 /**
  * Helper type to define function ARN type
@@ -997,6 +998,59 @@ export interface FunctionArgs {
    */
   layers?: Input<Input<string>[]>;
   /**
+   * Mount an EFS file system to the function.
+   *
+   * @example
+   * Create an EFS file system.
+   *
+   * ```js
+   * const fileSystem = new sst.aws.Efs("MyFileSystem", { vpc });
+   * ```
+   *
+   * And pass it in.
+   *
+   * ```js
+   * {
+   *   volume: {
+   *     efs: fileSystem,
+   *   }
+   * }
+   * ```
+   *
+   * By default, the file system will be mounted to `/mnt/efs`. You can change this by
+   * passing in the `path` property.
+   *
+   * ```js
+   * {
+   *   volume: {
+   *     efs: fileSystem,
+   *     path: "/mnt/my-files"
+   *   }
+   * }
+   * ```
+   *
+   * To use an existing EFS access point, pass in the EFS access point ARN.
+   *
+   * ```js
+   * {
+   *   volume: {
+   *     efs: "arn:aws:elasticfilesystem:us-east-1:123456789012:access-point/fsap-12345678",
+   *   }
+   * }
+   * ```
+   */
+  volume?: Input<{
+    /**
+     * The EFS file system to mount.
+     */
+    efs: Input<Efs | string>;
+    /**
+     * The path to mount the volumne.
+     * @default `"/mnt/efs"`
+     */
+    path?: Input<string>;
+  }>;
+  /**
    * A list of tags to add to the function.
    *
    * @example
@@ -1193,6 +1247,7 @@ export class Function extends Component implements Link.Linkable {
     const environment = normalizeEnvironment();
     const streaming = normalizeStreaming();
     const logging = normalizeLogging();
+    const volume = normalizeVolume();
     const url = normalizeUrl();
     const copyFiles = normalizeCopyFiles();
     const vpc = normalizeVpc();
@@ -1268,6 +1323,7 @@ export class Function extends Component implements Link.Linkable {
         handler: args.handler,
         internal: args._skipMetadata,
       },
+      _hint: fnUrl.apply((fnUrl) => fnUrl?.functionUrl),
     });
 
     function normalizeDev() {
@@ -1343,6 +1399,18 @@ export class Function extends Component implements Link.Linkable {
           format: logging?.format ?? "text",
         };
       });
+    }
+
+    function normalizeVolume() {
+      if (!args.volume) return;
+
+      return output(args.volume).apply((volume) => ({
+        efs:
+          volume.efs instanceof Efs
+            ? volume.efs.nodes.accessPoint.arn
+            : output(volume.efs),
+        path: volume.path ?? "/mnt/efs",
+      }));
     }
 
     function normalizeUrl() {
@@ -1897,6 +1965,10 @@ export class Function extends Component implements Link.Linkable {
               vpcConfig: vpc && {
                 securityGroupIds: vpc.securityGroups,
                 subnetIds: vpc.privateSubnets,
+              },
+              fileSystemConfig: volume && {
+                arn: volume.efs,
+                localMountPath: volume.path,
               },
               layers: args.layers,
               tags: args.tags,

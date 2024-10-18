@@ -13,6 +13,7 @@ export default $config({
 
     const vpc = addVpc();
     const bucket = addBucket();
+    //const efs = addEfs();
     //const email = addEmail();
     //const apiv1 = addApiV1();
     //const apiv2 = addApiV2();
@@ -31,6 +32,22 @@ export default $config({
       const bucket = new sst.aws.Bucket("MyBucket");
       ret.bucket = bucket.name;
       return bucket;
+    }
+
+    function addEfs() {
+      const efs = new sst.aws.Efs("MyEfs", { vpc });
+      ret.efs = efs.id;
+      ret.efsAccessPoint = efs.nodes.accessPoint.id;
+
+      const app = new sst.aws.Function("MyEfsApp", {
+        handler: "functions/efs/index.handler",
+        volume: { efs },
+        url: true,
+        vpc,
+      });
+      ret.efsApp = app.url;
+
+      return efs;
     }
 
     function addEmail() {
@@ -114,7 +131,6 @@ export default $config({
         link: [bucket],
       });
       ret.service = service.url;
-
       return service;
     }
 
@@ -123,7 +139,7 @@ export default $config({
         vpc,
       });
       ret.pgHost = postgres.host;
-      ret.pgPort = postgres.port;
+      ret.pgPort = $interpolate`postgres.port`;
       ret.pgUsername = postgres.username;
       ret.pgPassword = postgres.password;
       return postgres;

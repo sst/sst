@@ -13,6 +13,7 @@ export * from "./cognito-user-pool.js";
 export * from "./cron.js";
 export * from "./dns.js";
 export * from "./dynamo.js";
+export * from "./efs.js";
 export * from "./email.js";
 export * from "./function.js";
 export * from "./kinesis-stream.js";
@@ -39,6 +40,3 @@ export { iamEdit } from "./iam-edit.js";
 // internal components
 export * from "./cdn.js";
 export * from "./dns-validated-certificate.js";
-
-// TODO
-export * from "./providers/bucket-files.js";

@@ -70,6 +70,7 @@ const sidebar = [
   {
     label: "AWS",
     items: [
+      "docs/component/aws/efs",
       "docs/component/aws/vpc",
       "docs/component/aws/cron",
       "docs/component/aws/nuxt",
