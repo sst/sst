@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.515.0",
-    "sst": "3.2.31"
+    "ioredis": "^5.4.1",
+    "sst": "0.0.0-1729216281"
   }
 }

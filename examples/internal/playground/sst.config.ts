@@ -20,6 +20,7 @@ export default $config({
     //const app = addFunction();
     //const service = addService();
     //const postgres = addPostgres();
+    //const redis = addRedis();
     //const cron = addCron();
 
     return ret;
@@ -143,6 +144,17 @@ export default $config({
       ret.pgUsername = postgres.username;
       ret.pgPassword = postgres.password;
       return postgres;
+    }
+
+    function addRedis() {
+      const redis = new sst.aws.Redis("MyRedis", { vpc });
+      const app = new sst.aws.Function("MyRedisApp", {
+        handler: "functions/redis/index.handler",
+        url: true,
+        vpc,
+        link: [redis],
+      });
+      return redis;
     }
   },
 });
