@@ -19,8 +19,13 @@ import (
 )
 
 var PULUMI_VERSION = "v" + sdk.Version.String()
+var BUN_VERSION = func() string {
+	if flag.SST_BUN_VERSION != "" {
+		return flag.SST_BUN_VERSION
+	}
+	return "1.1.30"
+}()
 
-const BUN_VERSION = "1.1.29"
 const UV_VERSION = "0.3.2"
 
 var configDir = (func() string {
