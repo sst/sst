@@ -65,6 +65,7 @@ export function AuthHandler<
     >;
   }[keyof Providers],
 >(input: {
+  basePath?: string;
   stream?: boolean;
   session?: Sessions;
   providers: Providers;
@@ -104,7 +105,7 @@ export function AuthHandler<
     };
   };
 }) {
-  const app = new Hono();
+  const app = input.basePath ? new Hono().basePath(input.basePath) : new Hono();
 
   if (!input.callbacks.auth.error) {
     input.callbacks.auth.error = async (err) => {
