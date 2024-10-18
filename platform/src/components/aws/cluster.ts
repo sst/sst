@@ -808,7 +808,7 @@ export interface ClusterServiceArgs {
    * }
    * ```
    */
-  command?: Input<string[]>;
+  command?: Input<Input<string>[]>;
   /**
    * The entrypoint to override the default entrypoint in the container.
    * @example
@@ -896,7 +896,19 @@ export interface ClusterServiceArgs {
     /**
      * The Amazon EFS file system to mount.
      */
-    efs: Input<Efs | string>;
+    efs: Input<
+      | Efs
+      | {
+          /**
+           * The ID of the EFS file system.
+           */
+          fileSystem: Input<string>;
+          /**
+           * The ID of the EFS access point.
+           */
+          accessPoint: Input<string>;
+        }
+    >;
     /**
      * The path to mount the volumne.
      */

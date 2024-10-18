@@ -277,7 +277,13 @@ export class Service extends Component implements Link.Linkable {
               (volumes) =>
                 volumes?.map((volume) => ({
                   path: volume.path,
-                  efs: volume.efs instanceof Efs ? volume.efs.id : volume.efs,
+                  efs:
+                    volume.efs instanceof Efs
+                      ? {
+                          fileSystem: volume.efs.id,
+                          accessPoint: volume.efs.accessPoint,
+                        }
+                      : volume.efs,
                 })),
             );
           }
@@ -623,16 +629,19 @@ export class Service extends Component implements Link.Linkable {
             executionRoleArn: executionRole.arn,
             taskRoleArn: taskRole.arn,
             volumes: output(containers).apply((containers) => {
-              const uniqueFileSystemIds: Set<string> = new Set();
+              const uniqueAccessPoints: Set<string> = new Set();
               return containers.flatMap((container) =>
                 (container.volumes ?? []).flatMap((volume) => {
-                  if (uniqueFileSystemIds.has(volume.efs)) return [];
-                  uniqueFileSystemIds.add(volume.efs);
+                  if (uniqueAccessPoints.has(volume.efs.accessPoint)) return [];
+                  uniqueAccessPoints.add(volume.efs.accessPoint);
                   return {
-                    name: volume.efs,
+                    name: volume.efs.accessPoint,
                     efsVolumeConfiguration: {
-                      fileSystemId: volume.efs,
+                      fileSystemId: volume.efs.fileSystem,
                       transitEncryption: "ENABLED",
+                      authorizationConfig: {
+                        accessPointId: volume.efs.accessPoint,
+                      },
                     },
                   };
                 }),
@@ -667,7 +676,7 @@ export class Service extends Component implements Link.Linkable {
                       initProcessEnabled: true,
                     },
                     mountPoints: container.volumes?.map((volume) => ({
-                      sourceVolume: volume.efs,
+                      sourceVolume: volume.efs.accessPoint,
                       containerPath: volume.path,
                     })),
                   };

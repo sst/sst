@@ -203,6 +203,13 @@ export class Efs extends Component {
   }
 
   /**
+   * The ID of the EFS access point.
+   */
+  public get accessPoint() {
+    return this._accessPoint.id;
+  }
+
+  /**
    * The underlying [resources](/docs/components/#nodes) this component creates.
    */
   public get nodes() {
