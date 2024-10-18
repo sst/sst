@@ -24,7 +24,7 @@ export default $config({
     const vpc = new sst.aws.Vpc("MyVpc", { nat: "managed" });
 
     // Store SurrealDB data in EFS
-    const efs = new sst.aws.Efs("MyEfs2", { vpc });
+    const efs = new sst.aws.Efs("MyEfs", { vpc });
 
     // Run SurrealDB server in a container
     const cluster = new sst.aws.Cluster("MyCluster", { vpc });
