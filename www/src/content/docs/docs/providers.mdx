@@ -94,7 +94,13 @@ If you make any changes to the `providers` in your config, you'll need to run `s
 You'll need to run `sst install` if you update the `providers` in your config.
 :::
 
-The version of the provider is always pinned to what's in the `sst.config.ts` and does not auto-update. So if you want to update it, you'll need to change it manually and run `sst install`.
+The version of the provider is always pinned to what's in the `sst.config.ts` and does not auto-update. This is the case, even if there is no version set. This is to make sure that the providers don't update in the middle of your dev workflow.
+
+:::note
+Providers don't auto-update. They stick to the version that was installed initially.
+:::
+
+So if you want to update it, you'll need to change it manually and run `sst install`.
 
 ---
 
