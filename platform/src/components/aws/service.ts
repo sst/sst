@@ -624,22 +624,19 @@ export class Service extends Component implements Link.Linkable {
             taskRoleArn: taskRole.arn,
             volumes: output(containers).apply((containers) => {
               const uniqueFileSystemIds: Set<string> = new Set();
-              return containers
-                .flatMap(
-                  (container) =>
-                    container.volumes?.map((volume) => {
-                      if (uniqueFileSystemIds.has(volume.efs)) return;
-                      uniqueFileSystemIds.add(volume.efs);
-                      return {
-                        name: volume.efs,
-                        efsVolumeConfiguration: {
-                          fileSystemId: volume.efs,
-                          transitEncryption: "ENABLED",
-                        },
-                      };
-                    }),
-                )
-                .filter((v) => !!v);
+              return containers.flatMap((container) =>
+                (container.volumes ?? []).flatMap((volume) => {
+                  if (uniqueFileSystemIds.has(volume.efs)) return [];
+                  uniqueFileSystemIds.add(volume.efs);
+                  return {
+                    name: volume.efs,
+                    efsVolumeConfiguration: {
+                      fileSystemId: volume.efs,
+                      transitEncryption: "ENABLED",
+                    },
+                  };
+                }),
+              );
             }),
             containerDefinitions: $jsonStringify(
               all([
