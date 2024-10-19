@@ -164,8 +164,6 @@ const sidebar = [
       "docs/component/aws/kinesis-stream-lambda-subscriber",
     ],
   },
-  { label: "Examples", slug: "docs/examples" },
-  { label: "Common Errors", slug: "docs/common-errors" },
   {
     label: "Deprecated",
     collapsed: true,
@@ -175,6 +173,8 @@ const sidebar = [
       { label: "Postgres.v1", slug: "docs/component/aws/postgres-v1" },
     ],
   },
+  { label: "Examples", slug: "docs/examples" },
+  { label: "Common Errors", slug: "docs/common-errors" },
 ];
 
 if (import.meta.env.DEV) {
