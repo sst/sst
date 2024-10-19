@@ -9,23 +9,25 @@ type PartialUnwrappedPolicyDocument = {
 };
 
 /**
- * The AWS IAM Edit helper is used to modify the AWS IAM policy.
+ * A helper to modify the AWS IAM policy.
  *
  * The IAM policy document is normally in the form of a JSON string. This helper decodes
- * the string into a JSON object and allows you to modify the policy document in a type-safe
- * manner.
+ * the string into a JSON object and passes it to the callback. Allowing you to modify the
+ * policy document in a type-safe way.
  *
  * @example
  *
- * ```ts {4}
+ * For example, this comes in handy when you are transforming the policy of a component.
+ *
+ * ```ts title="sst.config.ts" "sst.aws.iamEdit"
  * new sst.aws.Bucket("MyBucket", {
  *   transform: {
  *     policy: (args) => {
  *       args.policy = sst.aws.iamEdit(args.policy, (policy) => {
  *         policy.Statement.push({
  *           Effect: "Allow",
- *           Principal: { Service: "ses.amazonaws.com" },
  *           Action: "s3:PutObject",
+ *           Principal: { Service: "ses.amazonaws.com" },
  *           Resource: $interpolate`arn:aws:s3:::${args.bucket}/*`,
  *         });
  *       });
