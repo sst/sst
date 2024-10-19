@@ -7,22 +7,36 @@ import { Vpc } from "./vpc.js";
 export interface EfsArgs {
   /**
    * The throughput mode for the EFS file system.
+   *
+   * The default `elastic` mode scales up or down based on the workload. However, if you know
+   * your access patterns, you can use `provisioned` to have a fixed throughput.
+   *
+   * Or you can use `bursting` to scale with the amount of storage you're using. It also
+   * supports bursting to higher levels for up to 12 hours per day.
+   *
    * @default `"elastic"`
+   *
    * @example
    * ```ts
    * {
-   *   throughput: "bursting",
+   *   throughput: "bursting"
    * }
    * ```
    */
   throughput?: Input<"provisioned" | "bursting" | "elastic">;
   /**
    * The performance mode for the EFS file system.
+   *
+   * The `max-io` mode can support higher throughput, but with slightly higher latency. It's
+   * recommended for larger workloads like data analysis or meadia processing.
+   *
+   * Both the modes are priced the same, but `general-purpose` is recommended for most use cases.
+   *
    * @default `"general-purpose"`
    * @example
    * ```ts
    * {
-   *   performance: "max-io,
+   *   performance: "max-io"
    * }
    * ```
    */
@@ -56,13 +70,13 @@ export interface EfsArgs {
    * ```
    */
   vpc:
-    | Vpc
-    | Input<{
-        /**
-         * A list of subnet IDs in the VPC to create the EFS mount targets in.
-         */
-        subnets: Input<Input<string>[]>;
-      }>;
+  | Vpc
+  | Input<{
+    /**
+     * A list of subnet IDs in the VPC to create the EFS mount targets in.
+     */
+    subnets: Input<Input<string>[]>;
+  }>;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -86,16 +100,46 @@ interface EfsRef {
 }
 
 /**
- * The `Efs` component lets you add an [Amazon Elastic File System (EFS)](https://docs.aws.amazon.com/efs/latest/ug/whatisefs.html) to your app.
+ * The `Efs` component lets you add [Amazon Elastic File System (EFS)](https://docs.aws.amazon.com/efs/latest/ug/whatisefs.html) to your app.
  *
  * @example
  *
  * #### Create the file system
  *
- * ```js title="sst.config.ts"
+ * ```js title="sst.config.ts" {2}
  * const vpc = new sst.aws.Vpc("MyVpc");
  * const efs = new sst.aws.Efs("MyEfs", { vpc });
  * ```
+ *
+ * This needs a VPC.
+ *
+ * #### Attach it to a Lambda function
+ *
+ * ```ts title="sst.config.ts" {4}
+ * new sst.aws.Function("MyFunction", {
+ *   vpc,
+ *   handler: "lambda.handler",
+ *   volume: { efs, path: "/mnt/efs" }
+ * });
+ * ```
+ *
+ * This is now mounted at `/mnt/efs` in the Lambda function.
+ *
+ * #### Attach it to a container
+ *
+ * ```ts title="sst.config.ts" {7}
+ * const cluster = new sst.aws.Cluster("MyCluster", { vpc });
+ * cluster.addService("MyService", {
+ *   public: {
+ *     ports: [{ listen: "80/http" }],
+ *   },
+ *   volumes: [
+ *     { efs, path: "/mnt/efs" }
+ *   ]
+ * });
+ * ```
+ *
+ * Mounted at `/mnt/efs` in the container.
  */
 export class Efs extends Component {
   private _fileSystem: Output<efs.FileSystem>;
@@ -235,7 +279,7 @@ export class Efs extends Component {
    * :::
    *
    * @param name The name of the component.
-   * @param fileSystemID The id of the existing EFS file system.
+   * @param fileSystemID The ID of the existing EFS file system.
    *
    * @example
    * Imagine you create a EFS file system in the `dev` stage. And in your personal stage
@@ -245,7 +289,7 @@ export class Efs extends Component {
    * ```ts title="sst.config.ts"
    * const efs = $app.stage === "frank"
    *   ? sst.aws.Efs.get("MyEfs", "app-dev-myefs")
-   *   : new sst.aws.Efs("MyEfs");
+   *   : new sst.aws.Efs("MyEfs", { vpc });
    * ```
    *
    * Here `app-dev-myefs` is the ID of the file system created in the `dev` stage.
