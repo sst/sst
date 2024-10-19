@@ -110,7 +110,7 @@ export default function Form({ url }: { url: string }) {
       onSubmit={async (e) => {
         e.preventDefault();
 
-        const file = (e.target as HTMLFormElement).file.files?.[0]!;
+        const file = (e.target as HTMLFormElement).file.files?.[0] ?? null;
 
         const image = await fetch(url, {
           body: file,
