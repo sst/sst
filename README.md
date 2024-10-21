@@ -1,13 +1,8 @@
-# SST v3
+# SST
+
+Build full-stack apps on your own infrastructure.
 
 SST v3 uses a new engine for deploying SST apps. It uses Pulumi and Terraform, as opposed to CDK and CloudFormation. [Read the full announcement here]([https://sst.dev/blog/moving-away-from-cdk](https://sst.dev/blog/sst-v3)).
-
-- **10x faster** deploys
-- Native **multi-region** support
-- No more cyclical dependencies
-- No stacks or stack resource limits
-- No CDK or npm package conflicts
-- Native support for **non-AWS** providers
 
 ## Installation
 
@@ -33,7 +28,7 @@ To use a package manager, [check out our docs](https://sst.dev/docs/reference/cl
 
 #### Manually
 
-Download the pre-compiled binaries from the [releases](https://github.com/sst/ion/releases/latest) page and copy to the desired location.
+Download the pre-compiled binaries from the [releases](https://github.com/sst/sst/releases/latest) page and copy to the desired location.
 
 ## Get Started
 
@@ -80,4 +75,4 @@ If you want to build the CLI, you can run `go build ./cmd/sst` from the root. Th
 
 ---
 
-**Join our community** [Discord](https://sst.dev/discord) | [YouTube](https://www.youtube.com/c/sst-dev) | [Twitter](https://twitter.com/SST_dev)
+**Join our community** [Discord](https://sst.dev/discord) | [YouTube](https://www.youtube.com/c/sst-dev) | [X.com](https://x.com/SST_dev)
