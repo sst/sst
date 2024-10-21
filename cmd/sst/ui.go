@@ -69,13 +69,6 @@ func CmdUI(c *cli.Cli) error {
 	if err != nil {
 		return err
 	}
-	if filter == "function" {
-		log, err := os.Create(".sst/log/function.log")
-		if err != nil {
-			return err
-		}
-		opts = append(opts, ui.WithLog(log))
-	}
 	u = ui.New(c.Context, opts...)
 	slog.Info("initialized ui")
 	if filter == "sst" || filter == "" {
