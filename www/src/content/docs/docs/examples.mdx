@@ -10,7 +10,7 @@ import Section from '../../../../src/components/tsdoc/Section.astro';
 import NestedTitle from '../../../../src/components/tsdoc/NestedTitle.astro';
 import InlineSection from '../../../../src/components/tsdoc/InlineSection.astro';
 
-Below is a collection of example SST apps. These are available in the [`examples/`](https://github.com/sst/ion/tree/dev/examples) directory of the repo.
+Below is a collection of example SST apps. These are available in the [`examples/`](https://github.com/sst/sst/tree/dev/examples) directory of the repo.
 
 :::tip
 This doc is best viewed through the site search or through the _AI_.
@@ -19,7 +19,7 @@ This doc is best viewed through the site search or through the _AI_.
 The descriptions for these examples are generated using the comments in the `sst.config.ts` of the app.
 
 #### Contributing
-To contribute an example or to edit one, submit a PR to the [repo](https://github.com/sst/ion).
+To contribute an example or to edit one, submit a PR to the [repo](https://github.com/sst/sst).
 Make sure to document the `sst.config.ts` in your example.
 
 
@@ -54,7 +54,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-apig-auth).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-apig-auth).
 
 
 ---
@@ -116,7 +116,7 @@ There's nothing to configure for streaming in the `Astro` component.
 new sst.aws.Astro("MyWeb");
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-astro-stream).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-astro-stream).
 
 
 ---
@@ -146,7 +146,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-bucket-policy).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-bucket-policy).
 
 
 ---
@@ -168,7 +168,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-bucket-queue-subscriber).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-bucket-queue-subscriber).
 
 
 ---
@@ -186,7 +186,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-bucket-subscriber).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-bucket-subscriber).
 
 
 ---
@@ -208,7 +208,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-bucket-topic-subscriber).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-bucket-topic-subscriber).
 
 
 ---
@@ -267,7 +267,7 @@ cluster.addService("MyService", {
 });
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-bun-elysia).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-bun-elysia).
 
 
 ---
@@ -327,7 +327,7 @@ cluster.addService("MyService", {
 });
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-bun-file-upload).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-bun-file-upload).
 
 
 ---
@@ -358,7 +358,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-dead-letter-queue).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-dead-letter-queue).
 
 
 ---
@@ -399,7 +399,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-dynamo).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-dynamo).
 
 
 ---
@@ -407,68 +407,50 @@ View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-dynamo)
 
 Use raw Pulumi resources to create an EC2 instance.
 ```ts title="sst.config.ts"
-<reference path="./.sst/platform/config.d.ts" />
+// Notice you don't need to import pulumi, it is already part of sst.
+const securityGroup = new aws.ec2.SecurityGroup("web-secgrp", {
+  ingress: [
+    {
+      protocol: "tcp",
+      fromPort: 80,
+      toPort: 80,
+      cidrBlocks: ["0.0.0.0/0"],
+    },
+  ],
+});
 
+// Find the latest Ubuntu AMI
+const ami = aws.ec2.getAmi({
+  filters: [
+    {
+      name: "name",
+      values: ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"],
+    },
+  ],
+  mostRecent: true,
+  owners: ["099720109477"], // Canonical
+});
 
-# EC2 with Pulumi
-
-se raw Pulumi resources to create an EC2 instance.
-
-rt default $config({
-(input) {
-turn {
-ame: "aws-ec2-pulumi",
-ome: "aws",
-emoval: input?.stage === "production" ? "retain" : "remove",
-
-
-nc run() {
- Notice you don't need to import pulumi, it is already part of sst.
-nst securityGroup = new aws.ec2.SecurityGroup("web-secgrp", {
-ngress: [
-{
-	protocol: "tcp",
-	fromPort: 80,
-	toPort: 80,
-	cidrBlocks: ["0.0.0.0/0"],
-},
-,
-;
-
- Find the latest Ubuntu AMI
-nst ami = aws.ec2.getAmi({
-ilters: [
-{
-	name: "name",
-	values: ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"],
-},
-,
-ostRecent: true,
-wners: ["099720109477"], // Canonical
-;
-
- User data to set up a simple web server
-nst userData = `#!/bin/bash
+// User data to set up a simple web server
+const userData = `#!/bin/bash
 ho "Hello, World!" > index.html
 hup python3 -m http.server 80 &`;
 
- Create an EC2 instance
-nst server = new aws.ec2.Instance("web-server", {
-nstanceType: "t2.micro",
-mi: ami.then((ami) => ami.id),
-serData: userData,
-pcSecurityGroupIds: [securityGroup.id],
-ssociatePublicIpAddress: true,
-;
+// Create an EC2 instance
+const server = new aws.ec2.Instance("web-server", {
+  instanceType: "t2.micro",
+  ami: ami.then((ami) => ami.id),
+  userData: userData,
+  vpcSecurityGroupIds: [securityGroup.id],
+  associatePublicIpAddress: true,
+});
 
-turn {
-pp: server.publicIp,
-
-
-
+return {
+  app: server.publicIp,
+};
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-ec2-pulumi).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-ec2-pulumi).
 
 
 ---
@@ -528,7 +510,7 @@ cluster.addService("MyService", {
 });
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-express-file-upload).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-express-file-upload).
 
 
 ---
@@ -579,7 +561,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-ffmpeg).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-ffmpeg).
 
 
 ---
@@ -624,7 +606,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-hono-steam).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-hono-steam).
 
 
 ---
@@ -677,7 +659,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-iam-permission-boundary).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-iam-permission-boundary).
 
 
 ---
@@ -693,7 +675,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-info).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-info).
 
 
 ---
@@ -748,7 +730,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-jsx-email).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-jsx-email).
 
 
 ---
@@ -784,7 +766,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-kinesis-stream).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-kinesis-stream).
 
 
 ---
@@ -855,7 +837,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-lambda-stream).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-lambda-stream).
 
 
 ---
@@ -913,7 +895,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-lambda-vpc).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-lambda-vpc).
 
 
 ---
@@ -956,7 +938,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-multi-region).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-multi-region).
 
 
 ---
@@ -1033,7 +1015,7 @@ new sst.aws.Nextjs("MyWeb", {
 });
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-nextjs-basic-auth).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-nextjs-basic-auth).
 
 
 ---
@@ -1078,7 +1060,7 @@ This is typically only a problem for demo apps.
 new sst.aws.Nextjs("MyWeb");
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-nextjs-stream).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-nextjs-stream).
 
 
 ---
@@ -1168,7 +1150,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-prisma).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-prisma).
 
 
 ---
@@ -1268,7 +1250,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-puppeteer).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-puppeteer).
 
 
 ---
@@ -1291,7 +1273,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-queue).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-queue).
 
 
 ---
@@ -1334,7 +1316,7 @@ Streaming works out of the box with the `Remix` component.
 new sst.aws.Remix("MyWeb");
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-remix-stream).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-remix-stream).
 
 
 ---
@@ -1369,7 +1351,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-router-bucket).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-router-bucket).
 
 
 ---
@@ -1398,7 +1380,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-router).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-router).
 
 
 ---
@@ -1445,7 +1427,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-sharp).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-sharp).
 
 
 ---
@@ -1487,7 +1469,7 @@ cluster.addService("MyService", {
 });
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-solid-container-ws).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-solid-container-ws).
 
 
 ---
@@ -1559,7 +1541,7 @@ new sst.aws.StaticSite("MySite", {
 });
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-static-site-basic-auth).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-static-site-basic-auth).
 
 
 ---
@@ -1573,7 +1555,7 @@ new sst.aws.StaticSite("MySite", {
 });
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-static-site).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-static-site).
 
 
 ---
@@ -1605,7 +1587,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-swift).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-swift).
 
 
 ---
@@ -1699,7 +1681,7 @@ new sst.aws.Nextjs("MyWeb", {
 });
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-t3).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-t3).
 
 
 ---
@@ -1726,7 +1708,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-topic).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-topic).
 
 
 ---
@@ -1773,7 +1755,7 @@ const app = new sst.aws.Function("MyApp", {
 return { seeder: seeder.url, app: app.url };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-vector).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-vector).
 
 
 ---
@@ -1789,7 +1771,7 @@ new sst.aws.StaticSite("Web", {
 });
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/aws-vite).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-vite).
 
 
 ---
@@ -1805,7 +1787,7 @@ const cron = new sst.cloudflare.Cron("Cron", {
 return {};
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/cloudflare-cron).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/cloudflare-cron).
 
 
 ---
@@ -1826,7 +1808,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/cloudflare-kv).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/cloudflare-kv).
 
 
 ---
@@ -1859,7 +1841,7 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/secret-link-all).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/secret-link-all).
 
 
 ---
@@ -1878,7 +1860,7 @@ new sst.aws.Function("MyFunction", {
 });
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/sst-$transform).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/sst-$transform).
 
 
 ---
@@ -1901,4 +1883,4 @@ return {
 };
 ```
 
-View the [full example](https://github.com/sst/ion/tree/dev/examples/vercel-domain).
+View the [full example](https://github.com/sst/sst/tree/dev/examples/vercel-domain).
