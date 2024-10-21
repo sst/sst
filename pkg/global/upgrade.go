@@ -39,7 +39,7 @@ func Upgrade(existingVersion string, nextVersion string) (string, error) {
 		return "", fmt.Errorf("unsupported architecture")
 	}
 	if nextVersion == "" {
-		resp, err := http.Get("https://api.github.com/repos/sst/ion/releases/latest")
+		resp, err := http.Get("https://api.github.com/repos/sst/sst/releases/latest")
 		if err != nil {
 			return "", err
 		}
@@ -66,7 +66,7 @@ func Upgrade(existingVersion string, nextVersion string) (string, error) {
 	if nextVersion == existingVersion {
 		return nextVersion, nil
 	}
-	url := "https://github.com/sst/ion/releases/download/" + nextVersion + "/sst-" + filename
+	url := "https://github.com/sst/sst/releases/download/" + nextVersion + "/sst-" + filename
 	slog.Info("downloading", "url", url)
 	resp, err := http.Get(url)
 	if err != nil {

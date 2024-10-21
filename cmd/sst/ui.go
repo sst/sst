@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log/slog"
-	"os"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/ion/cmd/sst/cli"
