@@ -34,7 +34,7 @@ checksum:
 snapshot:
   name_template: "0.0.0-{{ .Timestamp }}"
 aurs:
-  - homepage: "https://github.com/sst/ion"
+  - homepage: "https://github.com/sst/sst"
     description: "Deploy anything"
     private_key: '{{ .Env.AUR_KEY }}'
     git_url: 'ssh://aur@aur.archlinux.org/sst-bin.git'
