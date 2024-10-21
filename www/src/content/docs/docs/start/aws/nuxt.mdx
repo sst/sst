@@ -253,7 +253,11 @@ async run() {
 
 This creates a VPC with a bastion host, an ECS Cluster, and adds a Fargate service to it.
 
-The `dev.command` tells SST to run our Nuxt app locally in dev mode.
+:::note
+By default, your service in not deployed when running in _dev_.
+:::
+
+The `dev.command` tells SST to instead run our Nuxt app locally in dev mode.
 
 ---
 
