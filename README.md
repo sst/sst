@@ -2,7 +2,7 @@
 
 Build full-stack apps on your own infrastructure.
 
-SST v3 uses a new engine for deploying SST apps. It uses Pulumi and Terraform, as opposed to CDK and CloudFormation. [Read the full announcement here]([https://sst.dev/blog/moving-away-from-cdk](https://sst.dev/blog/sst-v3)).
+SST v3 uses a new engine for deploying SST apps. It uses Pulumi and Terraform, as opposed to CDK and CloudFormation. [Read the full announcement here](https://sst.dev/blog/sst-v3).
 
 ## Installation
 
