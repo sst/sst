@@ -195,7 +195,7 @@ export default defineConfig({
     enabled: false,
   },
   redirects: {
-    "/install": "https://raw.githubusercontent.com/sst/ion/dev/install",
+    "/install": "https://raw.githubusercontent.com/sst/sst/dev/install",
     "/discord": "https://discord.gg/sst",
     "/guide": "https://guide.sst.dev",
     "/docs/start/aws/container": "/docs/start/aws/express",
@@ -234,7 +234,7 @@ export default defineConfig({
         github: config.github,
       },
       editLink: {
-        baseUrl: "https://github.com/sst/ion/edit/dev/www",
+        baseUrl: "https://github.com/sst/sst/edit/dev/www",
       },
       components: {
         Hero: "./src/components/Hero.astro",
