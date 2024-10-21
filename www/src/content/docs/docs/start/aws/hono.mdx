@@ -341,6 +341,142 @@ We want the `/` route to increment a counter in our Redis cluster. Let's start b
 ```bash
 npm install ioredis
 ```
+
+Add the relevant imports to your `index.ts`.
+
+```ts title="index.ts" {5}
+import { Resource } from "sst";
+import { Cluster } from "ioredis";
+
+const redis = new Cluster(
+  [{ host: Resource.MyRedis.host, port: Resource.MyRedis.port }],
+  {
+    dnsLookup: (address, callback) => callback(null, address),
+    redisOptions: {
+      tls: {},
+      username: Resource.MyRedis.username,
+      password: Resource.MyRedis.password,
+    },
+  }
+);
+```
+
+:::tip
+We are directly accessing our Redis cluster with `Resource.MyRedis.*`.
+:::
+
+Let's update the `/` route.
+
+```ts title="index.ts"
+if (url.pathname === "/" && req.method === "GET") {
+  const counter = await redis.incr("counter");
+  return new Response(`Hit counter: ${counter}`);
+}
+```
+
+---
+
+#### Test your app
+
+Let's head over to `http://localhost:3000` in your browser and it'll show the current hit counter.
+
+You should see it increment every time you refresh the page.
+
+---
+
+### 5. Deploy your app
+
+To deploy our app we'll first add a `Dockerfile`. This is building our app by running our `build` script from above.
+
+<details>
+<summary>View Dockerfile</summary>
+
+```diff lang="dockerfile" title="Dockerfile"
+FROM node:20-alpine AS base
+
+FROM base AS builder
+
+RUN apk add --no-cache gcompat
+WORKDIR /app
+
+COPY package*json tsconfig.json src ./
+
++# Copy over generated types
++COPY sst-env.d.ts* ./
+
+RUN npm ci && \
+  npm run build && \
+  npm prune --production
+
+FROM base AS runner
+WORKDIR /app
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 hono
+
+COPY --from=builder --chown=hono:nodejs /app/node_modules /app/node_modules
+COPY --from=builder --chown=hono:nodejs /app/dist /app/dist
+COPY --from=builder --chown=hono:nodejs /app/package.json /app/package.json
+
+USER hono
+EXPOSE 3000
+
+CMD ["node", "/app/dist/index.js"]
+```
+</details>
+
+This is pretty much the same setup from the [Hono docs](https://hono.dev/docs/getting-started/nodejs#dockerfile).
+
+:::tip
+You need to be running [Docker Desktop](https://www.docker.com/products/docker-desktop/) to deploy your app.
+:::
+
+Let's also add a `.dockerignore` file in the root.
+
+```bash title=".dockerignore"
+node_modules
+.git
+```
+
+To compile our TypeScript file, we'll need add the following to the `tsconfig.json`.
+
+```diff lang="json" title="tsconfig.json" {4,6}
+{
+  "compilerOptions": {
+    // ...
++    "outDir": "./dist"
+  },
++  "exclude": ["node_modules"]
+}
+```
+
+Install TypeScript.
+
+```bash
+npm install typescript --save-dev
+```
+
+And add a `build` script to our `package.json`.
+
+```diff lang="json" title="package.json" {2}
+"scripts": {
++  "build": "tsc"
+}
+```
+
+Now to build our Docker image and deploy we run:
+
+```bash
+npx sst deploy --stage production
+```
+
+You can use any stage name here but it's good to create a new stage for production. This'll give the URL of your Hono app deployed as a Fargate service.
+
+```bash
+✓  Complete
+   MyService: http://prod-MyServiceLoadBalanc-491430065.us-east-1.elb.amazonaws.com
+```
+
 ---
 
 ## Connect the console
