@@ -3,7 +3,26 @@ title: Hono on AWS with SST
 description: Create and deploy a Hono API in AWS with SST.
 ---
 
-We are going to build a serverless [Hono](https://hono.dev) API, add an S3 Bucket for file uploads, and deploy it to AWS using SST.
+There are two ways to deploy a [Hono](https://hono.dev) app to AWS with SST.
+
+1. [Serverless](#serverless)
+2. [Containers](#containers)
+
+We'll use both to build a couple of simple apps below.
+
+---
+
+#### Examples
+
+We also have a few other Hono examples that you can refer to.
+
+- [Enabling streaming in your Hono app](/docs/examples/#aws-hono-streaming)
+
+---
+
+## Serverless
+
+We are going to build a serverless Hono API, add an S3 Bucket for file uploads, and deploy it using a Lambda function.
 
 :::tip[View source]
 You can [view the source](https://github.com/sst/sst/tree/dev/examples/aws-hono) of this example in our repo.
@@ -13,16 +32,16 @@ Before you get started, make sure to [configure your AWS credentials](/docs/iam-
 
 ---
 
-## 1. Create a project
+### 1. Create a project
 
 Let's start by creating our app.
 
 ```bash
-mkdir my-hono-app && cd my-hono-app
+mkdir aws-hono && cd aws-hono
 npm init -y
 ```
 
-#### Init SST
+##### Init SST
 
 Now let's initialize SST in our app.
 
@@ -35,7 +54,7 @@ Select the defaults and pick **AWS**. This'll create a `sst.config.ts` file in y
 
 ---
 
-## 2. Add an API
+### 2. Add an API
 
 Let's add a Hono API using an AWS Lambda. Update your `sst.config.ts`.
 
@@ -56,7 +75,7 @@ We are enabling the function URL for this.
 
 ---
 
-#### Start dev mode
+##### Start dev mode
 
 Start your app in dev mode. This runs your functions [_Live_](/docs/live/).
 
@@ -73,7 +92,7 @@ This will give you the URL of your API.
 
 ---
 
-## 3. Add an S3 Bucket
+### 3. Add an S3 Bucket
 
 Let's add an S3 Bucket for file uploads. Update your `sst.config.ts`.
 
@@ -81,7 +100,7 @@ Let's add an S3 Bucket for file uploads. Update your `sst.config.ts`.
 const bucket = new sst.aws.Bucket("MyBucket");
 ```
 
-#### Link the bucket
+##### Link the bucket
 
 Now, link the bucket to the API.
 
@@ -95,7 +114,7 @@ const hono = new sst.aws.Function("Hono", {
 
 ---
 
-## 4. Upload a file
+### 4. Upload a file
 
 We want the `/` route of our API to generate a pre-signed URL to upload a file to our S3 Bucket. Create an `index.ts` file and add the following.
 
@@ -143,7 +162,7 @@ const s3 = new S3Client({});
 
 ---
 
-## 5. Download a file
+### 5. Download a file
 
 We want the `/latest` route of our API to generate a pre-signed URL to download the last uploaded file in our S3 Bucket. Add this to your routes in `index.ts`.
 
@@ -173,7 +192,7 @@ const app = new Hono()
 
 ---
 
-#### Test your app
+##### Test your app
 
 Let's try uploading a file from your project root. Make sure to use your API URL.
 
@@ -185,7 +204,7 @@ Now head over to `https://gyrork2ll35rsuml2yr4lifuqu0tsjft.lambda-url.us-east-1.
 
 ---
 
-## 6. Deploy your app
+### 6. Deploy your app
 
 Now let's deploy your app.
 
@@ -195,6 +214,129 @@ npx sst deploy --stage production
 
 You can use any stage name here but it's good to create a new stage for production.
 
+---
+
+## Containers
+
+We are going to build a hit counter Hono API with Redis. We'll deploy it to AWS in a container using the `Cluster` component.
+
+:::tip[View source]
+You can [view the source](https://github.com/sst/sst/tree/dev/examples/aws-hono-container) of this example in our repo.
+:::
+
+Before you get started, make sure to [configure your AWS credentials](/docs/iam-credentials#credentials).
+
+---
+
+### 1. Create a project
+
+Let's start by creating our app.
+
+```bash
+npm create hono@latest aws-hono-container
+cd aws-hono-container
+```
+
+We are picking the **nodejs** template.
+
+##### Init SST
+
+Now let's initialize SST in our app.
+
+```bash
+npx sst@latest init
+npm install
+```
+
+Select the defaults and pick **AWS**. This'll create a `sst.config.ts` file in your project root.
+
+---
+
+### 2. Add a Cluster
+
+To deploy our Hono app in a container, we'll use [AWS Fargate](https://aws.amazon.com/fargate/) with [Amazon ECS](https://aws.amazon.com/ecs/). Replace the `run` function in
+
+
+```ts title="sst.config.ts" {9-11}
+async run() {
+  const vpc = new sst.aws.Vpc("MyVpc", { bastion: true });
+  const cluster = new sst.aws.Cluster("MyCluster", { vpc });
+
+  cluster.addService("MyService", {
+    public: {
+      ports: [{ listen: "80/http", forward: "3000/http" }],
+    },
+    dev: {
+      command: "npm run dev",
+    },
+  });
+}
+```
+
+This creates a VPC with a bastion host, an ECS Cluster, and adds a Fargate service to it.
+
+The `dev.command` tells SST to run our Astro site locally in dev mode.
+
+---
+
+### 3. Add Redis
+
+Let's add an [Amazon ElastiCache](https://aws.amazon.com/elasticache/) Redis cluster. Add this below the `Vpc` component in your `sst.config.ts`.
+
+```js title="sst.config.ts"
+const redis = new sst.aws.Redis("MyRedis", { vpc });
+```
+
+This shares the same VPC as our ECS cluster.
+
+---
+
+#### Link Redis
+
+Now, link the Redis cluster to the container.
+
+```ts title="sst.config.ts" {3}
+cluster.addService("MyService", {
+  // ...
+  link: [redis],
+});
+```
+
+This will allow us to reference the Redis cluster in our Astro site.
+
+---
+
+#### Install a tunnel
+
+Since our Redis cluster is in a VPC, we'll need a tunnel to connect to it from our local machine.
+
+```bash "sudo"
+sudo npx sst tunnel install
+```
+
+This needs _sudo_ to create a network interface on your machine. You'll only need to do this once on your machine.
+
+---
+
+#### Start dev mode
+
+Start your app in dev mode.
+
+```bash
+npx sst dev
+```
+
+This will deploy your app, start a tunnel in the **Tunnel** tab, and run your Astro site locally in the **MyServiceDev** tab.
+
+---
+
+### 4. Connect to Redis
+
+We want the `/` route to increment a counter in our Redis cluster. Let's start by installing the npm package we'll use.
+
+```bash
+npm install ioredis
+```
 ---
 
 ## Connect the console

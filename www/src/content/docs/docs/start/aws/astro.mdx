@@ -273,7 +273,7 @@ npx astro add node
 
 To deploy our Astro site in a container, we'll use [AWS Fargate](https://aws.amazon.com/fargate/) with [Amazon ECS](https://aws.amazon.com/ecs/). Replace the `run` function in your `sst.config.ts`.
 
-```js title="sst.config.ts" {9-11}
+```ts title="sst.config.ts" {9-11}
 async run() {
   const vpc = new sst.aws.Vpc("MyVpc", { bastion: true });
   const cluster = new sst.aws.Cluster("MyCluster", { vpc });
