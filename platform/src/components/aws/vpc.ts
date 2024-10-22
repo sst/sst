@@ -925,6 +925,7 @@ export class Vpc extends Component implements Link.Linkable {
    *
    * @param name The name of the component.
    * @param vpcId The ID of the existing VPC.
+   * @param opts The component resource options.
    *
    * @example
    * Imagine you create a VPC in the `dev` stage. And in your personal stage `frank`,
@@ -944,29 +945,54 @@ export class Vpc extends Component implements Link.Linkable {
    *   vpc: vpc.id
    * };
    * ```
+   *
+   * You can also do this with a provider.
+   * ```ts title="sst.config.ts"
+   * const providerEUWest = new aws.Provider('aws-eu-west-3', {
+   *   region: 'eu-west-3',
+   * })
+   *
+   * const vpc = $app.stage === "frank"
+   *   ? sst.aws.Vpc.get("MyVPC", "vpc-0be8fa4de860618bb", { provider: providerEUWest })
+   *   : new sst.aws.Vpc("MyVPC", undefined, { provider: providerEUWest });
+   * ```
    */
-  public static get(name: string, vpcId: Input<string>) {
-    const vpc = ec2.Vpc.get(`${name}Vpc`, vpcId);
+  public static get(
+    name: string,
+    vpcId: Input<string>,
+    opts?: ComponentResourceOptions,
+  ) {
+    const vpc = ec2.Vpc.get(`${name}Vpc`, vpcId, undefined, opts);
     const internetGateway = ec2.InternetGateway.get(
       `${name}InstanceGateway`,
-      ec2.getInternetGatewayOutput({
-        filters: [{ name: "attachment.vpc-id", values: [vpc.id] }],
-      }).internetGatewayId,
+      ec2.getInternetGatewayOutput(
+        {
+          filters: [{ name: "attachment.vpc-id", values: [vpc.id] }],
+        },
+        opts,
+      ).internetGatewayId,
+      undefined,
+      opts,
     );
     const securityGroup = ec2.SecurityGroup.get(
       `${name}SecurityGroup`,
       ec2
-        .getSecurityGroupsOutput({
-          filters: [
-            { name: "group-name", values: ["default"] },
-            { name: "vpc-id", values: [vpc.id] },
-          ],
-        })
+        .getSecurityGroupsOutput(
+          {
+            filters: [
+              { name: "group-name", values: ["default"] },
+              { name: "vpc-id", values: [vpc.id] },
+            ],
+          },
+          opts,
+        )
         .ids.apply((ids) => {
           if (!ids.length)
             throw new VisibleError(`Security group not found in VPC ${vpcId}`);
           return ids[0];
         }),
+      undefined,
+      opts,
     );
     const privateSubnets = ec2
       .getSubnetsOutput({
@@ -1063,11 +1089,14 @@ export class Vpc extends Component implements Link.Linkable {
     // there are multiple results. Even though `getDnsNamespaceOutput()` takes tags in args,
     // the tags are not used for lookup.
     const zone = output(vpcId).apply((vpcId) =>
-      route53.getZone({
-        name: "sst",
-        privateZone: true,
-        vpcId,
-      }),
+      route53.getZone(
+        {
+          name: "sst",
+          privateZone: true,
+          vpcId,
+        },
+        opts,
+      ),
     );
     const namespaceId = zone.linkedServiceDescription.apply((description) => {
       const match = description.match(/:namespace\/(ns-[a-z1-9]*)/)?.[1];
@@ -1081,6 +1110,7 @@ export class Vpc extends Component implements Link.Linkable {
       `${name}CloudmapNamespace`,
       namespaceId,
       { vpc: vpcId },
+      opts,
     );
 
     const privateKeyValue = bastionInstance.apply((v) => {
@@ -1088,6 +1118,8 @@ export class Vpc extends Component implements Link.Linkable {
       const param = ssm.Parameter.get(
         `${name}PrivateKey`,
         interpolate`/sst/vpc/${vpc.id}/private-key`,
+        undefined,
+        opts,
       );
       return param.value;
     });
