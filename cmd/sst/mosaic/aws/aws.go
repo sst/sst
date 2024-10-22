@@ -234,7 +234,7 @@ func Start(
 		getLog := func(functionID string, requestID string) *os.File {
 			log, ok := logs[requestID]
 			if !ok {
-				path := p.PathLog("lambda/" + functionID + "/" + requestID)
+				path := p.PathLog(fmt.Sprintf("lambda/%s/%d-%s", functionID, time.Now().Unix(), requestID))
 				os.MkdirAll(filepath.Dir(path), 0755)
 				log, _ = os.Create(path)
 				logs[requestID] = log
