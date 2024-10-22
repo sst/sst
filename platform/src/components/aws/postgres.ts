@@ -599,6 +599,7 @@ export class Postgres extends Component implements Link.Linkable {
    *
    * @param name The name of the component.
    * @param args The arguments to get the Postgres database.
+   * @param opts The component resource options.
    *
    * @example
    * Imagine you create a database in the `dev` stage. And in your personal stage `frank`,
@@ -615,6 +616,28 @@ export class Postgres extends Component implements Link.Linkable {
    *     });
    * ```
    *
+   * You can also do this with a provider.
+   * ```ts title="sst.config.ts"
+   * const providerEUWest = new aws.Provider('aws-eu-west-3', {
+   *   region: 'eu-west-3',
+   * });
+   *
+   * const database =
+   *   $app.stage === "frank"
+   *     ? sst.aws.Postgres.get(
+   *         "MyDatabase",
+   *         {
+   *           id: "app-dev-mydatabase",
+   *         },
+   *         {
+   *           provider: providerEUWest,
+   *         },
+   *       )
+   *     : new sst.aws.Postgres("MyDatabase", undefined, {
+   *         provider: providerEUWest,
+   *       });
+   * ```
+   *
    * Here `app-dev-mydatabase` is the ID of the database, and `app-dev-mydatabase-proxy`
    * is the ID of the proxy created in the `dev` stage. You can find these by outputting
    * the database ID and proxy ID in the `dev` stage.
@@ -626,18 +649,30 @@ export class Postgres extends Component implements Link.Linkable {
    * };
    * ```
    */
-  public static get(name: string, args: PostgresGetArgs) {
-    const instance = rds.Instance.get(`${name}Instance`, args.id);
+  public static get(
+    name: string,
+    args: PostgresGetArgs,
+    opts?: ComponentResourceOptions,
+  ) {
+    const instance = rds.Instance.get(
+      `${name}Instance`,
+      args.id,
+      undefined,
+      opts,
+    );
     const proxy = args.proxyId
-      ? rds.Proxy.get(`${name}Proxy`, args.proxyId)
+      ? rds.Proxy.get(`${name}Proxy`, args.proxyId, undefined, opts)
       : undefined;
 
     // get secret
     const secret = instance.tags.apply((tags) =>
       tags?.["sst:lookup:password"]
-        ? secretsmanager.getSecretVersionOutput({
-            secretId: tags["sst:lookup:password"],
-          })
+        ? secretsmanager.getSecretVersionOutput(
+            {
+              secretId: tags["sst:lookup:password"],
+            },
+            opts,
+          )
         : output(undefined),
     );
     const password = secret.apply((v) => {
