@@ -1193,6 +1193,12 @@ export interface ClusterServiceArgs {
  *
  * console.log(Resource.MyBucket.name);
  * ```
+ * 
+ * #### Running in dev
+ * 
+ * When running `sst dev` the cluster service will not be created.
+ * Use the `dev.command` argument to start a local docker container.
+ * 
  */
 export class Cluster extends Component {
   private constructorArgs: ClusterArgs;
