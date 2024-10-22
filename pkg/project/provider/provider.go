@@ -121,6 +121,7 @@ func Passphrase(backend Home, app, stage string) (string, error) {
 type Summary struct {
 	Version         string         `json:"version"`
 	UpdateID        string         `json:"updateID"`
+	Command         string         `json:"command"`
 	TimeStarted     string         `json:"timeStarted"`
 	TimeCompleted   string         `json:"timeCompleted"`
 	ResourceUpdated int            `json:"resourceUpdated"`
@@ -177,7 +178,7 @@ func PushState(backend Home, updateID string, app, stage string, from string) er
 	}
 	err = json.Unmarshal(fileBytes, &map[string]interface{}{})
 	if err != nil {
-		return fmt.Errorf("somoething has corrupted the state file - refusing to upload: %w", err)
+		return fmt.Errorf("something has corrupted the state file - refusing to upload: %w", err)
 	}
 	group.Go(func() error {
 		return backend.putData("app", app, stage, bytes.NewReader(fileBytes))

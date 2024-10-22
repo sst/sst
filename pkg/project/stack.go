@@ -523,6 +523,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 			return
 		}
 		var parsed provider.Summary
+		parsed.Command = input.Command
 		parsed.Version = p.Version()
 		parsed.UpdateID = updateID
 		parsed.TimeStarted = summary.StartTime
