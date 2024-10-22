@@ -146,6 +146,7 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 	if !isESM {
 		options.Format = esbuild.FormatCommonJS
 		options.Target = esbuild.ESNext
+		options.Banner["js"] = properties.Banner
 		options.MainFields = []string{"main"}
 	}
 
