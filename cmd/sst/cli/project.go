@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -112,4 +113,5 @@ func (c *Cli) configureLog() {
 			Level: slog.LevelInfo,
 		})),
 	)
+	debug.SetCrashOutput(logFile, debug.CrashOptions{})
 }
