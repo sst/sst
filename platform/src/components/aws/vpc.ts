@@ -950,7 +950,7 @@ export class Vpc extends Component implements Link.Linkable {
    * ```ts title="sst.config.ts"
    * const providerEUWest = new aws.Provider('aws-eu-west-3', {
    *   region: 'eu-west-3',
-   * })
+   * });
    *
    * const vpc = $app.stage === "frank"
    *   ? sst.aws.Vpc.get("MyVPC", "vpc-0be8fa4de860618bb", { provider: providerEUWest })
