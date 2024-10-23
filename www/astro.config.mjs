@@ -28,6 +28,7 @@ const sidebar = [
       { label: "Remix", slug: "docs/start/aws/remix" },
       { label: "Svelte", slug: "docs/start/aws/svelte" },
       { label: "Drizzle", slug: "docs/start/aws/drizzle" },
+      { label: "Prisma", slug: "docs/start/aws/prisma" },
       { label: "Next.js", slug: "docs/start/aws/nextjs" },
       { label: "Analog", slug: "docs/start/aws/analog" },
       { label: "Angular", slug: "docs/start/aws/angular" },

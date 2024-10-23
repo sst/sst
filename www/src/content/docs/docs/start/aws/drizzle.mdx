@@ -18,7 +18,7 @@ Before you get started, make sure to [configure your AWS credentials](/docs/iam-
 Let's start by creating a Node.js app.
 
 ```bash
-mkdir my-drizzle-app && cd my-drizzle-app
+mkdir aws-drizzle && cd aws-drizzle
 npm init -y
 ```
 
@@ -71,7 +71,7 @@ Let's also update our `tsconfig.json`.
 
 ## 2. Add a Postgres db
 
-Let's add a Postgres database using [Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html). This needs a VPC.
+Let's add a Postgres database using [Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html). This needs a VPC. Update your `sst.config.ts`.
 
 ```ts title="sst.config.ts"
 async run() {
@@ -80,7 +80,7 @@ async run() {
 },
 ```
 
-The `proxy` option configures an RDS Proxy behind the scenes making it ideal for serverless applications. Update your `sst.config.ts`.
+The `proxy` option configures an RDS Proxy behind the scenes making it ideal for serverless applications.
 
 :::tip
 The RDS Proxy allows serverless environments to reliably connect to RDS.
@@ -98,7 +98,6 @@ When you run SST in dev it can start other dev processes for you. In this case w
 new sst.x.DevCommand("Studio", {
   link: [rds],
   dev: {
-    autostart: true,
     command: "npx drizzle-kit studio",
   },
 });
