@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"time"
 
@@ -136,10 +135,25 @@ type SummaryError struct {
 	Message string `json:"message"`
 }
 
+type Update struct {
+	ID            string         `json:"id"`
+	RunID         string         `json:"runID,omitempty"`
+	Version       string         `json:"version"`
+	Command       string         `json:"command"`
+	Errors        []SummaryError `json:"errors"`
+	TimeStarted   string         `json:"timeStarted"`
+	TimeCompleted string         `json:"timeCompleted,omitempty"`
+}
+
 func PutSummary(backend Home, app, stage, updateID string, summary Summary) error {
 	slog.Info("putting summary", "app", app, "stage", stage)
 	return putData(backend, "summary", app, stage+"/"+updateID, false, summary)
+}
 
+func PutUpdate(backend Home, app, stage string, update Update) error {
+	slog.Info("putting update", "app", app, "stage", stage)
+	update.RunID = os.Getenv("SST_RUN_ID")
+	return putData(backend, "update", app, stage+"/"+update.ID, false, update)
 }
 
 func GetSecrets(backend Home, app, stage string) (map[string]string, error) {
@@ -184,8 +198,7 @@ func PushState(backend Home, updateID string, app, stage string, from string) er
 		return backend.putData("app", app, stage, bytes.NewReader(fileBytes))
 	})
 	group.Go(func() error {
-		prefix := fmt.Sprintf("%020d", math.MaxInt64-time.Now().Unix())
-		return backend.putData("history", app, stage+"/"+prefix+"-"+updateID, bytes.NewReader(fileBytes))
+		return backend.putData("snapshot", app, stage+"/"+updateID, bytes.NewReader(fileBytes))
 	})
 	return group.Wait()
 }
@@ -218,9 +231,10 @@ type lockData struct {
 	UpdateID string    `json:"updateID"`
 	RunID    string    `json:"runID"`
 	Command  string    `json:"command"`
+	Ignore   bool      `json:"ignore"`
 }
 
-func Lock(backend Home, updateID, command, app, stage string) error {
+func Lock(backend Home, updateID, version, command, app, stage string) error {
 	slog.Info("locking", "app", app, "stage", stage)
 	var lockData lockData
 	err := getData(backend, "lock", app, stage, false, &lockData)
@@ -234,10 +248,23 @@ func Lock(backend Home, updateID, command, app, stage string) error {
 	lockData.Created = time.Now()
 	lockData.UpdateID = updateID
 	lockData.Command = command
+	lockData.Ignore = true
 	err = putData(backend, "lock", app, stage, false, lockData)
 	if err != nil {
 		return err
 	}
+
+	err = PutUpdate(backend, app, stage, Update{
+		ID:          updateID,
+		Version:     version,
+		Command:     command,
+		Errors:      nil,
+		TimeStarted: time.Now().UTC().Format(time.RFC3339),
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
