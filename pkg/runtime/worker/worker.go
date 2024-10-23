@@ -117,6 +117,12 @@ func (w *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 		Target:            esbuild.ESNext,
 		Format:            esbuild.FormatESModule,
 		MainFields:        []string{"module", "main"},
+		Banner: map[string]string{
+			"js": strings.Join([]string{
+				`import { createRequire as topLevelCreateRequire } from 'module';`,
+				`const require = topLevelCreateRequire("/");`,
+			}, "\n"),
+		},
 	}
 
 	w.lock.RLock()

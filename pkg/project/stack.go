@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nrednav/cuid2"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/debug"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/events"
@@ -30,6 +29,7 @@ import (
 	"github.com/sst/ion/pkg/bus"
 	"github.com/sst/ion/pkg/flag"
 	"github.com/sst/ion/pkg/global"
+	"github.com/sst/ion/pkg/id"
 	"github.com/sst/ion/pkg/js"
 	"github.com/sst/ion/pkg/project/common"
 	"github.com/sst/ion/pkg/project/provider"
@@ -174,7 +174,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 		Version: p.Version(),
 	})
 
-	updateID := cuid2.Generate()
+	updateID := id.Descending()
 	if input.Command != "diff" {
 		err := p.Lock(updateID, input.Command)
 		if err != nil {
@@ -523,6 +523,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 			return
 		}
 		var parsed provider.Summary
+		parsed.Command = input.Command
 		parsed.Version = p.Version()
 		parsed.UpdateID = updateID
 		parsed.TimeStarted = summary.StartTime
@@ -551,6 +552,14 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 			})
 		}
 		provider.PutSummary(p.home, p.app.Name, p.app.Stage, updateID, parsed)
+		provider.PutUpdate(p.home, p.app.Name, p.app.Stage, provider.Update{
+			ID:            updateID,
+			Version:       parsed.Version,
+			Command:       parsed.Command,
+			Errors:        parsed.Errors,
+			TimeStarted:   parsed.TimeStarted,
+			TimeCompleted: parsed.TimeCompleted,
+		})
 	}()
 
 	pulumiLog, err := os.Create(p.PathLog("pulumi"))
@@ -653,6 +662,10 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	return nil
 }
 
+func (p *Project) Lock(updateID string, command string) error {
+	return provider.Lock(p.home, updateID, p.Version(), command, p.app.Name, p.app.Stage)
+}
+
 type PreviewInput struct {
 	Out chan interface{}
 }
@@ -662,10 +675,6 @@ type ImportOptions struct {
 	Name   string
 	ID     string
 	Parent string
-}
-
-func (s *Project) Lock(updateID string, command string) error {
-	return provider.Lock(s.home, updateID, command, s.app.Name, s.app.Stage)
 }
 
 func (s *Project) Unlock() error {
