@@ -1,5 +1,19 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
+/**
+ * ## AWS EFS
+ *
+ * Mount an EFS file system to a function and a container.
+ *
+ * This allows both your function and the container to access the same file system. Here they
+ * both update a counter that's stored in the file system.
+ *
+ * ```js title="common.mjs"
+ * await writeFile("/mnt/efs/counter", newValue.toString());
+ * ```
+ *
+ * The file system is mounted to `/mnt/efs` in both the function and the container.
+ */
 export default $config({
   app(input) {
     return {

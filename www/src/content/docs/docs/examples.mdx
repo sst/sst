@@ -454,6 +454,195 @@ View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-ec2-pul
 
 
 ---
+## AWS EFS with SQLite
+
+Mount an EFS file system to a function and write to a SQLite database.
+
+```js title="index.ts"
+const db = sqlite3("/mnt/efs/mydb.sqlite");
+```
+
+The file system is mounted to `/mnt/efs` in the function.
+
+:::note
+Given the performance of EFS, it's note recommended to use it for databases.
+:::
+
+This example is for demonstration purposes only. It's not recommended to use
+EFS for databases in production.
+```ts title="sst.config.ts"
+// NAT Gateways are required for Lambda functions
+const vpc = new sst.aws.Vpc("MyVpc", { nat: "managed" });
+
+// Create an EFS file system to store the SQLite database
+const efs = new sst.aws.Efs("MyEfs", { vpc });
+
+// Create a Lambda function that queries the database
+new sst.aws.Function("MyFunction", {
+  vpc,
+  url: true,
+  volume: {
+    efs,
+    path: "/mnt/efs",
+  },
+  handler: "index.handler",
+  nodejs: {
+    install: ["better-sqlite3"],
+  },
+});
+```
+
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-efs-sqlite).
+
+
+---
+## AWS EFS with SurrealDB
+
+We use the SurrealDB docker image to run a server in a container and use EFS as the file
+system.
+
+```ts title="sst.config.ts"
+const server = cluster.addService("MyService", {
+  architecture: "arm64",
+  image: "surrealdb/surrealdb:v2.0.2",
+  // ...
+  volumes: [
+    { efs, path: "/data" },
+  ],
+});
+```
+
+We then connect to the server from a Lambda function.
+
+```js title="index.ts"
+const endpoint = `http://${Resource.MyConfig.host}:${Resource.MyConfig.port}`;
+
+const db = new Surreal();
+await db.connect(endpoint);
+```
+
+This uses the SurrealDB client to connect to the server.
+
+:::note
+Given the performance of EFS, it's not recommended to use it for databases.
+:::
+
+This example is for demonstration purposes only. It's not recommended to use
+EFS for databases in production.
+```ts title="sst.config.ts"
+const { RandomPassword } = await import("@pulumi/random");
+
+// SurrealDB Credentials
+const PORT = 8080;
+const NAMESPACE = "test";
+const DATABASE = "test";
+const USERNAME = "root";
+const PASSWORD = new RandomPassword("Password", {
+  length: 32,
+}).result;
+
+// NAT Gateways are required for Lambda functions
+const vpc = new sst.aws.Vpc("MyVpc", { nat: "managed" });
+
+// Store SurrealDB data in EFS
+const efs = new sst.aws.Efs("MyEfs", { vpc });
+
+// Run SurrealDB server in a container
+const cluster = new sst.aws.Cluster("MyCluster", { vpc });
+const server = cluster.addService("MyService", {
+  architecture: "arm64",
+  image: "surrealdb/surrealdb:v2.0.2",
+  command: [
+    "start",
+    "--bind",
+    $interpolate`0.0.0.0:${PORT}`,
+    "--log",
+    "info",
+    "--user",
+    USERNAME,
+    "--pass",
+    PASSWORD,
+    "surrealkv://data/data.skv",
+    "--allow-scripting",
+  ],
+  volumes: [
+    { efs, path: "/data" },
+  ],
+});
+
+// Lambda client to connect to SurrealDB
+const config = new sst.Linkable("MyConfig", {
+  properties: {
+    username: USERNAME,
+    password: PASSWORD,
+    namespace: NAMESPACE,
+    database: DATABASE,
+    port: PORT,
+    host: server.service,
+  },
+});
+
+new sst.aws.Function("MyApp", {
+  handler: "index.handler",
+  link: [config],
+  url: true,
+  vpc,
+});
+```
+
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-efs-surrealdb).
+
+
+---
+## AWS EFS
+
+Mount an EFS file system to a function and a container.
+
+This allows both your function and the container to access the same file system. Here they
+both update a counter that's stored in the file system.
+
+```js title="common.mjs"
+await writeFile("/mnt/efs/counter", newValue.toString());
+```
+
+The file system is mounted to `/mnt/efs` in both the function and the container.
+```ts title="sst.config.ts"
+// NAT Gateways are required for Lambda functions
+const vpc = new sst.aws.Vpc("MyVpc", { nat: "managed" });
+
+// Create an EFS file system to store a counter
+const efs = new sst.aws.Efs("MyEfs", { vpc });
+
+// Create a Lambda function that increments the counter
+new sst.aws.Function("MyFunction", {
+  handler: "lambda.handler",
+  url: true,
+  vpc,
+  volume: {
+    efs,
+    path: "/mnt/efs",
+  },
+});
+
+// Create a service that increments the same counter
+const cluster = new sst.aws.Cluster("MyCluster", { vpc });
+cluster.addService("MyService", {
+  public: {
+    ports: [{ listen: "80/http" }],
+  },
+  volumes: [
+    {
+      efs,
+      path: "/mnt/efs",
+    },
+  ],
+});
+```
+
+View the [full example](https://github.com/sst/sst/tree/dev/examples/aws-efs).
+
+
+---
 ## AWS Express file upload
 
 Deploys an Express app to AWS.

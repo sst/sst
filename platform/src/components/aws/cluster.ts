@@ -862,7 +862,8 @@ export interface ClusterServiceArgs {
    * @example
    * Create an EFS file system.
    *
-   * ```js
+   * ```ts title="sst.config.ts"
+   * const vpc = new sst.aws.Vpc("MyVpc");
    * const fileSystem = new sst.aws.Efs("MyFileSystem", { vpc });
    * ```
    *
@@ -885,7 +886,10 @@ export interface ClusterServiceArgs {
    * {
    *   volumes: [
    *     {
-   *       efs: "fs-12345678",
+   *       efs: {
+   *         fileSystem: "fs-12345678",
+   *         accessPoint: "fsap-12345678"
+   *       },
    *       path: "/mnt/efs"
    *     }
    *   ]
@@ -910,7 +914,7 @@ export interface ClusterServiceArgs {
       }
     >;
     /**
-     * The path to mount the volumne.
+     * The path to mount the volume.
      */
     path: Input<string>;
   }>[];

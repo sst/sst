@@ -1,4 +1,39 @@
 /// <reference path="./.sst/platform/config.d.ts" />
+/**
+ * ## AWS EFS with SurrealDB
+ *
+ * We use the SurrealDB docker image to run a server in a container and use EFS as the file
+ * system.
+ *
+ * ```ts title="sst.config.ts"
+ * const server = cluster.addService("MyService", {
+ *   architecture: "arm64",
+ *   image: "surrealdb/surrealdb:v2.0.2",
+ *   // ...
+ *   volumes: [
+ *     { efs, path: "/data" },
+ *   ],
+ * });
+ * ```
+ *
+ * We then connect to the server from a Lambda function.
+ *
+ * ```js title="index.ts"
+ * const endpoint = `http://${Resource.MyConfig.host}:${Resource.MyConfig.port}`;
+ *
+ * const db = new Surreal();
+ * await db.connect(endpoint);
+ * ```
+ *
+ * This uses the SurrealDB client to connect to the server.
+ *
+ * :::note
+ * Given the performance of EFS, it's not recommended to use it for databases.
+ * :::
+ *
+ * This example is for demonstration purposes only. It's not recommended to use
+ * EFS for databases in production.
+ */
 export default $config({
   app(input) {
     return {
@@ -45,10 +80,7 @@ export default $config({
         "--allow-scripting",
       ],
       volumes: [
-        {
-          efs,
-          path: "/data",
-        },
+        { efs, path: "/data" },
       ],
     });
 
