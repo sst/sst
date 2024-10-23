@@ -14,8 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/nrednav/cuid2"
-
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/sst/ion/cmd/sst/cli"
@@ -24,6 +22,7 @@ import (
 	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/pkg/flag"
 	"github.com/sst/ion/pkg/global"
+	"github.com/sst/ion/pkg/id"
 	"github.com/sst/ion/pkg/project"
 	"github.com/sst/ion/pkg/project/provider"
 	"github.com/sst/ion/pkg/telemetry"
@@ -1058,7 +1057,7 @@ var root = &cli.Command{
 
 						var parsed provider.Summary
 						parsed.Version = version
-						parsed.UpdateID = cuid2.Generate()
+						parsed.UpdateID = id.Descending()
 						parsed.TimeStarted = time.Now().UTC().Format(time.RFC3339)
 						err = p.Lock(parsed.UpdateID, "edit")
 						if err != nil {
