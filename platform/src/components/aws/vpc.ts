@@ -127,8 +127,8 @@ export interface VpcArgs {
    */
   bastion?: Input<true>;
   /**
-   * [Transform](/docs/components#transform) how this component creates its underlying
-   * resources.
+   * [Transform](/docs/components#transform) how this component creates its
+   * underlying resources.
    */
   transform?: {
     /**
@@ -995,56 +995,80 @@ export class Vpc extends Component implements Link.Linkable {
       opts,
     );
     const privateSubnets = ec2
-      .getSubnetsOutput({
-        filters: [
-          { name: "vpc-id", values: [vpc.id] },
-          { name: "tag:Name", values: ["*Private*"] },
-        ],
-      })
+      .getSubnetsOutput(
+        {
+          filters: [
+            { name: "vpc-id", values: [vpc.id] },
+            { name: "tag:Name", values: ["*Private*"] },
+          ],
+        },
+        opts,
+      )
       .ids.apply((ids) =>
-        ids.map((id, i) => ec2.Subnet.get(`${name}PrivateSubnet${i + 1}`, id)),
+        ids.map((id, i) =>
+          ec2.Subnet.get(`${name}PrivateSubnet${i + 1}`, id, undefined, opts),
+        ),
       );
     const privateRouteTables = privateSubnets.apply((subnets) =>
       subnets.map((subnet, i) =>
         ec2.RouteTable.get(
           `${name}PrivateRouteTable${i + 1}`,
-          ec2.getRouteTableOutput({ subnetId: subnet.id }).routeTableId,
+          ec2.getRouteTableOutput({ subnetId: subnet.id }, opts).routeTableId,
+          undefined,
+          opts,
         ),
       ),
     );
     const publicSubnets = ec2
-      .getSubnetsOutput({
-        filters: [
-          { name: "vpc-id", values: [vpc.id] },
-          { name: "tag:Name", values: ["*Public*"] },
-        ],
-      })
+      .getSubnetsOutput(
+        {
+          filters: [
+            { name: "vpc-id", values: [vpc.id] },
+            { name: "tag:Name", values: ["*Public*"] },
+          ],
+        },
+        opts,
+      )
       .ids.apply((ids) =>
-        ids.map((id, i) => ec2.Subnet.get(`${name}PublicSubnet${i + 1}`, id)),
+        ids.map((id, i) =>
+          ec2.Subnet.get(`${name}PublicSubnet${i + 1}`, id, undefined, opts),
+        ),
       );
     const publicRouteTables = publicSubnets.apply((subnets) =>
       subnets.map((subnet, i) =>
         ec2.RouteTable.get(
           `${name}PublicRouteTable${i + 1}`,
-          ec2.getRouteTableOutput({ subnetId: subnet.id }).routeTableId,
+          ec2.getRouteTableOutput({ subnetId: subnet.id }, opts).routeTableId,
+          undefined,
+          opts,
         ),
       ),
     );
     const natGateways = publicSubnets.apply((subnets) => {
       const natGatewayIds = subnets.map((subnet, i) =>
         ec2
-          .getNatGatewaysOutput({
-            filters: [
-              { name: "subnet-id", values: [subnet.id] },
-              { name: "state", values: ["available"] },
-            ],
-          })
+          .getNatGatewaysOutput(
+            {
+              filters: [
+                { name: "subnet-id", values: [subnet.id] },
+                { name: "state", values: ["available"] },
+              ],
+            },
+            opts,
+          )
           .ids.apply((ids) => ids[0]),
       );
       return output(natGatewayIds).apply((ids) =>
         ids
           .filter((id) => id)
-          .map((id, i) => ec2.NatGateway.get(`${name}NatGateway${i + 1}`, id)),
+          .map((id, i) =>
+            ec2.NatGateway.get(
+              `${name}NatGateway${i + 1}`,
+              id,
+              undefined,
+              opts,
+            ),
+          ),
       );
     });
     const elasticIps = natGateways.apply((nats) =>
@@ -1052,29 +1076,39 @@ export class Vpc extends Component implements Link.Linkable {
         ec2.Eip.get(
           `${name}ElasticIp${i + 1}`,
           nat.allocationId as Output<string>,
+          undefined,
+          opts,
         ),
       ),
     );
     const natInstances = ec2
-      .getInstancesOutput({
-        filters: [
-          { name: "tag:sst:lookup-type", values: ["nat"] },
-          { name: "vpc-id", values: [vpc.id] },
-        ],
-      })
+      .getInstancesOutput(
+        {
+          filters: [
+            { name: "tag:sst:lookup-type", values: ["nat"] },
+            { name: "vpc-id", values: [vpc.id] },
+          ],
+        },
+        opts,
+      )
       .ids.apply((ids) =>
-        ids.map((id, i) => ec2.Instance.get(`${name}NatInstance${i + 1}`, id)),
+        ids.map((id, i) =>
+          ec2.Instance.get(`${name}NatInstance${i + 1}`, id, undefined, opts),
+        ),
       );
     const bastionInstance = ec2
-      .getInstancesOutput({
-        filters: [
-          { name: "tag:sst:lookup-type", values: ["bastion"] },
-          { name: "vpc-id", values: [vpc.id] },
-        ],
-      })
+      .getInstancesOutput(
+        {
+          filters: [
+            { name: "tag:sst:lookup-type", values: ["bastion"] },
+            { name: "vpc-id", values: [vpc.id] },
+          ],
+        },
+        opts,
+      )
       .ids.apply((ids) =>
         ids.length
-          ? ec2.Instance.get(`${name}BastionInstance`, ids[0])
+          ? ec2.Instance.get(`${name}BastionInstance`, ids[0], undefined, opts)
           : undefined,
       );
 
