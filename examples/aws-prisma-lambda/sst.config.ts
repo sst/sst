@@ -72,7 +72,7 @@
 export default $config({
   app(input) {
     return {
-      name: "aws-prisma",
+      name: "aws-prisma-lambda",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
     };

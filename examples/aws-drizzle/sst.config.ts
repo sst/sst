@@ -22,7 +22,6 @@ export default $config({
     new sst.x.DevCommand("Studio", {
       link: [rds],
       dev: {
-        autostart: true,
         command: "npx drizzle-kit studio",
       },
     });
