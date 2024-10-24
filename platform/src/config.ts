@@ -101,12 +101,12 @@ export interface App {
    * Takes a specific version.
    *
    * ```ts
-   * version: "0.0.300"
+   * version: "3.2.49"
    * ```
    *
    * Also supports semver ranges.
    * ```ts
-   * version: ">= 0.0.300"
+   * version: ">= 3.2.49"
    * ```
    */
   version?: string;
