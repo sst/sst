@@ -1039,18 +1039,21 @@ export class Vpc extends Component implements Link.Linkable {
       .ids.apply((ids) =>
         ids.map((id, i) => ec2.Instance.get(`${name}NatInstance${i + 1}`, id)),
       );
-    const bastionInstance = ec2
-      .getInstancesOutput({
-        filters: [
-          { name: "tag:sst:lookup-type", values: ["bastion"] },
-          { name: "vpc-id", values: [vpc.id] },
-        ],
-      })
-      .ids.apply((ids) =>
-        ids.length
-          ? ec2.Instance.get(`${name}BastionInstance`, ids[0])
-          : undefined,
-      );
+    const bastionInstance = natInstances.apply((instances) => {
+      if (instances.length) return output(instances[0]);
+      return ec2
+        .getInstancesOutput({
+          filters: [
+            { name: "tag:sst:lookup-type", values: ["bastion"] },
+            { name: "vpc-id", values: [vpc.id] },
+          ],
+        })
+        .ids.apply((ids) =>
+          ids.length
+            ? ec2.Instance.get(`${name}BastionInstance`, ids[0])
+            : undefined,
+        );
+    });
 
     // Note: can also use servicediscovery.getDnsNamespaceOutput() here, ie.
     // ```ts
