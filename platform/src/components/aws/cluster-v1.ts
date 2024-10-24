@@ -630,12 +630,12 @@ export interface ClusterServiceArgs {
   environment?: FunctionArgs["environment"];
   /**
    * Configure the service's logs in CloudWatch.
-   * @default `{ retention: "forever" }`
+   * @default `{ retention: "1 month" }`
    * @example
    * ```js
    * {
    *   logging: {
-   *     retention: "1 week"
+   *     retention: "forever"
    *   }
    * }
    * ```
@@ -643,7 +643,7 @@ export interface ClusterServiceArgs {
   logging?: Input<{
     /**
      * The duration the logs are kept in CloudWatch.
-     * @default `"forever"`
+     * @default `"1 month"`
      */
     retention?: Input<keyof typeof RETENTION>;
   }>;

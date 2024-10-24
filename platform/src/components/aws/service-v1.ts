@@ -231,7 +231,7 @@ export class Service extends Component implements Link.Linkable {
     function normalizeLogging() {
       return output(args.logging).apply((logging) => ({
         ...logging,
-        retention: logging?.retention ?? "forever",
+        retention: logging?.retention ?? "1 month",
       }));
     }
 
