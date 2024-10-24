@@ -12,7 +12,7 @@
  * The file system is mounted to `/mnt/efs` in the function.
  *
  * :::note
- * Given the performance of EFS, it's note recommended to use it for databases.
+ * Given the performance of EFS, it's not recommended to use it for databases.
  * :::
  *
  * This example is for demonstration purposes only. It's not recommended to use
