@@ -3,8 +3,8 @@ import {
   ComponentResourceOptions,
   interpolate,
   jsonStringify,
-  output,
   Output,
+  output,
 } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
 import { Link } from "../link";
@@ -145,13 +145,13 @@ export interface PostgresArgs {
    * ```
    */
   vpc:
-    | Vpc
-    | Input<{
-        /**
-         * A list of subnet IDs in the VPC.
-         */
-        subnets: Input<Input<string>[]>;
-      }>;
+  | Vpc
+  | Input<{
+    /**
+     * A list of subnet IDs in the VPC.
+     */
+    subnets: Input<Input<string>[]>;
+  }>;
   /**
    * [Transform](/docs/components#transform) how this component creates its underlying
    * resources.
@@ -229,6 +229,29 @@ interface PostgresRef {
  * });
  * await client.connect();
  * ```
+ *
+ * ---
+ *
+ * ### Cost
+ *
+ * By default this component uses a _Single-AZ Deployment_, _On-Demand DB Instances_ of a
+ * `db.t4g.micro` at $0.016 per hour. And 20GB of _General Purpose gp3 Storage_
+ * at $0.115 per GB per month.
+ *
+ * That works out to $0.016 x 24 x 30 + $0.115 x 20 or **$14 per month**. Adjust this for the
+ * `instance` type and the `storage` you are using.
+ *
+ * The above are rough estimates for _us-east-1_, check out the
+ * [RDS for PostgreSQL pricing](https://aws.amazon.com/rds/postgresql/pricing/#On-Demand_DB_Instances_costs) for more details.
+ *
+ * #### RDS Proxy
+ *
+ * If you enable the `proxy`, it uses _Provisioned instances_ with 2 vCPUs at $0.015 per hour.
+ *
+ * That works out to an **additional** $0.015 x 2 x 24 x 30 or **$22 per month**.
+ *
+ * The above are rough estimates for _us-east-1_, check out the
+ * [RDS Proxy pricing](https://aws.amazon.com/rds/proxy/pricing/) for more details.
  */
 export class Postgres extends Component implements Link.Linkable {
   private instance: rds.Instance;
@@ -285,14 +308,16 @@ export class Postgres extends Component implements Link.Linkable {
     function normalizeStorage() {
       return output(args.storage ?? "20 GB").apply((v) => {
         const size = toGBs(v);
-        if (size < 20)
+        if (size < 20) {
           throw new VisibleError(
             `Storage must be at least 20 GB for the ${name} Postgres database.`,
           );
-        if (size > 65536)
+        }
+        if (size > 65536) {
           throw new VisibleError(
             `Storage cannot be greater than 65536 GB (64 TB) for the ${name} Postgres database.`,
           );
+        }
         return size;
       });
     }
@@ -357,13 +382,13 @@ export class Postgres extends Component implements Link.Linkable {
       const password = args.password
         ? output(args.password)
         : new RandomPassword(
-            `${name}Password`,
-            {
-              length: 32,
-              special: false,
-            },
-            { parent },
-          ).result;
+          `${name}Password`,
+          {
+            length: 32,
+            special: false,
+          },
+          { parent },
+        ).result;
 
       const secret = new secretsmanager.Secret(
         `${name}ProxySecret`,
@@ -445,7 +470,7 @@ export class Postgres extends Component implements Link.Linkable {
               },
               { parent },
             ),
-        ),
+        )
       );
     }
 
@@ -528,10 +553,11 @@ export class Postgres extends Component implements Link.Linkable {
    */
   public get proxyId() {
     return this.proxy.apply((v) => {
-      if (!v)
+      if (!v) {
         throw new VisibleError(
           `Proxy is not enabled. Enable it with "proxy: true".`,
         );
+      }
       return v.id;
     });
   }
@@ -636,13 +662,14 @@ export class Postgres extends Component implements Link.Linkable {
     const secret = instance.tags.apply((tags) =>
       tags?.["sst:lookup:password"]
         ? secretsmanager.getSecretVersionOutput({
-            secretId: tags["sst:lookup:password"],
-          })
-        : output(undefined),
+          secretId: tags["sst:lookup:password"],
+        })
+        : output(undefined)
     );
     const password = secret.apply((v) => {
-      if (!v)
+      if (!v) {
         throw new VisibleError(`Failed to get password for Postgres ${name}.`);
+      }
       return JSON.parse(v.secretString).password as string;
     });
 

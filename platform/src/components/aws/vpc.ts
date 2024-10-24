@@ -1,8 +1,8 @@
 import {
-  ComponentResourceOptions,
-  Output,
   all,
+  ComponentResourceOptions,
   interpolate,
+  Output,
   output,
 } from "@pulumi/pulumi";
 import { Component, Transform, transform } from "../component";
@@ -72,29 +72,29 @@ export interface VpcArgs {
     | "ec2"
     | "managed"
     | {
+      /**
+       * Configures the NAT EC2 instance.
+       * @default `{instance: "t4g.nano"}`
+       * @example
+       * ```ts
+       * {
+       *   nat: {
+       *     ec2: {
+       *       instance: "t4g.large"
+       *     }
+       *   }
+       * }
+       * ```
+       */
+      ec2: Input<{
         /**
-         * Configures the NAT EC2 instance.
-         * @default `{instance: "t4g.nano"}`
-         * @example
-         * ```ts
-         * {
-         *   nat: {
-         *     ec2: {
-         *       instance: "t4g.large"
-         *     }
-         *   }
-         * }
-         * ```
+         * The type of instance to use for the NAT.
+         *
+         * @default `"t4g.nano"`
          */
-        ec2: Input<{
-          /**
-           * The type of instance to use for the NAT.
-           *
-           * @default `"t4g.nano"`
-           */
-          instance: Input<string>;
-        }>;
-      }
+        instance: Input<string>;
+      }>;
+    }
   >;
   /**
    * Configures a bastion host that can be used to connect to resources in the VPC.
@@ -236,6 +236,52 @@ interface VpcRef {
  *   nat: "managed"
  * });
  * ```
+ *
+ * ---
+ *
+ * ### Cost
+ *
+ * By default, this component is **free**. Following is the cost to enable the `nat` or `bastion`
+ * options.
+ *
+ * #### Managed NAT
+ *
+ * If you enable `nat` with the `managed` option, it uses a _NAT Gateway_ per `az` at $0.045 per
+ * hour, and $0.045 per GB processed per month.
+ *
+ * That works out to a minimum of $0.045 x 2 x 24 x 30 or **$65 per month**. Adjust this for the
+ * number of `az` and add $0.045 per GB processed per month.
+ *
+ * The above are rough estimates for _us-east-1_, check out the
+ * [NAT Gateway pricing](https://aws.amazon.com/vpc/pricing/) for more details.
+ *
+ * #### EC2 NAT
+ *
+ * If you enable `nat` with the `ec2` option, it uses `t4g.nano` EC2 _On Demand_ instances per
+ * `az` at $0.0042 per hour, and $0.09 per GB processed per month for the first 10TB.
+ *
+ * That works out to a minimum of $0.0042 x 2 x 24 x 30 or **$6 per month**. Adjust this for the
+ * `nat.ec2.instance` you are using and add $0.09 per GB processed per month.
+ *
+ * The above are rough estimates for _us-east-1_, check out the
+ * [EC2 On-Demand pricing](https://aws.amazon.com/vpc/pricing/) and the
+ * [EC2 Data Transfer pricing](https://aws.amazon.com/ec2/pricing/on-demand/#Data_Transfer)
+ * for more details.
+ *
+ * #### Bastion
+ *
+ * If you enable `bastion`, it uses a single `t4g.nano` EC2 _On Demand_ instance at
+ * $0.0042 per hour, and $0.09 per GB processed per month for the first 10TB.
+ *
+ * That works out to $0.0042 x 24 x 30 or **$3 per month**. Add $0.09 per GB processed per month.
+ *
+ * However if `nat: "ec2"` is enabled, one of the NAT EC2 instances will be reused; making this
+ * **free**.
+ *
+ * The above are rough estimates for _us-east-1_, check out the
+ * [EC2 On-Demand pricing](https://aws.amazon.com/vpc/pricing/) and the
+ * [EC2 Data Transfer pricing](https://aws.amazon.com/ec2/pricing/on-demand/#Data_Transfer)
+ * for more details.
  */
 export class Vpc extends Component implements Link.Linkable {
   private vpc: ec2.Vpc;
@@ -260,7 +306,8 @@ export class Vpc extends Component implements Link.Linkable {
       _message: [
         `There is a new version of "Vpc" that has breaking changes.`,
         ``,
-        `To continue using the previous version, rename "Vpc" to "Vpc.v${$cli.state.version[name]}". Or recreate this component to update - https://sst.dev/docs/components/#versioning`,
+        `To continue using the previous version, rename "Vpc" to "Vpc.v${$cli.state.version[name]
+        }". Or recreate this component to update - https://sst.dev/docs/components/#versioning`,
       ].join("\n"),
     });
 
@@ -347,15 +394,16 @@ export class Vpc extends Component implements Link.Linkable {
       return all([zones, args?.az ?? 2]).apply(([zones, az]) =>
         Array(az)
           .fill(0)
-          .map((_, i) => zones.names[i]),
+          .map((_, i) => zones.names[i])
       );
     }
 
     function normalizeNat() {
       return output(args?.nat).apply((nat) => {
         if (nat === "managed") return { type: "managed" as const };
-        if (nat === "ec2")
+        if (nat === "ec2") {
           return { type: "ec2" as const, ec2: { instance: "t4g.nano" } };
+        }
         if (nat) return { type: "ec2" as const, ec2: nat.ec2 };
         return undefined;
       });
@@ -580,7 +628,7 @@ export class Vpc extends Component implements Link.Linkable {
               },
               { parent },
             );
-          }),
+          })
         );
       });
     }
@@ -629,7 +677,7 @@ export class Vpc extends Component implements Link.Linkable {
           );
 
           return { subnet, routeTable };
-        }),
+        })
       );
 
       return {
@@ -664,20 +712,20 @@ export class Vpc extends Component implements Link.Linkable {
                   ([natGateways, natInstances]) => [
                     ...(natGateways[i]
                       ? [
-                          {
-                            cidrBlock: "0.0.0.0/0",
-                            natGatewayId: natGateways[i].id,
-                          },
-                        ]
+                        {
+                          cidrBlock: "0.0.0.0/0",
+                          natGatewayId: natGateways[i].id,
+                        },
+                      ]
                       : []),
                     ...(natInstances[i]
                       ? [
-                          {
-                            cidrBlock: "0.0.0.0/0",
-                            networkInterfaceId:
-                              natInstances[i].primaryNetworkInterfaceId,
-                          },
-                        ]
+                        {
+                          cidrBlock: "0.0.0.0/0",
+                          networkInterfaceId:
+                            natInstances[i].primaryNetworkInterfaceId,
+                        },
+                      ]
                       : []),
                   ],
                 ),
@@ -696,7 +744,7 @@ export class Vpc extends Component implements Link.Linkable {
           );
 
           return { subnet, routeTable };
-        }),
+        })
       );
 
       return {
@@ -825,7 +873,7 @@ export class Vpc extends Component implements Link.Linkable {
    */
   public get publicSubnets() {
     return this._publicSubnets.apply((subnets) =>
-      subnets.map((subnet) => subnet.id),
+      subnets.map((subnet) => subnet.id)
     );
   }
 
@@ -834,7 +882,7 @@ export class Vpc extends Component implements Link.Linkable {
    */
   public get privateSubnets() {
     return this._privateSubnets.apply((subnets) =>
-      subnets.map((subnet) => subnet.id),
+      subnets.map((subnet) => subnet.id)
     );
   }
 
@@ -850,10 +898,11 @@ export class Vpc extends Component implements Link.Linkable {
    */
   public get bastion() {
     return this.bastionInstance.apply((v) => {
-      if (!v)
+      if (!v) {
         throw new VisibleError(
           `VPC bastion is not enabled. Enable it with "bastion: true".`,
         );
+      }
       return v.id;
     });
   }
@@ -963,8 +1012,9 @@ export class Vpc extends Component implements Link.Linkable {
           ],
         })
         .ids.apply((ids) => {
-          if (!ids.length)
+          if (!ids.length) {
             throw new VisibleError(`Security group not found in VPC ${vpcId}`);
+          }
           return ids[0];
         }),
     );
@@ -976,15 +1026,15 @@ export class Vpc extends Component implements Link.Linkable {
         ],
       })
       .ids.apply((ids) =>
-        ids.map((id, i) => ec2.Subnet.get(`${name}PrivateSubnet${i + 1}`, id)),
+        ids.map((id, i) => ec2.Subnet.get(`${name}PrivateSubnet${i + 1}`, id))
       );
     const privateRouteTables = privateSubnets.apply((subnets) =>
       subnets.map((subnet, i) =>
         ec2.RouteTable.get(
           `${name}PrivateRouteTable${i + 1}`,
           ec2.getRouteTableOutput({ subnetId: subnet.id }).routeTableId,
-        ),
-      ),
+        )
+      )
     );
     const publicSubnets = ec2
       .getSubnetsOutput({
@@ -994,15 +1044,15 @@ export class Vpc extends Component implements Link.Linkable {
         ],
       })
       .ids.apply((ids) =>
-        ids.map((id, i) => ec2.Subnet.get(`${name}PublicSubnet${i + 1}`, id)),
+        ids.map((id, i) => ec2.Subnet.get(`${name}PublicSubnet${i + 1}`, id))
       );
     const publicRouteTables = publicSubnets.apply((subnets) =>
       subnets.map((subnet, i) =>
         ec2.RouteTable.get(
           `${name}PublicRouteTable${i + 1}`,
           ec2.getRouteTableOutput({ subnetId: subnet.id }).routeTableId,
-        ),
-      ),
+        )
+      )
     );
     const natGateways = publicSubnets.apply((subnets) => {
       const natGatewayIds = subnets.map((subnet, i) =>
@@ -1013,12 +1063,12 @@ export class Vpc extends Component implements Link.Linkable {
               { name: "state", values: ["available"] },
             ],
           })
-          .ids.apply((ids) => ids[0]),
+          .ids.apply((ids) => ids[0])
       );
       return output(natGatewayIds).apply((ids) =>
         ids
           .filter((id) => id)
-          .map((id, i) => ec2.NatGateway.get(`${name}NatGateway${i + 1}`, id)),
+          .map((id, i) => ec2.NatGateway.get(`${name}NatGateway${i + 1}`, id))
       );
     });
     const elasticIps = natGateways.apply((nats) =>
@@ -1026,8 +1076,8 @@ export class Vpc extends Component implements Link.Linkable {
         ec2.Eip.get(
           `${name}ElasticIp${i + 1}`,
           nat.allocationId as Output<string>,
-        ),
-      ),
+        )
+      )
     );
     const natInstances = ec2
       .getInstancesOutput({
@@ -1037,7 +1087,7 @@ export class Vpc extends Component implements Link.Linkable {
         ],
       })
       .ids.apply((ids) =>
-        ids.map((id, i) => ec2.Instance.get(`${name}NatInstance${i + 1}`, id)),
+        ids.map((id, i) => ec2.Instance.get(`${name}NatInstance${i + 1}`, id))
       );
     const bastionInstance = natInstances.apply((instances) => {
       if (instances.length) return output(instances[0]);
@@ -1051,7 +1101,7 @@ export class Vpc extends Component implements Link.Linkable {
         .ids.apply((ids) =>
           ids.length
             ? ec2.Instance.get(`${name}BastionInstance`, ids[0])
-            : undefined,
+            : undefined
         );
     });
 
@@ -1070,14 +1120,15 @@ export class Vpc extends Component implements Link.Linkable {
         name: "sst",
         privateZone: true,
         vpcId,
-      }),
+      })
     );
     const namespaceId = zone.linkedServiceDescription.apply((description) => {
       const match = description.match(/:namespace\/(ns-[a-z1-9]*)/)?.[1];
-      if (!match)
+      if (!match) {
         throw new VisibleError(
           `Cloud Map namespace not found for VPC ${vpcId}`,
         );
+      }
       return match;
     });
     const cloudmapNamespace = servicediscovery.PrivateDnsNamespace.get(
@@ -1095,22 +1146,25 @@ export class Vpc extends Component implements Link.Linkable {
       return param.value;
     });
 
-    return new Vpc(name, {
-      ref: true,
-      vpc,
-      internetGateway,
-      securityGroup,
-      privateSubnets,
-      privateRouteTables,
-      publicSubnets,
-      publicRouteTables,
-      natGateways,
-      natInstances,
-      elasticIps,
-      bastionInstance,
-      cloudmapNamespace,
-      privateKeyValue: output(privateKeyValue),
-    } satisfies VpcRef as VpcArgs);
+    return new Vpc(
+      name,
+      {
+        ref: true,
+        vpc,
+        internetGateway,
+        securityGroup,
+        privateSubnets,
+        privateRouteTables,
+        publicSubnets,
+        publicRouteTables,
+        natGateways,
+        natInstances,
+        elasticIps,
+        bastionInstance,
+        cloudmapNamespace,
+        privateKeyValue: output(privateKeyValue),
+      } satisfies VpcRef as VpcArgs,
+    );
   }
 
   /** @internal */

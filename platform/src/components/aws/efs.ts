@@ -140,6 +140,20 @@ interface EfsRef {
  * ```
  *
  * Mounted at `/mnt/efs` in the container.
+ *
+ * ---
+ *
+ * ### Cost
+ *
+ * By default this component uses _Regional (Multi-AZ) with Elastic Throughput_. The pricing is
+ * pay-per-use.
+ *
+ * - For storage: $0.30 per GB per month
+ * - For reads: $0.03 per GB per month
+ * - For writes: $0.06 per GB per month
+ *
+ * The above are rough estimates for _us-east-1_, check out the
+ * [EFS pricing](https://aws.amazon.com/efs/pricing/) for more details.
  */
 export class Efs extends Component {
   private _fileSystem: Output<efs.FileSystem>;
@@ -168,7 +182,7 @@ export class Efs extends Component {
       all(targets.map((target) => target.urn)).apply(() => ({
         fileSystem,
         accessPoint,
-      })),
+      }))
     );
     this._fileSystem = waited.fileSystem;
     this._accessPoint = waited.accessPoint;
@@ -192,7 +206,7 @@ export class Efs extends Component {
           `${name}FileSystem`,
           {
             performanceMode: performance.apply((v) =>
-              v === "general-purpose" ? "generalPurpose" : "maxIO",
+              v === "general-purpose" ? "generalPurpose" : "maxIO"
             ),
             throughputMode: throughput,
             encrypted: true,
@@ -214,7 +228,7 @@ export class Efs extends Component {
               },
               { parent },
             ),
-        ),
+        )
       );
     }
 
@@ -310,11 +324,14 @@ export class Efs extends Component {
       `${name}AccessPoint`,
       accessPointId,
     );
-    return new Efs(name, {
-      ref: true,
-      fileSystem,
-      accessPoint,
-    } satisfies EfsRef as unknown as EfsArgs);
+    return new Efs(
+      name,
+      {
+        ref: true,
+        fileSystem,
+        accessPoint,
+      } satisfies EfsRef as unknown as EfsArgs,
+    );
   }
 }
 

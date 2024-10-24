@@ -154,6 +154,20 @@ interface RedisRef {
  *   }
  * );
  * ```
+ *
+ * ---
+ *
+ * ### Cost
+ *
+ * By default this component uses _On-demand nodes_ with a single `cache.t4g.micro` instance;
+ * $0.0128 per hour.
+ *
+ * That works out to $0.0128 x 24 x 30 or **$9 per month**.
+ *
+ * Adjust this for the `instance` type and number of `nodes` you are using.
+ *
+ * The above are rough estimates for _us-east-1_, check out the
+ * [ElastiCache pricing](https://aws.amazon.com/elasticache/pricing/) for more details.
  */
 export class Redis extends Component implements Link.Linkable {
   private cluster: elasticache.ReplicationGroup;
