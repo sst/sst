@@ -149,7 +149,7 @@ export interface App {
    * }
    * ```
    */
-  removal?: "remove" | "retain" | "retain-all";
+  removal?: "remove" | "retain" | "retain-all" | "forbid";
   /**
    * The providers that are being used in this app. This allows you to use the resources from
    * these providers in your app.

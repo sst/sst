@@ -228,8 +228,8 @@ console.log("~j" + JSON.stringify(mod.app({
 				}
 			}
 
-			if proj.app.Removal != "remove" && proj.app.Removal != "retain" && proj.app.Removal != "retain-all" {
-				return nil, fmt.Errorf("Removal must be one of: remove, retain, retain-all")
+			if proj.app.Removal != "remove" && proj.app.Removal != "retain" && proj.app.Removal != "retain-all" && proj.app.Removal != "forbid" {
+				return nil, fmt.Errorf("Removal must be one of: remove, retain, retain-all", "forbid")
 			}
 			continue
 		}

@@ -1,8 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"strings"
-
+	"github.com/sst/ion/internal/util"
 	"github.com/sst/ion/cmd/sst/cli"
 	"github.com/sst/ion/cmd/sst/mosaic/ui"
 	"github.com/sst/ion/pkg/bus"
@@ -17,6 +18,10 @@ func CmdRemove(c *cli.Cli) error {
 		return err
 	}
 	defer p.Cleanup()
+
+	if p.App().Removal == "forbid" {
+		return util.NewReadableError(nil, fmt.Sprintf(`Removing this project is forbidden for the stage "%s". Please update the removal policy and try again.`, p.App().Stage))
+	}
 
 	target := []string{}
 	if c.String("target") != "" {
