@@ -135,6 +135,7 @@ export interface App {
    * - `remove`: Remove all your resources on remove.
    * - `retain`: Retains S3 buckets and DynamoDB tables, and remove all other resources.
    * - `retain-all`: Retains all your resources on remove.
+   * - `forbid`: Aborts `sst remove` before removing any resources.
    *
    * :::tip
    * If you change your removal policy, you'll need to deploy your app once for it to take effect.
