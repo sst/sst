@@ -1049,6 +1049,41 @@ export interface ClusterServiceArgs {
     };
   }>[];
   /**
+   * Configure the health check for the service.
+  */
+   healthCheck?: {
+    /**
+     * Whether the health check is enabled.
+     * @default `true`
+     */
+    enabled?: Input<boolean>;
+    /**
+     * The path to check for HTTP health checks.
+     * @default `"/"`
+     */
+    path?: Input<string>;
+    /**
+     * The interval (in seconds) between health checks.
+     * @default `30`
+     */
+    interval?: Input<number>;
+    /**
+     * The timeout (in seconds) for each health check.
+     * @default `5`
+     */
+    timeout?: Input<number>;
+    /**
+     * The number of consecutive successful health checks required to consider the container healthy.
+     * @default `2`
+     */
+    healthyThreshold?: Input<number>;
+    /**
+     * The number of consecutive failed health checks required to consider the container unhealthy.
+     * @default `2`
+     */
+    unhealthyThreshold?: Input<number>;
+  };
+  /**
    * Assigns the given IAM role name to the containers running in the service. This allows you to pass in a previously created role.
    *
    * :::caution
