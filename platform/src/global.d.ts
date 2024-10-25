@@ -55,7 +55,7 @@ interface $APP
     /**
      * The removal policy for the current stage. If `removal` was not set in the `sst.config.ts`, this will be return its default value, `retain`.
      */
-    removal: "remove" | "retain" | "retain-all";
+    removal: "remove" | "retain" | "retain-all" | "forbid";
     /**
      * The providers currently being used in the app.
      */
