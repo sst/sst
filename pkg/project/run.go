@@ -20,6 +20,7 @@ import (
 	"syscall"
 	"time"
 
+	esbuild "github.com/evanw/esbuild/pkg/api"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/events"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
 	"github.com/sst/sst/v3/internal/util"
@@ -115,6 +116,55 @@ func devSkipExpired(path string) bool {
 		return true
 	}
 	return time.Since(info.ModTime()) > time.Duration(secs)*time.Second
+}
+
+// devSkipBundleHash derives the fingerprint's bundle part from the config build's
+// sourcemap: a hash over each source's name + contents, EXCLUDING the <define:$cli>
+// virtual module. Hashing the raw esbuild output (the previous behavior, via
+// OutputFiles[0].Hash) silently included $cli, whose state.version field is the
+// PREVIOUS deployment's per-component versions map — so the bundle part flipped after
+// any state-changing session (teardown, create, kill-during-create) with zero source
+// edits, costing exactly one spurious full deploy on the next startup. Component
+// version changes remain detected by devSkipParts' separate "versions" part.
+//
+// The sourcemap is the right hash surface: object-valued defines ($app, $cli) are
+// hoisted into <define:*> virtual modules whose full JSON appears in sourcesContent,
+// the InjectGlobals plugin prepends the provider shim to every user source's contents,
+// and the stdin eval code appears as its own source — so every deploy-relevant input
+// except $cli stays covered. `mappings`/`names` are deliberately excluded: they encode
+// output positions, which shift with $cli's byte length. Falls back to the raw
+// first-output-file hash if no parseable sourcemap with contents is found.
+func devSkipBundleHash(buildResult esbuild.BuildResult) string {
+	for _, file := range buildResult.OutputFiles {
+		if !strings.HasSuffix(file.Path, ".map") {
+			continue
+		}
+		var sourcemap struct {
+			Sources        []string `json:"sources"`
+			SourcesContent []string `json:"sourcesContent"`
+		}
+		if err := json.Unmarshal(file.Contents, &sourcemap); err != nil {
+			break
+		}
+		if len(sourcemap.Sources) == 0 || len(sourcemap.SourcesContent) != len(sourcemap.Sources) {
+			break
+		}
+		hash := sha256.New()
+		for i, source := range sourcemap.Sources {
+			if source == "<define:$cli>" {
+				continue
+			}
+			hash.Write([]byte(source))
+			hash.Write([]byte{0})
+			hash.Write([]byte(sourcemap.SourcesContent[i]))
+			hash.Write([]byte{0})
+		}
+		return hex.EncodeToString(hash.Sum(nil))
+	}
+	if len(buildResult.OutputFiles) > 0 {
+		return buildResult.OutputFiles[0].Hash
+	}
+	return ""
 }
 
 // DevTargets reconstructs the dev function targets from the CURRENT deployed state. The aws
@@ -404,7 +454,7 @@ func (p *Project) Run(ctx context.Context, input *StackInput) error {
 	// drift (a resource changed in AWS outside this stack) are not detectable by
 	// input-hashing — SST_DEV_SKIP_MAX_AGE forces a periodic real up to reconcile.
 	if flag.SST_DEV_SKIP_UNCHANGED && input.Dev {
-		current := p.devSkipParts(buildResult.OutputFiles[0].Hash, secrets, fallback, completed)
+		current := p.devSkipParts(devSkipBundleHash(buildResult), secrets, fallback, completed)
 		var persisted map[string]string
 		if data, readErr := os.ReadFile(p.pathSkipHash()); readErr == nil {
 			json.Unmarshal(data, &persisted)
@@ -898,7 +948,7 @@ loop:
 	// apples-to-apples. Only on a clean dev deploy that finished with no errors and exit 0
 	// (so a half-applied / pending-ops stage is never marked skippable).
 	if flag.SST_DEV_SKIP_UNCHANGED && input.Dev && finished && len(errors) == 0 && cmd.ProcessState.ExitCode() == 0 {
-		parts := p.devSkipParts(buildResult.OutputFiles[0].Hash, secrets, fallback, complete)
+		parts := p.devSkipParts(devSkipBundleHash(buildResult), secrets, fallback, complete)
 		if data, mErr := json.Marshal(parts); mErr == nil {
 			if writeErr := os.WriteFile(p.pathSkipHash(), data, 0644); writeErr != nil {
 				log.Warn("failed to persist dev skip fingerprint", "err", writeErr)
