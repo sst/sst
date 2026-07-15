@@ -829,7 +829,7 @@ export abstract class SsrSite extends Component implements Link.Linkable {
         },
         _dev: {
           ...dev.outputs,
-          aws: { role: server.nodes.role.arn },
+          aws: { role: server.nodes.role!.arn },
         },
       });
       return;

@@ -46,7 +46,7 @@ import { Permission, permission } from "./permission.js";
 import { Vpc } from "./vpc.js";
 import { Image } from "@pulumi/docker-build";
 import { rpc } from "../rpc/rpc.js";
-import { parseRoleArn, splitQualifiedFunctionArn } from "./helpers/arn.js";
+import { splitQualifiedFunctionArn } from "./helpers/arn.js";
 import { RandomBytes } from "@pulumi/random";
 import { lazy } from "../../util/lazy.js";
 import { Efs } from "./efs.js";
@@ -1714,7 +1714,7 @@ export class Function extends Component implements Link.Linkable {
   private constructorName: string;
   private durable: boolean;
   private function: Output<lambda.Function>;
-  private role: iam.Role;
+  private role?: iam.Role;
   private logGroup: Output<cloudwatch.LogGroup | undefined>;
   private urlEndpoint: Output<string | undefined>;
   private eventInvokeConfig?: lambda.FunctionEventInvokeConfig;
@@ -2227,14 +2227,12 @@ export class Function extends Component implements Link.Linkable {
     }
 
     function createRole() {
-      if (args.role) {
-        return iam.Role.get(
-          `${name}Role`,
-          output(args.role).apply(parseRoleArn).roleName,
-          {},
-          { parent },
-        );
-      }
+      // When an existing role ARN is passed, don't register an iam.Role.get read
+      // resource for it: read resources are re-fetched from live IAM on EVERY
+      // deploy (even a no-op one) and each forces two non-elided snapshot writes,
+      // which serializes the engine's checkpoint loop. The ARN is used directly
+      // by createFunction; nothing downstream needs the Role resource.
+      if (args.role) return undefined;
 
       const policy = all([args.permissions || [], linkPermissions, dev]).apply(
         ([argsPermissions, linkPermissions, dev]) =>
@@ -2945,7 +2943,9 @@ export class Function extends Component implements Link.Linkable {
   public get nodes() {
     return {
       /**
-       * The IAM Role the function will use.
+       * The IAM Role the function will use. `undefined` when an existing role
+       * ARN was passed in via `role` — the function uses that role directly
+       * without registering a resource for it.
        */
       role: this.role,
       /**
