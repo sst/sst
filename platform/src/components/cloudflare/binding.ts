@@ -8,6 +8,9 @@
  * kinds, so new provider fields can pass through this helper. Cloudflare's provider or API may
  * still reject an unsupported kind or field.
  *
+ * Binding objects from earlier SST releases are also accepted and normalized to the provider
+ * shape, so existing `Linkable` definitions continue to work.
+ *
  * A production binding only describes the Worker binding. It does not generate Wrangler
  * configuration or a runtime TypeScript type. Native Cloudflare resources should extend
  * `CloudflareComponent` from `sst.cloudflare` so those projections can be declared independently.
@@ -74,9 +77,37 @@ export type CloudflareBinding = Omit<
   readonly [field: string]: unknown;
 };
 
+const legacyBindingTypes = {
+  aiBindings: "ai",
+  plainTextBindings: "plain_text",
+  secretTextBindings: "secret_text",
+  queueBindings: "queue",
+  serviceBindings: "service",
+  durableObjectNamespaceBindings: "durable_object_namespace",
+  kvNamespaceBindings: "kv_namespace",
+  d1DatabaseBindings: "d1",
+  r2BucketBindings: "r2_bucket",
+  hyperdriveBindings: "hyperdrive",
+  versionMetadataBindings: "version_metadata",
+  workflowBindings: "workflow",
+  rateLimitBindings: "ratelimit",
+} as const;
+
 export function binding(input: CloudflareBinding) {
+  const providerType =
+    typeof input.type === "string" &&
+    Object.prototype.hasOwnProperty.call(legacyBindingTypes, input.type)
+      ? legacyBindingTypes[input.type as keyof typeof legacyBindingTypes]
+      : undefined;
+  const workerBinding = providerType
+    ? {
+        type: providerType,
+        ...(input.properties as Record<string, unknown>),
+      }
+    : input;
+
   return {
     type: "cloudflare.binding" as const,
-    binding: input,
+    binding: workerBinding,
   };
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { output, type Input } from "@pulumi/pulumi";
 import { Link } from "../../../src/components/link";
+import { binding } from "../../../src/components/cloudflare/binding";
 import { buildWorkerBinding } from "../../../src/components/cloudflare/helpers/worker-binding";
 
 function link(definition: Link.Definition): Link.Linkable {
@@ -20,6 +21,21 @@ function resolve<T>(value: Input<T>): Promise<T> {
 }
 
 describe("Worker binding projection", () => {
+  it("projects legacy version metadata into the provider shape", async () => {
+    const result = buildWorkerBinding(
+      link({
+        properties: {},
+        include: [binding({ type: "versionMetadataBindings", properties: {} })],
+      }),
+      "CF_VERSION_METADATA",
+    );
+
+    await expect(resolve(result)).resolves.toEqual({
+      type: "version_metadata",
+      name: "CF_VERSION_METADATA",
+    });
+  });
+
   it("copies arbitrary production binding fields and overwrites name", async () => {
     const result = buildWorkerBinding(
       link({

@@ -1,8 +1,11 @@
 import * as cloudflare from "@pulumi/cloudflare";
-import type { Input } from "@pulumi/pulumi";
+import { output, type Input } from "@pulumi/pulumi";
 import type { Unstable_RawConfig as RawConfig } from "wrangler";
 import { describe, expect, it } from "vitest";
-import { binding, type CloudflareBinding } from "../../../src/components/cloudflare/binding";
+import {
+  binding,
+  type CloudflareBinding,
+} from "../../../src/components/cloudflare/binding";
 
 describe("Cloudflare worker binding type baseline", () => {
   const productionBindings = [
@@ -42,9 +45,7 @@ describe("Cloudflare worker binding type baseline", () => {
     durable_objects: {
       bindings: [{ name: "COUNTER", class_name: "Counter" }],
     },
-    services: [
-      { binding: "SERVICE", service: "service-name", remote: true },
-    ],
+    services: [{ binding: "SERVICE", service: "service-name", remote: true }],
     hyperdrive: [{ binding: "HYPERDRIVE", id: "hyperdrive-id" }],
     workflows: [
       {
@@ -113,6 +114,47 @@ describe("Cloudflare worker binding type baseline", () => {
     });
   });
 
+  it("converts legacy SST bindings to provider-shaped bindings", () => {
+    const cases = [
+      ["aiBindings", "ai", {}],
+      ["plainTextBindings", "plain_text", { text: "value" }],
+      ["secretTextBindings", "secret_text", { text: "secret" }],
+      ["queueBindings", "queue", { queueName: "queue" }],
+      ["serviceBindings", "service", { service: "worker" }],
+      [
+        "durableObjectNamespaceBindings",
+        "durable_object_namespace",
+        { className: "Counter" },
+      ],
+      ["kvNamespaceBindings", "kv_namespace", { namespaceId: "namespace" }],
+      ["d1DatabaseBindings", "d1", { id: "database" }],
+      ["r2BucketBindings", "r2_bucket", { bucketName: "bucket" }],
+      ["hyperdriveBindings", "hyperdrive", { id: "hyperdrive" }],
+      ["versionMetadataBindings", "version_metadata", {}],
+      [
+        "workflowBindings",
+        "workflow",
+        {
+          workflowName: "workflow",
+          className: "Workflow",
+          scriptName: "worker",
+        },
+      ],
+      [
+        "rateLimitBindings",
+        "ratelimit",
+        { namespaceId: "1001", simple: { limit: 100, period: 60 } },
+      ],
+    ] as const;
+
+    for (const [legacyType, providerType, properties] of cases) {
+      expect(binding({ type: legacyType, properties }).binding).toEqual({
+        type: providerType,
+        ...properties,
+      });
+    }
+  });
+
   it("accepts every provider binding kind without a local kind union", () => {
     const input: CloudflareBinding = {
       type: "new-provider-kind",
@@ -122,9 +164,23 @@ describe("Cloudflare worker binding type baseline", () => {
     expect(binding(input).binding.type).toBe("new-provider-kind");
   });
 
+  it("does not treat inherited object properties as legacy binding kinds", () => {
+    const input: CloudflareBinding = {
+      type: "constructor",
+      customField: "preserved",
+    };
+
+    expect(binding(input).binding).toBe(input);
+  });
+
   it("does not allow the Worker-owned name in the public binding type", () => {
     // @ts-expect-error Worker assigns the binding name at the final projection.
     const input: CloudflareBinding = { type: "ai", name: "Ai" };
     expect(input.name).toBe("Ai");
+  });
+
+  it("accepts Pulumi inputs for provider binding kinds", () => {
+    const input: CloudflareBinding = { type: output("version_metadata") };
+    expect(binding(input).binding).toBe(input);
   });
 });
