@@ -8,7 +8,6 @@
     "build": "openauth build"
   },
   "dependencies": {
-    "@aws-auth-react/core": "*",
     "@openauthjs/openauth": "../../../../../openauth/packages/openauth",
     "@openauthjs/react": "../../../../../openauth/packages/react",
     "@openauthjs/vite": "../../../../../openauth/packages/vite",
