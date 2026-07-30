@@ -11,6 +11,56 @@ import { createAuthTable } from "./shared.js";
 import { transform } from "../../component.js";
 import type { Dynamo } from "../dynamo.js";
 
+/**
+ * The `CustomAuth` component lets you deploy a fully customizable [OpenAuth](https://openauth.js.org/) server to AWS.
+ * It allows you to use any modern UI framework (e.g., React) with SSR and full HMR support in dev mode.
+ *
+ * @example
+ *
+ * #### Minimal example
+ *
+ * Deploy a custom auth server located in the `packages/auth/` directory. 
+ * Note that you must specify the `dev.url` to proxy traffic during local development.
+ *
+ * ```js title="sst.config.ts"
+ * new sst.aws.CustomAuth("MyAuth", {
+ *   path: "packages/auth/",
+ *   dev: {
+ *     url: "http://localhost:5174"
+ *   }
+ * });
+ * ```
+ *
+ * #### Link to a frontend
+ *
+ * [Link the auth component](/docs/linking/) to a frontend application, such as Next.js. This allows the frontend to access the issuer URL and other auth resources.
+ *
+ * ```ts {9} title="sst.config.ts"
+ * const auth = new sst.aws.CustomAuth("MyAuth", {
+ *   path: "packages/auth/",
+ *   dev: {
+ *     url: "http://localhost:5174"
+ *   }
+ * });
+ *
+ * new sst.aws.Nextjs("MyWeb", {
+ *   link: [auth]
+ * });
+ * ```
+ *
+ * Once linked, you can now use it to create an [OpenAuth
+ * client](https://openauth.js.org/docs/client/).
+ *
+ * ```ts title="app/page.tsx" {1,6}
+ * import { Resource } from "sst"
+ * import { createClient } from "@openauthjs/openauth/client"
+ *
+ * export const client = createClient({
+ *   clientID: "nextjs",
+ *   issuer: Resource.MyAuth.url
+ * });
+ * ```
+ */
 export class CustomAuth extends SsrSite {
   constructor(
     name: string,
