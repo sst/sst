@@ -3,8 +3,8 @@ import {
   jsonStringify,
   Output,
 } from "@pulumi/pulumi";
-import { Component, Transform, transform } from "../../component";
-import { Link } from "../../link";
+import { Component, Transform, transform } from "../component";
+import { Link } from "../link";
 import {
   FunctionArgs,
   Function,
@@ -12,12 +12,12 @@ import {
   CdnArgs,
   Router,
   RouterArgs,
-} from "..";
-import { functionBuilder } from "../helpers/function-builder";
-import { env } from "../../linkable";
-import { Auth as AuthV1 } from "../auth-v1";
-import { Input } from "../../input";
-import { createAuthTable } from "./shared";
+} from ".";
+import { functionBuilder } from "./helpers/function-builder";
+import { env } from "../linkable";
+import { Auth as AuthV1 } from "./auth-v1";
+import { Input } from "../input";
+import { createAuthTable } from "./auth/shared";
 
 export interface AuthArgs {
   /**

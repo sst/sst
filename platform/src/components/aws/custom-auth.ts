@@ -6,10 +6,10 @@ import {
   output,
   jsonStringify,
 } from "@pulumi/pulumi";
-import { Plan, SsrSite, SsrSiteArgs } from "../ssr-site.js";
-import { createAuthTable } from "./shared.js";
-import { transform } from "../../component.js";
-import type { Dynamo } from "../dynamo.js";
+import { Plan, SsrSite, SsrSiteArgs } from "./ssr-site.js";
+import { createAuthTable } from "./auth/shared.js";
+import { transform } from "../component.js";
+import type { Dynamo } from "./dynamo.js";
 
 /**
  * The `CustomAuth` component lets you deploy a fully customizable [OpenAuth](https://openauth.js.org/) server to AWS.
