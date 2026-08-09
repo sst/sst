@@ -34,12 +34,14 @@ export const handler: CloudFrontRequestHandler = async (event) => {
   }
 
   const data = request.body?.data;
+  // SHA256 hex digest of the body for x-amz-content-sha256 (required by Lambda URL OAC)
   const digest = !data
-    ? EMPTY_SHA256
+    ? EMPTY_SHA256 // empty body → precomputed SHA256 of zero bytes
     : request.body?.encoding === "base64"
-      ? createHash("sha256").update(data, "base64").digest("hex")
-      : hash("sha256", data, "hex");
+      ? createHash("sha256").update(data, "base64").digest("hex") // hash raw bytes from base64 without decoding to a string first
+      : hash("sha256", data, "hex"); // body already plain text; one-shot hex digest
 
+  // CloudFront header map: attach the digest so the origin request is OAC-signed
   request.headers["x-amz-content-sha256"] = [
     {
       key: "x-amz-content-sha256",
