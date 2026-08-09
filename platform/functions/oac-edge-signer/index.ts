@@ -33,23 +33,19 @@ export const handler: CloudFrontRequestHandler = async (event) => {
     };
   }
 
-  try {
-    const data = request.body?.data;
-    const digest = !data
-      ? EMPTY_SHA256
-      : request.body?.encoding === "base64"
-        ? createHash("sha256").update(data, "base64").digest("hex")
-        : hash("sha256", data, "hex");
+  const data = request.body?.data;
+  const digest = !data
+    ? EMPTY_SHA256
+    : request.body?.encoding === "base64"
+      ? createHash("sha256").update(data, "base64").digest("hex")
+      : hash("sha256", data, "hex");
 
-    request.headers["x-amz-content-sha256"] = [
-      {
-        key: "x-amz-content-sha256",
-        value: digest,
-      },
-    ];
-  } catch (error) {
-    console.error("Error computing SHA256 hash:", error);
-  }
+  request.headers["x-amz-content-sha256"] = [
+    {
+      key: "x-amz-content-sha256",
+      value: digest,
+    },
+  ];
 
   return request;
 };
