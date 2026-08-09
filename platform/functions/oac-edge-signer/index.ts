@@ -8,7 +8,7 @@ import { createHash, hash } from "node:crypto";
 const EMPTY_SHA256 =
   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-const METHODS_WITH_BODY = ["POST", "PUT", "PATCH"];
+const METHODS_WITH_BODY = ["POST", "PUT", "PATCH", "QUERY"];
 
 export const handler: CloudFrontRequestHandler = async (event) => {
   const request = event.Records[0].cf.request;
