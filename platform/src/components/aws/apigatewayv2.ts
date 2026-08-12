@@ -185,7 +185,9 @@ export interface ApiGatewayV2Args {
    * Customize the CORS (Cross-origin resource sharing) settings for your HTTP API.
    * @default `true`
    * @example
-   * Disable CORS.
+   * Disable CORS. This omits CORS configuration entirely (`CorsConfiguration` is
+   * unset). An empty config object is not the same — AWS treats that as CORS
+   * enabled with no allowed origins or headers.
    * ```js
    * {
    *   cors: false
