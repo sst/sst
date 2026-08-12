@@ -775,7 +775,8 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
 
     function normalizeCors() {
       return output(args.cors).apply((cors) => {
-        if (cors === false) return {};
+        // AWS treats `{}` as an empty CORS config; omit to fully disable.
+        if (cors === false) return undefined;
 
         const defaultCors: types.input.apigatewayv2.ApiCorsConfiguration = {
           allowHeaders: ["*"],
@@ -831,6 +832,7 @@ export class ApiGatewayV2 extends Component implements Link.Linkable {
           `${name}Api`,
           {
             protocolType: "HTTP",
+            // @ts-ignore Output includes undefined when cors is false
             corsConfiguration: cors,
           },
           { parent },
