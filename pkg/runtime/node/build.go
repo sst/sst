@@ -107,6 +107,7 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 				})
 			},
 		},
+		js.ESMShimsPlugin(),
 	}
 	if properties.Plugins != "" {
 		plugins = append(plugins, plugin(properties.Plugins))
@@ -141,15 +142,9 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 		MainFields:  properties.ESBuild.ResolveMainFields([]string{"module", "main"}),
 		Conditions:  properties.ESBuild.ResolveConditions(nil),
 		Banner: map[string]string{
-			"js": strings.Join([]string{
-				`import { createRequire as topLevelCreateRequire } from 'module';`,
-				`const require = topLevelCreateRequire(import.meta.url);`,
-				`import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"`,
-				`const __filename = topLevelFileUrlToPath(import.meta.url)`,
-				`const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))`,
-				properties.Banner,
-			}, "\n"),
+			"js": js.ESMBanner(properties.Banner),
 		},
+		Inject:    []string{js.ESMShimsImport},
 		NodePaths: properties.ESBuild.NodePaths,
 		Define:    properties.ESBuild.Define,
 	}
@@ -157,6 +152,7 @@ func (r *Runtime) Build(ctx context.Context, input *runtime.BuildInput) (*runtim
 	if !isESM {
 		options.Format = esbuild.FormatCommonJS
 		options.Banner["js"] = properties.Banner
+		options.Inject = nil
 		options.MainFields = properties.ESBuild.ResolveMainFields([]string{"main"})
 	}
 

@@ -62,13 +62,7 @@ func Build(input EvalOptions) (esbuild.BuildResult, error) {
 	var err error
 	result := esbuild.Build(esbuild.BuildOptions{
 		Banner: map[string]string{
-			"js": `
-import { createRequire as topLevelCreateRequire } from 'module';
-const require = topLevelCreateRequire(import.meta.url);
-import { fileURLToPath as topLevelFileUrlToPath, URL as topLevelURL } from "url"
-const __filename = topLevelFileUrlToPath(import.meta.url)
-const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
-` + input.Banner,
+			"js": ESMBanner(input.Banner),
 		},
 		MainFields: []string{"module", "main"},
 		Format:     esbuild.FormatESModule,
@@ -119,6 +113,7 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 						})
 				},
 			},
+			ESMShimsPlugin(),
 		},
 		External: []string{
 			"@pulumi/*",
@@ -132,7 +127,7 @@ const __dirname = topLevelFileUrlToPath(new topLevelURL(".", import.meta.url))
 			"vite", // The remix component uses vite to resolve the user's vite config file. We don't want to bundle it.
 		},
 		Define:   input.Define,
-		Inject:   input.Inject,
+		Inject:   append([]string{ESMShimsImport}, input.Inject...),
 		Outfile:  outfile,
 		Write:    true,
 		Bundle:   true,
