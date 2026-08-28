@@ -1,13 +1,14 @@
-import { ComponentResourceOptions, Input, all } from "@pulumi/pulumi";
+import { all } from "@pulumi/pulumi";
+import type { ComponentResourceOptions, Input } from "@pulumi/pulumi";
 import { Component } from "../component";
 import {
   buildKvNamespace,
   createKvRouteData,
   parsePattern,
-  RouterBaseRouteArgs,
   updateKvRoutes,
 } from "./router-base-route";
-import { RouterUrlRouteArgs } from "./router";
+import type { RouterBaseRouteArgs } from "./router-base-route";
+import type { ProtectionConfig, RouterUrlRouteArgs } from "./router";
 import { toSeconds } from "../duration";
 
 export interface Args extends RouterBaseRouteArgs {
@@ -19,6 +20,10 @@ export interface Args extends RouterBaseRouteArgs {
    * Additional arguments for the route.
    */
   routeArgs?: Input<RouterUrlRouteArgs>;
+  /**
+   * The protection mode to apply to this route.
+   */
+  protection: Input<ProtectionConfig["mode"]>;
 }
 
 /**
@@ -37,11 +42,14 @@ export class RouterUrlRoute extends Component {
 
     const self = this;
 
-    all([args.url, args.pattern, args.routeArgs]).apply(
-      ([url, pattern, routeArgs]) => {
+    all([args.url, args.pattern, args.routeArgs, args.protection]).apply(
+      ([url, pattern, routeArgs, protection]) => {
         const u = new URL(url);
         const host = u.host;
         const protocol = u.protocol.slice(0, -1);
+        const useOac =
+          /^[^.]+\.lambda-url\.[^.]+\.on\.aws$/.test(u.hostname) &&
+          (protection === "oac" || protection === "oac-with-edge-signing");
 
         const patternData = parsePattern(pattern);
         const namespace = buildKvNamespace(name);
@@ -51,6 +59,16 @@ export class RouterUrlRoute extends Component {
           origin: {
             protocol: protocol === "https" ? undefined : protocol,
             connectionAttempts: routeArgs?.connectionAttempts,
+            ...(useOac
+              ? {
+                  originAccessControlConfig: {
+                    enabled: true,
+                    signingBehavior: "always",
+                    signingProtocol: "sigv4",
+                    originType: "lambda",
+                  },
+                }
+              : {}),
             timeouts: (() => {
               const timeouts = [
                 "connectionTimeout" as const,
