@@ -21,9 +21,9 @@ export interface Args extends RouterBaseRouteArgs {
    */
   routeArgs?: Input<RouterUrlRouteArgs>;
   /**
-   * The protection mode to apply to this route.
+   * The protection configuration inherited from the Router.
    */
-  protection: Input<ProtectionConfig["mode"]>;
+  protection: Input<ProtectionConfig>;
 }
 
 /**
@@ -48,8 +48,9 @@ export class RouterUrlRoute extends Component {
         const host = u.host;
         const protocol = u.protocol.slice(0, -1);
         const useOac =
-          /^[^.]+\.lambda-url\.[^.]+\.on\.aws$/.test(u.hostname) &&
-          (protection === "oac" || protection === "oac-with-edge-signing");
+          /^[a-z0-9]{32}\.lambda-url\.[a-z0-9-]+\.on\.aws$/.test(u.hostname) &&
+          (protection.mode === "oac" ||
+            protection.mode === "oac-with-edge-signing");
 
         const patternData = parsePattern(pattern);
         const namespace = buildKvNamespace(name);
@@ -57,7 +58,7 @@ export class RouterUrlRoute extends Component {
           host,
           rewrite: routeArgs?.rewrite,
           origin: {
-            protocol: protocol === "https" ? undefined : protocol,
+            protocol: useOac || protocol === "https" ? undefined : protocol,
             connectionAttempts: routeArgs?.connectionAttempts,
             ...(useOac
               ? {

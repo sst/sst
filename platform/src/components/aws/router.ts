@@ -2549,7 +2549,7 @@ async function handler(event) {
             pattern,
             url,
             routeArgs: args,
-            protection: protection.mode,
+            protection,
           },
           { provider: this.constructorOpts.provider },
         );

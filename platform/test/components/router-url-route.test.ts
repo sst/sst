@@ -51,7 +51,7 @@ async function settle() {
   }
 }
 
-function getOriginAccessControlConfig(host: string): unknown {
+function getOrigin(host: string): Record<string, unknown> {
   for (const metadata of captured.routeMetadata) {
     const parsed = metadata;
 
@@ -66,9 +66,7 @@ function getOriginAccessControlConfig(host: string): unknown {
     )
       continue;
 
-    return "originAccessControlConfig" in parsed.origin
-      ? parsed.origin.originAccessControlConfig
-      : undefined;
+    return parsed.origin as Record<string, unknown>;
   }
 
   throw new Error(`Route metadata not found for ${host}`);
@@ -106,12 +104,13 @@ describe("Router URL route protection", () => {
     "applies %s protection to Lambda function URLs",
     async (protection) => {
       const router = createRouter(protection);
-      const host = "abcdefghijklmnopqrstuvwxyz.lambda-url.us-east-1.on.aws";
+      const host =
+        "abcdefghijklmnopqrstuvwxyz234567.lambda-url.us-east-1.on.aws";
 
       router.route("/api", `https://${host}`);
       await settle();
 
-      expect(getOriginAccessControlConfig(host)).toEqual({
+      expect(getOrigin(host).originAccessControlConfig).toEqual({
         enabled: true,
         signingBehavior: "always",
         signingProtocol: "sigv4",
@@ -120,14 +119,26 @@ describe("Router URL route protection", () => {
     },
   );
 
-  it("does not apply OAC when protection is disabled", async () => {
+  it("forces HTTPS for protected Lambda function URLs", async () => {
+    const router = createRouter("oac");
+    const host = "abcdefghijklmnopqrstuvwxyz234567.lambda-url.us-east-1.on.aws";
+
+    router.route("/api", `http://${host}`);
+    await settle();
+
+    const origin = getOrigin(host);
+    expect(origin.originAccessControlConfig).toBeDefined();
+    expect(origin.protocol).toBeUndefined();
+  });
+
+  it("does not apply OAC for the normalized default protection mode", async () => {
     const router = createRouter("none");
-    const host = "abcdefghijklmnopqrstuvwxyz.lambda-url.us-east-1.on.aws";
+    const host = "abcdefghijklmnopqrstuvwxyz234567.lambda-url.us-east-1.on.aws";
 
     router.route("/api", `https://${host}`);
     await settle();
 
-    expect(getOriginAccessControlConfig(host)).toBeUndefined();
+    expect(getOrigin(host).originAccessControlConfig).toBeUndefined();
   });
 
   it("does not apply OAC to ordinary HTTPS origins", async () => {
@@ -137,17 +148,18 @@ describe("Router URL route protection", () => {
     router.route("/api", `https://${host}`);
     await settle();
 
-    expect(getOriginAccessControlConfig(host)).toBeUndefined();
+    expect(getOrigin(host).originAccessControlConfig).toBeUndefined();
   });
 
-  it("does not apply OAC to spoofed Lambda URL hostnames", async () => {
+  it.each([
+    "abcdefghijklmnopqrstuvwxyz.lambda-url.us-east-1.on.aws",
+    "abcdefghijklmnopqrstuvwxyz234567.lambda-url.us-east-1.on.aws.example.com",
+  ])("does not apply OAC to spoofed Lambda URL hostname %s", async (host) => {
     const router = createRouter("oac");
-    const host =
-      "abcdefghijklmnopqrstuvwxyz.lambda-url.us-east-1.on.aws.example.com";
 
     router.route("/api", `https://${host}`);
     await settle();
 
-    expect(getOriginAccessControlConfig(host)).toBeUndefined();
+    expect(getOrigin(host).originAccessControlConfig).toBeUndefined();
   });
 });
