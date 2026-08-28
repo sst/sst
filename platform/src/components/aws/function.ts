@@ -2686,7 +2686,7 @@ export class Function extends Component implements Link.Linkable {
                 ? {
                     description: transformed[1].description
                       ? output(transformed[1].description).apply(
-                          (v) => `${v.substring(0, 240)} (live)`,
+                          (v) => (v ? `${v.substring(0, 240)} (live)` : "live"),
                         )
                       : "live",
                     runtime: resolveDevRuntime(),
