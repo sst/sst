@@ -3,11 +3,14 @@ package watcher
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/sst/sst/v3/pkg/bus"
 	"github.com/sst/sst/v3/pkg/project"
 	"github.com/stretchr/testify/assert"
@@ -242,6 +245,51 @@ func TestStartOnlyWatchesConfiguredPaths(t *testing.T) {
 
 	cancel()
 	require.NoError(t, <-errCh)
+}
+
+func TestWatchLoopDrainsErrors(t *testing.T) {
+	root := t.TempDir()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	events := make(chan fsnotify.Event, 1)
+	// Unbuffered, matching fsnotify v1.7.0's Errors channel.
+	errs := make(chan error)
+
+	// Mimic fsnotify's backend: sendError blocks until the error is read,
+	// then an event follows. If the loop never reads errs, the event is
+	// never delivered and the watcher silently stalls.
+	go func() {
+		select {
+		case errs <- errors.New("boom"):
+		case <-time.After(5 * time.Second):
+			t.Error("error send blocked: Errors channel was not drained")
+			return
+		}
+		events <- fsnotify.Event{Name: filepath.Join(root, "main.go"), Op: fsnotify.Write}
+	}()
+
+	published := make(chan string, 1)
+	done := make(chan error, 1)
+	go func() {
+		done <- watchLoop(
+			ctx, events, errs, slog.Default(), root, []string{root}, nil,
+			func(path string, publish bool) error { return nil },
+			func(path string, discovered bool) { published <- path },
+		)
+	}()
+
+	select {
+	case path := <-published:
+		assert.Equal(t, filepath.Join(root, "main.go"), path)
+	case err := <-done:
+		t.Fatalf("watchLoop returned early: %v", err)
+	case <-time.After(5 * time.Second):
+		t.Fatal("event after an error was never delivered: Errors not drained")
+	}
+
+	cancel()
+	require.NoError(t, <-done)
 }
 
 func mustInfo(t *testing.T, path string) os.FileInfo {

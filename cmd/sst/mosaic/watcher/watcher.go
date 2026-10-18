@@ -314,9 +314,27 @@ func Start(ctx context.Context, config WatchConfig) error {
 
 	headFile := filepath.Join(config.Root, ".git/HEAD")
 	watcher.Add(headFile)
+	return watchLoop(ctx, watcher.Events, watcher.Errors, log, config.Root, roots, ignore, watchTree, publishChange)
+}
+
+// watchLoop runs the fsnotify event loop. It drains both the Events and
+// Errors channels: in fsnotify v1.7.0 the Errors channel is unbuffered, so
+// an unread error blocks the reader goroutine and silently stops delivery
+// of all further events.
+func watchLoop(
+	ctx context.Context,
+	events <-chan fsnotify.Event,
+	errs <-chan error,
+	log *slog.Logger,
+	root string,
+	roots []string,
+	ignore []string,
+	watchTree func(path string, publish bool) error,
+	publishChange func(path string, discovered bool),
+) error {
 	for {
 		select {
-		case event, ok := <-watcher.Events:
+		case event, ok := <-events:
 			if !ok {
 				return nil
 			}
@@ -330,7 +348,7 @@ func Start(ctx context.Context, config WatchConfig) error {
 					return err
 				}
 				if err == nil && info.IsDir() {
-					if shouldSkipDir(config.Root, ignore, event.Name, info) || !shouldWatchDir(config.Root, roots, event.Name) {
+					if shouldSkipDir(root, ignore, event.Name, info) || !shouldWatchDir(root, roots, event.Name) {
 						log.Info("ignoring created directory", "path", event.Name)
 						continue
 					}
@@ -357,12 +375,17 @@ func Start(ctx context.Context, config WatchConfig) error {
 				log.Info("ignoring unwatched file event", "path", event.Name, "op", event.Op)
 				continue
 			}
-			if isIgnored(config.Root, ignore, event.Name) {
+			if isIgnored(root, ignore, event.Name) {
 				log.Info("ignoring ignored file event", "path", event.Name, "op", event.Op)
 				continue
 			}
 			log.Info("file event", "path", event.Name, "op", event.Op)
 			publishChange(event.Name, false)
+		case err := <-errs:
+			// Drain the error channel. fsnotify's sendError blocks until the
+			// error is read, so leaving it unread wedges the reader goroutine
+			// and silently stops all further events.
+			log.Error("watcher error", "err", err)
 		case <-ctx.Done():
 			return nil
 		}
